@@ -1,3 +1,29 @@
+# 🌵 La Pitaya
+
+**Sonoran Multi-Agent AI Harness** · un proyecto de **PitayaCode** · Sonora, México
+
+La Pitaya es un harness multi-agente para automatizar progresivamente el desarrollo de software:
+agentes especializados (El Inge, Valentín, El Beni, Margarito, José Juan, El Tutú), orquestación,
+evidencia, auditoría y aprendizaje, con la metodología **CIMA** (BUILD → TEST → LEARN → ITERATE).
+
+Es un fork de [Munder Difflin](https://github.com/chaitanyagiri/munder-difflin) (MIT, © 2026
+Chaitanya Giri), cuyo runtime se conserva. Estado: **Foundation v0.1**.
+
+- Identidad y qué cambió: [docs/LA_PITAYA_IDENTITY.md](docs/LA_PITAYA_IDENTITY.md)
+- Agentes: [docs/AGENTS.md](docs/AGENTS.md) · CIMA: [docs/CIMA/](docs/CIMA/README.md) · Alicia: [docs/ALICIA/](docs/ALICIA/README.md)
+- Baseline del fork: [docs/LA_PITAYA_FORK_BASELINE.md](docs/LA_PITAYA_FORK_BASELINE.md) · Reporte de la fase: [docs/LA_PITAYA_FOUNDATION_01.md](docs/LA_PITAYA_FOUNDATION_01.md)
+
+```bash
+npm install
+npm run dev          # desde la terminal integrada de VS Code: env -u ELECTRON_RUN_AS_NODE npm run dev
+npm run typecheck && npm run test:focused
+```
+
+> Lo que sigue es el README del proyecto upstream (Munder Difflin), conservado como referencia del
+> runtime en el que se basa La Pitaya.
+
+---
+
 <div align="center">
 
 <img src="./docs/logo.png" alt="Munder Difflin, the agent harness to run an office of your clones" width="180">

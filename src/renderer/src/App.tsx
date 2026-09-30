@@ -14,6 +14,7 @@ import { AgentDetailPanel } from '@/components/AgentDetailPanel';
 import { AgentStrip } from '@/components/AgentStrip';
 import { AddAgentModal } from '@/components/AddAgentModal';
 import { MichaelBooting } from '@/components/MichaelBooting';
+import { LA_PITAYA_NAME } from '@shared/lapitaya/brand';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
 import { HivePicker } from '@/components/HivePicker';
 import { QuitWarningModal, type ClosingTimeState } from '@/components/QuitWarningModal';
@@ -297,7 +298,7 @@ export function App() {
       >
         <img
           src={brandLogo}
-          alt="Munder Difflin"
+          alt={LA_PITAYA_NAME}
           style={{ height: 20, width: 'auto', display: 'block' }}
         />
         {/* v0.3.7: the version is no longer inert text — it doubles as the

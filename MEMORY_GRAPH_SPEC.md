@@ -1,7 +1,7 @@
 # Memory Graph Visualization — Spec (Phase 1)
 
 **Feature #8** of the Munder Difflin harness roadmap · author: Jim · branch `feature/memory-graph`
-**Status:** awaiting god sign-off. No component code is written yet — this document is the contract for Phase 2.
+**Status:** implemented. See `src/renderer/src/components/memoryGraph/` and the `graph` tab in `CommandCenterPanel.tsx`.
 
 ---
 

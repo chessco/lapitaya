@@ -32,6 +32,7 @@ import {
 import { notifyArabicTerminalChangeAll } from '@/components/terminalPool';
 import { isComposingKey } from '@shared/imeGuard';
 import { LANGUAGES, setLanguage } from '@/i18n';
+import { LocaleSettingsRows } from './LocaleSettingsRows';
 
 export interface SettingsModalProps {
   config: HarnessConfig;
@@ -1092,6 +1093,7 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
                             ))}
                           </select>
                         </div>
+                        <LocaleSettingsRows selectStyle={slackInputStyle} />
                       </div>
 
                       <div style={{ height: 1, background: 'var(--cth-ink-300)' }} />

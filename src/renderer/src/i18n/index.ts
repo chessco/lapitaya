@@ -1,13 +1,16 @@
 /**
  * i18n bootstrap — react-i18next with inline JSON resources.
  *
- * English is the default language (and the fallback for any missing key).
- * The user's choice is persisted in localStorage (`cth.language`). With nothing
- * saved the app starts in English, ALWAYS — it deliberately does not read
- * navigator.language. Auto-detect would change the UI out from under every
- * existing user on a non-English machine, who never asked for a translation and
- * may not want a partial one. Nothing moves until someone picks a language in
- * Settings.
+ * La Pitaya: Spanish (es-MX) is the default UI language and English (en-US) is
+ * the technical fallback for any missing key. The user's choice is persisted in
+ * localStorage (`cth.language`). With nothing saved the app starts in es-MX,
+ * ALWAYS — it deliberately does not read navigator.language, so the language
+ * never changes on its own; it moves only when someone picks one in Settings.
+ * The upstream code `en` is migrated to `en-US` on read.
+ *
+ * The UI language is only one of three locale settings — see
+ * @shared/lapitaya/locales.ts. agentLocale and notificationLocale are stored
+ * separately below and never follow the UI language implicitly.
  *
  * Adding a language: drop a `locales/<code>.json` with the exact same key
  * tree as `en.json`, register it in `resources` and `supportedLngs`, and add
@@ -18,9 +21,16 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { DEFAULT_GOD_NAME } from '@shared/godIdentity';
+import { DEFAULT_LOCALE_SETTINGS, FALLBACK_LOCALE, canonicalLocale, resolveLocaleSettings, type LocaleSettings } from '@shared/lapitaya/locales';
+import esMX from './locales/es-MX.json';
 import en from './locales/en.json';
 import zhCN from './locales/zh-CN.json';
 import ar from './locales/ar.json';
+// La Pitaya's own strings (roles, CIMA phases, locale settings) live in a
+// separate `lapitaya` namespace. Only es-MX and en-US ship it; every other
+// locale falls back to en-US for this namespace alone.
+import lapitayaEsMX from './locales/lapitaya/es-MX.json';
+import lapitayaEnUS from './locales/lapitaya/en-US.json';
 
 /**
  * The languages the Settings picker offers, in display order.
@@ -33,7 +43,8 @@ import ar from './locales/ar.json';
  * the renderer takes the same path it took before Arabic existed.
  */
 export const LANGUAGES = [
-  { code: 'en', label: 'English', dir: 'ltr' },
+  { code: 'es-MX', label: 'Español (México)', dir: 'ltr' },
+  { code: 'en-US', label: 'English (US)', dir: 'ltr' },
   { code: 'zh-CN', label: '简体中文', dir: 'ltr' },
   { code: 'ar', label: 'العربية', dir: 'rtl' }
 ] as const;
@@ -89,13 +100,14 @@ export function setGodName(name: string | undefined | null): void {
   i18n.emit('languageChanged', i18n.language);
 }
 
-/** The saved choice, or English. Never the OS locale — see the note above. */
+/** The saved choice, or es-MX. Never the OS locale — see the note above.
+ *  A legacy upstream value (`en`) is read as its La Pitaya code (`en-US`). */
 function detectLanguage(): string {
   try {
-    const saved = window.localStorage.getItem(STORAGE_KEY);
+    const saved = canonicalLocale(window.localStorage.getItem(STORAGE_KEY));
     if (saved && SUPPORTED.includes(saved as LanguageCode)) return saved;
-  } catch { /* localStorage unavailable — English it is */ }
-  return 'en';
+  } catch { /* localStorage unavailable — the default it is */ }
+  return DEFAULT_LOCALE_SETTINGS.uiLocale;
 }
 
 /** Switch language now and persist the choice for next launch. */
@@ -104,17 +116,47 @@ export function setLanguage(lng: string): void {
   try { window.localStorage.setItem(STORAGE_KEY, lng); } catch { /* best-effort */ }
 }
 
+// --- agentLocale / notificationLocale -----------------------------------------
+// Stored independently of the UI language (see @shared/lapitaya/locales.ts).
+
+const AGENT_LOCALE_KEY = 'lapitaya.agentLocale';
+const NOTIFICATION_LOCALE_KEY = 'lapitaya.notificationLocale';
+
+function readKey(key: string): string | undefined {
+  try { return window.localStorage.getItem(key) ?? undefined; } catch { return undefined; }
+}
+
+/** The three locale settings in effect right now. */
+export function getLocaleSettings(): LocaleSettings {
+  return resolveLocaleSettings({
+    uiLocale: i18n.language,
+    agentLocale: readKey(AGENT_LOCALE_KEY),
+    notificationLocale: readKey(NOTIFICATION_LOCALE_KEY)
+  });
+}
+
+export function setAgentLocale(code: string): void {
+  try { window.localStorage.setItem(AGENT_LOCALE_KEY, code); } catch { /* best-effort */ }
+}
+
+export function setNotificationLocale(code: string): void {
+  try { window.localStorage.setItem(NOTIFICATION_LOCALE_KEY, code); } catch { /* best-effort */ }
+}
+
 void i18n
   .use(initReactI18next)
   .init({
     resources: {
-      en: { translation: en },
+      'es-MX': { translation: esMX, lapitaya: lapitayaEsMX },
+      'en-US': { translation: en, lapitaya: lapitayaEnUS },
       'zh-CN': { translation: zhCN },
       ar: { translation: ar }
     },
     lng: detectLanguage(),
-    fallbackLng: 'en',
-    supportedLngs: ['en', 'zh-CN', 'ar'],
+    fallbackLng: FALLBACK_LOCALE,
+    supportedLngs: ['es-MX', 'en-US', 'zh-CN', 'ar'],
+    ns: ['translation', 'lapitaya'],
+    defaultNS: 'translation',
     // Resources are bundled inline, so nothing ever suspends — the string is
     // there at init time. Keeping this false lets every component call
     // useTranslation() without wrapping the tree in <Suspense>.

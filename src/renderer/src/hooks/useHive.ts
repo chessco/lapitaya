@@ -20,6 +20,8 @@ import { bridgeOf, providerPreset } from '../../../shared/agentProvider';
 import { isDurableRole, preferredAgentRole, roleForHiveSpawn } from '../../../shared/agentRole';
 import { inboxNudgeText } from '../../../shared/hiveNudge';
 import { resolveGodName } from '../../../shared/godIdentity';
+import { AUTONOMY_PROMPT } from '../../../shared/lapitaya/autonomy';
+import { CIMA_GOD_BRIEFING } from '../../../shared/lapitaya/cimaBriefing';
 import { acquireTerminal, resetTerminal, isTerminalAutomationSafe } from '@/components/terminalPool';
 import { canDeliverToAgent, deliverWithAcknowledgement, checkPrecondition } from './queueDelivery';
 import { OFFICE_CAST, DEFAULT_CHARACTER } from '@/scene/office/cast';
@@ -70,15 +72,18 @@ function withStandingGoal(agent: Agent, text: string): string {
   return `<goal>\n${goal}\n</goal>\n\n${text}`;
 }
 
-// The first thing Michael (god) is told on a fresh spawn — orient him and put
-// him to work running the floor. Kept terse and action-oriented.
-const INITIAL_GOD_PROMPT = [
-  "You're online as Michael, the orchestrator of the hive. Get oriented, then start running the floor:",
+// The first thing the god (El Inge by default) is told on a fresh spawn — orient
+// it and put it to work running the floor. Kept terse and action-oriented. Takes
+// the live name so a renamed orchestrator is not told it is someone else.
+const initialGodPrompt = (godName: string): string => [
+  `You're online as ${godName}, the orchestrator of the La Pitaya hive. Get oriented, then start running the floor:`,
   '1. Read your memory.md and drain every message in your inbox.',
   '2. Review board.md + tasks.json and the current roster of agents (active vs archived).',
   '3. Check fleet health: read fleet.json in the hive root for every agent\'s live tokens, cost, status, breaker level, and inbox backlog (`claude agents` will NOT show your hive\'s agents). Flag anyone stalled, over-budget, or breaker-armed.',
   '4. Skim COMMANDS.md (hive root) for the Claude Code commands you can use — and run `mempalace wake-up` for a memory digest if the CLI is available.',
-  'Then begin orchestrating: triage requests, delegate work to the team, and keep everyone unblocked. You are fully autonomous — there is no approval queue, so handle tool-permission prompts in this session yourself (the human can approve them remotely from their phone).'
+  'Then begin orchestrating: triage requests, delegate work to the team, and keep everyone unblocked. There is no approval queue, so handle routine tool-permission prompts in this session yourself (the human can approve them remotely from their phone).',
+  CIMA_GOD_BRIEFING,
+  AUTONOMY_PROMPT
 ].join('\n');
 
 // Per-pty submission chain. Every submitToPty for a given pty is appended here so
@@ -163,7 +168,7 @@ function enrichTaskPrompt(text: string): string {
     `ENRICH TASK: ${text}`,
     '',
     '(Identify the relevant project, cd in, gather READ-ONLY context, then send the improved,',
-    'self-contained prompt to Michael via an outbox message with "to":"god". Do not do the task yourself.)'
+    'self-contained prompt to the orchestrator via an outbox message with "to":"god". Do not do the task yourself.)'
   ].join('\n');
 }
 
@@ -465,7 +470,7 @@ export function useHive(config: HarnessConfig | null): void {
             // main process hands it back as seedPrompt — type it FIRST (identity), then
             // the orientation kick. Serialized via writeChains so they can't jam. (ondev-b)
             if (res.seedPrompt) await submitToPty(GOD_PTY, res.seedPrompt, godProvider);
-            await submitToPty(GOD_PTY, INITIAL_GOD_PROMPT, godProvider);
+            await submitToPty(GOD_PTY, initialGodPrompt(godName), godProvider);
           }
         } catch { /* PTY may have died during startup */ }
         finally { bootGraceUntil.current[GOD_ID] = 0; }

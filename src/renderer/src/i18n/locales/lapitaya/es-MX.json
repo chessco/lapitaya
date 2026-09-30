@@ -1,0 +1,56 @@
+{
+  "brand": {
+    "tagline": "Harness multi-agente de IA sonorense",
+    "origin": "Sonora, México"
+  },
+  "team": {
+    "label": "Equipo La Pitaya",
+    "hint": "Llena nombre, personaje, descripción y objetivo con un rol de CIMA. Tú revisas y lanzas."
+  },
+  "roles": {
+    "orchestrator": "Orquestador principal",
+    "architect": "Arquitecto",
+    "builder": "Constructor",
+    "tester": "Probador",
+    "auditor": "Auditor",
+    "learner": "Aprendiz",
+    "companion": "Compañera de IA"
+  },
+  "cima": {
+    "name": "CIMA",
+    "phases": {
+      "CONTEXT": "Contexto",
+      "ARCHITECT": "Arquitectura",
+      "BUILD": "Construir",
+      "TEST": "Probar",
+      "AUDIT": "Auditar",
+      "LEARN": "Aprender",
+      "DECISION": "Decisión",
+      "ITERATE": "Iterar"
+    },
+    "principles": {
+      "BUILDER_NOT_AUDITOR": "Quien construye no audita",
+      "EVIDENCE_FIRST": "Evidencia primero",
+      "HUMAN_GOVERNANCE": "Gobierno humano",
+      "PROGRESSIVE_AUTONOMY": "Autonomía progresiva"
+    }
+  },
+  "autonomy": {
+    "modes": {
+      "AUTO": "Automático",
+      "SUPERVISED": "Supervisado",
+      "HUMAN_APPROVAL": "Aprobación humana"
+    },
+    "risk": {
+      "LOW": "Riesgo bajo",
+      "MEDIUM": "Riesgo medio",
+      "HIGH": "Riesgo alto"
+    }
+  },
+  "locales": {
+    "agentLocale": "Idioma de los agentes",
+    "agentLocaleDesc": "En qué idioma escriben los agentes de La Pitaya sus mensajes y reportes. Es independiente del idioma de la interfaz. Los comandos, el código, los logs y la salida de pruebas nunca se traducen.",
+    "notificationLocale": "Idioma de las notificaciones",
+    "notificationLocaleDesc": "Idioma de los avisos y, más adelante, de los resúmenes de Alicia. Es independiente del idioma de la interfaz."
+  }
+}

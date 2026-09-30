@@ -6,7 +6,7 @@ import { SpritePortrait } from './SpritePortrait';
 import { Icon } from './Icon';
 import { ProviderLogo } from './ProviderLogo';
 import { useStore, type Agent } from '@/store/store';
-import { OFFICE_CAST, DEFAULT_CHARACTER, type OfficeCharacterName } from '@/scene/office/cast';
+import { OFFICE_CAST, CAST_BY_NAME, DEFAULT_CHARACTER, castDisplayName, type OfficeCharacterName } from '@/scene/office/cast';
 import { type AccentColorName } from '@/design/tokens';
 import type { HireManifest } from '@shared/hire';
 import { hireQueueProgress } from '@shared/hireQueue';
@@ -30,6 +30,10 @@ import {
   isClaudeProvider
 } from '@/store/config';
 import { useRtl } from '@/i18n/useDirection';
+import { LA_PITAYA_NAME } from '@shared/lapitaya/brand';
+import { LA_PITAYA_HIRE_PRESETS, agentByName, agentDisplayName, agentLanguageDirective } from '@shared/lapitaya/agents';
+import { toAscii } from '@shared/lapitaya/locales';
+import { getLocaleSettings } from '@/i18n';
 
 const ACCENTS: AccentColorName[] = ['coral', 'mint', 'sky', 'lemon', 'lilac', 'peach'];
 
@@ -83,7 +87,7 @@ const DESCRIPTION_TEMPLATES: { labelKey: string; description: string; goal: stri
 // the exact JSON shape the importer accepts and ends with a fill-in section so the
 // user adds their own details (item 7). Kept in sync with the HireManifest schema
 // (src/shared/hire.ts) — provider allowlist is claude | codex | antigravity | cursor.
-const HIRE_PROMPT = `You are designing a "hire" — a ready-to-spawn AI agent for Munder Difflin, an app that runs a team of CLI coding agents. Output ONE JSON object (a hire manifest) and nothing else.
+const HIRE_PROMPT = `You are designing a "hire" — a ready-to-spawn AI agent for ${LA_PITAYA_NAME}, an app that runs a team of CLI coding agents. Output ONE JSON object (a hire manifest) and nothing else.
 
 Make the agent genuinely useful: give it a sharp role, a concrete standing goal, and a description that makes it behave like an expert operator of its CLI engine (Claude Code, Codex, or Antigravity/Gemini). It should know how to use the terminal, read and edit files, run and inspect commands, lean on available skills and MCP tools, keep notes in memory, and work autonomously toward its goal without hand-holding.
 
@@ -131,7 +135,8 @@ function basename(path: string): string {
 }
 
 function uniqueId(name: string): string {
-  return `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString(36)}`;
+  // Diacritics are folded first so "Valentín" seeds `valentin-…`, not `valent-n-…`.
+  return `${toAscii(name).toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString(36)}`;
 }
 
 export interface AddAgentModalProps {
@@ -143,7 +148,7 @@ export interface AddAgentModalProps {
 }
 
 export function AddAgentModal({ onClose, config, onConfigChange }: AddAgentModalProps) {
-  const { t: tr } = useTranslation();
+  const { t: tr, i18n } = useTranslation();
   const rtl = useRtl();
   const addAgent = useStore(s => s.addAgent);
   // Deep links and file batches share one FIFO. The head alone seeds the form;
@@ -172,7 +177,10 @@ export function AddAgentModal({ onClose, config, onConfigChange }: AddAgentModal
     const q = n.trim().toLowerCase();
     if (!q) return null;
     const hit = OFFICE_CAST.find(c => c.displayName.toLowerCase() === q || c.name === q);
-    return hit ? hit.name : null;
+    if (hit) return hit.name;
+    // A La Pitaya name typed in either spelling (Valentín / Valentin).
+    const agent = agentByName(n);
+    return agent?.character && agent.character in CAST_BY_NAME ? (agent.character as OfficeCharacterName) : null;
   };
   /** The locally-built spawn command for a manifest: provider preset + model
    *  from the LOCAL config builder, with the manifest's validated flags
@@ -188,7 +196,7 @@ export function AddAgentModal({ onClose, config, onConfigChange }: AddAgentModal
   const initialProvider = inferAgentProvider(config.defaultCommand);
   const initialModel = isClaudeProvider(initialProvider) ? config.defaultModel : undefined;
 
-  const [name, setName] = useState(pendingHire?.name ?? 'Jim');
+  const [name, setName] = useState(pendingHire?.name ?? castDisplayName(CAST_BY_NAME[DEFAULT_CHARACTER], i18n.language));
   const [character, setCharacter] = useState<OfficeCharacterName>(knownCharacter(pendingHire?.character));
   const [accent, setAccent] = useState<AccentColorName>(knownAccent(pendingHire?.accent));
   const [cwd, setCwd] = useState<string>(config.registeredRepos[0] ?? '');
@@ -669,6 +677,36 @@ export function AddAgentModal({ onClose, config, onConfigChange }: AddAgentModal
               <div style={{ flex: 1, minWidth: 0, minHeight: 260, display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {section === 'identity' && (
                   <>
+                    {/* La Pitaya: one-click CIMA role presets. Same contract as the
+                        briefing templates — they only pre-fill fields; the human
+                        still reviews the command and presses spawn. */}
+                    <Row label={tr('lapitaya:team.label')}>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }} title={tr('lapitaya:team.hint')}>
+                        {LA_PITAYA_HIRE_PRESETS.map((a) => (
+                          <button
+                            key={a.id}
+                            data-lapitaya-agent={a.id}
+                            onClick={() => {
+                              setName(agentDisplayName(a.id, i18n.language));
+                              if (a.character && a.character in CAST_BY_NAME) setCharacter(a.character as OfficeCharacterName);
+                              setDescription(a.description ?? '');
+                              setGoal((a.goal ?? '') + agentLanguageDirective(getLocaleSettings().agentLocale));
+                            }}
+                            title={`${tr(`lapitaya:roles.${a.role}`)} — ${a.description ?? ''}`}
+                            style={{
+                              padding: '3px 8px 1px',
+                              background: 'var(--cth-cream-100)',
+                              boxShadow: 'inset 0 0 0 1px var(--cth-ink-100)',
+                              fontFamily: 'var(--cth-font-ui)', fontSize: 12,
+                              color: 'var(--cth-ink-900)', cursor: 'pointer', border: 'none'
+                            }}
+                          >
+                            {agentDisplayName(a.id, i18n.language)} · {tr(`lapitaya:roles.${a.role}`)}
+                          </button>
+                        ))}
+                      </div>
+                    </Row>
+
                     <Row label={tr('addAgent.name')}>
                       <input
                         value={name}
@@ -688,7 +726,7 @@ export function AddAgentModal({ onClose, config, onConfigChange }: AddAgentModal
                         {OFFICE_CAST.map(c => (
                           <button
                             key={c.name}
-                            onClick={() => { setCharacter(c.name); setName(c.displayName); }}
+                            onClick={() => { setCharacter(c.name); setName(castDisplayName(c, i18n.language)); }}
                             title={c.blurb}
                             style={{
                               padding: 4,
@@ -704,7 +742,7 @@ export function AddAgentModal({ onClose, config, onConfigChange }: AddAgentModal
                             <div style={{ width: 44, height: 56, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', overflow: 'hidden' }}>
                               <SpritePortrait character={c.name} scale={2} />
                             </div>
-                            <span style={{ fontSize: 11, color: 'var(--cth-ink-700)' }}>{c.displayName}</span>
+                            <span style={{ fontSize: 11, color: 'var(--cth-ink-700)' }}>{castDisplayName(c, i18n.language)}</span>
                           </button>
                         ))}
                       </div>

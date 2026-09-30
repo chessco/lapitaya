@@ -1,10 +1,11 @@
 import { useEffect, useState, type CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PixelPanel } from './PixelPanel';
 import { PixelButton } from './PixelButton';
 import { SpritePortrait } from './SpritePortrait';
 import { ProviderLogo } from './ProviderLogo';
 import { useStore, type Agent } from '@/store/store';
-import { OFFICE_CAST, type OfficeCharacterName } from '@/scene/office/cast';
+import { OFFICE_CAST, castDisplayName, type OfficeCharacterName } from '@/scene/office/cast';
 import { type AccentColorName } from '@/design/tokens';
 import {
   type AgentProvider,
@@ -30,6 +31,7 @@ export interface EditAgentModalProps {
  * via updateAgent (engine changes apply on the next restart).
  */
 export function EditAgentModal({ agent, onClose }: EditAgentModalProps) {
+  const { i18n } = useTranslation();
   const updateAgent = useStore((s) => s.updateAgent);
   const [config, setConfig] = useState<HarnessConfig | null>(null);
 
@@ -138,7 +140,7 @@ export function EditAgentModal({ agent, onClose }: EditAgentModalProps) {
                       <button
                         key={c.name}
                         type="button"
-                        onClick={() => { setCharacter(c.name); setName(c.displayName); }}
+                        onClick={() => { setCharacter(c.name); setName(castDisplayName(c, i18n.language)); }}
                         title={c.blurb}
                         style={{
                           padding: 4,
@@ -157,7 +159,7 @@ export function EditAgentModal({ agent, onClose }: EditAgentModalProps) {
                         }}>
                           <SpritePortrait character={c.name} scale={1.5} />
                         </div>
-                        <span style={{ fontSize: 10, color: 'var(--cth-ink-700)' }}>{c.displayName}</span>
+                        <span style={{ fontSize: 10, color: 'var(--cth-ink-700)' }}>{castDisplayName(c, i18n.language)}</span>
                       </button>
                     );
                   })}

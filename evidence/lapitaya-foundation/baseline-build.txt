@@ -1,0 +1,139 @@
+
+> munder-difflin@0.4.6 build
+> electron-vite build && npm run copy:main-assets
+
+[36mvite v5.4.21 [32mbuilding SSR bundle for production...[36m[39m
+transforming...
+[32m✓[39m 75 modules transformed.
+rendering chunks...
+[2mout/main/[22m[36mindex.js  [39m[1m[33m687.33 kB[39m[22m
+[32m✓ built in 6.24s[39m
+[36mvite v5.4.21 [32mbuilding SSR bundle for production...[36m[39m
+transforming...
+[32m✓[39m 1 modules transformed.
+rendering chunks...
+[2mout/preload/[22m[36mindex.js  [39m[1m[2m42.65 kB[22m[1m[22m
+[32m✓ built in 201ms[39m
+[36mvite v5.4.21 [32mbuilding for production...[36m[39m
+transforming...
+[32m✓[39m 2592 modules transformed.
+rendering chunks...
+[1m[33m[plugin:vite:reporter][39m[22m [33m[plugin vite:reporter] 
+(!) C:/PitayaCode/LaPitaya/src/renderer/src/store/store.ts is dynamically imported by C:/PitayaCode/LaPitaya/src/renderer/src/components/terminalPool.ts but also statically imported by C:/PitayaCode/LaPitaya/src/renderer/src/App.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/components/AddAgentModal.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/components/AgentDetailPanel.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/components/AgentHoldButton.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/components/AgentStrip.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/components/AiEnginesSettings.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/components/AskMeTab.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/components/CommandCenterPanel.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/components/EditAgentModal.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/components/FullscreenTerminal.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/components/MemoryGraphPanel.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/components/MessageQueueComposer.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/components/OfficeThemePicker.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/components/RealtimeMichaelToggle.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/components/SettingsModal.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/components/SetupPanel.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/components/TaskDetailOverlay.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/components/TasksKanban.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/components/WorkersTab.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/components/triggers/OrgSection.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/components/triggers/SchedulesSection.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/components/triggers/TriggerHistoryTab.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/components/triggers/WebhooksSection.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/freeflow/holdOption.ts, C:/PitayaCode/LaPitaya/src/renderer/src/freeflow/recorder.ts, C:/PitayaCode/LaPitaya/src/renderer/src/hooks/useHive.ts, C:/PitayaCode/LaPitaya/src/renderer/src/hooks/usePtyParser.ts, C:/PitayaCode/LaPitaya/src/renderer/src/hooks/useRestoreTeam.ts, C:/PitayaCode/LaPitaya/src/renderer/src/i18n/useGodNameSync.ts, C:/PitayaCode/LaPitaya/src/renderer/src/ide/IdePanel.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/realtime/CompletionToast.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/realtime/DevicePicker.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/scene/office/OfficeFloor.tsx, C:/PitayaCode/LaPitaya/src/renderer/src/store/mockEvents.ts, dynamic import will not move module into another chunk.
+[39m
+[2m../../out/renderer/[22m[32mindex.html                                      [39m[1m[2m     2.17 kB[22m[1m[22m
+[2m../../out/renderer/[22m[32massets/press-start-2p-latin-400-ClsvrIBJ.woff2  [39m[1m[2m     4.70 kB[22m[1m[22m
+[2m../../out/renderer/[22m[32massets/office-tileset-CHQT-uYL.png              [39m[1m[2m    18.60 kB[22m[1m[22m
+[2m../../out/renderer/[22m[32massets/jetbrains-mono-latin-var-Db4Uuiha.woff2  [39m[1m[2m    31.34 kB[22m[1m[22m
+[2m../../out/renderer/[22m[32massets/inter-latin-var-8kRkwJBP.woff2           [39m[1m[2m    48.43 kB[22m[1m[22m
+[2m../../out/renderer/[22m[32massets/codicon-DCmgc-ay.ttf                     [39m[1m[2m    80.34 kB[22m[1m[22m
+[2m../../out/renderer/[22m[32massets/interiors-CQGBjffT.png                   [39m[1m[2m   134.46 kB[22m[1m[22m
+[2m../../out/renderer/[22m[32massets/editor.worker-ZSx8gsAZ.js                [39m[1m[2m   503.10 kB[22m[1m[22m
+[2m../../out/renderer/[22m[32massets/json.worker-CYJeM0Vc.js                  [39m[1m[2m   802.53 kB[22m[1m[22m
+[2m../../out/renderer/[22m[32massets/html.worker-CLkxC0C0.js                  [39m[1m[2m 1,200.21 kB[22m[1m[22m
+[2m../../out/renderer/[22m[32massets/css.worker-rtSqh8pb.js                   [39m[1m[2m 1,829.45 kB[22m[1m[22m
+[2m../../out/renderer/[22m[32massets/ts.worker-D6bfeQIp.js                    [39m[1m[2m12,093.35 kB[22m[1m[22m
+[2m../../out/renderer/[22m[35massets/index-CT2sy2Js.css                       [39m[1m[2m   223.75 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/azcli-BXM2IlsQ.js                        [39m[1m[2m     1.69 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/javascript-BvfzoP64.js                   [39m[1m[2m     1.69 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/ini-x6GHxt7E.js                          [39m[1m[2m     2.05 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/csp-C2AJIiui.js                          [39m[1m[2m     2.09 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/Filter-CqVhubFX.js                       [39m[1m[2m     2.20 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/scheme-CnrVPi0g.js                       [39m[1m[2m     2.74 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/bat-CXk6R9i1.js                          [39m[1m[2m     3.04 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/flow9-D8e8abbC.js                        [39m[1m[2m     3.14 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/sb-NjH6_omD.js                           [39m[1m[2m     3.20 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/pla-CsZTrHnY.js                          [39m[1m[2m     3.26 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/dockerfile-CmPC2DZV.js                   [39m[1m[2m     3.40 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/pascaligo-Cmaorwot.js                    [39m[1m[2m     3.63 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/bicep-BF8AAygK.js                        [39m[1m[2m     3.81 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/lua-DRbkEJ__.js                          [39m[1m[2m     3.81 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/objective-c-Bsf9Adr2.js                  [39m[1m[2m     3.86 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/cameligo-nP5XeB7Z.js                     [39m[1m[2m     3.89 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/xml-CqA3OYcY.js                          [39m[1m[2m     3.97 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/graphql-BAUBdV83.js                      [39m[1m[2m     4.15 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/lexon-CS1RGqME.js                        [39m[1m[2m     4.19 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/typespec-D3BaxOKL.js                     [39m[1m[2m     4.26 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/sparql-BwgSs7wE.js                       [39m[1m[2m     4.32 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/mips-CaM-c8sw.js                         [39m[1m[2m     4.52 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/m3-DYNA-e-5.js                           [39m[1m[2m     4.54 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/sophia-Z6PHlxcE.js                       [39m[1m[2m     4.65 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/shell-nZFhZCI1.js                        [39m[1m[2m     4.87 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/go-Co3voQ1F.js                           [39m[1m[2m     4.88 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/fsharp-b9EwJ6OO.js                       [39m[1m[2m     4.89 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/pascal-DLtAU0x_.js                       [39m[1m[2m     5.10 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/r-Hxn2SnYa.js                            [39m[1m[2m     5.18 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/less-BQjbkuJA.js                         [39m[1m[2m     5.38 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/GpuStencilModesToPixi-Mfqmqj-G.js        [39m[1m[2m     5.39 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/tcl-CF3tYq1H.js                          [39m[1m[2m     5.43 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/qsharp-BD7c0_xf.js                       [39m[1m[2m     5.53 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/cypher-CLz3A125.js                       [39m[1m[2m     5.54 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/java-BqOgBITW.js                         [39m[1m[2m     5.54 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/hcl-BgDEIw1l.js                          [39m[1m[2m     5.59 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/kotlin-D1TiZq8i.js                       [39m[1m[2m     5.63 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/redis-yl8TqW_z.js                        [39m[1m[2m     5.63 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/restructuredtext-C45krjdV.js             [39m[1m[2m     5.71 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/powershell-BLZmOKjF.js                   [39m[1m[2m     5.77 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/coffee-CY60ZdVX.js                       [39m[1m[2m     5.90 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/liquid-Cqx85Bqr.js                       [39m[1m[2m     6.30 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/css-Dc1e6frd.js                          [39m[1m[2m     6.49 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/rust-C2rcm8y9.js                         [39m[1m[2m     6.66 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/apex-DG5IjXEF.js                         [39m[1m[2m     6.77 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/dart-BdL3T2qP.js                         [39m[1m[2m     6.87 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/yaml-fsSORPmH.js                         [39m[1m[2m     7.01 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/markdown-C1LDbTIq.js                     [39m[1m[2m     7.03 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/mdx-DaHCjU2K.js                          [39m[1m[2m     7.13 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/msdax-Dkw0rKnc.js                        [39m[1m[2m     7.33 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/csharp-B3nfFqjg.js                       [39m[1m[2m     7.36 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/swift-pEk5NNOh.js                        [39m[1m[2m     7.56 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/python-BLM0oYGZ.js                       [39m[1m[2m     7.63 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/ecl-BRZtCkhn.js                          [39m[1m[2m     8.32 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/cpp-BteEkr-J.js                          [39m[1m[2m     8.60 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/pug-KZRE8PkR.js                          [39m[1m[2m     8.65 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/vb-dhxRY2dE.js                           [39m[1m[2m     8.71 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/html-BqxVbg9Y.js                         [39m[1m[2m     8.77 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/typescript-BULPtCnS.js                   [39m[1m[2m     9.11 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/scss-Dsuw-lBL.js                         [39m[1m[2m     9.45 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/wgsl-CaHBWX8o.js                         [39m[1m[2m    10.14 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/st-BG4-BhrP.js                           [39m[1m[2m    10.53 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/twig-CHKK6meg.js                         [39m[1m[2m    10.64 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/julia-CFXRrAu4.js                        [39m[1m[2m    10.87 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/scala-BjP-ReDi.js                        [39m[1m[2m    11.08 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/handlebars-C10ZPdZY.js                   [39m[1m[2m    11.56 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/systemverilog-Bn-_PPJj.js                [39m[1m[2m    12.01 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/canvasUtils-cxJ8_jZ5.js                  [39m[1m[2m    12.62 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/php-NQU4bmpL.js                          [39m[1m[2m    12.87 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/protobuf-Dg-80f8u.js                     [39m[1m[2m    13.06 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/perl-BPi58r3D.js                         [39m[1m[2m    13.20 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/clojure-BQC0MhrY.js                      [39m[1m[2m    14.33 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/razor-BZi11EkH.js                        [39m[1m[2m    14.48 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/ruby-Bvv4DQ04.js                         [39m[1m[2m    15.70 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/sql-Dl7Picx6.js                          [39m[1m[2m    15.94 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/mysql--o_yUUHh.js                        [39m[1m[2m    16.54 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/redshift-Bf-JYjU_.js                     [39m[1m[2m    16.71 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/pgsql-BYfQsqS2.js                        [39m[1m[2m    18.63 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/elixir-DST-1xVL.js                       [39m[1m[2m    19.12 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/postiats-BEsqrLND.js                     [39m[1m[2m    19.69 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/powerquery-B2m3ADxD.js                   [39m[1m[2m    22.03 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/abap-C1iBNFz_.js                         [39m[1m[2m    23.36 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/solidity-DLTEqBGt.js                     [39m[1m[2m    26.41 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/agent-D9MyXJxy.js                        [39m[1m[2m    28.48 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/webworkerAll-BKLpzqTF.js                 [39m[1m[2m    34.20 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/CanvasRenderer-D6kyMVdG.js               [39m[1m[2m    42.62 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/tsMode-C7BCtnCH.js                       [39m[1m[2m    43.22 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/freemarker2-CNPA2NIN.js                  [39m[1m[2m    43.35 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/WebGPURenderer-e0UcZEdA.js               [39m[1m[2m    66.81 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/cssMode-Cbpw0Rrq.js                      [39m[1m[2m    68.89 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/htmlMode-Dc4R9xuR.js                     [39m[1m[2m    69.91 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/jsonMode-Z5XyV0pJ.js                     [39m[1m[2m    91.73 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/browserAll-sXC5ut8y.js                   [39m[1m[2m   100.91 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/WebGLRenderer-CBORTMkn.js                [39m[1m[2m   102.14 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/RenderTargetSystem-CSWQGtqI.js           [39m[1m[2m   107.93 kB[22m[1m[22m
+[2m../../out/renderer/[22m[36massets/index-DL5d3HHq.js                        [39m[1m[33m12,203.59 kB[39m[22m
+[32m✓ built in 2m 26s[39m
+
+> munder-difflin@0.4.6 copy:main-assets
+> node tools/copy-main-assets.cjs
+
+[copy-main-assets] src/main/slack-trigger.cjs -> out/main/slack-trigger.cjs
+[copy-main-assets] src/main/kg-core.cjs -> out/main/kg-core.cjs

@@ -1,0 +1,56 @@
+{
+  "brand": {
+    "tagline": "Sonoran Multi-Agent AI Harness",
+    "origin": "Sonora, Mexico"
+  },
+  "team": {
+    "label": "La Pitaya team",
+    "hint": "Fills name, character, description and goal with a CIMA role. You review and spawn."
+  },
+  "roles": {
+    "orchestrator": "Primary Orchestrator",
+    "architect": "Architect",
+    "builder": "Builder",
+    "tester": "Tester",
+    "auditor": "Auditor",
+    "learner": "Learner",
+    "companion": "AI Companion"
+  },
+  "cima": {
+    "name": "CIMA",
+    "phases": {
+      "CONTEXT": "Context",
+      "ARCHITECT": "Architect",
+      "BUILD": "Build",
+      "TEST": "Test",
+      "AUDIT": "Audit",
+      "LEARN": "Learn",
+      "DECISION": "Decision",
+      "ITERATE": "Iterate"
+    },
+    "principles": {
+      "BUILDER_NOT_AUDITOR": "Builder != Auditor",
+      "EVIDENCE_FIRST": "Evidence First",
+      "HUMAN_GOVERNANCE": "Human Governance",
+      "PROGRESSIVE_AUTONOMY": "Progressive Autonomy"
+    }
+  },
+  "autonomy": {
+    "modes": {
+      "AUTO": "Auto",
+      "SUPERVISED": "Supervised",
+      "HUMAN_APPROVAL": "Human approval"
+    },
+    "risk": {
+      "LOW": "Low risk",
+      "MEDIUM": "Medium risk",
+      "HIGH": "High risk"
+    }
+  },
+  "locales": {
+    "agentLocale": "Agent language",
+    "agentLocaleDesc": "The language La Pitaya agents write their messages and reports in. Independent of the interface language. Commands, code, logs and test output are never translated.",
+    "notificationLocale": "Notification language",
+    "notificationLocaleDesc": "The language of notices and, later, of Alicia's summaries. Independent of the interface language."
+  }
+}
