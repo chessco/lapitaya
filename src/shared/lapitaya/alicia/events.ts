@@ -26,6 +26,7 @@ export const ALICIA_EVENT_TYPES = [
   'governance.blocked', 'governance.supervised',
   'approval.required', 'approval.granted', 'approval.denied',
   'audit.completed', 'workflow.completed',
+  'intent.received', 'intent.classified', 'intent.forwarded', 'intent.governed', 'intent.blocked',
   'error'
 ] as const;
 export type AliciaEventType = (typeof ALICIA_EVENT_TYPES)[number];
@@ -144,6 +145,22 @@ export function fromRuntimeEvent(e: RuntimeEventLike | null | undefined, now: nu
         type: 'governance.blocked', ts: now, source: 'governance', taskId: str(d.taskId), phase: 'DECISION',
         technical: { decision: 'DENY', rule: 'DECISION_GATE', risk: 'HIGH', tool: str(d.via), reason: str(d.reason) }
       }];
+    case 'intent': {
+      // One ledger record per governed intent; its trail becomes the intent.* events.
+      if (d.kind !== 'intent' || !str(d.id) || !Array.isArray(d.trail)) return [];
+      const t = obj(d.target);
+      const technical: AliciaTechnical = {
+        decision: str(d.decision), rule: str(d.rule), risk: str(d.risk), category: str(d.category),
+        mode: str(d.mode), reason: str(d.reason), approvalId: str(d.approvalId), tool: str(t.tool)
+      };
+      return (d.trail as unknown[]).flatMap((step) => {
+        const st = str(obj(step).status)?.toLowerCase();
+        const type = `intent.${st}`;
+        if (!isAliciaEventType(type)) return [];
+        const ts = typeof obj(step).ts === 'number' ? obj(step).ts as number : now;
+        return [{ type, ts, source: 'governance' as const, taskId: str(d.taskId) ?? str(t.taskId), agentId: str(d.source), subject: str(d.message), ref: str(d.id), technical }];
+      });
+    }
     case 'cima-record': {
       if (d.kind === 'cima-assignment' && str(d.taskId) && isCimaPhase(d.phase)) return [fromAssignment(d as unknown as CimaAssignment)];
       if (d.kind === 'cima' && str(d.taskId) && isCimaPhase(d.phase) && Array.isArray(d.violations) && Array.isArray(d.evidence)) {

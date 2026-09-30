@@ -33,9 +33,9 @@ import { phaseForAgent } from '../shared/lapitaya/agents';
 import { recordBanner } from '../shared/lapitaya/cimaRuntime';
 import { LA_PITAYA_NAME } from '../shared/lapitaya/brand';
 import {
-  alicia, registerAlicia, createAliciaCompanion, fromRuntimeEvent, deriveCimaStatus, parseAliciaIntent,
-  ALICIA_ACTOR_ID
+  alicia, registerAlicia, createAliciaCompanion, fromRuntimeEvent, deriveCimaStatus, ALICIA_ACTOR_ID
 } from '../shared/lapitaya/alicia';
+import { IntentBoundary } from './intentBoundary';
 import { CircuitBreaker, type BreakerInput } from './breaker';
 import { CumulativeSampleGate, type UsageProvider } from './usage';
 import { MemoryManager } from './memory';
@@ -275,9 +275,19 @@ const lapitaya = new CimaRuntimeService({
     try { for (const ev of fromRuntimeEvent(e, Date.now())) alicia().notify(ev); } catch { /* never break governance */ }
   }
 });
-// La Pitaya Alicia v0.4 — the companion layer. She is lent READ-ONLY views of
-// the runtime plus ONE outbound channel (a hive request to El Inge, sent as
-// 'alicia'). No governance, CIMA or task-status write path is handed to her.
+// La Pitaya Alicia v0.4.1 — the intent boundary. The ONLY path from Alicia to
+// El Inge: every intent is validated and re-classified by the runtime, ACTIONs
+// get their risk/decision from CimaRuntimeService, and only then is a stamped
+// request delivered. It has no executor: execution stays with El Inge's own
+// tool calls, re-authorized at PreToolUse.
+const intentBoundary = new IntentBoundary({
+  runtime: lapitaya,
+  orchestratorId: () => hive.registry().godId ?? 'god',
+  deliver: (msg, from) => (hive.enabled() ? hive.send(msg, from).id : null)
+});
+// The companion layer. She is lent READ-ONLY views of the runtime plus ONE
+// outbound channel: the intent boundary above. No hive, governance, CIMA or
+// task-status write path is handed to her.
 const aliciaCompanion = createAliciaCompanion({
   ports: {
     cimaStatus: (taskId) => deriveCimaStatus({
@@ -293,13 +303,7 @@ const aliciaCompanion = createAliciaCompanion({
       return cwd ? { root: cwd, name: basename(cwd) } : null;
     },
     agentName: (id) => hive.registry().agents[id]?.name,
-    autonomyStage: lapitayaStage,
-    orchestratorId: () => hive.registry().godId ?? 'god',
-    sendToOrchestrator: (req) => {
-      if (!hive.enabled()) return { ok: false, error: 'hive disabled (no harnessHome)' };
-      hive.send(req, ALICIA_ACTOR_ID);
-      return { ok: true };
-    }
+    submitIntent: (intent) => intentBoundary.submit(intent)
   }
 });
 registerAlicia(aliciaCompanion);
@@ -3558,6 +3562,11 @@ ipcMain.handle('hive:messages', (_evt, opts: unknown) =>
 ipcMain.handle('hive:send', (_evt, partial: Partial<HiveMessage>, from: unknown) => {
   if (!hive.enabled()) return { ok: false, error: 'hive disabled (no harnessHome)' };
   const sender = typeof from === 'string' ? from : 'system';
+  // Alicia v0.4.1: messages under Alicia's id exist only through the intent
+  // boundary (validated, re-classified, governed). Nothing may forge one here.
+  if (sender.trim().toLowerCase() === ALICIA_ACTOR_ID) {
+    return { ok: false, error: 'messages from alicia go through the intent boundary (alicia:submit)' };
+  }
   const msg = hive.send(partial ?? {}, sender);
   // Count only what a PERSON sent. Every renderer surface that dispatches on a
   // human's behalf passes 'human' (Command Center dispatch, thread replies, ASK
@@ -4028,9 +4037,10 @@ ipcMain.handle('lapitaya:decide', (_evt, id: unknown, approve: unknown) => {
   if (typeof id !== 'string' || typeof approve !== 'boolean') return null;
   return lapitaya.decide(id, approve, 'human');
 });
-// Alicia v0.4: a read-only snapshot (rendered in the locales the UI passes,
-// since uiLocale/notificationLocale live in the renderer) and the request path
-// to El Inge. Neither can approve, decide, record CIMA or change a task.
+// Alicia: a read-only snapshot (rendered in the locales the UI passes, since
+// uiLocale/notificationLocale live in the renderer) and, since v0.4.1, the
+// intent path — through the runtime intent boundary. Neither can approve,
+// decide, record CIMA or change a task.
 ipcMain.handle('alicia:snapshot', (_evt, opts: unknown) => {
   const o = (opts && typeof opts === 'object' ? opts : {}) as Record<string, unknown>;
   const l = (o.locales && typeof o.locales === 'object' ? o.locales : {}) as Record<string, unknown>;
@@ -4041,10 +4051,18 @@ ipcMain.handle('alicia:snapshot', (_evt, opts: unknown) => {
   });
 });
 ipcMain.handle('alicia:markRead', (_evt, id: unknown) => typeof id === 'string' && aliciaCompanion.markRead(id));
-ipcMain.handle('alicia:request', (_evt, raw: unknown) => {
-  const intent = parseAliciaIntent(raw);
-  if (!intent) return { delivered: false, to: null, preview: null, executed: false, error: 'invalid intent' };
-  return aliciaCompanion.request(intent);
+ipcMain.handle('alicia:submit', (_evt, message: unknown, opts: unknown) => {
+  if (typeof message !== 'string' || !message.trim()) return { ok: false, error: 'message required' };
+  const o = (opts && typeof opts === 'object' ? opts : {}) as Record<string, unknown>;
+  const l = (o.locales && typeof o.locales === 'object' ? o.locales : {}) as Record<string, unknown>;
+  const pick = (v: unknown) => (typeof v === 'string' && v.length <= 20 ? v : undefined);
+  // The target is passed through untouched: the boundary validates it.
+  const result = aliciaCompanion.submit(message.slice(0, 4000), {
+    taskId: typeof o.taskId === 'string' ? o.taskId.slice(0, 200) : null,
+    target: o.target && typeof o.target === 'object' ? (o.target as Record<string, unknown>) : null,
+    locales: { uiLocale: pick(l.uiLocale), agentLocale: pick(l.agentLocale), notificationLocale: pick(l.notificationLocale) }
+  });
+  return { ok: true, ...result };
 });
 ipcMain.handle('lapitaya:ledger', (_evt, limit: unknown) =>
   lapitaya.ledger(typeof limit === 'number' && limit > 0 ? Math.min(limit, 5000) : 200));

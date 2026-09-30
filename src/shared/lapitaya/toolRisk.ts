@@ -57,7 +57,7 @@ const INFRA_PATH = /(^|\/)(\.github\/workflows\/|terraform\/|infra\/|k8s\/|kuber
 const AUTH_PATH = /(^|\/)(auth|authentication|authorization|permissions?|rbac|acl)(\/|\.|-|_)/;
 /** Files that implement governance itself. An agent editing these could turn
  *  its own guard off, so they are HIGH no matter who asks. */
-const GOVERNANCE_PATH = /(^|\/)(\.claude\/settings[^/]*\.json|src\/shared\/lapitaya\/(autonomy|governance|toolrisk|cimaruntime|providergovernance)\.ts|src\/main\/(hooks|cimaruntime)\.ts|src\/shared\/agentprovider\.ts)$/;
+const GOVERNANCE_PATH = /(^|\/)(\.claude\/settings[^/]*\.json|src\/shared\/lapitaya\/(autonomy|governance|toolrisk|cimaruntime|providergovernance|intent)\.ts|src\/main\/(hooks|cimaruntime|intentboundary)\.ts|src\/shared\/agentprovider\.ts)$/;
 /** Inside the hive: the harness-owned files an agent must not rewrite. */
 const HIVE_GOVERNANCE = /(^|\/)(bin\/|lapitaya\/|registry\.json$|agents\/[^/]+\/(settings\.json|identity\.md|cursor\.json)$)/;
 const DOC_PATH = /\.(md|mdx|txt|rst|adoc)$/;
@@ -120,7 +120,7 @@ const LOW_SHELL: Array<[RegExp, ActionCategory]> = [
 ];
 
 /** Governance state files, as a shell command would name them. */
-const GOVERNANCE_STATE_REF = /(tasks\.json|registry\.json|cima-ledger\.jsonl|traces\.jsonl|approvals\.json|hive[\\/]lapitaya[\\/]|agents[\\/][^\\/\s"']+[\\/]settings\.json|\.claude[\\/]settings[^\\/\s"']*\.json|(cth|agy|gemini|grok)-hook|lapitaya[\\/](autonomy|governance|toolRisk|cimaRuntime|providerGovernance)\.ts|main[\\/](hooks|cimaRuntime)\.ts)/i;
+const GOVERNANCE_STATE_REF = /(tasks\.json|registry\.json|cima-ledger\.jsonl|traces\.jsonl|approvals\.json|hive[\\/]lapitaya[\\/]|agents[\\/][^\\/\s"']+[\\/]settings\.json|\.claude[\\/]settings[^\\/\s"']*\.json|(cth|agy|gemini|grok)-hook|lapitaya[\\/](autonomy|governance|toolRisk|cimaRuntime|providerGovernance|intent)\.ts|main[\\/](hooks|cimaRuntime|intentBoundary)\.ts)/i;
 
 /** Split a shell command into its sequential segments (&&, ||, ;, |, newlines). */
 export function shellSegments(command: string): string[] {

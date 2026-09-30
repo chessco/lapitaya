@@ -37,6 +37,7 @@ import {
 /** Tools whose write to the task ledger is judged by the decision gate. */
 const TASK_WRITE_TOOLS: ReadonlySet<string> = new Set(['Write', 'Edit', 'MultiEdit']);
 import type { CimaPhase } from '../shared/lapitaya/cima';
+import type { IntentRecord } from '../shared/lapitaya/intent';
 
 /** A governance decision as it lands in the ledger. */
 export interface GovernanceRecord {
@@ -57,7 +58,7 @@ export interface GovernanceRecord {
   approvalId?: string;
 }
 
-export type LedgerEntry = CimaRecord | CimaAssignment | GovernanceRecord;
+export type LedgerEntry = CimaRecord | CimaAssignment | GovernanceRecord | IntentRecord;
 
 export interface CimaRuntimeDeps {
   hiveRoot: () => string | null;
@@ -68,7 +69,7 @@ export interface CimaRuntimeDeps {
   /** The task an agent is currently on (tasks.json: assignee + status doing). */
   taskOf?: (agentId: string) => string | null;
   /** Push a governance/CIMA event to the UI. */
-  onEvent?: (e: { type: 'approval-request' | 'approval-decided' | 'supervised' | 'cima-record' | 'completion-blocked'; data: unknown }) => void;
+  onEvent?: (e: { type: 'approval-request' | 'approval-decided' | 'supervised' | 'cima-record' | 'completion-blocked' | 'intent'; data: unknown }) => void;
   /** The provider an agent runs on, for the ledger. */
   providerOf?: (agentId: string) => string | null;
   /** Test seam: replaces the risk classifier. */
@@ -219,23 +220,7 @@ export class CimaRuntimeService {
       }
     }
     if (auth.decision === 'HUMAN_APPROVAL_REQUIRED') {
-      // One pending request per distinct call — a retry loop must not spam the human.
-      let pending = this.approvals.find((x) => x.status === 'pending' && x.agentId === agentId && x.fingerprint === auth.fingerprint);
-      if (!pending) {
-        pending = {
-          id: this.nextId('apr'),
-          agentId, tool,
-          fingerprint: auth.fingerprint,
-          category: auth.category,
-          risk: auth.risk,
-          summary: auth.summary,
-          status: 'pending',
-          createdAt: this.now()
-        };
-        this.approvals.push(pending);
-        this.saveApprovals();
-        this.deps.onEvent?.({ type: 'approval-request', data: pending });
-      }
+      const pending = this.requestApproval(agentId, tool, auth);
       auth.approvalId = pending.id;
       auth.reason = `${auth.reason} (approval ${pending.id})`;
     }
@@ -253,6 +238,77 @@ export class CimaRuntimeService {
       return denyAuthorization('LEDGER_UNAVAILABLE', 'the governance ledger could not record this decision', agentId, tool, input);
     }
     return auth;
+  }
+
+  /** The pending human-approval request for one exact call by one agent. One
+   *  pending request per distinct call — a retry loop must not spam the human. */
+  private requestApproval(agentId: string, tool: string, auth: Authorization): Approval {
+    let pending = this.approvals.find((x) => x.status === 'pending' && x.agentId === agentId && x.fingerprint === auth.fingerprint);
+    if (!pending) {
+      pending = {
+        id: this.nextId('apr'),
+        agentId, tool,
+        fingerprint: auth.fingerprint,
+        category: auth.category,
+        risk: auth.risk,
+        summary: auth.summary,
+        status: 'pending',
+        createdAt: this.now()
+      };
+      this.approvals.push(pending);
+      this.saveApprovals();
+      this.deps.onEvent?.({ type: 'approval-request', data: pending });
+    }
+    return pending;
+  }
+
+  // ─── intent boundary (v0.4.1) ────────────────────────────────────────────
+
+  /** The risk classification the runtime applies to a call (with the hive context). */
+  classifyCall(tool: string, input: unknown): ToolRisk {
+    return (this.deps.classify ?? classifyToolCall)(tool, input, { hiveRoot: this.deps.hiveRoot() });
+  }
+
+  /**
+   * What governance says about a PROPOSED call by `executorId`, without running
+   * it: same classifier, autonomy stage and decision-gate projection as
+   * authorize(). Never consumes an approval and writes no governance record
+   * (the intent record carries the decision). With `raiseApproval`, a
+   * HUMAN_APPROVAL_REQUIRED call raises the same pending approval authorize()
+   * would, so the human approves the exact call the executor will make.
+   */
+  evaluateProposedCall(executorId: string, tool: string, input: unknown, opts: {
+    raiseApproval?: boolean;
+    classify?: (tool: string, input: unknown, ctx?: ToolCallContext) => ToolRisk;
+  } = {}): Authorization {
+    const root = this.deps.hiveRoot();
+    if (!root) return denyAuthorization('GOVERNANCE_STATE_UNAVAILABLE', 'no hive root', executorId || '?', tool || '?', input);
+    if (!executorId || !tool) return denyAuthorization('GOVERNANCE_STATE_UNAVAILABLE', 'missing executor or tool', executorId || '?', tool || '?', input);
+    try { this.load(); } catch (e) {
+      return denyAuthorization('GOVERNANCE_STATE_UNAVAILABLE', `cannot load governance state: ${String(e).slice(0, 120)}`, executorId, tool, input);
+    }
+    let auth = authorizeToolCall({
+      agentId: executorId, tool, input,
+      stage: this.deps.stage?.() ?? DEFAULT_AUTONOMY_STAGE,
+      approvals: [],
+      ctx: { hiveRoot: root },
+      classify: opts.classify ?? this.deps.classify
+    });
+    if (isExecutable(auth.decision) && TASK_WRITE_TOOLS.has(tool)) {
+      const gate = this.taskLedgerWriteGate(root, tool, input);
+      if (gate) auth = denyAuthorization('DECISION_GATE', gate, executorId, tool, input);
+    }
+    if (auth.decision === 'HUMAN_APPROVAL_REQUIRED' && opts.raiseApproval) {
+      auth.approvalId = this.requestApproval(executorId, tool, auth).id;
+    }
+    return auth;
+  }
+
+  /** Append one intent record to the ledger and publish it on the event stream. */
+  recordIntent(rec: IntentRecord): boolean {
+    const ok = this.append('cima-ledger.jsonl', rec);
+    this.deps.onEvent?.({ type: 'intent', data: rec });
+    return ok;
   }
 
   /** Append one governance decision to the ledger. Returns false if it could not be written. */

@@ -23,8 +23,10 @@ humano ──▶ Alicia ──intent──▶ solicitud en el hive ──▶ El 
 - `status.ts`, `evidence.ts`: `CimaStatus` derivado del runtime y evidencia citada textual.
 - `messages.ts`, `notifications.ts`: texto localizado alrededor de identificadores intactos.
 - `context.ts`, `presence.ts`: `AliciaContext` (derivado, mínimo, auditable) y `AliciaPresence`.
-- `intent.ts`: la única salida. `prepare` y `request` se convierten en una solicitud del hive a El
-  Inge, enviada como `alicia`.
+- `intent.ts`: la única salida (v0.4.1). Construye un `AliciaIntent` y lo entrega al *intent
+  boundary* del runtime (`src/main/intentBoundary.ts`), que lo reclasifica, aplica la gobernanza
+  de CIMA y solo entonces lo envía a El Inge. Ver
+  [LA_PITAYA_ALICIA_INTENT_04_1.md](../LA_PITAYA_ALICIA_INTENT_04_1.md).
 - `conversation.ts`, `provider.ts`: solo interfaces.
 - `companion.ts`: estado, preferencias y los *ports* que el host le presta.
 

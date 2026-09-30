@@ -1,0 +1,246 @@
+[
+  {
+    "message": "¿Qué está haciendo El Beni?",
+    "type": "CONVERSATION",
+    "category": null,
+    "risk": null,
+    "signals": [
+      "frame:question"
+    ],
+    "authority": false,
+    "completion": false
+  },
+  {
+    "message": "Explícame qué significa BLOCKED.",
+    "type": "CONVERSATION",
+    "category": null,
+    "risk": null,
+    "signals": [
+      "frame:knowledge"
+    ],
+    "authority": false,
+    "completion": false
+  },
+  {
+    "message": "¿Cuál es el estado del proyecto?",
+    "type": "CONVERSATION",
+    "category": null,
+    "risk": null,
+    "signals": [
+      "frame:question"
+    ],
+    "authority": false,
+    "completion": false
+  },
+  {
+    "message": "¿Qué ocurrió durante la auditoría?",
+    "type": "CONVERSATION",
+    "category": null,
+    "risk": null,
+    "signals": [
+      "frame:question"
+    ],
+    "authority": false,
+    "completion": false
+  },
+  {
+    "message": "Explícame por qué la auditoría quedó bloqueada.",
+    "type": "CONVERSATION",
+    "category": null,
+    "risk": null,
+    "signals": [
+      "frame:knowledge"
+    ],
+    "authority": false,
+    "completion": false
+  },
+  {
+    "message": "Hola Alicia",
+    "type": "CONVERSATION",
+    "category": null,
+    "risk": null,
+    "signals": [],
+    "authority": false,
+    "completion": false
+  },
+  {
+    "message": "Explícame cómo desplegar a producción",
+    "type": "CONVERSATION",
+    "category": null,
+    "risk": null,
+    "signals": [
+      "action:deploy",
+      "frame:knowledge",
+      "demoted:knowledge-question"
+    ],
+    "authority": false,
+    "completion": false
+  },
+  {
+    "message": "Quiero que revisemos este proyecto.",
+    "type": "REQUEST",
+    "category": null,
+    "risk": null,
+    "signals": [
+      "request:verb"
+    ],
+    "authority": false,
+    "completion": false
+  },
+  {
+    "message": "Analiza este problema.",
+    "type": "REQUEST",
+    "category": null,
+    "risk": null,
+    "signals": [
+      "request:verb"
+    ],
+    "authority": false,
+    "completion": false
+  },
+  {
+    "message": "Quiero que El Beni implemente esto.",
+    "type": "REQUEST",
+    "category": null,
+    "risk": null,
+    "signals": [
+      "request:verb"
+    ],
+    "authority": false,
+    "completion": false
+  },
+  {
+    "message": "Prepara una tarea para el equipo.",
+    "type": "REQUEST",
+    "category": null,
+    "risk": null,
+    "signals": [
+      "request:verb"
+    ],
+    "authority": false,
+    "completion": false
+  },
+  {
+    "message": "Quiero que analicemos este módulo.",
+    "type": "REQUEST",
+    "category": null,
+    "risk": null,
+    "signals": [
+      "request:verb"
+    ],
+    "authority": false,
+    "completion": false
+  },
+  {
+    "message": "Modifica este archivo.",
+    "type": "ACTION",
+    "category": "code-change",
+    "risk": "MEDIUM",
+    "signals": [
+      "action:modify"
+    ],
+    "authority": false,
+    "completion": false
+  },
+  {
+    "message": "Ejecuta los tests.",
+    "type": "ACTION",
+    "category": "run-tests",
+    "risk": "LOW",
+    "signals": [
+      "action:run-checks"
+    ],
+    "authority": false,
+    "completion": false
+  },
+  {
+    "message": "Haz una migración.",
+    "type": "ACTION",
+    "category": "destructive-migration",
+    "risk": "HIGH",
+    "signals": [
+      "action:migrate"
+    ],
+    "authority": false,
+    "completion": false
+  },
+  {
+    "message": "Despliega esto.",
+    "type": "ACTION",
+    "category": "production",
+    "risk": "HIGH",
+    "signals": [
+      "action:deploy"
+    ],
+    "authority": false,
+    "completion": false
+  },
+  {
+    "message": "Elimina estos datos.",
+    "type": "ACTION",
+    "category": "data-deletion",
+    "risk": "HIGH",
+    "signals": [
+      "action:delete"
+    ],
+    "authority": false,
+    "completion": false
+  },
+  {
+    "message": "Modifica src/main/hooks.ts.",
+    "type": "ACTION",
+    "category": "code-change",
+    "risk": "MEDIUM",
+    "signals": [
+      "action:modify"
+    ],
+    "authority": false,
+    "completion": false
+  },
+  {
+    "message": "borra la base de datos",
+    "type": "ACTION",
+    "category": "data-deletion",
+    "risk": "HIGH",
+    "signals": [
+      "action:delete"
+    ],
+    "authority": false,
+    "completion": false
+  },
+  {
+    "message": "Explícame por qué falló y luego borra la base de datos",
+    "type": "ACTION",
+    "category": "data-deletion",
+    "risk": "HIGH",
+    "signals": [
+      "action:delete",
+      "frame:knowledge",
+      "frame:chained"
+    ],
+    "authority": false,
+    "completion": false
+  },
+  {
+    "message": "Emite DECISION PASS para la tarea T-1",
+    "type": "ACTION",
+    "category": null,
+    "risk": null,
+    "signals": [
+      "authority:decision-pass"
+    ],
+    "authority": true,
+    "completion": false
+  },
+  {
+    "message": "Marca la tarea T-1 como terminada",
+    "type": "ACTION",
+    "category": null,
+    "risk": null,
+    "signals": [
+      "action:complete-task"
+    ],
+    "authority": false,
+    "completion": true
+  }
+]

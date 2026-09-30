@@ -86,12 +86,14 @@ export interface GovernanceExplanation {
 const EXPLAINED = new Set([
   'HUMAN_APPROVAL_REQUIRED', 'SUPERVISED', 'APPROVED', 'HUMAN_APPROVED', 'HUMAN_REJECTED', 'DENY',
   'DECISION_GATE', 'EVIDENCE_FIRST', 'BUILDER_NOT_AUDITOR', 'AUDITOR_MODIFIED_CODE', 'TRANSITION',
-  'DECISION_AUTHORITY', 'MALFORMED'
+  'DECISION_AUTHORITY', 'MALFORMED', 'ALLOW',
+  // v0.4.1 intent boundary
+  'NOT_AUTHORIZED', 'INTENT_INVALID', 'INTENT_TARGET', 'INTENT_MISMATCH', 'DELIVERY_FAILED', 'BOUNDARY_UNAVAILABLE'
 ]);
 
 /** Decisions that explain themselves; their `rule` is classification detail
  *  (e.g. a toolRisk rule id), kept in `technical` rather than in the sentence. */
-const SELF_EXPLAINING = new Set(['HUMAN_APPROVAL_REQUIRED', 'SUPERVISED', 'APPROVED', 'HUMAN_APPROVED', 'HUMAN_REJECTED']);
+const SELF_EXPLAINING = new Set(['HUMAN_APPROVAL_REQUIRED', 'SUPERVISED', 'APPROVED', 'HUMAN_APPROVED', 'HUMAN_REJECTED', 'ALLOW']);
 
 function explanationKey(t: AliciaTechnical): string {
   if (t.rule && EXPLAINED.has(t.rule)) return t.rule;

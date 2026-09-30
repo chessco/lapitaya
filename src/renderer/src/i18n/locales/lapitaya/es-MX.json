@@ -83,6 +83,11 @@
       "approval_denied": { "title": "Aprobación rechazada", "message": "Rechazaste la acción de {{agent}}. No se ejecutará." },
       "audit_completed": { "title": "Auditoría terminada", "message": "{{agent}} terminó la auditoría: {{verdict}}." },
       "workflow_completed": { "title": "Trabajo aceptado", "message": "La tarea {{task}} tiene DECISION PASS registrada por el runtime." },
+      "intent_received": { "title": "Solicitud recibida", "message": "El runtime recibió tu solicitud." },
+      "intent_classified": { "title": "Solicitud clasificada", "message": "El runtime clasificó tu solicitud." },
+      "intent_forwarded": { "title": "Enviada a El Inge", "message": "Tu solicitud llegó a El Inge como propuesta; no se ejecuta nada hasta que tú confirmes." },
+      "intent_governed": { "title": "Acción gobernada por CIMA", "message": "CIMA evaluó tu acción: riesgo {{risk}}, decisión {{decision}}. {{explanation}}" },
+      "intent_blocked": { "title": "Solicitud bloqueada", "message": "Tu solicitud no se envió: CIMA la bloqueó ({{rule}}). {{explanation}}" },
       "error": { "title": "Error", "message": "Ocurrió un error. Consulta el detalle técnico." }
     },
     "explain": {
@@ -99,6 +104,13 @@
       "TRANSITION": "Faltan fases previas de CIMA para aceptar este paso.",
       "DECISION_AUTHORITY": "Solo El Inge o el humano pueden aceptar el trabajo.",
       "MALFORMED": "El reporte CIMA no tiene el formato requerido.",
+      "ALLOW": "Es de riesgo bajo: se permite automáticamente y se vuelve a autorizar al ejecutarse.",
+      "NOT_AUTHORIZED": "Alicia no tiene autoridad para aprobar ni para emitir una DECISION; eso corresponde a ti y a El Inge.",
+      "INTENT_INVALID": "La solicitud estaba incompleta o mal formada, así que no se procesó.",
+      "INTENT_TARGET": "Alicia solo puede dirigir solicitudes a El Inge, no a otros agentes ni a herramientas.",
+      "INTENT_MISMATCH": "Lo que pediste implica más riesgo que la acción propuesta, así que CIMA no la envió.",
+      "DELIVERY_FAILED": "No se pudo entregar la solicitud a El Inge.",
+      "BOUNDARY_UNAVAILABLE": "El control de solicitudes no respondió; no se hizo nada.",
       "UNKNOWN": "La regla {{rule}} lo impidió. Consulta el detalle técnico."
     },
     "evidence": {
@@ -106,6 +118,15 @@
       "recorded": "{{agent}} registró {{phase}}: {{verdict}}",
       "verified": "{{verified}}/{{total}} evidencias verificadas por el harness",
       "none": "Sin evidencia registrada"
+    },
+    "reply": {
+      "task": "Estoy aquí. La tarea {{task}} va en {{phase}} ({{phaseLabel}}); tienes {{unread}} avisos sin leer.",
+      "idle": "Estoy aquí. No hay una tarea activa; tienes {{unread}} avisos sin leer."
+    },
+    "intentTypes": {
+      "CONVERSATION": "Conversación: Alicia responde, no se ejecuta nada.",
+      "REQUEST": "Solicitud: El Inge prepara una propuesta y espera tu confirmación.",
+      "ACTION": "Acción: pasa por CIMA (riesgo, autonomía y autorización) antes de ejecutarse."
     },
     "presence": {
       "IDLE": "En espera",

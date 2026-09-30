@@ -1,5 +1,5 @@
 /**
- * Conversation boundary — INTERFACES ONLY in v0.4.
+ * Conversation boundary — interfaces plus one deterministic reply (v0.4.1).
  *
  * Fixes the shape of a turn so a future implementation (and any provider) plugs
  * in without touching CIMA, the hive or the UI. Explicitly NOT here: memory,
@@ -7,14 +7,15 @@
  *
  * Two guarantees are defined now because they are about governance, not about
  * conversation quality:
- *   - suggested actions are AliciaIntents: they go through toOrchestratorRequest
- *     and governance like anything else, never straight to a tool;
+ *   - suggested actions are AliciaIntents: they go through the runtime intent
+ *     boundary and governance like anything else, never straight to a tool;
  *   - citations must point at evidence the runtime already recorded
  *     (groundedCitations) — a response cannot bring its own evidence.
  */
 
 import type { AliciaContext } from './context';
-import type { AliciaIntent } from './intent';
+import type { AliciaIntent } from '../intent';
+import { aliciaLocale, aliciaText, phaseLabel } from './messages';
 
 export interface AliciaUserMessage {
   id: string;
@@ -52,6 +53,32 @@ export interface AliciaTurn {
 /** What a conversation implementation will provide. Not implemented in v0.4. */
 export interface AliciaConversation {
   respond(message: AliciaUserMessage, context: AliciaContext): Promise<AliciaAssistantResponse>;
+}
+
+/** Alicia's own answer to a CONVERSATION intent. */
+export interface AliciaReply {
+  text: string;
+  locale: string;
+  citations: readonly AliciaCitation[];
+}
+
+/**
+ * The v0.4.1 conversational answer: a deterministic summary of the derived
+ * context, in uiLocale — no model, no ledger, no El Inge. A provider-backed
+ * AliciaConversation replaces it later without changing the boundary.
+ */
+export function statusReply(context: AliciaContext, locale: string | null | undefined): AliciaReply {
+  const loc = aliciaLocale(locale);
+  const task = context.currentTask;
+  const text = task
+    ? aliciaText(loc, 'alicia.reply.task', {
+        task: task.id,
+        phase: context.currentCimaPhase ?? '-',
+        phaseLabel: context.currentCimaPhase ? phaseLabel(loc, context.currentCimaPhase) : '-',
+        unread: context.notifications.unread
+      })
+    : aliciaText(loc, 'alicia.reply.idle', { unread: context.notifications.unread });
+  return { text, locale: loc, citations: task ? [{ kind: 'task', ref: task.id, taskId: task.id }] : [] };
 }
 
 /** Keep only citations whose ref is known to the runtime-backed context. */

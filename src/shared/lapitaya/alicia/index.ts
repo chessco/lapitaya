@@ -2,7 +2,7 @@
  * Alicia — La Pitaya's transversal AI companion layer (v0.4: architecture).
  *
  *   HUMAN ──▶ ALICIA ── context ──▶ explanation / notifications / presence
- *                  └── intent ──▶ EL INGE ──▶ CIMA ──▶ agents / governance
+ *                  └── AliciaIntent ──▶ runtime intent boundary ──▶ EL INGE ──▶ CIMA ──▶ agents / governance
  *
  * Alicia is NOT a CIMA agent (no phase, no verdict, no DECISION authority), NOT
  * the orchestrator (El Inge is) and NOT a governance authority. She observes
@@ -18,7 +18,7 @@
  *   notifications.ts  AliciaNotification
  *   presence.ts       AliciaPresence (model only)
  *   context.ts        AliciaContext (derived, minimal, scoped, auditable)
- *   intent.ts         the only way out: intents → a request to El Inge
+ *   intent.ts         builds the AliciaIntent handed to the runtime boundary (v0.4.1)
  *   conversation.ts   conversation boundary (interfaces)
  *   provider.ts       model provider boundary (interface)
  *   companion.ts      companion state, preferences and the ports a host lends

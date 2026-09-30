@@ -9,4 +9,5 @@ export * from './cima';
 export * from './autonomy';
 export * from './agents';
 export * from './cimaBriefing';
+export * from './intent';
 export * from './alicia';

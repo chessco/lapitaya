@@ -1,0 +1,130 @@
+{
+  "INTENT-01 CONVERSATION \"Hola Alicia\"": {
+    "outcome": {
+      "status": "COMPLETED",
+      "type": "CONVERSATION",
+      "claimedType": "CONVERSATION",
+      "reclassified": false,
+      "risk": null,
+      "claimedRisk": null,
+      "decision": "NONE",
+      "rule": "CONVERSATION",
+      "route": "producer",
+      "signals": [],
+      "executed": false
+    },
+    "reply": {
+      "text": "Estoy aquí. No hay una tarea activa; tienes 0 avisos sin leer.",
+      "locale": "es-MX",
+      "citations": []
+    },
+    "ledgerLinesAdded": 0,
+    "approvals": 0
+  },
+  "INTENT-02 REQUEST": {
+    "outcome": {
+      "status": "FORWARDED",
+      "type": "REQUEST",
+      "claimedType": "REQUEST",
+      "reclassified": false,
+      "risk": null,
+      "claimedRisk": null,
+      "decision": "PROPOSAL_ONLY",
+      "rule": "INTENT_REQUEST",
+      "route": "orchestrator",
+      "signals": [
+        "request:verb"
+      ],
+      "executed": false
+    },
+    "elIngeMessage": "[Intent boundary] intent int-mywpiww0-2 · REQUEST · risk - · decision PROPOSAL_ONLY · rule INTENT_REQUEST\nPROPOSAL ONLY: reply to the human with a plan or proposal and WAIT for their go-ahead. Do not execute anything for this request.\n\nHuman request (verbatim, relayed by alicia):\n> Quiero que revisemos este proyecto.\n\nalicia has no authority to approve, decide or execute. Route this through CIMA as usual."
+  },
+  "INTENT-03 ACTION LOW": {
+    "outcome": {
+      "status": "GOVERNED",
+      "type": "ACTION",
+      "claimedType": "ACTION",
+      "reclassified": false,
+      "risk": "LOW",
+      "claimedRisk": null,
+      "decision": "ALLOW",
+      "rule": "shell:low",
+      "route": "orchestrator",
+      "signals": [
+        "action:run-checks",
+        "target:tool"
+      ],
+      "executed": false
+    },
+    "elInge_PreToolUse": "ALLOW"
+  },
+  "INTENT-04 ACTION MEDIUM": {
+    "outcome": {
+      "status": "GOVERNED",
+      "type": "ACTION",
+      "claimedType": "ACTION",
+      "reclassified": false,
+      "risk": "MEDIUM",
+      "claimedRisk": null,
+      "decision": "SUPERVISED",
+      "rule": "code-path",
+      "route": "orchestrator",
+      "signals": [
+        "action:modify",
+        "target:tool"
+      ],
+      "executed": false
+    },
+    "elInge_PreToolUse": "SUPERVISED"
+  },
+  "INTENT-05 ACTION HIGH": {
+    "outcome": {
+      "status": "GOVERNED",
+      "type": "ACTION",
+      "claimedType": "ACTION",
+      "reclassified": false,
+      "risk": "HIGH",
+      "claimedRisk": null,
+      "decision": "HUMAN_APPROVAL_REQUIRED",
+      "rule": "shell:recursive-delete",
+      "route": "orchestrator",
+      "approvalId": "apr-mywpiz7c-1",
+      "signals": [
+        "action:delete",
+        "target:tool"
+      ],
+      "executed": false
+    },
+    "aliciaExplains": {
+      "type": "APPROVAL_REQUIRED",
+      "title": "Se requiere tu aprobación",
+      "message": "Se requiere aprobación humana. Esta acción requiere tu aprobación porque está clasificada como riesgo alto.",
+      "action": {
+        "kind": "open-approvals",
+        "ref": "apr-mywpiz7c-1",
+        "humanOnly": true
+      }
+    },
+    "approvalFlow": [
+      {
+        "step": "El Inge identical call, before approval",
+        "decision": "HUMAN_APPROVAL_REQUIRED",
+        "permission": "deny"
+      },
+      {
+        "step": "human approves via lapitaya.decide",
+        "approvalId": "apr-mywpiz7c-1"
+      },
+      {
+        "step": "El Inge identical call, after approval",
+        "decision": "APPROVED",
+        "permission": "allow"
+      },
+      {
+        "step": "El Inge retries",
+        "decision": "HUMAN_APPROVAL_REQUIRED",
+        "permission": "deny"
+      }
+    ]
+  }
+}

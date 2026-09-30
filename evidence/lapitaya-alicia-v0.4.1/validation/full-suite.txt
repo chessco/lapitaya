@@ -1,0 +1,33 @@
+# npm run test:focused (package.json has no 'test' script)
+ℹ tests 980
+ℹ suites 0
+ℹ pass 948
+ℹ fail 21
+ℹ cancelled 0
+ℹ skipped 11
+ℹ todo 0
+
+# 21 failures: identical set to the recorded baseline (evidence/lapitaya-cima-runtime/test/failures.txt), all PRE_EXISTING
+# NEW_REGRESSION: 0 | ENVIRONMENT (this run): 0 | fixed vs baseline: 0
+# Note: this run preceded the one extra assertion added to INTENT-NEG-02; that suite was re-run alone (alicia-v041-suite.txt).
+✖ Command Center sets and clears one cap through the atomic IPC
+✖ a dangling symlink cannot be used to create a file outside the workspace
+✖ a final-component symlink cannot be read as bytes
+✖ a final-component symlink cannot be read as text
+✖ a final-component symlink cannot be written through
+✖ an in-workspace symlink to an in-workspace target is followed, not refused
+✖ an intermediate directory symlink cannot be read through
+✖ consecutive agent caps survive an interleaved config update
+✖ does not follow the dependency symlink when removing a worktree
+✖ does not remove a worktree node_modules link to another directory
+✖ leaves a dangling worktree dependency symlink untouched
+✖ lexical traversal out of the root is still rejected
+✖ listDir cannot list a directory outside the workspace
+✖ ordinary in-workspace reads and writes still succeed
+✖ removes only the linked dependencies before checking worktree status
+✖ reports a failed link without throwing
+✖ steer is counted at the IPC seam, not inside control.steer
+✖ the composer counts its own submit, not the shared enqueue action
+✖ the git diff path check refuses a symlink escape
+✖ the remote file and the baked file agree on every model
+✖ turning it off is a real undo, not a terminal rebuild

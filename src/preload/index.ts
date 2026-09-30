@@ -16,7 +16,8 @@ import type { HookEvent } from '../shared/hookEvents';
 import type { Approval } from '../shared/lapitaya/governance';
 import type { LedgerEntry } from '../main/cimaRuntime';
 import type { LocaleSettings } from '../shared/lapitaya/locales';
-import type { AliciaCompanionState, AliciaIntent, AliciaRequestResult } from '../shared/lapitaya/alicia';
+import type { AliciaCompanionState, AliciaSubmitResult } from '../shared/lapitaya/alicia';
+import type { IntentTarget } from '../shared/lapitaya/intent';
 export type { HookEvent } from '../shared/hookEvents';
 import type { LocalSkill, CatalogSkill } from '../main/skills';
 export type { LocalSkill, CatalogSkill } from '../main/skills';
@@ -1090,13 +1091,19 @@ const api = {
     return () => ipcRenderer.removeListener('lapitaya:governance', listener);
   },
 
-  // ─── Alicia v0.4 (companion layer: observe, explain, relay to El Inge) ────
+  // ─── Alicia (companion layer: observe, explain, hand intents to the runtime) ──
   /** Alicia's context, notifications and presence, rendered in the given locales. */
   aliciaSnapshot: (opts?: { locales?: Partial<LocaleSettings>; focusTaskId?: string | null }): Promise<AliciaCompanionState> =>
     ipcRenderer.invoke('alicia:snapshot', opts ?? {}),
   aliciaMarkRead: (id: string): Promise<boolean> => ipcRenderer.invoke('alicia:markRead', id),
-  /** Relay an intent to El Inge. Never executes, approves or decides anything. */
-  aliciaRequest: (intent: AliciaIntent): Promise<AliciaRequestResult> => ipcRenderer.invoke('alicia:request', intent),
+  /** What the human said → AliciaIntent → runtime intent boundary. Conversation is
+   *  answered by Alicia; requests and actions are governed by CIMA before El Inge
+   *  sees them. Never executes, approves or decides anything. */
+  aliciaSubmit: (
+    message: string,
+    opts?: { taskId?: string | null; target?: IntentTarget | null; locales?: Partial<LocaleSettings> }
+  ): Promise<({ ok: true } & AliciaSubmitResult) | { ok: false; error: string }> =>
+    ipcRenderer.invoke('alicia:submit', message, opts ?? {}),
 
   // ─── Task kanban (hive/tasks.json) ───────────────────────────────────────
   /** Atomically append one card against the latest main-process ledger. */

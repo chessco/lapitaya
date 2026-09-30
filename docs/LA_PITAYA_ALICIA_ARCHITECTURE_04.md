@@ -6,6 +6,11 @@
 **Date**: September 29, 2026
 **Evidence**: [`evidence/lapitaya-alicia-v0.4/`](../evidence/lapitaya-alicia-v0.4/)
 
+> **Superseded in part by v0.4.1** ([LA_PITAYA_ALICIA_INTENT_04_1.md](LA_PITAYA_ALICIA_INTENT_04_1.md)):
+> Alicia's outbound path (§4, §10) is no longer a direct hive request. Every intent now goes
+> through the runtime intent boundary, and the governance preview moved from Alicia's layer to
+> the runtime.
+
 ---
 
 ## 1. Purpose

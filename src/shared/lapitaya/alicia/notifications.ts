@@ -62,11 +62,20 @@ const KIND: Readonly<Record<AliciaEventType, [AliciaNotificationType, AliciaSeve
   'approval.denied': ['WARNING', 'low'],
   'audit.completed': ['SUCCESS', 'info'],
   'workflow.completed': ['SUCCESS', 'info'],
+  'intent.received': ['INFO', 'info'],
+  'intent.classified': ['INFO', 'info'],
+  'intent.forwarded': ['INFO', 'info'],
+  'intent.governed': ['INFO', 'low'],
+  'intent.blocked': ['BLOCKED', 'high'],
   error: ['ERROR', 'high']
 };
 
 function classify(e: AliciaEvent): [AliciaNotificationType, AliciaSeverity] {
   const base = KIND[e.type];
+  if (e.type === 'intent.governed') {
+    if (e.technical?.decision === 'HUMAN_APPROVAL_REQUIRED') return ['APPROVAL_REQUIRED', 'high'];
+    if (e.technical?.decision === 'SUPERVISED') return ['INFO', 'low'];
+  }
   if ((e.type === 'cima.phase.changed' || e.type === 'audit.completed') && e.verdict && e.verdict !== 'PASS') {
     return e.verdict === 'BLOCKED' ? ['BLOCKED', 'medium'] : ['WARNING', 'medium'];
   }
@@ -84,7 +93,8 @@ export function notificationFor(
   const { locale } = opts;
   const [type, severity] = classify(event);
   const technical = Object.freeze({ ...(event.technical ?? {}) });
-  const governed = event.type.startsWith('governance.') || event.type.startsWith('approval.');
+  const governed = event.type.startsWith('governance.') || event.type.startsWith('approval.')
+    || event.type === 'intent.governed' || event.type === 'intent.blocked';
   const explanation = governed ? explainGovernance(technical, locale).text : '';
   const key = `alicia.notifications.${event.type.replace(/\./g, '_')}`;
   const vars = {
@@ -95,10 +105,13 @@ export function notificationFor(
     phaseLabel: event.phase ? phaseLabel(locale, event.phase) : '',
     verdict: event.verdict ?? '',
     rule: technical.rule ?? technical.decision ?? '',
+    risk: technical.risk ?? '-',
+    decision: technical.decision ?? '',
+    request: event.subject ?? '',
     explanation
   };
   let action: AliciaNotificationAction | null = null;
-  if (event.type === 'approval.required' && technical.approvalId) action = { kind: 'open-approvals', ref: technical.approvalId, humanOnly: true };
+  if ((event.type === 'approval.required' || event.type === 'intent.governed') && technical.approvalId) action = { kind: 'open-approvals', ref: technical.approvalId, humanOnly: true };
   else if (event.taskId) action = { kind: 'open-task', ref: event.taskId, humanOnly: true };
   return {
     id: opts.id,

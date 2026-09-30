@@ -3,108 +3,19 @@
  * La Pitaya Alicia v0.4 — companion architecture tests.
  *
  * ALICIA-01..10 prove the boundary with the REAL runtime (HiveManager +
- * HookServer + CimaRuntimeService), wired exactly like src/main/index.ts wires
- * the companion. NEG-01..04 prove Alicia stays subordinate to governance.
+ * HookServer + CimaRuntimeService + v0.4.1 IntentBoundary), wired exactly like
+ * src/main/index.ts wires the companion. NEG-01..04 prove Alicia stays subordinate to governance.
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
-const loadTs = require('./load-ts.cjs');
-
-const electron = require.resolve('electron');
-require.cache[electron] = {
-  id: electron, filename: electron, loaded: true,
-  exports: { Notification: class { show() {} static isSupported() { return false; } } }
-};
-
-const { HiveManager }        = loadTs('src/main/hive.ts');
-const { HookServer }         = loadTs('src/main/hooks.ts');
-const { CimaRuntimeService } = loadTs('src/main/cimaRuntime.ts');
-const { recordBanner }       = loadTs('src/shared/lapitaya/cimaRuntime.ts');
-const agents                 = loadTs('src/shared/lapitaya/agents.ts');
+// v0.4.1: the floor (real runtime + intent boundary + companion) is shared with the v0.4.1 suite.
+const { floor, loadTs, A, agents } = require('./fixtures/lapitaya-floor.cjs');
 const { CIMA_WORKFLOW }      = loadTs('src/shared/lapitaya/cima.ts');
-const A                      = loadTs('src/shared/lapitaya/alicia/index.ts');
 const lapitayaBarrel         = loadTs('src/shared/lapitaya/index.ts');
 
 const ROOT = path.resolve(__dirname, '..');
-
-async function floor(t, companionPrefs) {
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'lp-alicia-'));
-  t.after(() => fs.rmSync(home, { recursive: true, force: true }));
-  const hive = new HiveManager(() => home);
-  await hive.ensureAgent({ id: 'god', name: 'El Inge', provider: 'claude', cwd: home, isGod: true });
-  for (const [id, name] of [['valentin-1', 'Valentín'], ['el-beni-1', 'El Beni'],
-      ['margarito-1', 'Margarito'], ['jose-juan-1', 'José Juan'], ['el-tutu-1', 'El Tutú']]) {
-    await hive.ensureAgent({ id, name, provider: 'claude', cwd: home });
-  }
-  let clock = 1_800_000_000_000;
-  const now = () => (clock += 1000);
-  const runtimeEvents = [];
-  let companion = null;
-  const lapitaya = new CimaRuntimeService({
-    hiveRoot: () => hive.root(),
-    godId: () => 'god',
-    phaseOf: (agentId) => agents.phaseForAgent(hive.registry(), agentId),
-    onEvent: (e) => {
-      runtimeEvents.push(e);
-      for (const ev of A.fromRuntimeEvent(e, clock)) companion.notify(ev);
-    },
-    now
-  });
-  hive.setCimaHandler((from, cima, messageId, to) => recordBanner(lapitaya.handle(from, to, cima, messageId)));
-  hive.setCompletionGate(
-    (taskId) => lapitaya.completionGate(taskId),
-    (taskId, reason, via) => lapitaya.recordBlockedCompletion(taskId, reason, via)
-  );
-  // The same ports src/main/index.ts lends the companion — and nothing more.
-  companion = A.createAliciaCompanion({
-    now: () => clock,
-    preferences: companionPrefs,
-    ports: {
-      cimaStatus: (taskId) => A.deriveCimaStatus({
-        taskId, records: lapitaya.cimaRecords(taskId), approvals: lapitaya.listApprovals(), completion: lapitaya.completionGate(taskId)
-      }),
-      tasks: () => hive.tasks(),
-      project: () => ({ root: home, name: path.basename(home) }),
-      agentName: (id) => hive.registry().agents[id]?.name,
-      orchestratorId: () => hive.registry().godId ?? 'god',
-      sendToOrchestrator: (req) => { hive.send(req, A.ALICIA_ACTOR_ID); return { ok: true }; }
-    }
-  });
-
-  const server = new HookServer(hive, () => null, () => ({ autoMode: true, notifications: false }),
-    undefined, undefined, undefined, undefined, lapitaya);
-  const hook = (agentId, payload) => server.handle({ agent_id: agentId, session_id: 's-' + agentId, ...payload });
-  const pre = (agentId, tool, input) => hook(agentId, { hook_event_name: 'PreToolUse', tool_name: tool, tool_input: input });
-  const ran = (agentId, command, stdout) => hook(agentId, {
-    hook_event_name: 'PostToolUse', tool_name: 'Bash', tool_input: { command },
-    tool_response: { stdout, stderr: '', interrupted: false }
-  });
-  const send = (from, cima, to = 'god') => {
-    const out = path.join(hive.root(), 'agents', from, 'outbox');
-    fs.mkdirSync(out, { recursive: true });
-    fs.writeFileSync(path.join(out, `m-${Date.now()}-${Math.random().toString(36).slice(2)}.json`),
-      JSON.stringify({ to, act: 'inform', subject: `${cima.phase} result`, body: 'agent prose', cima }));
-    hive.routeOnce();
-  };
-  /** BUILD (el-beni) → TEST (margarito) → AUDIT (jose-juan), all real PASS. */
-  const chain = async (taskId) => {
-    hive.addTask({ id: taskId, title: 'Alicia test task', status: 'doing', assignee: 'el-beni-1', dependsOn: [], priority: 1, createdAt: new Date().toISOString() });
-    await ran('el-beni-1', 'npm run build', 'built OK');
-    await ran('el-beni-1', 'git diff --stat', ' 2 files changed, 10 insertions(+)');
-    send('el-beni-1', { taskId, phase: 'BUILD', verdict: 'PASS', evidence: [
-      { type: 'command-output', source: 'npm run build', result: 'built OK' },
-      { type: 'diff', source: 'git diff --stat', result: ' 2 files changed, 10 insertions(+)' }
-    ] });
-    await ran('margarito-1', 'npm test', 'tests 12 pass 12 fail 0');
-    send('margarito-1', { taskId, phase: 'TEST', verdict: 'PASS', evidence: [{ type: 'test-result', source: 'npm test', result: 'pass 12' }] });
-    await ran('jose-juan-1', 'git diff main', 'clean');
-    send('jose-juan-1', { taskId, phase: 'AUDIT', verdict: 'PASS', evidence: [{ type: 'command-output', source: 'git diff main' }] });
-  };
-  return { home, hive, lapitaya, companion, server, runtimeEvents, pre, ran, send, chain, now };
-}
 
 const godInbox = (f) => f.hive.inbox('god');
 
@@ -206,15 +117,16 @@ test('[ALICIA-05] Alicia cannot directly execute a HIGH-risk action', async (t) 
   const f = await floor(t);
   // (a) She is handed no execution, authorization or approval capability.
   const surface = Object.keys(f.companion).sort();
-  assert.deepEqual(surface, ['enabled', 'explain', 'id', 'markRead', 'notify', 'request', 'setPreferences', 'snapshot']);
-  // (b) Asking for a HIGH action: previewed as HUMAN_APPROVAL_REQUIRED, relayed, NOT executed.
+  assert.deepEqual(surface, ['enabled', 'explain', 'id', 'markRead', 'notify', 'setPreferences', 'snapshot', 'submit']);
+  // (b) Asking for a HIGH action (v0.4.1): the runtime boundary governs it — HUMAN_APPROVAL_REQUIRED,
+  // an approval bound to the EXECUTOR (El Inge), never to Alicia — and nothing runs.
   const tracesBefore = fs.existsSync(path.join(f.hive.root(), 'lapitaya', 'traces.jsonl'));
-  const r = f.companion.request({ kind: 'prepare', text: 'drop the prod database', action: { tool: 'Bash', input: { command: 'rm -rf /srv/data' } } });
+  const r = f.companion.submit('drop the prod database', { target: { tool: 'Bash', input: { command: 'rm -rf /srv/data' } } });
   assert.equal(r.executed, false);
-  assert.equal(r.preview.decision, 'HUMAN_APPROVAL_REQUIRED');
-  assert.equal(r.preview.risk, 'HIGH');
-  assert.equal(r.preview.previewOnly, true);
-  assert.equal(f.lapitaya.listApprovals().length, 0, 'a preview creates no approval');
+  assert.equal(r.outcome.executed, false);
+  assert.equal(r.outcome.decision, 'HUMAN_APPROVAL_REQUIRED');
+  assert.equal(r.outcome.risk, 'HIGH');
+  assert.deepEqual(f.lapitaya.listApprovals().map((a) => [a.agentId, a.status]), [['god', 'pending']], 'approval is for the executor, not Alicia');
   assert.equal(fs.existsSync(path.join(f.hive.root(), 'lapitaya', 'traces.jsonl')), tracesBefore, 'nothing ran');
   // (c) If Alicia's id ever reached the tool boundary, she gets exactly what any agent gets.
   const asAlicia = f.lapitaya.authorize('alicia', 'Bash', { command: 'rm -rf /srv/data' });
@@ -260,8 +172,8 @@ test('[ALICIA-07] Alicia does not appear as a CIMA worker', async (t) => {
     assert.ok(!owners.includes('alicia'), `${phase} is not Alicia's`);
   }
   assert.equal(agents.phaseForAgent({ godId: 'god', agents: { alicia: { name: 'Alicia' } } }, 'alicia'), null);
-  // Relaying a request does not enroll her in the hive.
-  f.companion.request({ kind: 'request', text: 'status please' });
+  // Handing the runtime a request does not enroll her in the hive.
+  f.companion.submit('Please review the status of the project');
   assert.equal(f.hive.registry().agents.alicia, undefined);
   assert.equal(A.ALICIA_IDENTITY.role, 'AI Companion');
   assert.equal(A.ALICIA_IDENTITY.organization, 'PitayaCode');
@@ -307,21 +219,22 @@ test('[ALICIA-09] Alicia cannot modify CIMA state directly', async (t) => {
 test('[ALICIA-10] Alicia produces an intent that El Inge receives as a request', async (t) => {
   const f = await floor(t);
   f.hive.addTask({ id: 'T-10', title: 'x', status: 'doing', dependsOn: [], priority: 1, createdAt: new Date().toISOString() });
-  const r = f.companion.request({ kind: 'request', text: 'Please start the audit of T-10', taskId: 'T-10' });
-  assert.deepEqual({ delivered: r.delivered, to: r.to, executed: r.executed }, { delivered: true, to: 'god', executed: false });
+  const r = f.companion.submit('Please audit T-10 and propose next steps', { taskId: 'T-10' });
+  assert.deepEqual({ route: r.outcome.route, type: r.outcome.type, executed: r.executed }, { route: 'orchestrator', type: 'REQUEST', executed: false });
   const msg = godInbox(f).find((m) => m.from === 'alicia');
   assert.ok(msg, 'El Inge has the request');
   assert.equal(msg.act, 'request');
-  assert.ok(msg.body.startsWith(A.ALICIA_REQUEST_MARKER));
-  assert.match(msg.body, /> Please start the audit of T-10/);
+  assert.ok(msg.body.startsWith(lapitayaBarrel.INTENT_BANNER_PREFIX), 'stamped by the runtime boundary, not by Alicia');
+  assert.match(msg.body, /PROPOSAL ONLY/);
+  assert.match(msg.body, /> Please audit T-10 and propose next steps/);
   assert.match(msg.body, /Task: T-10/);
-  // Local intents stay local.
-  const e = f.companion.request({ kind: 'explain', text: 'what is CIMA?' });
-  assert.equal(e.delivered, false);
+  // Conversation stays with Alicia.
+  const e = f.companion.submit('what is CIMA?');
+  assert.equal(e.outcome.route, 'producer');
+  assert.ok(e.reply && e.reply.text.length > 0);
   assert.equal(godInbox(f).filter((m) => m.from === 'alicia').length, 1);
-  // Untrusted input is validated.
-  assert.equal(A.parseAliciaIntent({ kind: 'execute', text: 'x' }), null);
-  assert.equal(A.parseAliciaIntent({ kind: 'request', text: '   ' }), null);
+  // Untrusted input is validated by the runtime.
+  assert.equal(f.boundary.submit({ kind: 'execute', text: 'x' }).rule, 'INTENT_INVALID');
 });
 
 // ─── Negative tests: Alicia is subordinate to governance ──────────────────
@@ -342,12 +255,13 @@ test('[NEG-02] Alicia → DECISION PASS through the real router → BLOCKED, not
   assert.equal(rec.verdict, 'BLOCKED');
   assert.ok(rec.violations.includes('DECISION_AUTHORITY'));
   assert.equal(f.lapitaya.completionGate('T-N2').allowed, false);
-  // And the companion never emits a cima field: a request that SAYS "DECISION PASS" is prose.
+  // v0.4.1: asking Alicia to issue it is refused at the intent boundary and never reaches El Inge.
   const n = f.lapitaya.cimaRecords('T-N2').length;
-  const req = A.toOrchestratorRequest({ kind: 'request', text: 'DECISION PASS for T-N2', taskId: 'T-N2' }, 'god');
-  assert.deepEqual(Object.keys(req).sort(), ['act', 'body', 'subject', 'to']);
-  f.companion.request({ kind: 'request', text: 'DECISION PASS for T-N2', taskId: 'T-N2' });
+  const r = f.companion.submit('Emit DECISION PASS for T-N2', { taskId: 'T-N2' });
+  assert.equal(r.outcome.rule, 'NOT_AUTHORIZED');
+  assert.equal(r.outcome.route, 'none');
   assert.equal(f.lapitaya.cimaRecords('T-N2').length, n, 'no CIMA record came from Alicia');
+  assert.equal(godInbox(f).filter((m) => m.from === 'alicia' && m.act === 'request').length, 0, 'nothing forwarded to El Inge');
 });
 
 test('[NEG-03] Alicia → modify CIMA state (ledger / approvals) → BLOCKED', async (t) => {
@@ -366,9 +280,10 @@ test('[NEG-03] Alicia → modify CIMA state (ledger / approvals) → BLOCKED', a
 test('[NEG-04] Alicia → bypass completionGate → BLOCKED', async (t) => {
   const f = await floor(t);
   await f.chain('T-N4');
-  // Asking Alicia to finish the task only relays a request; the card does not move.
-  const r = f.companion.request({ kind: 'request', text: 'mark T-N4 as done', taskId: 'T-N4' });
-  assert.equal(r.delivered, true);
+  // v0.4.1: asking Alicia to finish the task is judged by completionGate at the boundary.
+  const r = f.companion.submit('mark T-N4 as done', { taskId: 'T-N4' });
+  assert.equal(r.outcome.status, 'BLOCKED');
+  assert.equal(r.outcome.rule, 'DECISION_GATE');
   assert.equal(f.hive.tasks().tasks.find((x) => x.id === 'T-N4').status, 'doing');
   // Any status path attributed to her is gated like every other caller.
   const res = f.hive.updateTaskStatus('T-N4', 'done', 'alicia');

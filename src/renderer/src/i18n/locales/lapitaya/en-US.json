@@ -83,6 +83,11 @@
       "approval_denied": { "title": "Approval rejected", "message": "You rejected the action from {{agent}}. It will not run." },
       "audit_completed": { "title": "Audit finished", "message": "{{agent}} finished the audit: {{verdict}}." },
       "workflow_completed": { "title": "Work accepted", "message": "Task {{task}} has a DECISION PASS recorded by the runtime." },
+      "intent_received": { "title": "Request received", "message": "The runtime received your request." },
+      "intent_classified": { "title": "Request classified", "message": "The runtime classified your request." },
+      "intent_forwarded": { "title": "Sent to El Inge", "message": "Your request reached El Inge as a proposal; nothing runs until you confirm." },
+      "intent_governed": { "title": "Action governed by CIMA", "message": "CIMA evaluated your action: risk {{risk}}, decision {{decision}}. {{explanation}}" },
+      "intent_blocked": { "title": "Request blocked", "message": "Your request was not sent: CIMA blocked it ({{rule}}). {{explanation}}" },
       "error": { "title": "Error", "message": "Something went wrong. See the technical detail." }
     },
     "explain": {
@@ -99,6 +104,13 @@
       "TRANSITION": "Earlier CIMA phases are missing, so this step cannot be accepted.",
       "DECISION_AUTHORITY": "Only El Inge or the human can accept the work.",
       "MALFORMED": "The CIMA report is not in the required format.",
+      "ALLOW": "It is low risk: allowed automatically, and authorized again when it runs.",
+      "NOT_AUTHORIZED": "Alicia has no authority to approve or to issue a DECISION; that belongs to you and El Inge.",
+      "INTENT_INVALID": "The request was incomplete or malformed, so it was not processed.",
+      "INTENT_TARGET": "Alicia can only address requests to El Inge, not to other agents or to tools.",
+      "INTENT_MISMATCH": "What you asked for carries more risk than the proposed action, so CIMA did not send it.",
+      "DELIVERY_FAILED": "The request could not be delivered to El Inge.",
+      "BOUNDARY_UNAVAILABLE": "The request boundary did not answer; nothing was done.",
       "UNKNOWN": "Rule {{rule}} stopped it. See the technical detail."
     },
     "evidence": {
@@ -106,6 +118,15 @@
       "recorded": "{{agent}} recorded {{phase}}: {{verdict}}",
       "verified": "{{verified}}/{{total}} evidence items verified by the harness",
       "none": "No evidence recorded"
+    },
+    "reply": {
+      "task": "I'm here. Task {{task}} is at {{phase}} ({{phaseLabel}}); you have {{unread}} unread notices.",
+      "idle": "I'm here. There is no active task; you have {{unread}} unread notices."
+    },
+    "intentTypes": {
+      "CONVERSATION": "Conversation: Alicia answers, nothing runs.",
+      "REQUEST": "Request: El Inge prepares a proposal and waits for your go-ahead.",
+      "ACTION": "Action: goes through CIMA (risk, autonomy and authorization) before it runs."
     },
     "presence": {
       "IDLE": "Idle",
