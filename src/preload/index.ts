@@ -17,7 +17,7 @@ import type { Approval } from '../shared/lapitaya/governance';
 import type { LedgerEntry, RequestConfirmation } from '../main/cimaRuntime';
 import type { RequestProposal } from '../shared/lapitaya/intent';
 import type { LocaleSettings } from '../shared/lapitaya/locales';
-import type { AliciaCompanionState, AliciaSubmitResult } from '../shared/lapitaya/alicia';
+import type { AliciaCompanionState, AliciaSubmitResult, ObservabilityView } from '../shared/lapitaya/alicia';
 import type { IntentTarget } from '../shared/lapitaya/intent';
 export type { HookEvent } from '../shared/hookEvents';
 import type { LocalSkill, CatalogSkill } from '../main/skills';
@@ -1093,6 +1093,9 @@ const api = {
   lapitayaCompleteRequest: (id: string): Promise<RequestConfirmation> => ipcRenderer.invoke('lapitaya:completeRequest', id),
   /** Recent governance decisions and CIMA records (append-only ledger). */
   lapitayaLedger: (limit?: number): Promise<LedgerEntry[]> => ipcRenderer.invoke('lapitaya:ledger', limit),
+  /** v0.6: read-only, human-safe projection of governance facts (Alicia's observability). */
+  lapitayaObservability: (opts?: { recentLimit?: number }): Promise<ObservabilityView> =>
+    ipcRenderer.invoke('lapitaya:observability', opts ?? {}),
   /** Live governance/CIMA events (approval requests, supervised calls, records). */
   onLapitayaGovernance: (cb: (e: { type: string; data: unknown }) => void): (() => void) => {
     const listener = (_e: IpcRendererEvent, payload: { type: string; data: unknown }) => cb(payload);

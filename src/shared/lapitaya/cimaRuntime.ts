@@ -62,6 +62,8 @@ export interface ExecutionTrace {
   ok: boolean;
   /** First part of the real output, as the tool returned it. */
   outputHead?: string;
+  /** v0.6: exact-call fingerprint, equal to the PreToolUse governance record's. */
+  fingerprint?: string;
 }
 
 export interface CimaSubmission {

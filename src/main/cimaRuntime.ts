@@ -26,7 +26,7 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync, renameSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { randomBytes } from 'node:crypto';
-import { authorizeToolCall, denyAuthorization, isExecutable, fnv1a, type Approval, type Authorization } from '../shared/lapitaya/governance';
+import { authorizeToolCall, denyAuthorization, isExecutable, fnv1a, toolCallFingerprint, type Approval, type Authorization } from '../shared/lapitaya/governance';
 import type { ToolCallContext, ToolRisk } from '../shared/lapitaya/toolRisk';
 import { DEFAULT_AUTONOMY_STAGE, type AutonomyStage } from '../shared/lapitaya/autonomy';
 import { classifyToolCall } from '../shared/lapitaya/toolRisk';
@@ -80,6 +80,9 @@ export interface GovernanceRecord {
   approvalId?: string;
   /** v0.4.2: the REQUEST proposal whose gate state governed this call. */
   proposalId?: string;
+  /** v0.6: the exact-call fingerprint (as approvals use it), so the call's
+   *  PostToolUse trace can be linked to this decision without guessing. */
+  fingerprint?: string;
 }
 
 export type LedgerEntry = CimaRecord | CimaAssignment | GovernanceRecord | IntentRecord | RequestTransitionRecord;
@@ -93,7 +96,7 @@ export interface CimaRuntimeDeps {
   /** The task an agent is currently on (tasks.json: assignee + status doing). */
   taskOf?: (agentId: string) => string | null;
   /** Push a governance/CIMA event to the UI. */
-  onEvent?: (e: { type: 'approval-request' | 'approval-decided' | 'supervised' | 'cima-record' | 'completion-blocked' | 'intent' | 'request'; data: unknown }) => void;
+  onEvent?: (e: { type: 'approval-request' | 'approval-decided' | 'supervised' | 'cima-record' | 'completion-blocked' | 'intent' | 'request' | 'governance' | 'trace'; data: unknown }) => void;
   /** The provider an agent runs on, for the ledger. */
   providerOf?: (agentId: string) => string | null;
   /** Test seam: replaces the risk classifier. */
@@ -528,9 +531,18 @@ export class CimaRuntimeService {
       decision: auth.decision,
       rule: auth.rule,
       ...(auth.approvalId ? { approvalId: auth.approvalId } : {}),
-      ...(proposalId ? { proposalId } : {})
+      ...(proposalId ? { proposalId } : {}),
+      ...(auth.fingerprint ? { fingerprint: auth.fingerprint } : {})
     };
-    return this.append('cima-ledger.jsonl', rec);
+    if (!this.append('cima-ledger.jsonl', rec)) return false;
+    // v0.6 observability: a signal that a decision was recorded, on the existing
+    // stream (read-only consumers refresh; it raises no notification and decides
+    // nothing). No action text or fingerprint: the ledger is the record.
+    this.deps.onEvent?.({ type: 'governance', data: {
+      ts: rec.ts, agentId, tool, decision: rec.decision, rule: rec.rule, risk: rec.risk,
+      ...(rec.proposalId ? { proposalId: rec.proposalId } : {}), ...(rec.approvalId ? { approvalId: rec.approvalId } : {})
+    } });
+    return true;
   }
 
   // ─── decision gate ───────────────────────────────────────────────────────
@@ -639,12 +651,22 @@ export class CimaRuntimeService {
       ok: event !== 'PostToolUseFailure' && !interrupted,
       outputHead: outputHead(response)
     };
+    // v0.6: the same exact-call fingerprint the PreToolUse decision recorded.
+    try { trace.fingerprint = toolCallFingerprint(agentId, tool, input); } catch { /* unlinked trace */ }
     // Coordination writes inside the hive are not "modifying code".
     if (kind === 'write' && cls.category === 'hive-coordination') trace.kind = 'tool';
     this.traces.push(trace);
     if (this.traces.length > MAX_TRACES_IN_MEMORY) this.traces.splice(0, this.traces.length - MAX_TRACES_IN_MEMORY);
     this.append('traces.jsonl', trace);
+    // v0.6 observability: that a governed call ran — no command, path or output.
+    this.deps.onEvent?.({ type: 'trace', data: { id: trace.id, ts: trace.ts, agentId, tool, ok: trace.ok } });
     return trace;
+  }
+
+  /** The most recent execution traces (read-only; PostToolUse evidence). */
+  recentTraces(limit = 500): ExecutionTrace[] {
+    this.load();
+    return this.traces.slice(-limit).map((t) => ({ ...t }));
   }
 
   // ─── 3. CIMA submissions from the router ─────────────────────────────────

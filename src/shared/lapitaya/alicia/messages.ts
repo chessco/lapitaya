@@ -98,7 +98,7 @@ const EXPLAINED = new Set([
  *  (e.g. a toolRisk rule id), kept in `technical` rather than in the sentence. */
 const SELF_EXPLAINING = new Set(['HUMAN_APPROVAL_REQUIRED', 'SUPERVISED', 'APPROVED', 'HUMAN_APPROVED', 'HUMAN_REJECTED', 'ALLOW']);
 
-function explanationKey(t: AliciaTechnical): string {
+export function explanationKey(t: AliciaTechnical): string {
   if (t.rule && EXPLAINED.has(t.rule)) return t.rule;
   if (t.decision && SELF_EXPLAINING.has(t.decision)) return t.decision;
   // A refusal for a rule the catalog does not know: name it, never fall back to

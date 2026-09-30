@@ -212,6 +212,100 @@
         "blocked": "CIMA no lo envió ({{rule}}).",
         "failed": "No pude entregar tu mensaje; no se hizo nada."
       }
+    },
+    "observe": {
+      "sectionTitle": "Gobernanza (según el runtime)",
+      "activityTitle": "ACTIVIDAD DE GOBERNANZA",
+      "activityHint": "Hechos registrados por el runtime de CIMA. Alicia los explica; no los decide.",
+      "activityEmpty": "Todavía no hay hechos de gobernanza relevantes.",
+      "unavailable": "No se puede confirmar el motivo con la evidencia disponible.",
+      "notAvailable": "No disponible",
+      "evidence": "Evidencia:",
+      "noEvidence": "Sin evidencia registrada; no se afirma nada.",
+      "repeated": "×{{count}}",
+      "timelineToggle": "Ver línea de tiempo ({{count}} eventos)",
+      "timelineLabel": "Línea de tiempo del REQUEST {{proposalId}} (solo lectura)",
+      "labels": {
+        "what": "¿Qué ocurrió?",
+        "why": "¿Por qué?",
+        "state": "Estado",
+        "risk": "Riesgo (CIMA)",
+        "scope": "Alcance",
+        "autonomy": "Autonomía",
+        "rule": "Regla",
+        "decision": "Decisión",
+        "next": "¿Qué sigue?",
+        "humanAction": "¿Qué necesita de ti?",
+        "agent": "Quién",
+        "operation": "Operación"
+      },
+      "what": {
+        "INTENT_RECEIVED": "El runtime recibió tu mensaje.",
+        "INTENT_CLASSIFIED": "El runtime clasificó tu mensaje.",
+        "INTENT_FORWARDED": "El runtime se lo entregó a El Inge.",
+        "INTENT_GOVERNED": "CIMA evaluó la acción que pediste.",
+        "INTENT_BLOCKED": "El runtime no envió tu solicitud.",
+        "INTENT_COMPLETED": "El runtime cerró el intent.",
+        "REQUEST_PROPOSED": "Tu solicitud quedó como REQUEST: una propuesta ({{proposalId}}).",
+        "REQUEST_REVALIDATED": "El runtime revalidó la propuesta {{proposalId}} antes de confirmarla.",
+        "REQUEST_CONFIRMED": "Confirmaste la propuesta {{proposalId}}.",
+        "REQUEST_CONFIRMATION_DENIED": "El runtime rechazó una confirmación de {{proposalId}}.",
+        "REQUEST_CANCELLED": "La propuesta {{proposalId}} fue cancelada.",
+        "REQUEST_COMPLETED": "La propuesta {{proposalId}} fue cerrada como terminada.",
+        "REQUEST_SUPERSEDED": "La propuesta {{proposalId}} fue reemplazada por una más reciente.",
+        "REQUEST_BLOCKED": "La propuesta {{proposalId}} quedó bloqueada por el runtime.",
+        "REQUEST_CONFIRMATION_REQUIRED": "La acción fue bloqueada: {{agent}} intentó {{operation}}.",
+        "REQUEST_SCOPE_EXCEEDED": "La acción fue bloqueada por exceder el alcance confirmado: {{agent}} intentó {{operation}}.",
+        "ACTION_AUTHORIZED": "CIMA autorizó {{operation}} de {{agent}}.",
+        "ACTION_SUPERVISED": "CIMA permitió {{operation}} de {{agent}} bajo supervisión.",
+        "ACTION_DENIED": "CIMA bloqueó {{operation}} de {{agent}}.",
+        "HUMAN_APPROVAL_REQUIRED": "CIMA detuvo {{operation}} de {{agent}}: requiere aprobación HIGH.",
+        "APPROVAL_GRANTED": "Aprobaste la acción {{approvalId}} de {{agent}}.",
+        "APPROVAL_REJECTED": "Rechazaste la acción {{approvalId}} de {{agent}}.",
+        "COMPLETION_BLOCKED": "El runtime impidió marcar una tarea como terminada.",
+        "EXECUTION_COMPLETED": "{{agent}} ejecutó {{operation}} (registrado por el harness).",
+        "EXECUTION_FAILED": "{{operation}} de {{agent}} falló al ejecutarse (registrado por el harness).",
+        "UNKNOWN_EVENT": "El runtime registró un hecho que Alicia no sabe interpretar ({{decision}})."
+      },
+      "why": {
+        "INTENT_RECEIVED": "Todo lo que le dices a Alicia pasa primero por el runtime.",
+        "INTENT_CLASSIFIED": "El runtime decide si es CONVERSATION, REQUEST o ACTION; Alicia no.",
+        "INTENT_FORWARDED": "El Inge recibe las solicitudes como propuesta; no se ejecutan hasta que confirmes.",
+        "INTENT_GOVERNED": "Toda ACTION pasa por CIMA (riesgo, autonomía y autorización).",
+        "INTENT_COMPLETED": "El runtime terminó de procesar el intent.",
+        "REQUEST_PROPOSED": "Un REQUEST es solo una propuesta: el runtime no deja ejecutar nada en el piso hasta que lo confirmes.",
+        "REQUEST_REVALIDATED": "Antes de confirmar, el runtime comprueba que la propuesta siga siendo válida.",
+        "REQUEST_CONFIRMED": "Tu confirmación permite que el trabajo continúe; cada acción sigue pasando por CIMA. No es una aprobación HIGH.",
+        "REQUEST_CANCELLED": "Una propuesta cancelada ya no permite trabajo en el piso.",
+        "REQUEST_COMPLETED": "Una propuesta cerrada ya no permite trabajo en el piso.",
+        "REQUEST_SUPERSEDED": "Solo cuenta la propuesta más reciente para la misma tarea.",
+        "EXECUTION_COMPLETED": "El harness observó la ejecución de esa llamada exacta después de que CIMA la autorizó.",
+        "EXECUTION_FAILED": "El harness observó que esa llamada exacta falló o fue interrumpida."
+      },
+      "next": {
+        "WAITING_HUMAN_CONFIRMATION": "Nada se ejecuta hasta que confirmes o canceles la propuesta.",
+        "WAITING_HUMAN_APPROVAL": "Revisa la aprobación en Aprobaciones de gobernanza. Confirmar el REQUEST no aprobó esta acción HIGH.",
+        "CONTINUES_UNDER_CIMA": "El trabajo continúa; cada acción sigue siendo evaluada por CIMA.",
+        "MAY_EXECUTE": "La llamada puede ejecutarse; su ejecución aparecerá cuando el harness la registre.",
+        "APPROVAL_ON_ATTEMPT": "Cuando El Inge intente esa acción, CIMA te pedirá la aprobación HIGH de esa llamada exacta; sin ella no se ejecuta.",
+        "MAY_RUN_ONCE": "El agente puede reintentar esa llamada exacta una sola vez.",
+        "NOT_EXECUTED": "No se ejecutó ninguna herramienta.",
+        "EXECUTED": "La herramienta se ejecutó.",
+        "EXECUTION_FAILED": "La herramienta no terminó correctamente.",
+        "CLOSED": "La propuesta está cerrada; nada más depende de ella.",
+        "TASK_NOT_COMPLETED": "La tarea sigue abierta hasta que exista un DECISION PASS registrado por el runtime.",
+        "SEE_LATER_EVENTS": "Hubo hechos posteriores; revisa la línea de tiempo.",
+        "NOT_AVAILABLE": "No hay información suficiente para decir qué sigue."
+      },
+      "autonomy": {
+        "AUTO": "AUTO: puede continuar automáticamente si CIMA lo autoriza.",
+        "SUPERVISED": "SUPERVISED: continúa bajo supervisión y queda registrado en el ledger.",
+        "HUMAN_APPROVAL": "HUMAN_APPROVAL: requiere tu aprobación explícita."
+      },
+      "action": {
+        "CONFIRM_REQUEST": "Confirmar o cancelar la propuesta.",
+        "DECIDE_APPROVAL": "Aprobar o rechazar la acción HIGH en Aprobaciones de gobernanza."
+      }
     }
   }
 }

@@ -4,6 +4,7 @@ import type { AliciaCompanionState } from '@shared/lapitaya/alicia';
 import { getLocaleSettings } from '@/i18n';
 import { aliciaLineKey, createConfirmationController, type ConfirmationController, type ConfirmationPort } from './confirmationController';
 import { AliciaPanelView, lineForSubmit, NS, type AliciaLine } from './AliciaPanelView';
+import { useGovernanceObservability } from './useGovernanceObservability';
 
 /**
  * La Pitaya Alicia v0.5 — Human Confirmation UI.
@@ -37,6 +38,8 @@ export function AliciaPanel() {
   const [lines, setLines] = useState<AliciaLine[]>([]);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
+  // v0.6: what the runtime recorded, explained (read only).
+  const observability = useGovernanceObservability();
 
   const locales = useCallback(() => ({ ...getLocaleSettings(), uiLocale: i18n.language }), [i18n.language]);
   const refreshAlicia = useCallback(() => {
@@ -49,6 +52,8 @@ export function AliciaPanel() {
     // The existing runtime event stream — no new bus.
     return window.cth.onLapitayaGovernance((e) => {
       if (e.type === 'request' || e.type === 'approval-request' || e.type === 'approval-decided') void controller.refresh();
+      // v0.6: per-call decision/trace signals never change Alicia's notifications.
+      if (e.type === 'governance' || e.type === 'trace') return;
       refreshAlicia();
     });
   }, [controller, refreshAlicia]);
@@ -110,6 +115,7 @@ export function AliciaPanel() {
       onGoToProposal={goToProposal}
       onDraft={setDraft}
       onSend={() => void send()}
+      observability={observability}
     />
   );
 }

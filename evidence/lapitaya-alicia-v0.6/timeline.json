@@ -1,0 +1,224 @@
+{
+  "proposalId": "req-mywpixns-1",
+  "steps": [
+    {
+      "step": "agent tries while PROPOSED",
+      "result": "DENIED"
+    },
+    {
+      "step": "agent tries again",
+      "result": "DENIED"
+    },
+    {
+      "step": "human confirms",
+      "result": true
+    },
+    {
+      "step": "agent runs npm test (PreToolUse)",
+      "result": "ALLOWED"
+    },
+    {
+      "step": "harness records the run (PostToolUse)"
+    },
+    {
+      "step": "agent tries HIGH",
+      "result": "DENIED"
+    },
+    {
+      "step": "human approves the HIGH call separately",
+      "approvalId": "apr-mywpj65c-3"
+    },
+    {
+      "step": "agent retries the HIGH call",
+      "result": "ALLOWED"
+    }
+  ],
+  "timeline": [
+    {
+      "time": 1800000000000,
+      "category": "INTENT_RECEIVED",
+      "count": 1,
+      "risk": null,
+      "autonomy": null,
+      "rule": null,
+      "next": "SEE_LATER_EVENTS",
+      "evidence": {
+        "ref": "EVT-45ef5bbe.0",
+        "source": "cima-ledger.jsonl"
+      },
+      "es-MX": "El runtime recibió tu mensaje."
+    },
+    {
+      "time": 1800000003000,
+      "category": "REQUEST_PROPOSED",
+      "count": 1,
+      "risk": null,
+      "autonomy": null,
+      "rule": null,
+      "next": "SEE_LATER_EVENTS",
+      "evidence": {
+        "ref": "EVT-f492076d",
+        "source": "cima-ledger.jsonl"
+      },
+      "es-MX": "Tu solicitud quedó como REQUEST: una propuesta (req-mywpixns-1)."
+    },
+    {
+      "time": 1800000003000,
+      "category": "INTENT_CLASSIFIED",
+      "count": 1,
+      "risk": null,
+      "autonomy": null,
+      "rule": null,
+      "next": "SEE_LATER_EVENTS",
+      "evidence": {
+        "ref": "EVT-45ef5bbe.1",
+        "source": "cima-ledger.jsonl"
+      },
+      "es-MX": "El runtime clasificó tu mensaje."
+    },
+    {
+      "time": 1800000003000,
+      "category": "INTENT_FORWARDED",
+      "count": 1,
+      "risk": null,
+      "autonomy": null,
+      "rule": null,
+      "next": "CONTINUES_UNDER_CIMA",
+      "evidence": {
+        "ref": "EVT-45ef5bbe.2",
+        "source": "cima-ledger.jsonl"
+      },
+      "es-MX": "El runtime se lo entregó a El Inge."
+    },
+    {
+      "time": 1800000004000,
+      "category": "REQUEST_CONFIRMATION_REQUIRED",
+      "count": 2,
+      "risk": "LOW",
+      "autonomy": "AUTO",
+      "rule": "REQUEST_CONFIRMATION_REQUIRED",
+      "next": "NOT_EXECUTED",
+      "evidence": {
+        "ref": "EVT-fe90fc3b",
+        "source": "cima-ledger.jsonl"
+      },
+      "es-MX": "La acción fue bloqueada: god intentó Bash · run-tests."
+    },
+    {
+      "time": 1800000006000,
+      "category": "REQUEST_REVALIDATED",
+      "count": 1,
+      "risk": null,
+      "autonomy": null,
+      "rule": null,
+      "next": "CONTINUES_UNDER_CIMA",
+      "evidence": {
+        "ref": "EVT-bdd6698b",
+        "source": "cima-ledger.jsonl"
+      },
+      "es-MX": "El runtime revalidó la propuesta req-mywpixns-1 antes de confirmarla."
+    },
+    {
+      "time": 1800000008000,
+      "category": "REQUEST_CONFIRMED",
+      "count": 1,
+      "risk": null,
+      "autonomy": null,
+      "rule": null,
+      "next": "CONTINUES_UNDER_CIMA",
+      "evidence": {
+        "ref": "EVT-9bfc2cb0",
+        "source": "cima-ledger.jsonl"
+      },
+      "es-MX": "Confirmaste la propuesta req-mywpixns-1."
+    },
+    {
+      "time": 1800000009000,
+      "category": "ACTION_AUTHORIZED",
+      "count": 1,
+      "risk": "LOW",
+      "autonomy": "AUTO",
+      "rule": "shell:low",
+      "next": "MAY_EXECUTE",
+      "evidence": {
+        "ref": "EVT-839873a4",
+        "source": "cima-ledger.jsonl"
+      },
+      "es-MX": "CIMA autorizó Bash · run-tests de god."
+    },
+    {
+      "time": 1800000011000,
+      "category": "EXECUTION_COMPLETED",
+      "count": 1,
+      "risk": "LOW",
+      "autonomy": "AUTO",
+      "rule": "shell:low",
+      "next": "EXECUTED",
+      "evidence": {
+        "ref": "trc-mywpj4ls-2",
+        "source": "traces.jsonl"
+      },
+      "es-MX": "god ejecutó Bash · run-tests (registrado por el harness)."
+    },
+    {
+      "time": 1800000014000,
+      "category": "HUMAN_APPROVAL_REQUIRED",
+      "count": 1,
+      "risk": "HIGH",
+      "autonomy": "HUMAN_APPROVAL",
+      "rule": "shell:recursive-delete",
+      "next": "SEE_LATER_EVENTS",
+      "evidence": {
+        "ref": "EVT-34506cb0",
+        "source": "cima-ledger.jsonl"
+      },
+      "es-MX": "CIMA detuvo Bash · data-deletion de god: requiere aprobación HIGH."
+    },
+    {
+      "time": 1800000015000,
+      "category": "APPROVAL_GRANTED",
+      "count": 1,
+      "risk": "HIGH",
+      "autonomy": "HUMAN_APPROVAL",
+      "rule": "human",
+      "next": "MAY_RUN_ONCE",
+      "evidence": {
+        "ref": "EVT-6a15e4c5",
+        "source": "cima-ledger.jsonl"
+      },
+      "es-MX": "Aprobaste la acción apr-mywpj65c-3 de god."
+    },
+    {
+      "time": 1800000016000,
+      "category": "ACTION_AUTHORIZED",
+      "count": 1,
+      "risk": "HIGH",
+      "autonomy": "HUMAN_APPROVAL",
+      "rule": "shell:recursive-delete",
+      "next": "MAY_EXECUTE",
+      "evidence": {
+        "ref": "EVT-efd19946",
+        "source": "cima-ledger.jsonl"
+      },
+      "es-MX": "CIMA autorizó Bash · data-deletion de god."
+    },
+    {
+      "time": 1800000018000,
+      "category": "EXECUTION_COMPLETED",
+      "count": 1,
+      "risk": "HIGH",
+      "autonomy": "HUMAN_APPROVAL",
+      "rule": "shell:recursive-delete",
+      "next": "EXECUTED",
+      "evidence": {
+        "ref": "trc-mywpja08-4",
+        "source": "traces.jsonl"
+      },
+      "es-MX": "god ejecutó Bash · data-deletion (registrado por el harness)."
+    }
+  ],
+  "latest": "EXECUTION_COMPLETED",
+  "readOnly": {
+    "frozen": true
+  }
+}

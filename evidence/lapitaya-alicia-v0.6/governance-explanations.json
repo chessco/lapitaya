@@ -1,0 +1,570 @@
+{
+  "REQUEST_PROPOSED": {
+    "fact": {
+      "eventId": "EVT-3df2cee2",
+      "category": "REQUEST_PROPOSED",
+      "timestamp": 1800000003000,
+      "intentId": "int-mywpiww0-1",
+      "proposalId": "req-mywpixns-1",
+      "approvalId": null,
+      "taskId": null,
+      "agent": "alicia",
+      "operation": null,
+      "intentType": "REQUEST",
+      "runtimeStatus": "PROPOSED",
+      "risk": null,
+      "scope": "LOW",
+      "autonomy": null,
+      "decision": null,
+      "rule": null,
+      "evidence": {
+        "ref": "EVT-3df2cee2",
+        "source": "cima-ledger.jsonl"
+      },
+      "requiredHumanAction": "CONFIRM_REQUEST",
+      "nextState": "WAITING_HUMAN_CONFIRMATION",
+      "count": 1
+    },
+    "keys": {
+      "what": "alicia.observe.what.REQUEST_PROPOSED",
+      "why": "alicia.observe.why.REQUEST_PROPOSED",
+      "next": "alicia.observe.next.WAITING_HUMAN_CONFIRMATION",
+      "autonomy": null,
+      "humanAction": "alicia.observe.action.CONFIRM_REQUEST"
+    },
+    "es-MX": {
+      "what": "Tu solicitud quedó como REQUEST: una propuesta (req-mywpixns-1).",
+      "why": "Un REQUEST es solo una propuesta: el runtime no deja ejecutar nada en el piso hasta que lo confirmes.",
+      "next": "Nada se ejecuta hasta que confirmes o canceles la propuesta.",
+      "risk": null,
+      "autonomy": null,
+      "rule": null,
+      "humanAction": "Confirmar o cancelar la propuesta.",
+      "evidence": "Evidencia: cima-ledger.jsonl · EVT-3df2cee2"
+    },
+    "en-US": {
+      "what": "Your request became a REQUEST: a proposal (req-mywpixns-1).",
+      "why": "A REQUEST is only a proposal: the runtime lets nothing on the floor execute until you confirm it.",
+      "next": "Nothing executes until you confirm or cancel the proposal.",
+      "risk": null,
+      "autonomy": null,
+      "rule": null,
+      "humanAction": "Confirm or cancel the proposal.",
+      "evidence": "Evidence: cima-ledger.jsonl · EVT-3df2cee2"
+    },
+    "evidenceResolvesTo": {
+      "kind": "request",
+      "transition": "PROPOSED",
+      "status": "PROPOSED"
+    }
+  },
+  "REQUEST_CONFIRMATION_REQUIRED": {
+    "fact": {
+      "eventId": "EVT-fe90fc3b",
+      "category": "REQUEST_CONFIRMATION_REQUIRED",
+      "timestamp": 1800000004000,
+      "intentId": null,
+      "proposalId": "req-mywpixns-1",
+      "approvalId": null,
+      "taskId": null,
+      "agent": "god",
+      "operation": "Bash · run-tests",
+      "intentType": null,
+      "runtimeStatus": "DENY",
+      "risk": "LOW",
+      "scope": null,
+      "autonomy": "AUTO",
+      "decision": "DENY",
+      "rule": "REQUEST_CONFIRMATION_REQUIRED",
+      "evidence": {
+        "ref": "EVT-fe90fc3b",
+        "source": "cima-ledger.jsonl"
+      },
+      "requiredHumanAction": "CONFIRM_REQUEST",
+      "nextState": "WAITING_HUMAN_CONFIRMATION",
+      "count": 1
+    },
+    "keys": {
+      "what": "alicia.observe.what.REQUEST_CONFIRMATION_REQUIRED",
+      "why": "alicia.explain.REQUEST_CONFIRMATION_REQUIRED",
+      "next": "alicia.observe.next.WAITING_HUMAN_CONFIRMATION",
+      "autonomy": "alicia.observe.autonomy.AUTO",
+      "humanAction": "alicia.observe.action.CONFIRM_REQUEST"
+    },
+    "es-MX": {
+      "what": "La acción fue bloqueada: god intentó Bash · run-tests.",
+      "why": "Nada se ejecuta hasta que confirmes la propuesta; mientras tanto solo se permite leer, analizar y responder.",
+      "next": "Nada se ejecuta hasta que confirmes o canceles la propuesta.",
+      "risk": "LOW",
+      "autonomy": "AUTO: puede continuar automáticamente si CIMA lo autoriza.",
+      "rule": "REQUEST_CONFIRMATION_REQUIRED",
+      "humanAction": "Confirmar o cancelar la propuesta.",
+      "evidence": "Evidencia: cima-ledger.jsonl · EVT-fe90fc3b"
+    },
+    "en-US": {
+      "what": "The action was blocked: god tried Bash · run-tests.",
+      "why": "Nothing runs until you confirm the proposal; meanwhile only reading, analysis and replies are allowed.",
+      "next": "Nothing executes until you confirm or cancel the proposal.",
+      "risk": "LOW",
+      "autonomy": "AUTO: may continue automatically if CIMA authorizes it.",
+      "rule": "REQUEST_CONFIRMATION_REQUIRED",
+      "humanAction": "Confirm or cancel the proposal.",
+      "evidence": "Evidence: cima-ledger.jsonl · EVT-fe90fc3b"
+    },
+    "evidenceResolvesTo": {
+      "kind": "governance",
+      "decision": "DENY",
+      "rule": "REQUEST_CONFIRMATION_REQUIRED",
+      "risk": "LOW"
+    }
+  },
+  "TAMPERED": {
+    "fact": {
+      "eventId": "EVT-86ca3d74",
+      "category": "REQUEST_CONFIRMATION_DENIED",
+      "timestamp": 1800000005000,
+      "intentId": "int-mywpiww0-1",
+      "proposalId": "req-mywpixns-1",
+      "approvalId": null,
+      "taskId": null,
+      "agent": "human",
+      "operation": null,
+      "intentType": "REQUEST",
+      "runtimeStatus": "PROPOSED",
+      "risk": null,
+      "scope": "LOW",
+      "autonomy": null,
+      "decision": null,
+      "rule": "TAMPERED",
+      "evidence": {
+        "ref": "EVT-86ca3d74",
+        "source": "cima-ledger.jsonl"
+      },
+      "requiredHumanAction": "NONE",
+      "nextState": "NOT_EXECUTED",
+      "count": 1
+    },
+    "keys": {
+      "what": "alicia.observe.what.REQUEST_CONFIRMATION_DENIED",
+      "why": "alicia.explain.TAMPERED",
+      "next": "alicia.observe.next.NOT_EXECUTED",
+      "autonomy": null,
+      "humanAction": null
+    },
+    "es-MX": {
+      "what": "El runtime rechazó una confirmación de req-mywpixns-1.",
+      "why": "La confirmación no coincide con la propuesta, así que se rechazó.",
+      "next": "No se ejecutó ninguna herramienta.",
+      "risk": null,
+      "autonomy": null,
+      "rule": "TAMPERED",
+      "humanAction": null,
+      "evidence": "Evidencia: cima-ledger.jsonl · EVT-86ca3d74"
+    },
+    "en-US": {
+      "what": "The runtime refused a confirmation of req-mywpixns-1.",
+      "why": "The confirmation does not match the proposal, so it was rejected.",
+      "next": "No tool was executed.",
+      "risk": null,
+      "autonomy": null,
+      "rule": "TAMPERED",
+      "humanAction": null,
+      "evidence": "Evidence: cima-ledger.jsonl · EVT-86ca3d74"
+    },
+    "evidenceResolvesTo": {
+      "kind": "request",
+      "transition": "CONFIRMATION_DENIED",
+      "rule": "TAMPERED",
+      "status": "PROPOSED"
+    }
+  },
+  "NOT_AUTHORIZED": {
+    "fact": {
+      "eventId": "EVT-dc88456f",
+      "category": "REQUEST_CONFIRMATION_DENIED",
+      "timestamp": 1800000006000,
+      "intentId": "int-mywpiww0-1",
+      "proposalId": "req-mywpixns-1",
+      "approvalId": null,
+      "taskId": null,
+      "agent": "alicia",
+      "operation": null,
+      "intentType": "REQUEST",
+      "runtimeStatus": "PROPOSED",
+      "risk": null,
+      "scope": "LOW",
+      "autonomy": null,
+      "decision": null,
+      "rule": "NOT_AUTHORIZED",
+      "evidence": {
+        "ref": "EVT-dc88456f",
+        "source": "cima-ledger.jsonl"
+      },
+      "requiredHumanAction": "NONE",
+      "nextState": "NOT_EXECUTED",
+      "count": 1
+    },
+    "keys": {
+      "what": "alicia.observe.what.REQUEST_CONFIRMATION_DENIED",
+      "why": "alicia.explain.NOT_AUTHORIZED",
+      "next": "alicia.observe.next.NOT_EXECUTED",
+      "autonomy": null,
+      "humanAction": null
+    },
+    "es-MX": {
+      "what": "El runtime rechazó una confirmación de req-mywpixns-1.",
+      "why": "Alicia no tiene autoridad para aprobar ni para emitir una DECISION; eso corresponde a ti y a El Inge.",
+      "next": "No se ejecutó ninguna herramienta.",
+      "risk": null,
+      "autonomy": null,
+      "rule": "NOT_AUTHORIZED",
+      "humanAction": null,
+      "evidence": "Evidencia: cima-ledger.jsonl · EVT-dc88456f"
+    },
+    "en-US": {
+      "what": "The runtime refused a confirmation of req-mywpixns-1.",
+      "why": "Alicia has no authority to approve or to issue a DECISION; that belongs to you and El Inge.",
+      "next": "No tool was executed.",
+      "risk": null,
+      "autonomy": null,
+      "rule": "NOT_AUTHORIZED",
+      "humanAction": null,
+      "evidence": "Evidence: cima-ledger.jsonl · EVT-dc88456f"
+    },
+    "evidenceResolvesTo": {
+      "kind": "request",
+      "transition": "CONFIRMATION_DENIED",
+      "rule": "NOT_AUTHORIZED",
+      "status": "PROPOSED"
+    }
+  },
+  "REQUEST_CONFIRMED": {
+    "fact": {
+      "eventId": "EVT-cac8deb0",
+      "category": "REQUEST_CONFIRMED",
+      "timestamp": 1800000009000,
+      "intentId": "int-mywpiww0-1",
+      "proposalId": "req-mywpixns-1",
+      "approvalId": null,
+      "taskId": null,
+      "agent": "human",
+      "operation": null,
+      "intentType": "REQUEST",
+      "runtimeStatus": "CONFIRMED",
+      "risk": null,
+      "scope": "LOW",
+      "autonomy": null,
+      "decision": null,
+      "rule": null,
+      "evidence": {
+        "ref": "EVT-cac8deb0",
+        "source": "cima-ledger.jsonl"
+      },
+      "requiredHumanAction": "NONE",
+      "nextState": "CONTINUES_UNDER_CIMA",
+      "count": 1
+    },
+    "keys": {
+      "what": "alicia.observe.what.REQUEST_CONFIRMED",
+      "why": "alicia.observe.why.REQUEST_CONFIRMED",
+      "next": "alicia.observe.next.CONTINUES_UNDER_CIMA",
+      "autonomy": null,
+      "humanAction": null
+    },
+    "es-MX": {
+      "what": "Confirmaste la propuesta req-mywpixns-1.",
+      "why": "Tu confirmación permite que el trabajo continúe; cada acción sigue pasando por CIMA. No es una aprobación HIGH.",
+      "next": "El trabajo continúa; cada acción sigue siendo evaluada por CIMA.",
+      "risk": null,
+      "autonomy": null,
+      "rule": null,
+      "humanAction": null,
+      "evidence": "Evidencia: cima-ledger.jsonl · EVT-cac8deb0"
+    },
+    "en-US": {
+      "what": "You confirmed proposal req-mywpixns-1.",
+      "why": "Your confirmation lets the work continue; every action still goes through CIMA. It is not a HIGH approval.",
+      "next": "The work continues; every action is still evaluated by CIMA.",
+      "risk": null,
+      "autonomy": null,
+      "rule": null,
+      "humanAction": null,
+      "evidence": "Evidence: cima-ledger.jsonl · EVT-cac8deb0"
+    },
+    "evidenceResolvesTo": {
+      "kind": "request",
+      "transition": "CONFIRMED",
+      "status": "CONFIRMED"
+    }
+  },
+  "REQUEST_SCOPE_EXCEEDED": {
+    "fact": {
+      "eventId": "EVT-91c3ffae",
+      "category": "REQUEST_SCOPE_EXCEEDED",
+      "timestamp": 1800000010000,
+      "intentId": null,
+      "proposalId": "req-mywpixns-1",
+      "approvalId": null,
+      "taskId": null,
+      "agent": "god",
+      "operation": "Edit · code-change",
+      "intentType": null,
+      "runtimeStatus": "DENY",
+      "risk": "MEDIUM",
+      "scope": null,
+      "autonomy": "SUPERVISED",
+      "decision": "DENY",
+      "rule": "REQUEST_SCOPE_EXCEEDED",
+      "evidence": {
+        "ref": "EVT-91c3ffae",
+        "source": "cima-ledger.jsonl"
+      },
+      "requiredHumanAction": "NONE",
+      "nextState": "NOT_EXECUTED",
+      "count": 1
+    },
+    "keys": {
+      "what": "alicia.observe.what.REQUEST_SCOPE_EXCEEDED",
+      "why": "alicia.explain.REQUEST_SCOPE_EXCEEDED",
+      "next": "alicia.observe.next.NOT_EXECUTED",
+      "autonomy": "alicia.observe.autonomy.SUPERVISED",
+      "humanAction": null
+    },
+    "es-MX": {
+      "what": "La acción fue bloqueada por exceder el alcance confirmado: god intentó Edit · code-change.",
+      "why": "La acción va más allá de lo que confirmaste en la propuesta, así que no se ejecutó.",
+      "next": "No se ejecutó ninguna herramienta.",
+      "risk": "MEDIUM",
+      "autonomy": "SUPERVISED: continúa bajo supervisión y queda registrado en el ledger.",
+      "rule": "REQUEST_SCOPE_EXCEEDED",
+      "humanAction": null,
+      "evidence": "Evidencia: cima-ledger.jsonl · EVT-91c3ffae"
+    },
+    "en-US": {
+      "what": "The action was blocked for going beyond the confirmed scope: god tried Edit · code-change.",
+      "why": "The action goes beyond what you confirmed in the proposal, so it did not run.",
+      "next": "No tool was executed.",
+      "risk": "MEDIUM",
+      "autonomy": "SUPERVISED: continues under supervision and is recorded in the ledger.",
+      "rule": "REQUEST_SCOPE_EXCEEDED",
+      "humanAction": null,
+      "evidence": "Evidence: cima-ledger.jsonl · EVT-91c3ffae"
+    },
+    "evidenceResolvesTo": {
+      "kind": "governance",
+      "decision": "DENY",
+      "rule": "REQUEST_SCOPE_EXCEEDED",
+      "risk": "MEDIUM"
+    }
+  },
+  "HUMAN_APPROVAL_REQUIRED": {
+    "fact": {
+      "eventId": "EVT-15517554",
+      "category": "HUMAN_APPROVAL_REQUIRED",
+      "timestamp": 1800000013000,
+      "intentId": null,
+      "proposalId": "req-mywpixns-1",
+      "approvalId": "apr-mywpj5dk-2",
+      "taskId": null,
+      "agent": "god",
+      "operation": "Bash · data-deletion",
+      "intentType": null,
+      "runtimeStatus": "HUMAN_APPROVAL_REQUIRED",
+      "risk": "HIGH",
+      "scope": null,
+      "autonomy": "HUMAN_APPROVAL",
+      "decision": "HUMAN_APPROVAL_REQUIRED",
+      "rule": "shell:recursive-delete",
+      "evidence": {
+        "ref": "EVT-15517554",
+        "source": "cima-ledger.jsonl"
+      },
+      "requiredHumanAction": "DECIDE_APPROVAL",
+      "nextState": "WAITING_HUMAN_APPROVAL",
+      "count": 1
+    },
+    "keys": {
+      "what": "alicia.observe.what.HUMAN_APPROVAL_REQUIRED",
+      "why": "alicia.explain.HUMAN_APPROVAL_REQUIRED",
+      "next": "alicia.observe.next.WAITING_HUMAN_APPROVAL",
+      "autonomy": "alicia.observe.autonomy.HUMAN_APPROVAL",
+      "humanAction": "alicia.observe.action.DECIDE_APPROVAL"
+    },
+    "es-MX": {
+      "what": "CIMA detuvo Bash · data-deletion de god: requiere aprobación HIGH.",
+      "why": "Esta acción requiere tu aprobación porque está clasificada como riesgo alto.",
+      "next": "Revisa la aprobación en Aprobaciones de gobernanza. Confirmar el REQUEST no aprobó esta acción HIGH.",
+      "risk": "HIGH",
+      "autonomy": "HUMAN_APPROVAL: requiere tu aprobación explícita.",
+      "rule": "shell:recursive-delete",
+      "humanAction": "Aprobar o rechazar la acción HIGH en Aprobaciones de gobernanza.",
+      "evidence": "Evidencia: cima-ledger.jsonl · EVT-15517554"
+    },
+    "en-US": {
+      "what": "CIMA stopped Bash · data-deletion by god: it needs HIGH approval.",
+      "why": "This action needs your approval because it is classified as high risk.",
+      "next": "Review the approval in Governance approvals. Confirming the REQUEST did not approve this HIGH action.",
+      "risk": "HIGH",
+      "autonomy": "HUMAN_APPROVAL: needs your explicit approval.",
+      "rule": "shell:recursive-delete",
+      "humanAction": "Approve or reject the HIGH action in Governance approvals.",
+      "evidence": "Evidence: cima-ledger.jsonl · EVT-15517554"
+    },
+    "evidenceResolvesTo": {
+      "kind": "governance",
+      "decision": "HUMAN_APPROVAL_REQUIRED",
+      "rule": "shell:recursive-delete",
+      "risk": "HIGH"
+    }
+  },
+  "STALE_PROPOSAL": {
+    "fact": {
+      "eventId": "EVT-3250e297",
+      "category": "REQUEST_BLOCKED",
+      "timestamp": 1800000018000,
+      "intentId": "int-stale",
+      "proposalId": "req-mywpj7ow-3",
+      "approvalId": null,
+      "taskId": null,
+      "agent": "runtime",
+      "operation": null,
+      "intentType": "REQUEST",
+      "runtimeStatus": "BLOCKED",
+      "risk": null,
+      "scope": "LOW",
+      "autonomy": null,
+      "decision": null,
+      "rule": "STALE_PROPOSAL",
+      "evidence": {
+        "ref": "EVT-3250e297",
+        "source": "cima-ledger.jsonl"
+      },
+      "requiredHumanAction": "NONE",
+      "nextState": "CLOSED",
+      "count": 1
+    },
+    "keys": {
+      "what": "alicia.observe.what.REQUEST_BLOCKED",
+      "why": "alicia.explain.STALE_PROPOSAL",
+      "next": "alicia.observe.next.CLOSED",
+      "autonomy": null,
+      "humanAction": null
+    },
+    "es-MX": {
+      "what": "La propuesta req-mywpj7ow-3 quedó bloqueada por el runtime.",
+      "why": "La propuesta ya no es válida; hay que volver a pedirla.",
+      "next": "La propuesta está cerrada; nada más depende de ella.",
+      "risk": null,
+      "autonomy": null,
+      "rule": "STALE_PROPOSAL",
+      "humanAction": null,
+      "evidence": "Evidencia: cima-ledger.jsonl · EVT-3250e297"
+    },
+    "en-US": {
+      "what": "Proposal req-mywpj7ow-3 was blocked by the runtime.",
+      "why": "The proposal is no longer valid; it has to be requested again.",
+      "next": "The proposal is closed; nothing else depends on it.",
+      "risk": null,
+      "autonomy": null,
+      "rule": "STALE_PROPOSAL",
+      "humanAction": null,
+      "evidence": "Evidence: cima-ledger.jsonl · EVT-3250e297"
+    },
+    "evidenceResolvesTo": {
+      "kind": "request",
+      "transition": "BLOCKED",
+      "rule": "STALE_PROPOSAL",
+      "status": "BLOCKED"
+    }
+  },
+  "UNKNOWN_DECISION_synthetic": {
+    "fact": {
+      "eventId": "EVT-9150dc1e",
+      "category": "UNKNOWN_EVENT",
+      "timestamp": 1,
+      "intentId": null,
+      "proposalId": null,
+      "approvalId": null,
+      "taskId": null,
+      "agent": "god",
+      "operation": null,
+      "intentType": null,
+      "runtimeStatus": "SOMETHING_NEW",
+      "risk": null,
+      "scope": null,
+      "autonomy": null,
+      "decision": "SOMETHING_NEW",
+      "rule": null,
+      "evidence": {
+        "ref": "EVT-9150dc1e",
+        "source": "cima-ledger.jsonl"
+      },
+      "requiredHumanAction": "NONE",
+      "nextState": "NOT_AVAILABLE",
+      "count": 1,
+      "keys": {
+        "what": "alicia.observe.what.UNKNOWN_EVENT",
+        "why": "alicia.observe.unavailable",
+        "next": "alicia.observe.next.NOT_AVAILABLE",
+        "autonomy": null,
+        "humanAction": null
+      }
+    },
+    "es-MX": {
+      "what": "El runtime registró un hecho que Alicia no sabe interpretar (SOMETHING_NEW).",
+      "why": "No se puede confirmar el motivo con la evidencia disponible.",
+      "next": "No hay información suficiente para decir qué sigue.",
+      "risk": null,
+      "autonomy": null,
+      "rule": null,
+      "humanAction": null,
+      "evidence": "Evidencia: cima-ledger.jsonl · EVT-9150dc1e"
+    },
+    "note": "synthetic record: an unknown decision is shown verbatim, never interpreted"
+  },
+  "MISSING_FIELDS_synthetic": {
+    "fact": {
+      "eventId": "EVT-3d1e42a7",
+      "category": "UNKNOWN_EVENT",
+      "timestamp": 1,
+      "intentId": null,
+      "proposalId": null,
+      "approvalId": null,
+      "taskId": null,
+      "agent": null,
+      "operation": null,
+      "intentType": null,
+      "runtimeStatus": null,
+      "risk": null,
+      "scope": null,
+      "autonomy": null,
+      "decision": null,
+      "rule": null,
+      "evidence": {
+        "ref": "EVT-3d1e42a7",
+        "source": "cima-ledger.jsonl"
+      },
+      "requiredHumanAction": "NONE",
+      "nextState": "NOT_AVAILABLE",
+      "count": 1,
+      "keys": {
+        "what": "alicia.observe.what.UNKNOWN_EVENT",
+        "why": "alicia.observe.unavailable",
+        "next": "alicia.observe.next.NOT_AVAILABLE",
+        "autonomy": null,
+        "humanAction": null
+      }
+    },
+    "es-MX": {
+      "what": "El runtime registró un hecho que Alicia no sabe interpretar (—).",
+      "why": "No se puede confirmar el motivo con la evidencia disponible.",
+      "next": "No hay información suficiente para decir qué sigue.",
+      "risk": null,
+      "autonomy": null,
+      "rule": null,
+      "humanAction": null,
+      "evidence": "Evidencia: cima-ledger.jsonl · EVT-3d1e42a7"
+    },
+    "note": "synthetic record with no rule/decision/risk: \"information unavailable\""
+  }
+}

@@ -22,6 +22,7 @@
  *   conversation.ts   conversation boundary (interfaces)
  *   provider.ts       model provider boundary (interface)
  *   companion.ts      companion state, preferences and the ports a host lends
+ *   observability.ts  read-only projection of runtime facts + their explanation keys (v0.6)
  */
 export * from './registry';
 export * from './identity';
@@ -36,3 +37,4 @@ export * from './intent';
 export * from './conversation';
 export * from './provider';
 export * from './companion';
+export * from './observability';

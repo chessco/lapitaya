@@ -1,6 +1,8 @@
 import type { CSSProperties, FormEvent } from 'react';
 import type { AliciaSubmitResult } from '@shared/lapitaya/alicia';
+import type { ObservabilityView } from '@shared/lapitaya/alicia/observability';
 import { EXPLAINED_CODES, type ConfirmationSnapshot, type ProposalView } from './confirmationController';
+import { GovernanceActivity, ProposalGovernance } from './GovernanceExplanationView';
 
 /**
  * La Pitaya Alicia v0.5 — the Human Confirmation UI, as a pure render of the
@@ -29,6 +31,8 @@ export interface AliciaPanelViewProps {
   onGoToProposal(): void;
   onDraft(value: string): void;
   onSend(): void;
+  /** v0.6: the runtime's read-only governance projection (absent → nothing extra is shown). */
+  observability?: ObservabilityView | null;
 }
 
 const box: CSSProperties = {
@@ -55,9 +59,10 @@ function refusalText(t: T, code: string): string {
   return t('lapitaya:alicia.explain.UNKNOWN', { rule: code });
 }
 
-export function AliciaProposalCard({ t, view, acknowledged, onAcknowledge, onConfirm, onCancel }: {
+export function AliciaProposalCard({ t, view, acknowledged, onAcknowledge, onConfirm, onCancel, observability }: {
   t: T; view: ProposalView; acknowledged: boolean;
   onAcknowledge(id: string, value: boolean): void; onConfirm(id: string): void; onCancel(id: string): void;
+  observability?: ObservabilityView | null;
 }) {
   const base = `alicia-proposal-${view.id}`;
   const active = view.status === 'PROPOSED' || view.status === 'CONFIRMED';
@@ -124,6 +129,8 @@ export function AliciaProposalCard({ t, view, acknowledged, onAcknowledge, onCon
           {t(`${NS}.highPending`, { count: view.pendingHighApprovals })}
         </p>
       )}
+
+      {observability && <ProposalGovernance t={t} proposalId={view.id} entry={observability.byProposal[view.id]} />}
 
       {/* The runtime's answer. Not retried: the human decides what to do next. */}
       <div role={failed ? 'alert' : 'status'} aria-live={failed ? 'assertive' : 'polite'} data-field="outcome" style={{ fontSize: 11, marginBottom: active ? 6 : 0 }}>
@@ -193,8 +200,11 @@ export function AliciaPanelView(p: AliciaPanelViewProps) {
         <AliciaProposalCard
           key={v.id} t={t} view={v} acknowledged={p.acknowledged.has(v.id)}
           onAcknowledge={p.onAcknowledge} onConfirm={p.onConfirm} onCancel={p.onCancel}
+          observability={p.observability}
         />
       ))}
+
+      {p.observability && <GovernanceActivity t={t} view={p.observability} />}
 
       <div aria-live="polite" data-field="conversation" style={{ marginBottom: 6 }}>
         {p.lines.map((l, i) => (

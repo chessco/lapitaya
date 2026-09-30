@@ -33,7 +33,7 @@ import { phaseForAgent } from '../shared/lapitaya/agents';
 import { recordBanner } from '../shared/lapitaya/cimaRuntime';
 import { LA_PITAYA_NAME } from '../shared/lapitaya/brand';
 import {
-  alicia, registerAlicia, createAliciaCompanion, fromRuntimeEvent, deriveCimaStatus, ALICIA_ACTOR_ID
+  alicia, registerAlicia, createAliciaCompanion, fromRuntimeEvent, deriveCimaStatus, projectObservability, ALICIA_ACTOR_ID
 } from '../shared/lapitaya/alicia';
 import { IntentBoundary } from './intentBoundary';
 import { CircuitBreaker, type BreakerInput } from './breaker';
@@ -4071,6 +4071,20 @@ ipcMain.handle('alicia:submit', (_evt, message: unknown, opts: unknown) => {
     locales: { uiLocale: pick(l.uiLocale), agentLocale: pick(l.agentLocale), notificationLocale: pick(l.notificationLocale) }
   });
   return { ok: true, ...result };
+});
+// v0.6 governance observability: a read-only, human-safe projection of what the
+// runtime recorded (ledger, execution traces, approval/proposal state). It is
+// computed here so raw records (commands, paths, outputs, tokens) never reach
+// the Alicia UI; it decides nothing and writes nothing.
+ipcMain.handle('lapitaya:observability', (_evt, opts: unknown) => {
+  const o = (opts && typeof opts === 'object' ? opts : {}) as Record<string, unknown>;
+  const recentLimit = typeof o.recentLimit === 'number' && o.recentLimit > 0 ? Math.min(o.recentLimit, 50) : 12;
+  return projectObservability({
+    ledger: lapitaya.ledger(3000),
+    traces: lapitaya.recentTraces(1000),
+    approvals: lapitaya.listApprovals(),
+    requests: lapitaya.listRequests()
+  }, { recentLimit });
 });
 ipcMain.handle('lapitaya:ledger', (_evt, limit: unknown) =>
   lapitaya.ledger(typeof limit === 'number' && limit > 0 ? Math.min(limit, 5000) : 200));
