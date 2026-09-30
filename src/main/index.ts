@@ -27,6 +27,10 @@ import {
 import { linkWorktreeDeps, unlinkWorktreeDeps } from './worktreeDeps';
 import { HiveManager, type AgentMeta, type HiveMessage, type HiveTask } from './hive';
 import { HookServer } from './hooks';
+import { CimaRuntimeService } from './cimaRuntime';
+import { AUTONOMY_STAGES, DEFAULT_AUTONOMY_STAGE, type AutonomyStage } from '../shared/lapitaya/autonomy';
+import { phaseForAgent } from '../shared/lapitaya/agents';
+import { recordBanner } from '../shared/lapitaya/cimaRuntime';
 import { LA_PITAYA_NAME } from '../shared/lapitaya/brand';
 import { CircuitBreaker, type BreakerInput } from './breaker';
 import { CumulativeSampleGate, type UsageProvider } from './usage';
@@ -245,6 +249,26 @@ const hive = new HiveManager(
 // #7C — operator control state (pause/gate/steer/halt), read by the HookServer
 // when deciding hook returns.
 const control = new ControlRegistry();
+// La Pitaya — runtime governance + CIMA. Authorizes every PreToolUse (via the
+// HookServer below), records what really ran as evidence, and evaluates the
+// `cima` claims agents attach to hive messages (via the router).
+const lapitaya = new CimaRuntimeService({
+  hiveRoot: () => hive.root(),
+  godId: () => hive.registry().godId ?? 'god',
+  stage: () => {
+    const s = (readConfig() as { lapitayaAutonomyStage?: unknown }).lapitayaAutonomyStage;
+    return (AUTONOMY_STAGES as readonly unknown[]).includes(s) ? (s as AutonomyStage) : DEFAULT_AUTONOMY_STAGE;
+  },
+  phaseOf: (agentId) => phaseForAgent(hive.registry(), agentId),
+  taskOf: (agentId) => {
+    const t = (hive.tasks() as { tasks?: Array<{ id?: string; assignee?: string; status?: string }> })?.tasks ?? [];
+    return t.find((x) => x?.assignee === agentId && x?.status === 'doing')?.id ?? null;
+  },
+  onEvent: (e) => {
+    try { liveWebContents()?.send('lapitaya:governance', e); } catch { /* window gone */ }
+  }
+});
+hive.setCimaHandler((from, cima, messageId, to) => recordBanner(lapitaya.handle(from, to, cima, messageId)));
 // Stage 7A — the live observability tap. Receives Claude Code's first-party OTel
 // over loopback OTLP/JSON and exposes the locked usage-provider seam. resolveCwd
 // lets the transcript fallback find an agent's cwd from the hive registry.
@@ -310,7 +334,8 @@ const hookServer = new HookServer(
   control,
   breaker,
   standingGoalFromRoster,
-  (agentId, event, message) => workerWake.noteHook(agentId, event, message)
+  (agentId, event, message) => workerWake.noteHook(agentId, event, message),
+  lapitaya
 );
 const memory = new MemoryManager(
   () => readConfig().harnessHome,
@@ -3950,6 +3975,16 @@ ipcMain.handle('control:setBreakerState', (_evt, state: unknown) => {
 
 // ─── IPC: operator control over agents (#7C.1–7C.3) ─────────────────────────
 // All return the agent's fresh control snapshot so the UI can reflect state.
+// La Pitaya governance — the human's side of HUMAN_APPROVAL_REQUIRED, and a
+// read-only view of the CIMA ledger for the UI and for evidence export.
+ipcMain.handle('lapitaya:approvals', () => lapitaya.listApprovals());
+ipcMain.handle('lapitaya:decide', (_evt, id: unknown, approve: unknown) => {
+  if (typeof id !== 'string' || typeof approve !== 'boolean') return null;
+  return lapitaya.decide(id, approve, 'human');
+});
+ipcMain.handle('lapitaya:ledger', (_evt, limit: unknown) =>
+  lapitaya.ledger(typeof limit === 'number' && limit > 0 ? Math.min(limit, 5000) : 200));
+
 ipcMain.handle('control:pause', (_evt, agentId: unknown, on: unknown) => {
   if (typeof agentId !== 'string') return null;
   control.pause(agentId, on === true);

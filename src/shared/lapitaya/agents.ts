@@ -60,7 +60,10 @@ const HARD_RULES =
   'CIMA rules: Builder != Auditor (never approve your own work). Evidence First (no PASS without ' +
   'command output, exit codes or test results, quoted verbatim). Human Governance (production, ' +
   'security, auth, permissions, infrastructure, destructive migrations and data deletion need explicit ' +
-  'human approval — ask El Inge to escalate).';
+  'human approval — ask El Inge to escalate). Report every phase result as a hive message with a `cima` ' +
+  'field {taskId, phase, verdict, evidence[{type, source, description, result}]} (see PROTOCOL.md): the ' +
+  'harness verifies each evidence `source` against the commands and files you actually ran/read, and ' +
+  'records BLOCKED when it cannot.';
 
 export const LA_PITAYA_AGENTS: readonly LaPitayaAgent[] = [
   {
@@ -177,6 +180,16 @@ export const LA_PITAYA_HIRE_PRESETS: readonly LaPitayaAgent[] =
 export function agentDisplayName(id: LaPitayaAgentId, locale: string | null | undefined): string {
   const name = LA_PITAYA_AGENT_BY_ID[id].name;
   return isEnglish(locale) ? toAscii(name) : name;
+}
+
+/** The CIMA phase a hive agent works in, from its registry name (El Inge →
+ *  CONTEXT). Used to stamp governance decisions with a phase. */
+export function phaseForAgent(
+  registry: { godId?: string | null; agents: Record<string, { name?: string } | undefined> },
+  agentId: string
+): CimaPhase | null {
+  if (agentId === (registry.godId ?? 'god')) return 'CONTEXT';
+  return agentByName(registry.agents[agentId]?.name)?.cimaPhases[0] ?? null;
 }
 
 /** Which La Pitaya agent wears a given office sprite, if any. */

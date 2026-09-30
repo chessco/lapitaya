@@ -17,9 +17,23 @@ El humano conserva la autoridad sobre las decisiones de alto impacto.
 | [EVIDENCE.md](EVIDENCE.md) | Qué cuenta como evidencia y la regla de no traducirla |
 | [AUTONOMY.md](AUTONOMY.md) | Política de autonomía y su evolución |
 
-## Implementación en Foundation v0.1
+## Runtime (v0.2)
 
-CIMA se integra **conceptualmente** sobre el runtime existente, sin un motor de workflow nuevo:
+Desde CIMA Runtime v0.2 las reglas **se aplican en el runtime**, en dos fronteras que el agente no
+controla. El detalle está en [`docs/LA_PITAYA_CIMA_RUNTIME_02.md`](../LA_PITAYA_CIMA_RUNTIME_02.md).
+
+| Frontera | Qué aplica | Dónde |
+| --- | --- | --- |
+| `PreToolUse` de cada llamada a herramienta | Clasificación de riesgo → política de autonomía → ALLOW / SUPERVISED / HUMAN_APPROVAL_REQUIRED (deny) | `src/main/hooks.ts` → `src/main/cimaRuntime.ts` → `shared/lapitaya/{toolRisk,governance}.ts` |
+| `PostToolUse` / `PostToolUseFailure` | Lo que realmente se ejecutó o leyó se convierte en `ExecutionTrace`, la única evidencia aceptada | mismo servicio |
+| Router del hive (`routeOnce`) | El campo `cima` de un mensaje se evalúa: Evidence First, Builder != Auditor, transiciones y autoridad de DECISION. El veredicto del runtime se sella en el mensaje | `src/main/hive.ts` → `shared/lapitaya/cimaRuntime.ts` |
+| Ledger | Decisiones de gobernanza, registros CIMA, asignaciones de fase, trazas y aprobaciones, en JSONL dentro del hive | `<hive>/lapitaya/` |
+
+El formato del campo `cima` que usan los agentes está en el `PROTOCOL.md` del hive (sección CIMA).
+
+## Implementación en Foundation v0.1 (base conceptual, se mantiene)
+
+CIMA se integró **conceptualmente** sobre el runtime existente, sin un motor de workflow nuevo:
 
 | Pieza | Dónde |
 | --- | --- |

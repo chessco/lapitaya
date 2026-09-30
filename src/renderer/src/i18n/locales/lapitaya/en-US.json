@@ -52,5 +52,17 @@
     "agentLocaleDesc": "The language La Pitaya agents write their messages and reports in. Independent of the interface language. Commands, code, logs and test output are never translated.",
     "notificationLocale": "Notification language",
     "notificationLocaleDesc": "The language of notices and, later, of Alicia's summaries. Independent of the interface language."
+  },
+  "governance": {
+    "title": "GOVERNANCE APPROVALS",
+    "approveHint": "Approve allows ONE execution of this exact call. The agent must retry it.",
+    "approve": "approve",
+    "reject": "reject",
+    "status": {
+      "pending": "pending",
+      "approved": "approved",
+      "rejected": "rejected",
+      "consumed": "executed"
+    }
   }
 }

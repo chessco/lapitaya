@@ -407,6 +407,13 @@ export class HiveManager {
     return this._maySpawn;
   }
 
+  /** La Pitaya CIMA runtime hook: evaluates a message's `cima` claim and returns
+   *  the banner stamped onto the delivered body (see CimaRuntimeService.submit). */
+  private cimaHandler: ((from: string, cima: unknown, messageId: string, to: string) => string | null) | null = null;
+  setCimaHandler(fn: ((from: string, cima: unknown, messageId: string, to: string) => string | null) | null): void {
+    this.cimaHandler = fn;
+  }
+
   // — paths —
   root(): string | null {
     const home = this.getHome();
@@ -1198,6 +1205,9 @@ export class HiveManager {
         SubagentStop: [entry()],
         PreToolUse: [entry('*')],
         PostToolUse: [entry('*')],
+        // La Pitaya: a failed command is evidence too (a TEST that FAILs must be
+        // provable). Without this only successful calls reach the trace log.
+        PostToolUseFailure: [entry('*')],
         UserPromptSubmit: [entry()],
         Notification: [entry()],
         SessionStart: [entry()],
@@ -1747,6 +1757,19 @@ export class HiveManager {
           }
           const msg = this.normalize(partial, id);
           msg.from = id; // sender is authoritative — the owning directory
+          // La Pitaya CIMA: a `cima` field is a claim (task, phase, verdict,
+          // evidence). The runtime evaluates it against what the harness saw the
+          // sender actually do and stamps ITS verdict on the message, so no
+          // recipient ever relies on the sender's word alone.
+          const cima = (partial as { cima?: unknown }).cima;
+          if (cima !== undefined && this.cimaHandler) {
+            try {
+              const banner = this.cimaHandler(id, cima, msg.id, msg.to);
+              if (banner) msg.body = `${banner}\n\n${msg.body}`;
+            } catch (e) {
+              this.appendLog({ kind: 'cima-error', from: id, id: msg.id, error: String(e) });
+            }
+          }
           this.routeMessage(msg);
           renameSync(full, join(outbox, '.sent', f)); // archive, don't reprocess
           routed++;
@@ -2856,6 +2879,43 @@ There are two shared surfaces, both in the hive root:
 - \`board.md\` — the freeform narrative plan. The god agent is its sole scribe; others \`propose\` edits.
 - \`tasks.json\` — the structured task ledger (a kanban: \`todo / doing / blocked / done\`, with title,
   assignee, priority, deps). Keep the task you're working reflected in its status.
+
+## CIMA (La Pitaya) — reporting a phase result
+When you finish a CIMA phase for a task, add a \`cima\` object to your outbox message:
+
+\`\`\`json
+{
+  "to": "god", "act": "inform", "subject": "TEST result for <taskId>", "body": "…",
+  "cima": {
+    "taskId": "<task id from tasks.json>",
+    "phase": "CONTEXT | ARCHITECT | BUILD | TEST | AUDIT | LEARN | DECISION | ITERATE",
+    "verdict": "PASS | FAIL | BLOCKED",
+    "summary": "one paragraph",
+    "evidence": [
+      { "type": "test-result | command-output | static-analysis | file-inspection | diff | runtime-result | audit-finding | execution-trace",
+        "source": "<the EXACT command you ran, or the file path you read>",
+        "description": "what it shows", "result": "<verbatim output excerpt>" }
+    ]
+  }
+}
+\`\`\`
+
+The harness checks every claim before delivering it and stamps its own verdict on the message:
+- **Evidence First** — each \`source\` must be a command you actually ran or a file you actually read in
+  this session (the harness records every tool call). Prose is not evidence; a PASS or FAIL with
+  unverifiable evidence is recorded as BLOCKED.
+- **Builder != Auditor** — whoever submitted BUILD for a task cannot PASS its TEST or AUDIT; an auditor
+  who edits files after the build started cannot PASS the AUDIT.
+- **Transitions** — TEST PASS needs BUILD PASS, AUDIT PASS needs TEST PASS, and only god/the human can
+  record DECISION PASS (accept the work), which needs AUDIT PASS.
+- Use BLOCKED when you cannot validate (missing evidence, human approval needed). BLOCKED is not FAIL.
+
+## Governance — tool calls are authorized at runtime
+Every tool call is classified LOW / MEDIUM / HIGH. LOW runs; MEDIUM runs and is logged as supervised;
+HIGH (production, destructive migrations, secrets, auth/permissions, infrastructure, data deletion,
+git push, editing hook/governance files) is DENIED with \`HUMAN_APPROVAL_REQUIRED\` until the human
+approves that exact call. Do not work around a denial — report it; retry the identical call only after
+approval.
 
 ## Asking the human (the ASK ME card)
 When a card can only move with the human — a question to answer, or an action only they can do

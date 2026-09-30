@@ -39,8 +39,20 @@ evidencia. Solo el label visible se localiza (`lapitaya:cima.phases.<PHASE>`):
 Si un rol no está contratado, El Inge lo cubre o se lo pide al humano. El briefing lo dice como
 "when these agents are on the roster".
 
-## Pendiente (fase AGENT AUTOMATION)
+## Estado en v0.2
 
-- Etiquetar tareas con su fase CIMA en `tasks.json`.
-- Aplicar `canApprove` al cerrar tareas y `isVerdictBacked` al marcar PASS, en `hive.ts`.
+- Hecho: cada fase se reporta con el campo `cima` y el router del hive la valida (Evidence First,
+  Builder != Auditor, transiciones, autoridad de DECISION). El veredicto del runtime queda en el
+  ledger y sellado en el mensaje.
+- Hecho: El Inge etiqueta cada delegación con `cima: {taskId, phase}`, que se registra como
+  `cima-assignment` (entrega de fase, no veredicto).
+- Validado en vivo: la tarea LP-CIMA-001 recorrió ARCHITECT → BUILD → TEST → AUDIT → LEARN →
+  DECISION → ITERATE con los seis agentes (ver `docs/LA_PITAYA_CIMA_RUNTIME_02.md`).
+
+## Pendiente
+
+- `tasks.json` se sigue editando directamente. Marcar una tarjeta `done` todavía no exige
+  DECISION PASS en el ledger.
+- CONTEXT no tiene un reclamo propio: El Inge lo ejecuta (hay trazas), pero su primer registro
+  CIMA es la asignación a ARCHITECT.
 - Emitir eventos `cima-phase` y `verdict` hacia Alicia.

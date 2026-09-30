@@ -19,6 +19,7 @@ import type { ControlRegistry } from './control';
 import type { CircuitBreaker } from './breaker';
 import { estimateCostUsd } from './pricing';
 import { validateHookEvent } from '../shared/hookEvents';
+import type { CimaRuntimeService } from './cimaRuntime';
 
 /** Maximum JSON payload bytes in one newline-delimited hook frame. */
 const MAX_HOOK_FRAME_BYTES = 256 * 1024;
@@ -33,6 +34,10 @@ interface HookPayload {
   cwd?: string;
   tool_name?: string;
   tool_input?: unknown;
+  /** PostToolUse / PostToolUseFailure: what the tool returned (La Pitaya traces). */
+  tool_response?: unknown;
+  /** PostToolUseFailure: the failure text. */
+  error?: unknown;
   stop_hook_active?: boolean;
   prompt?: string;
   source?: string;
@@ -83,7 +88,11 @@ export class HookServer {
     /** Optional observer of every hook boundary (agentId, event, message). The
      *  worker inbox-wake watchdog (workerWake.ts) feeds on this to learn when an
      *  agent is parked on a permission/HITL prompt so it never types into it. */
-    private onEvent?: (agentId: string | undefined, event: string, message: string | undefined) => void
+    private onEvent?: (agentId: string | undefined, event: string, message: string | undefined) => void,
+    /** La Pitaya governance + CIMA runtime: authorizes every PreToolUse and
+     *  records what actually ran (PostToolUse / PostToolUseFailure) as evidence.
+     *  Optional so tests can omit it. */
+    private governance?: CimaRuntimeService
   ) {}
 
   start(): void {
@@ -236,6 +245,14 @@ export class HookServer {
       this.breaker?.recordToolUse(agentId, p.tool_name, p.tool_input);
     }
 
+    // La Pitaya — what really ran is the only thing CIMA accepts as evidence.
+    if ((event === 'PostToolUse' || event === 'PostToolUseFailure') && agentId && p.tool_name && this.governance) {
+      try {
+        this.governance.recordTrace(agentId, event, p.tool_name, p.tool_input,
+          event === 'PostToolUseFailure' ? (p.error ?? p.tool_response) : p.tool_response);
+      } catch (e) { console.error('[lapitaya] trace failed:', e); }
+    }
+
     // A human just spoke to this agent (issue #376): stamp the third progress
     // clock the no-progress arm reads. A conversation is prose in, prose out —
     // no hive file changes, no tool spans — which the arm otherwise reads as
@@ -281,6 +298,41 @@ export class HookServer {
             hookEventName: 'PreToolUse',
             permissionDecision: 'deny',
             permissionDecisionReason: d.reason ?? 'Denied by operator.'
+          }
+        };
+      }
+    }
+
+    // La Pitaya runtime governance. Runs for EVERY tool call, after the
+    // operator gate: risk → autonomy policy → decision. HIGH risk is denied until
+    // a human approves the identical call. This is a hook decision, so it holds
+    // in autoMode (bypassPermissions only silences the CLI's own prompts) and no
+    // prompt can talk the agent past it.
+    if (event === 'PreToolUse' && agentId && this.governance && p.tool_name) {
+      let auth: ReturnType<CimaRuntimeService['authorize']> | null = null;
+      try { auth = this.governance.authorize(agentId, p.tool_name, p.tool_input); } catch (e) {
+        // Fail CLOSED: if governance cannot decide, the call does not run.
+        // (Ledger/approval writes already swallow their own I/O errors, so only
+        // a programming error reaches here.)
+        console.error('[lapitaya] authorize failed:', e);
+        this.emit(agentId, event, p, true);
+        return {
+          hookSpecificOutput: {
+            hookEventName: 'PreToolUse',
+            permissionDecision: 'deny',
+            permissionDecisionReason: 'GOVERNANCE_ERROR — La Pitaya could not authorize this call, so it was NOT executed. Report it to the human.'
+          }
+        };
+      }
+      if (auth?.decision === 'HUMAN_APPROVAL_REQUIRED') {
+        this.emitControl(agentId, p.tool_name, auth.reason);
+        this.notify(agentId, `needs approval: ${auth.summary}`);
+        this.emit(agentId, event, p, true);
+        return {
+          hookSpecificOutput: {
+            hookEventName: 'PreToolUse',
+            permissionDecision: 'deny',
+            permissionDecisionReason: auth.reason ?? 'HUMAN_APPROVAL_REQUIRED'
           }
         };
       }

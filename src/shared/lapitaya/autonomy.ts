@@ -21,12 +21,15 @@ export type AutonomyStage = (typeof AUTONOMY_STAGES)[number];
 
 export type ActionCategory =
   // LOW
-  | 'read-code' | 'analysis' | 'run-tests' | 'lint' | 'documentation' | 'generate-tests' | 'static-analysis'
+  | 'read-code' | 'analysis' | 'run-tests' | 'lint' | 'documentation' | 'static-analysis'
+  | 'hive-coordination'
   // MEDIUM
+  | 'code-change' | 'config-change' | 'generate-tests' | 'shell-command'
   | 'api-change' | 'broad-refactor' | 'structural-change' | 'major-dependency-change'
   // HIGH
   | 'production' | 'destructive-migration' | 'critical-security' | 'auth' | 'permissions'
-  | 'infrastructure' | 'data-deletion' | 'multi-tenancy' | 'irreversible';
+  | 'infrastructure' | 'data-deletion' | 'multi-tenancy' | 'irreversible'
+  | 'secrets' | 'governance-tamper';
 
 export const ACTION_RISK: Readonly<Record<ActionCategory, RiskLevel>> = Object.freeze({
   'read-code': 'LOW',
@@ -34,12 +37,26 @@ export const ACTION_RISK: Readonly<Record<ActionCategory, RiskLevel>> = Object.f
   'run-tests': 'LOW',
   lint: 'LOW',
   documentation: 'LOW',
-  'generate-tests': 'LOW',
   'static-analysis': 'LOW',
+  // The agent's own hive workspace: outbox, memory.md, tasks.json, board.md.
+  'hive-coordination': 'LOW',
+  'code-change': 'MEDIUM',
+  'config-change': 'MEDIUM',
+  // v0.2: creating tests changes the repo, so it is supervised (was LOW in v0.1).
+  'generate-tests': 'MEDIUM',
+  // A shell command that is neither a known read/test command nor a known
+  // destructive one. Supervised, not blocked: blocking every unknown command
+  // would stop ordinary work (mkdir, node scripts, moving inbox files).
+  'shell-command': 'MEDIUM',
   'api-change': 'MEDIUM',
   'broad-refactor': 'MEDIUM',
   'structural-change': 'MEDIUM',
   'major-dependency-change': 'MEDIUM',
+  secrets: 'HIGH',
+  // Editing the machinery that enforces governance (hooks, agent settings, the
+  // CIMA ledger, approvals, the policy code itself). An agent must never be able
+  // to switch its own guard off.
+  'governance-tamper': 'HIGH',
   production: 'HIGH',
   'destructive-migration': 'HIGH',
   'critical-security': 'HIGH',
@@ -89,8 +106,9 @@ export function requiresHuman(action: string, stage: AutonomyStage = DEFAULT_AUT
 
 /** One paragraph for El Inge's orientation prompt — the policy in plain English. */
 export const AUTONOMY_PROMPT =
-  'Autonomy policy (La Pitaya): LOW risk (reading code, analysis, tests, lint, docs, static analysis) — ' +
-  'proceed. MEDIUM risk (API changes, broad refactors, structural changes, major dependency changes) — ' +
-  'proceed under supervision and report to the human. HIGH risk (production, destructive migrations, ' +
-  'critical security, auth, permissions, infrastructure, data deletion, multi-tenancy, anything ' +
-  'irreversible) — STOP and ask the human for explicit approval first.';
+  'Autonomy policy (La Pitaya, ENFORCED by the harness at every tool call): LOW risk (reading code, ' +
+  'analysis, tests, lint, docs, static analysis) — runs automatically. MEDIUM risk (code/config changes, ' +
+  'new tests, refactors, other shell commands) — runs under supervision and is logged. HIGH risk ' +
+  '(production, destructive migrations, secrets, auth, permissions, infrastructure, data deletion, ' +
+  'irreversible actions, editing governance/hook files) — the harness DENIES the call with ' +
+  'HUMAN_APPROVAL_REQUIRED; ask the human, and retry the identical call only after they approve.';

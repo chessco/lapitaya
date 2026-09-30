@@ -1,0 +1,47 @@
+[36mvite v5.4.21 [32mbuilding SSR bundle for development...[36m[39m
+transforming...
+[32m✓[39m 84 modules transformed.
+rendering chunks...
+[2mout/main/[22m[36mindex.js  [39m[1m[33m723.92 kB[39m[22m
+[32m✓ built in 1.03s[39m
+[32m
+build the electron main process successfully[39m
+[90m
+-----
+[39m
+[36mvite v5.4.21 [32mbuilding SSR bundle for development...[36m[39m
+transforming...
+[32m✓[39m 1 modules transformed.
+rendering chunks...
+[2mout/preload/[22m[36mindex.js  [39m[1m[2m43.52 kB[22m[1m[22m
+[32m✓ built in 35ms[39m
+[32m
+build the electron preload files successfully[39m
+[90m
+-----
+[39m
+Re-optimizing dependencies because vite config has changed
+Port 5173 is in use, trying another one...
+[32mdev server running for the electron renderer process at:
+[39m
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5174[22m/[39m
+[2m  [32m➜[39m  [1mNetwork[22m[2m: use [22m[1m--host[22m[2m to expose[22m
+[32m
+start electron app...
+[39m
+
+
+DevTools listening on ws://127.0.0.1:9333/devtools/browser/8e6f8e28-361d-4093-971b-03b904814654
+[broker] integration broker listening on http://127.0.0.1:56976
+[telemetry] collector listening http://127.0.0.1:56977
+[roster] refused to overwrite a non-empty roster with an empty one
+[power] keep-awake ON (prevent-app-suspension) — agents running
+[roster] refused to overwrite a non-empty roster with an empty one
+[2m7:23:01 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/@fs/C:/PitayaCode/LaPitaya/src/renderer/src/App.tsx[22m
+[2m7:23:01 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mC:/PitayaCode/LaPitaya/src/renderer/src/main.tsx[22m
+[2m7:23:01 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mC:/PitayaCode/LaPitaya/src/renderer/src/main.tsx[22m
+[worker-wake] nudging valentin-munh7sdc on pty-valentin-munh7sdc (1 pending)
+[worker-wake] nudging el-beni-munh8ii6 on pty-el-beni-munh8ii6 (1 pending)
+[worker-wake] nudging margarito-munh93e7 on pty-margarito-munh93e7 (1 pending)
+[worker-wake] nudging jose-juan-munh9oat on pty-jose-juan-munh9oat (1 pending)
+[worker-wake] nudging el-tutu-munha96x on pty-el-tutu-munha96x (1 pending)

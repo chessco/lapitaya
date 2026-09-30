@@ -1,0 +1,22 @@
+# All 21 are PRE_EXISTING: identical to evidence/lapitaya-cima-runtime/baseline/failures.txt (0 NEW_REGRESSION).
+EXPECTED_WINDOWS_ISSUE:CRLF-source-regex | Command Center sets and clears one cap through the atomic IPC
+EXPECTED_WINDOWS_ISSUE:symlink-EPERM | a dangling symlink cannot be used to create a file outside the workspace
+EXPECTED_WINDOWS_ISSUE:symlink-EPERM | a final-component symlink cannot be read as bytes
+EXPECTED_WINDOWS_ISSUE:symlink-EPERM | a final-component symlink cannot be read as text
+EXPECTED_WINDOWS_ISSUE:symlink-EPERM | a final-component symlink cannot be written through
+EXPECTED_WINDOWS_ISSUE:symlink-EPERM | an in-workspace symlink to an in-workspace target is followed, not refused
+EXPECTED_WINDOWS_ISSUE:symlink-EPERM | an intermediate directory symlink cannot be read through
+EXPECTED_WINDOWS_ISSUE:posix-path-separator | consecutive agent caps survive an interleaved config update
+EXPECTED_WINDOWS_ISSUE:symlink-EPERM | does not follow the dependency symlink when removing a worktree
+EXPECTED_WINDOWS_ISSUE:symlink-EPERM | does not remove a worktree node_modules link to another directory
+EXPECTED_WINDOWS_ISSUE:symlink-EPERM | leaves a dangling worktree dependency symlink untouched
+EXPECTED_WINDOWS_ISSUE:symlink-EPERM | lexical traversal out of the root is still rejected
+EXPECTED_WINDOWS_ISSUE:symlink-EPERM | listDir cannot list a directory outside the workspace
+EXPECTED_WINDOWS_ISSUE:symlink-EPERM | ordinary in-workspace reads and writes still succeed
+EXPECTED_WINDOWS_ISSUE:symlink-not-created | removes only the linked dependencies before checking worktree status
+EXPECTED_WINDOWS_ISSUE:symlink-EPERM | reports a failed link without throwing
+EXPECTED_WINDOWS_ISSUE:symlink-EPERM | steer is counted at the IPC seam, not inside control.steer
+EXPECTED_WINDOWS_ISSUE:CRLF-source-regex | the composer counts its own submit, not the shared enqueue action
+EXPECTED_WINDOWS_ISSUE:symlink-EPERM | the git diff path check refuses a symlink escape
+ENVIRONMENT:remote-model-catalog | the remote file and the baked file agree on every model
+EXPECTED_WINDOWS_ISSUE:CRLF-source-regex | turning it off is a real undo, not a terminal rebuild

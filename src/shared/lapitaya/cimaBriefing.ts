@@ -17,4 +17,8 @@ export const CIMA_GOD_BRIEFING =
   `When these agents are on the roster, route work through them: ${team}. ` +
   'Rules: Builder != Auditor (the agent that built a change never approves it); Evidence First (no PASS ' +
   'without verbatim command/test output and exit codes); Human Governance (the human decides high-impact ' +
-  'calls); never translate or rewrite evidence.';
+  'calls); never translate or rewrite evidence. These rules are ENFORCED by the harness: every phase ' +
+  'result travels as a hive message with a `cima` field (PROTOCOL.md), the runtime checks it against what ' +
+  'the agent really executed and stamps its own verdict ([CIMA runtime] …) on the message — trust that ' +
+  'stamp, not the claim. You accept finished work by sending a DECISION with a `cima` field; the runtime ' +
+  'only records DECISION PASS after an AUDIT PASS.';

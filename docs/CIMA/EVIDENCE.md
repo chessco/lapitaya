@@ -1,6 +1,22 @@
 # Evidencia
 
-## Qué cuenta
+## Modelo de runtime (v0.2)
+
+La evidencia que el runtime acepta tiene dos mitades
+([`cimaRuntime.ts`](../../src/shared/lapitaya/cimaRuntime.ts)):
+
+- **`EvidenceItem`**, lo que el agente cita: `{ type, source, description, result, timestamp }`,
+  con `type` ∈ `test-result | command-output | static-analysis | file-inspection | diff |
+  runtime-result | audit-finding | execution-trace`.
+- **`ExecutionTrace`**, lo que el harness observó en `PostToolUse` / `PostToolUseFailure`:
+  `{ agentId, kind: command|read|write|tool, subject, ok, outputHead }`.
+
+Un `EvidenceItem` solo cuenta si su `source` coincide con una traza **del mismo agente**: el
+comando que ejecutó (se ignoran anotaciones como `(cwd …)`) o el archivo que leyó. Un texto del
+agente diciendo "todo está correcto" no coincide con nada, así que no es evidencia. Un PASS o un
+FAIL con alguna cita no verificable se registra **BLOCKED**.
+
+## Tipos v0.1 (se mantienen en `cima.ts`)
 
 `EvidenceKind` en `src/shared/lapitaya/cima.ts`:
 

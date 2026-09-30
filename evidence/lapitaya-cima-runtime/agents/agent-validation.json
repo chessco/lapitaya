@@ -1,0 +1,112 @@
+{
+  "El Inge": {
+    "hiveId": "god",
+    "toolCalls": 101,
+    "decisions": {
+      "ALLOW/LOW": 79,
+      "SUPERVISED/MEDIUM": 22
+    },
+    "commandsRun": 40,
+    "filesWritten": [],
+    "cimaRecords": [
+      "LP-CIMA-001 CONTEXT BLOCKED->BLOCKED [MALFORMED]",
+      "LP-CIMA-001 CONTEXT BLOCKED->BLOCKED [MALFORMED]",
+      "LP-CIMA-001 CONTEXT BLOCKED->BLOCKED [MALFORMED]",
+      "LP-CIMA-001 CONTEXT BLOCKED->BLOCKED [MALFORMED]",
+      "LP-CIMA-001 CONTEXT BLOCKED->BLOCKED [MALFORMED]",
+      "LP-CIMA-001 CONTEXT BLOCKED->BLOCKED [MALFORMED]",
+      "LP-CIMA-001 CONTEXT BLOCKED->BLOCKED [MALFORMED]",
+      "LP-CIMA-001 CONTEXT BLOCKED->BLOCKED [MALFORMED]",
+      "LP-CIMA-001 CONTEXT BLOCKED->BLOCKED [MALFORMED]",
+      "LP-CIMA-NEG-TR DECISION PASS->BLOCKED [TRANSITION]",
+      "LP-CIMA-001 DECISION PASS->PASS",
+      "LP-CIMA-001 ITERATE PASS->PASS"
+    ],
+    "assignments": []
+  },
+  "Valentin": {
+    "hiveId": "valentin-munh7sdc",
+    "toolCalls": 18,
+    "decisions": {
+      "ALLOW/LOW": 15,
+      "SUPERVISED/MEDIUM": 3
+    },
+    "commandsRun": 8,
+    "filesWritten": [],
+    "cimaRecords": [
+      "LP-CIMA-001 ARCHITECT PASS->PASS"
+    ],
+    "assignments": []
+  },
+  "El Beni": {
+    "hiveId": "el-beni-munh8ii6",
+    "toolCalls": 36,
+    "decisions": {
+      "ALLOW/LOW": 23,
+      "SUPERVISED/MEDIUM": 8,
+      "HUMAN_APPROVAL_REQUIRED/HIGH": 2,
+      "HUMAN_APPROVED/HIGH": 1,
+      "APPROVED/HIGH": 1,
+      "HUMAN_REJECTED/HIGH": 1
+    },
+    "commandsRun": 15,
+    "filesWritten": [
+      "C:\\PitayaCode\\LaPitaya-cima-sandbox\\src\\shared\\lapitaya\\agents.ts",
+      "C:\\PitayaCode\\LaPitaya-cima-sandbox\\test\\lapitaya-foundation.test.cjs"
+    ],
+    "cimaRecords": [
+      "LP-CIMA-001 BUILD PASS->PASS",
+      "LP-CIMA-001 AUDIT PASS->BLOCKED [BUILDER_NOT_AUDITOR]"
+    ],
+    "assignments": []
+  },
+  "Margarito": {
+    "hiveId": "margarito-munh93e7",
+    "toolCalls": 39,
+    "decisions": {
+      "ALLOW/LOW": 29,
+      "SUPERVISED/MEDIUM": 10
+    },
+    "commandsRun": 27,
+    "filesWritten": [
+      "C:\\Users\\chess\\AppData\\Local\\Temp\\claude\\C--PitayaCode-LaPitaya-cima-sandbox\\26edaac4-70a5-4ce5-80fa-723db4d1815e\\scratchpad\\probe-agentByHiveId.cjs"
+    ],
+    "cimaRecords": [
+      "LP-CIMA-001 TEST PASS->BLOCKED [EVIDENCE_FIRST]",
+      "LP-CIMA-001 TEST PASS->PASS",
+      "LP-CIMA-NEG-EV TEST PASS->BLOCKED [EVIDENCE_FIRST,TRANSITION]"
+    ],
+    "assignments": []
+  },
+  "Jose Juan": {
+    "hiveId": "jose-juan-munh9oat",
+    "toolCalls": 34,
+    "decisions": {
+      "ALLOW/LOW": 30,
+      "SUPERVISED/MEDIUM": 4
+    },
+    "commandsRun": 21,
+    "filesWritten": [],
+    "cimaRecords": [
+      "LP-CIMA-001 AUDIT PASS->BLOCKED [EVIDENCE_FIRST]",
+      "LP-CIMA-001 AUDIT PASS->BLOCKED [EVIDENCE_FIRST]",
+      "LP-CIMA-001 AUDIT PASS->PASS"
+    ],
+    "assignments": []
+  },
+  "El Tutu": {
+    "hiveId": "el-tutu-munha96x",
+    "toolCalls": 27,
+    "decisions": {
+      "ALLOW/LOW": 24,
+      "SUPERVISED/MEDIUM": 3
+    },
+    "commandsRun": 18,
+    "filesWritten": [],
+    "cimaRecords": [
+      "LP-CIMA-001 LEARN PASS->BLOCKED [EVIDENCE_FIRST]",
+      "LP-CIMA-001 LEARN PASS->PASS"
+    ],
+    "assignments": []
+  }
+}

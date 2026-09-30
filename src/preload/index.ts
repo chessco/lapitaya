@@ -13,6 +13,8 @@ export type { HeroPayload } from '../shared/heroPayload';
 import type { ModelCatalog } from '../shared/modelCatalogPayload';
 export type { ModelCatalog, CatalogModel } from '../shared/modelCatalogPayload';
 import type { HookEvent } from '../shared/hookEvents';
+import type { Approval } from '../shared/lapitaya/governance';
+import type { LedgerEntry } from '../main/cimaRuntime';
 export type { HookEvent } from '../shared/hookEvents';
 import type { LocalSkill, CatalogSkill } from '../main/skills';
 export type { LocalSkill, CatalogSkill } from '../main/skills';
@@ -1069,6 +1071,21 @@ const api = {
     const listener = (_e: IpcRendererEvent, payload: { agentId: string; tool?: string; reason?: string }) => cb(payload);
     ipcRenderer.on('control:approvalRequest', listener);
     return () => ipcRenderer.removeListener('control:approvalRequest', listener);
+  },
+
+  // ─── La Pitaya governance (HUMAN_APPROVAL_REQUIRED + CIMA ledger) ─────────
+  /** Every approval request the runtime has raised, newest first. */
+  lapitayaApprovals: (): Promise<Approval[]> => ipcRenderer.invoke('lapitaya:approvals'),
+  /** The human's explicit decision on one PENDING request. */
+  lapitayaDecide: (id: string, approve: boolean): Promise<Approval | null> =>
+    ipcRenderer.invoke('lapitaya:decide', id, approve),
+  /** Recent governance decisions and CIMA records (append-only ledger). */
+  lapitayaLedger: (limit?: number): Promise<LedgerEntry[]> => ipcRenderer.invoke('lapitaya:ledger', limit),
+  /** Live governance/CIMA events (approval requests, supervised calls, records). */
+  onLapitayaGovernance: (cb: (e: { type: string; data: unknown }) => void): (() => void) => {
+    const listener = (_e: IpcRendererEvent, payload: { type: string; data: unknown }) => cb(payload);
+    ipcRenderer.on('lapitaya:governance', listener);
+    return () => ipcRenderer.removeListener('lapitaya:governance', listener);
   },
 
   // ─── Task kanban (hive/tasks.json) ───────────────────────────────────────
