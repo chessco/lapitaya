@@ -1092,6 +1092,12 @@ const api = {
   /** Atomically append one card against the latest main-process ledger. */
   hiveAddTask: (task: HiveTask): Promise<{ ok: boolean; error?: string }> =>
     ipcRenderer.invoke('hive:addTask', task),
+  /** Update task status with CIMA completionGate governance enforcement. */
+  hiveUpdateTaskStatus: (
+    id: string,
+    status: string
+  ): Promise<{ ok: boolean; error?: string }> =>
+    ipcRenderer.invoke('hive:updateTaskStatus', id, status),
   /** Atomically patch one named card without replacing unrelated cards/fields. */
   hivePatchTask: (
     id: string,

@@ -414,6 +414,18 @@ export class HiveManager {
     this.cimaHandler = fn;
   }
 
+  private completionGateHandler: ((taskId: string) => { allowed: boolean; reason: string }) | null = null;
+  private blockedCompletionRecorder: ((taskId: string, reason: string, via: string) => void) | null = null;
+
+  /** Wire CIMA completionGate enforcement into hive task status writes. */
+  setCompletionGate(
+    gate: ((taskId: string) => { allowed: boolean; reason: string }) | null,
+    recorder?: ((taskId: string, reason: string, via: string) => void) | null
+  ): void {
+    this.completionGateHandler = gate;
+    this.blockedCompletionRecorder = recorder ?? null;
+  }
+
   // — paths —
   root(): string | null {
     const home = this.getHome();
@@ -1812,7 +1824,47 @@ export class HiveManager {
    *  Deleting a card still works: the incoming list IS the membership, so a card
    *  dropped from it (TasksKanban dismiss, the voice delete_task action) is
    *  gone. Merging protects fields, never card membership. */
-  writeTasks(tasks: HiveTask[]): void {
+  /** Update a task's status with CIMA completionGate enforcement. */
+  updateTaskStatus(id: string, status: HiveTask['status'] | string, via = 'HiveManager.updateTaskStatus'): { ok: boolean; error?: string } {
+    if (status === 'done') {
+      const ledger = this.tasks() as { tasks?: HiveTask[] };
+      const tasks = Array.isArray(ledger?.tasks) ? ledger.tasks : [];
+      const existing = tasks.find((t) => t?.id === id);
+      if (existing?.status !== 'done' && this.completionGateHandler) {
+        const verdict = this.completionGateHandler(id);
+        if (!verdict.allowed) {
+          this.blockedCompletionRecorder?.(id, verdict.reason, via);
+          return { ok: false, error: verdict.reason };
+        }
+      }
+    }
+    const ok = this.patchTaskInternal(id, { status: status as HiveTask['status'] });
+    return ok ? { ok: true } : { ok: false, error: 'task not found' };
+  }
+
+  writeTasks(tasks: HiveTask[], via = 'HiveManager.writeTasks'): boolean {
+    const root = this.root();
+    if (!root) return false;
+    if (this.completionGateHandler) {
+      const path = join(root, 'tasks.json');
+      const current = this.readJson<{ tasks?: HiveTask[] }>(path, { tasks: [] });
+      const currentTasks = Array.isArray(current?.tasks) ? current.tasks : [];
+      const currentMap = new Map(currentTasks.map((t) => [t?.id, t?.status]));
+      for (const t of tasks) {
+        if (t?.status === 'done' && currentMap.get(t.id) !== 'done') {
+          const verdict = this.completionGateHandler(t.id);
+          if (!verdict.allowed) {
+            this.blockedCompletionRecorder?.(t.id, verdict.reason, via);
+            return false;
+          }
+        }
+      }
+    }
+    this.writeTasksInternal(tasks);
+    return true;
+  }
+
+  private writeTasksInternal(tasks: HiveTask[]): void {
     const root = this.root();
     if (!root) return;
     this.ensureHive();
@@ -1831,20 +1883,35 @@ export class HiveManager {
     const ledger = this.tasks() as { tasks?: HiveTask[] };
     const tasks = Array.isArray(ledger?.tasks) ? ledger.tasks : [];
     if (tasks.some((current) => current?.id === task.id)) return false;
-    this.writeTasks([...tasks, task]);
-    return true;
+    return this.writeTasks([...tasks, task], 'HiveManager.addTask');
   }
 
   /** Patch one card against the latest on-disk ledger, preserving unrelated
    *  cards and fields (notably webhook.tokenHash and Slack thread metadata). */
-  patchTask(id: string, patch: Partial<Omit<HiveTask, 'id'>>): boolean {
+  patchTask(id: string, patch: Partial<Omit<HiveTask, 'id'>>, via = 'HiveManager.patchTask'): boolean {
+    if (patch.status === 'done') {
+      const ledger = this.tasks() as { tasks?: HiveTask[] };
+      const tasks = Array.isArray(ledger?.tasks) ? ledger.tasks : [];
+      const existing = tasks.find((t) => t?.id === id);
+      if (existing?.status !== 'done' && this.completionGateHandler) {
+        const verdict = this.completionGateHandler(id);
+        if (!verdict.allowed) {
+          this.blockedCompletionRecorder?.(id, verdict.reason, via);
+          return false;
+        }
+      }
+    }
+    return this.patchTaskInternal(id, patch);
+  }
+
+  private patchTaskInternal(id: string, patch: Partial<Omit<HiveTask, 'id'>>): boolean {
     const ledger = this.tasks() as { tasks?: HiveTask[] };
     const tasks = Array.isArray(ledger?.tasks) ? ledger.tasks : [];
     const index = tasks.findIndex((task) => task?.id === id);
     if (index < 0) return false;
     const next = tasks.slice();
     next[index] = { ...tasks[index], ...patch, id };
-    this.writeTasks(next);
+    this.writeTasksInternal(next);
     return true;
   }
 
@@ -1854,7 +1921,7 @@ export class HiveManager {
     const tasks = Array.isArray(ledger?.tasks) ? ledger.tasks : [];
     const next = tasks.filter((task) => task?.id !== id);
     if (next.length === tasks.length) return false;
-    this.writeTasks(next);
+    this.writeTasksInternal(next);
     return true;
   }
   memory(id: string): string {

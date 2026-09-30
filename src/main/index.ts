@@ -269,6 +269,10 @@ const lapitaya = new CimaRuntimeService({
   }
 });
 hive.setCimaHandler((from, cima, messageId, to) => recordBanner(lapitaya.handle(from, to, cima, messageId)));
+hive.setCompletionGate(
+  (taskId) => lapitaya.completionGate(taskId),
+  (taskId, reason, via) => lapitaya.recordBlockedCompletion(taskId, reason, via)
+);
 // Stage 7A — the live observability tap. Receives Claude Code's first-party OTel
 // over loopback OTLP/JSON and exposes the locked usage-provider seam. resolveCwd
 // lets the transcript fallback find an agent's cwd from the hive registry.
@@ -3534,6 +3538,13 @@ ipcMain.handle('hive:addTask', (_evt, task: unknown) => {
   }
   if (!hive.enabled()) return { ok: false, error: 'hive disabled (no harnessHome)' };
   return { ok: hive.addTask(task as HiveTask) };
+});
+ipcMain.handle('hive:updateTaskStatus', (_evt, id: unknown, status: unknown) => {
+  if (typeof id !== 'string' || !id || typeof status !== 'string' || !status) {
+    return { ok: false, error: 'invalid task id or status' };
+  }
+  if (!hive.enabled()) return { ok: false, error: 'hive disabled (no harnessHome)' };
+  return hive.updateTaskStatus(id, status as HiveTask['status']);
 });
 ipcMain.handle('hive:patchTask', (_evt, id: unknown, patch: unknown) => {
   if (typeof id !== 'string' || !id || !patch || typeof patch !== 'object' || Array.isArray(patch)) {
