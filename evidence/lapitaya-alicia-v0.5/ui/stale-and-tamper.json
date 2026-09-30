@@ -1,0 +1,95 @@
+{
+  "stale": {
+    "runtime": {
+      "ok": false,
+      "code": "STALE_PROPOSAL",
+      "reason": "re-validation classified it as ACTION"
+    },
+    "ui": {
+      "id": "req-mywpixns-1",
+      "status": "BLOCKED",
+      "uiState": "STALE",
+      "scope": "LOW",
+      "canConfirm": false,
+      "canCancel": false,
+      "outcome": {
+        "op": "confirm",
+        "ok": false,
+        "code": "STALE_PROPOSAL",
+        "reason": "re-validation classified it as ACTION"
+      },
+      "pendingHighApprovals": 0,
+      "aliciaSays": "stale"
+    }
+  },
+  "confirmedElsewhere": {
+    "runtime": {
+      "ok": false,
+      "code": "NOT_CONFIRMABLE",
+      "reason": "proposal req-mywpj1io-2 is CONFIRMED"
+    },
+    "ui": {
+      "id": "req-mywpj1io-2",
+      "status": "CONFIRMED",
+      "uiState": "CONFIRMED",
+      "scope": "LOW",
+      "canConfirm": false,
+      "canCancel": true,
+      "outcome": {
+        "op": "confirm",
+        "ok": false,
+        "code": "NOT_CONFIRMABLE",
+        "reason": "proposal req-mywpj1io-2 is CONFIRMED"
+      },
+      "pendingHighApprovals": 0,
+      "aliciaSays": "changedElsewhere"
+    }
+  },
+  "superseded": {
+    "ui": {
+      "id": "req-mywpj6x4-3",
+      "status": "SUPERSEDED",
+      "uiState": "SUPERSEDED",
+      "scope": "LOW",
+      "canConfirm": false,
+      "canCancel": false,
+      "outcome": null,
+      "pendingHighApprovals": 0,
+      "aliciaSays": null
+    }
+  },
+  "tamperedOnDisk": {
+    "runtime": {
+      "ok": false,
+      "code": "TAMPERED",
+      "reason": "proposal req-mywpixns-1 changed after it was proposed"
+    },
+    "ui": {
+      "id": "req-mywpixns-1",
+      "status": "PROPOSED",
+      "uiState": "ERROR",
+      "scope": "MEDIUM",
+      "canConfirm": true,
+      "canCancel": true,
+      "outcome": {
+        "op": "confirm",
+        "ok": false,
+        "code": "TAMPERED",
+        "reason": "proposal req-mywpixns-1 changed after it was proposed"
+      },
+      "pendingHighApprovals": 0,
+      "aliciaSays": "refused"
+    }
+  },
+  "forgedToken": {
+    "ok": false,
+    "code": "TAMPERED",
+    "reason": "the confirmation token does not match this proposal"
+  },
+  "nonHuman": {
+    "ok": false,
+    "code": "NOT_AUTHORIZED",
+    "reason": "only the human confirms a request"
+  },
+  "statusAfterRefusals": "PROPOSED"
+}

@@ -147,6 +147,71 @@
       "CELEBRATING": "Celebrando",
       "WARNING": "Atención",
       "BLOCKED": "Bloqueado"
+    },
+    "confirmation": {
+      "title": "ALICIA · CONFIRMACIÓN DE PROPUESTAS",
+      "role": "Alicia te presenta la propuesta y recibe tu decisión. El runtime de CIMA decide qué puede ejecutarse.",
+      "loading": "Cargando propuestas del runtime…",
+      "loadError": "No se pudieron leer las propuestas del runtime. No se cambió nada.",
+      "empty": "No hay propuestas REQUEST esperándote.",
+      "pendingBanner": "Propuestas pendientes de tu confirmación: {{count}}. Mientras no decidas, nada se ejecuta en el piso.",
+      "goToProposal": "Ver propuesta",
+      "pendingBadge": "Propuestas REQUEST pendientes de tu confirmación: {{count}}",
+      "understood": "Entendí que quieres:",
+      "fields": {
+        "risk": "Alcance (riesgo del runtime)",
+        "status": "Estado",
+        "executor": "Ejecutor",
+        "task": "Tarea",
+        "created": "Creada"
+      },
+      "scopeExplain": {
+        "LOW": "Si confirmas, el piso solo podrá inspeccionar (riesgo LOW). Los cambios requerirían un nuevo REQUEST.",
+        "MEDIUM": "Si confirmas, podrán continuar acciones de riesgo LOW y MEDIUM, cada una autorizada de nuevo por CIMA al ejecutarse."
+      },
+      "meaning": "Confirmar permite que este REQUEST continúe al flujo de gobernanza de CIMA. No ejecuta nada por sí mismo.",
+      "highNote": "Confirmar el REQUEST no equivale a aprobar una acción de alto riesgo: cada acción HIGH necesita su propia aprobación en Aprobaciones de gobernanza.",
+      "ack": "Leí la propuesta y entiendo que confirmar no aprueba acciones HIGH.",
+      "decisionGroup": "Decisión sobre la propuesta",
+      "confirm": "Confirmar REQUEST",
+      "cancel": "Cancelar REQUEST",
+      "noRetry": "No se reintenta nada automáticamente.",
+      "confirmedNote": "REQUEST confirmado — esto no es una aprobación. CIMA sigue evaluando cada acción, y las acciones HIGH requieren tu aprobación por separado.",
+      "highPending": "CIMA requiere tu aprobación para acciones HIGH (HUMAN_APPROVAL_REQUIRED): {{count}} pendientes. Decídelas en Aprobaciones de gobernanza; confirmar el REQUEST no las aprobó.",
+      "state": {
+        "PENDING": "Propuesta pendiente de tu confirmación",
+        "CONFIRMING": "Confirmando con el runtime…",
+        "CONFIRMED": "REQUEST confirmado — continúa por la gobernanza de CIMA",
+        "CANCELING": "Cancelando con el runtime…",
+        "CANCELLED": "REQUEST cancelado",
+        "COMPLETED": "REQUEST cerrado",
+        "SUPERSEDED": "Reemplazada por una propuesta más reciente",
+        "BLOCKED": "Bloqueada por el runtime",
+        "STALE": "La propuesta ya no es válida (stale)",
+        "ERROR": "El runtime rechazó la confirmación"
+      },
+      "errors": {
+        "LEDGER_UNAVAILABLE": "El runtime no pudo registrar la decisión, así que nada cambió.",
+        "IPC_ERROR": "El runtime no respondió, así que nada cambió."
+      },
+      "said": {
+        "confirmed": "Confirmado. La solicitud continuará por el proceso de gobernanza.",
+        "cancelled": "Solicitud cancelada.",
+        "stale": "Esa propuesta ya no es válida. Pídela de nuevo si todavía la necesitas.",
+        "changedElsewhere": "Esa propuesta cambió en otro lado; te muestro su estado actual.",
+        "refused": "El runtime rechazó la confirmación ({{code}}). No se ejecutó nada."
+      },
+      "conversation": {
+        "label": "Mensaje para Alicia",
+        "placeholder": "Escríbele a Alicia…",
+        "send": "Enviar",
+        "human": "Tú",
+        "alicia": "Alicia",
+        "forwarded": "Se lo envié a El Inge como la propuesta {{id}}. Revísala arriba: nada se ejecuta hasta que confirmes.",
+        "governed": "CIMA evaluó tu acción: riesgo {{risk}}, decisión {{decision}}.",
+        "blocked": "CIMA no lo envió ({{rule}}).",
+        "failed": "No pude entregar tu mensaje; no se hizo nada."
+      }
     }
   }
 }

@@ -147,6 +147,71 @@
       "CELEBRATING": "Celebrating",
       "WARNING": "Heads up",
       "BLOCKED": "Blocked"
+    },
+    "confirmation": {
+      "title": "ALICIA · PROPOSAL CONFIRMATION",
+      "role": "Alicia presents the proposal and receives your decision. The CIMA runtime decides what may execute.",
+      "loading": "Loading proposals from the runtime…",
+      "loadError": "Could not read the proposals from the runtime. Nothing was changed.",
+      "empty": "No REQUEST proposals are waiting for you.",
+      "pendingBanner": "Proposals waiting for your confirmation: {{count}}. Until you decide, nothing on the floor executes.",
+      "goToProposal": "View proposal",
+      "pendingBadge": "REQUEST proposals waiting for your confirmation: {{count}}",
+      "understood": "I understood that you want:",
+      "fields": {
+        "risk": "Scope (runtime risk)",
+        "status": "Status",
+        "executor": "Executor",
+        "task": "Task",
+        "created": "Created"
+      },
+      "scopeExplain": {
+        "LOW": "If you confirm, the floor may only inspect (LOW risk). Changes would need a new REQUEST.",
+        "MEDIUM": "If you confirm, LOW and MEDIUM risk actions may continue, each one still authorized by CIMA when it runs."
+      },
+      "meaning": "Confirming lets this REQUEST continue to CIMA governance. It does not execute anything by itself.",
+      "highNote": "Confirming the REQUEST is not approving a high-risk action: every HIGH action needs its own approval in Governance approvals.",
+      "ack": "I have read the proposal and understand that confirming does not approve HIGH actions.",
+      "decisionGroup": "Decision on the proposal",
+      "confirm": "Confirm REQUEST",
+      "cancel": "Cancel REQUEST",
+      "noRetry": "Nothing is retried automatically.",
+      "confirmedNote": "REQUEST confirmed — this is not an approval. Every action is still evaluated by CIMA, and HIGH actions need your separate approval.",
+      "highPending": "CIMA requires your approval for HIGH actions (HUMAN_APPROVAL_REQUIRED): {{count}} pending. Decide them in Governance approvals; confirming the REQUEST did not approve them.",
+      "state": {
+        "PENDING": "Proposal waiting for your confirmation",
+        "CONFIRMING": "Confirming with the runtime…",
+        "CONFIRMED": "REQUEST confirmed — continues through CIMA governance",
+        "CANCELING": "Cancelling with the runtime…",
+        "CANCELLED": "REQUEST cancelled",
+        "COMPLETED": "REQUEST closed",
+        "SUPERSEDED": "Replaced by a newer proposal",
+        "BLOCKED": "Blocked by the runtime",
+        "STALE": "Proposal no longer valid (stale)",
+        "ERROR": "Confirmation refused by the runtime"
+      },
+      "errors": {
+        "LEDGER_UNAVAILABLE": "The runtime could not record the decision, so nothing changed.",
+        "IPC_ERROR": "The runtime did not answer, so nothing changed."
+      },
+      "said": {
+        "confirmed": "Confirmed. The request will continue through the governance process.",
+        "cancelled": "Request cancelled.",
+        "stale": "That proposal is no longer valid. Ask again if you still need it.",
+        "changedElsewhere": "That proposal changed elsewhere; I am showing its current state.",
+        "refused": "The runtime refused the confirmation ({{code}}). Nothing was executed."
+      },
+      "conversation": {
+        "label": "Message for Alicia",
+        "placeholder": "Write to Alicia…",
+        "send": "Send",
+        "human": "You",
+        "alicia": "Alicia",
+        "forwarded": "I sent it to El Inge as proposal {{id}}. Review it above: nothing executes until you confirm.",
+        "governed": "CIMA evaluated your action: risk {{risk}}, decision {{decision}}.",
+        "blocked": "CIMA did not send it ({{rule}}).",
+        "failed": "I could not deliver your message; nothing was done."
+      }
     }
   }
 }

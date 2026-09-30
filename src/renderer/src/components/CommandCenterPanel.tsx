@@ -9,6 +9,7 @@ import { MessageQueueComposer } from './MessageQueueComposer';
 import { TasksKanban } from './TasksKanban';
 import { AskMeTab } from './AskMeTab';
 import { GovernancePanel } from './GovernancePanel';
+import { AliciaPanel, AliciaPendingBadge } from './alicia/AliciaPanel';
 import { TriggersTab } from './triggers/TriggersTab';
 import { TriggerHistoryTab } from './triggers/TriggerHistoryTab';
 import { WorkersTab } from './WorkersTab';
@@ -286,6 +287,7 @@ export function CommandCenterPanel({ agent, fullscreen = false }: { agent: Agent
             }}
           >
             <Icon name={tabDef.icon} /> {t(tabDef.labelKey)}
+            {tabDef.key === 'human' && <AliciaPendingBadge />}
           </button>
         ))}
       </div>
@@ -322,7 +324,7 @@ export function CommandCenterPanel({ agent, fullscreen = false }: { agent: Agent
         )}
         {tab === 'floor' && <FloorTab seed={dispatchSeed} />}
         {tab === 'tasks' && <TasksKanban />}
-        {tab === 'human' && <><GovernancePanel /><AskMeTab /></>}
+        {tab === 'human' && <><AliciaPanel /><GovernancePanel /><AskMeTab /></>}
         {tab === 'triggers' && <TriggersTab />}
         {tab === 'trigger-history' && <TriggerHistoryTab />}
         {tab === 'memory' && (

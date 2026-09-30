@@ -1,0 +1,50 @@
+{
+  "before": {
+    "id": "req-mywpixns-1",
+    "status": "PROPOSED",
+    "uiState": "PENDING",
+    "scope": "MEDIUM",
+    "canConfirm": true,
+    "canCancel": true,
+    "outcome": null,
+    "pendingHighApprovals": 0,
+    "aliciaSays": null
+  },
+  "after": {
+    "id": "req-mywpixns-1",
+    "status": "CANCELLED",
+    "uiState": "CANCELLED",
+    "scope": "MEDIUM",
+    "canConfirm": false,
+    "canCancel": false,
+    "outcome": {
+      "op": "cancel",
+      "ok": true,
+      "code": null,
+      "reason": null
+    },
+    "pendingHighApprovals": 0,
+    "aliciaSays": "cancelled"
+  },
+  "runtime": {
+    "status": "CANCELLED",
+    "closedBy": "human",
+    "token": null
+  },
+  "confirmAfterCancel": {
+    "ui": null,
+    "runtime": {
+      "ok": false,
+      "code": "NOT_CONFIRMABLE",
+      "reason": "proposal req-mywpixns-1 is CANCELLED"
+    }
+  },
+  "executionAfterCancel": {
+    "step": "MEDIUM after the REQUEST was cancelled (no active scope)",
+    "agent": "god",
+    "call": "Edit {\"file_path\":\"<home>\\\\src\\\\app.ts\",\"old_string\":\"a\",\"new_string\":\"b\"}",
+    "result": "ALLOWED",
+    "decision": "SUPERVISED",
+    "reason": ""
+  }
+}
