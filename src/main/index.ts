@@ -4037,6 +4037,14 @@ ipcMain.handle('lapitaya:decide', (_evt, id: unknown, approve: unknown) => {
   if (typeof id !== 'string' || typeof approve !== 'boolean') return null;
   return lapitaya.decide(id, approve, 'human');
 });
+// v0.4.2 REQUEST execution gate — the human's channel, like lapitaya:decide.
+// These are the ONLY call sites of confirm/cancel/complete: no agent, no
+// Alicia and no hive message can reach them.
+ipcMain.handle('lapitaya:requests', () => lapitaya.listRequests());
+ipcMain.handle('lapitaya:confirmRequest', (_evt, id: unknown, token: unknown) =>
+  lapitaya.confirmRequest(id, { by: 'human', token }));
+ipcMain.handle('lapitaya:cancelRequest', (_evt, id: unknown) => lapitaya.cancelRequest(id, 'human'));
+ipcMain.handle('lapitaya:completeRequest', (_evt, id: unknown) => lapitaya.completeRequest(id, 'human'));
 // Alicia: a read-only snapshot (rendered in the locales the UI passes, since
 // uiLocale/notificationLocale live in the renderer) and, since v0.4.1, the
 // intent path — through the runtime intent boundary. Neither can approve,

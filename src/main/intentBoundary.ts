@@ -28,7 +28,7 @@ import type { ToolRisk } from '../shared/lapitaya/toolRisk';
 import { ACTION_RISK } from '../shared/lapitaya/autonomy';
 import {
   validateIntent, classifyIntentMessage, stricterType, stricterRisk, intentMessage,
-  type IntentRecord, type IntentStatus, type IntentType, type IntentOutcome
+  type IntentRecord, type IntentStatus, type IntentType, type IntentOutcome, type IntentTarget, type RequestProposal
 } from '../shared/lapitaya/intent';
 
 export type { IntentOutcome };
@@ -43,6 +43,11 @@ export interface IntentBoundaryRuntime {
   recordIntent(rec: IntentRecord): boolean;
   completionGate(taskId: string): CompletionVerdict;
   recordBlockedCompletion(taskId: string, reason: string, via: string, agentId?: string): void;
+  openRequest(input: {
+    intentId: string; executor: string; requestedBy: string; source: string;
+    message: string; taskId: string | null; target: IntentTarget | null; signals: string[];
+  }): RequestProposal | null;
+  withdrawRequest(proposalId: string, reason: string): void;
 }
 
 export interface IntentBoundaryDeps {
@@ -128,7 +133,18 @@ export class IntentBoundary {
 
     if (type === 'REQUEST') {
       const rec = { ...base, reclassified: reclassified(type, null), risk: null, category: null, decision: 'PROPOSAL_ONLY', rule: 'INTENT_REQUEST', mode: null };
-      return this.forward(rec, received, orchestrator);
+      // v0.4.2: the runtime opens the proposal BEFORE El Inge hears of it, so
+      // the execution gate is closed from the first moment. Ids and the
+      // confirmation token are the runtime's, never the producer's.
+      const proposal = this.deps.runtime.openRequest({
+        intentId: intent.id, executor: orchestrator, requestedBy: intent.requestedBy, source: intent.source,
+        message: intent.message, taskId: base.taskId, target: intent.target, signals: cls.signals
+      });
+      if (!proposal) {
+        return this.finish({ ...rec, decision: 'DENY', rule: 'LEDGER_UNAVAILABLE', reason: 'the proposal could not be recorded, so the request was not forwarded' },
+          ['RECEIVED', 'CLASSIFIED', 'BLOCKED'], received, null);
+      }
+      return this.forward({ ...rec, proposalId: proposal.id }, received, orchestrator);
     }
 
     // ─── ACTION ─────────────────────────────────────────────────────────────
@@ -193,6 +209,7 @@ export class IntentBoundary {
     let messageId: string | null = null;
     try { messageId = this.deps.deliver(intentMessage(full, orchestrator), rec.source); } catch { messageId = null; }
     if (!messageId) {
+      if (rec.proposalId) this.deps.runtime.withdrawRequest(rec.proposalId, 'not delivered to the orchestrator');
       return this.finish({ ...rec, decision: 'DENY', rule: 'DELIVERY_FAILED', reason: 'the orchestrator could not be reached' },
         ['RECEIVED', 'CLASSIFIED', 'BLOCKED'], received, null);
     }
@@ -223,6 +240,7 @@ export class IntentBoundary {
       signals: rec.signals,
       ...(rec.approvalId ? { approvalId: rec.approvalId } : {}),
       ...(rec.messageId ? { messageId: rec.messageId } : {}),
+      ...(rec.proposalId ? { proposalId: rec.proposalId } : {}),
       ...(rec.reason ? { reason: rec.reason } : {}),
       executed: false
     };

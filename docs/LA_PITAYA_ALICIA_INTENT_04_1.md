@@ -9,6 +9,10 @@
 > Alicia can turn human conversation into a structured intent, but only CIMA can turn a
 > governable intent into an authorized action.
 
+> **Update (v0.4.2):** Observation 1 is resolved. "REQUEST = proposal only" is now enforced by the
+> runtime: an unconfirmed REQUEST blocks every non-planning tool call at PreToolUse until the human
+> confirms it. See [LA_PITAYA_ALICIA_REQUEST_GATE_04_2.md](LA_PITAYA_ALICIA_REQUEST_GATE_04_2.md).
+
 ---
 
 ## 1. Problem

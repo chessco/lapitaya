@@ -14,7 +14,8 @@ import type { ModelCatalog } from '../shared/modelCatalogPayload';
 export type { ModelCatalog, CatalogModel } from '../shared/modelCatalogPayload';
 import type { HookEvent } from '../shared/hookEvents';
 import type { Approval } from '../shared/lapitaya/governance';
-import type { LedgerEntry } from '../main/cimaRuntime';
+import type { LedgerEntry, RequestConfirmation } from '../main/cimaRuntime';
+import type { RequestProposal } from '../shared/lapitaya/intent';
 import type { LocaleSettings } from '../shared/lapitaya/locales';
 import type { AliciaCompanionState, AliciaSubmitResult } from '../shared/lapitaya/alicia';
 import type { IntentTarget } from '../shared/lapitaya/intent';
@@ -1082,6 +1083,14 @@ const api = {
   /** The human's explicit decision on one PENDING request. */
   lapitayaDecide: (id: string, approve: boolean): Promise<Approval | null> =>
     ipcRenderer.invoke('lapitaya:decide', id, approve),
+  /** v0.4.2: REQUEST proposals waiting for (or holding) the human's confirmation. */
+  lapitayaRequests: (): Promise<RequestProposal[]> => ipcRenderer.invoke('lapitaya:requests'),
+  /** The human confirms one proposal with its runtime token. Executes nothing;
+   *  every resulting call is still authorized by CIMA (HIGH still needs approval). */
+  lapitayaConfirmRequest: (id: string, token: string): Promise<RequestConfirmation> =>
+    ipcRenderer.invoke('lapitaya:confirmRequest', id, token),
+  lapitayaCancelRequest: (id: string): Promise<RequestConfirmation> => ipcRenderer.invoke('lapitaya:cancelRequest', id),
+  lapitayaCompleteRequest: (id: string): Promise<RequestConfirmation> => ipcRenderer.invoke('lapitaya:completeRequest', id),
   /** Recent governance decisions and CIMA records (append-only ledger). */
   lapitayaLedger: (limit?: number): Promise<LedgerEntry[]> => ipcRenderer.invoke('lapitaya:ledger', limit),
   /** Live governance/CIMA events (approval requests, supervised calls, records). */

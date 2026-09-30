@@ -27,6 +27,7 @@ export const ALICIA_EVENT_TYPES = [
   'approval.required', 'approval.granted', 'approval.denied',
   'audit.completed', 'workflow.completed',
   'intent.received', 'intent.classified', 'intent.forwarded', 'intent.governed', 'intent.blocked',
+  'request.proposed', 'request.confirmed', 'request.closed',
   'error'
 ] as const;
 export type AliciaEventType = (typeof ALICIA_EVENT_TYPES)[number];
@@ -160,6 +161,23 @@ export function fromRuntimeEvent(e: RuntimeEventLike | null | undefined, now: nu
         const ts = typeof obj(step).ts === 'number' ? obj(step).ts as number : now;
         return [{ type, ts, source: 'governance' as const, taskId: str(d.taskId) ?? str(t.taskId), agentId: str(d.source), subject: str(d.message), ref: str(d.id), technical }];
       });
+    }
+    case 'request': {
+      // v0.4.2 REQUEST proposal transitions (the runtime's, never Alicia's).
+      if (d.kind !== 'request' || !str(d.proposalId)) return [];
+      const transition = str(d.transition);
+      const type: AliciaEventType | null =
+        transition === 'PROPOSED' ? 'request.proposed'
+        : transition === 'CONFIRMED' ? 'request.confirmed'
+        : transition === 'CONFIRMATION_DENIED' ? 'governance.blocked'
+        : transition && ['COMPLETED', 'CANCELLED', 'SUPERSEDED', 'BLOCKED'].includes(transition) ? 'request.closed'
+        : null;
+      if (!type) return [];
+      return [{
+        type, ts: typeof d.ts === 'number' ? d.ts : now, source: 'governance', taskId: str(d.taskId), agentId: str(d.executor),
+        subject: str(d.message), ref: str(d.proposalId),
+        technical: { decision: str(d.status), rule: str(d.code) ?? (type === 'request.proposed' ? 'REQUEST_CONFIRMATION_REQUIRED' : undefined), reason: str(d.reason) }
+      }];
     }
     case 'cima-record': {
       if (d.kind === 'cima-assignment' && str(d.taskId) && isCimaPhase(d.phase)) return [fromAssignment(d as unknown as CimaAssignment)];

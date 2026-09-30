@@ -21,7 +21,7 @@ export const ALICIA_SEVERITIES = ['info', 'low', 'medium', 'high', 'critical'] a
 export type AliciaSeverity = (typeof ALICIA_SEVERITIES)[number];
 
 export interface AliciaNotificationAction {
-  kind: 'open-approvals' | 'open-task';
+  kind: 'open-approvals' | 'open-requests' | 'open-task';
   ref: string;
   /** Only the human can act on this; Alicia merely points at it. */
   readonly humanOnly: true;
@@ -67,6 +67,9 @@ const KIND: Readonly<Record<AliciaEventType, [AliciaNotificationType, AliciaSeve
   'intent.forwarded': ['INFO', 'info'],
   'intent.governed': ['INFO', 'low'],
   'intent.blocked': ['BLOCKED', 'high'],
+  'request.proposed': ['APPROVAL_REQUIRED', 'high'],
+  'request.confirmed': ['SUCCESS', 'info'],
+  'request.closed': ['INFO', 'info'],
   error: ['ERROR', 'high']
 };
 
@@ -94,7 +97,7 @@ export function notificationFor(
   const [type, severity] = classify(event);
   const technical = Object.freeze({ ...(event.technical ?? {}) });
   const governed = event.type.startsWith('governance.') || event.type.startsWith('approval.')
-    || event.type === 'intent.governed' || event.type === 'intent.blocked';
+    || event.type === 'intent.governed' || event.type === 'intent.blocked' || event.type === 'request.proposed';
   const explanation = governed ? explainGovernance(technical, locale).text : '';
   const key = `alicia.notifications.${event.type.replace(/\./g, '_')}`;
   const vars = {
@@ -112,6 +115,7 @@ export function notificationFor(
   };
   let action: AliciaNotificationAction | null = null;
   if ((event.type === 'approval.required' || event.type === 'intent.governed') && technical.approvalId) action = { kind: 'open-approvals', ref: technical.approvalId, humanOnly: true };
+  else if (event.type === 'request.proposed' && event.ref) action = { kind: 'open-requests', ref: event.ref, humanOnly: true };
   else if (event.taskId) action = { kind: 'open-task', ref: event.taskId, humanOnly: true };
   return {
     id: opts.id,

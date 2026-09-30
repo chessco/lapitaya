@@ -25,7 +25,8 @@
 
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync, renameSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { authorizeToolCall, denyAuthorization, isExecutable, type Approval, type Authorization } from '../shared/lapitaya/governance';
+import { randomBytes } from 'node:crypto';
+import { authorizeToolCall, denyAuthorization, isExecutable, fnv1a, type Approval, type Authorization } from '../shared/lapitaya/governance';
 import type { ToolCallContext, ToolRisk } from '../shared/lapitaya/toolRisk';
 import { DEFAULT_AUTONOMY_STAGE, type AutonomyStage } from '../shared/lapitaya/autonomy';
 import { classifyToolCall } from '../shared/lapitaya/toolRisk';
@@ -37,7 +38,28 @@ import {
 /** Tools whose write to the task ledger is judged by the decision gate. */
 const TASK_WRITE_TOOLS: ReadonlySet<string> = new Set(['Write', 'Edit', 'MultiEdit']);
 import type { CimaPhase } from '../shared/lapitaya/cima';
-import type { IntentRecord } from '../shared/lapitaya/intent';
+import {
+  requestGate, requestScope, classifyIntentMessage,
+  type IntentRecord, type IntentTarget, type RequestProposal, type RequestStatus
+} from '../shared/lapitaya/intent';
+
+/** One transition of a REQUEST proposal, as it lands in the ledger (v0.4.2). */
+export interface RequestTransitionRecord {
+  kind: 'request';
+  ts: number;
+  proposalId: string;
+  intentId: string;
+  transition: 'PROPOSED' | 'REVALIDATED' | 'CONFIRMED' | 'CONFIRMATION_DENIED' | 'COMPLETED' | 'CANCELLED' | 'SUPERSEDED' | 'BLOCKED';
+  status: RequestStatus;
+  by: string;
+  scope: 'LOW' | 'MEDIUM';
+  code?: string;
+  reason?: string;
+}
+
+export type RequestConfirmation =
+  | { ok: true; proposal: RequestProposal }
+  | { ok: false; code: string; reason: string };
 
 /** A governance decision as it lands in the ledger. */
 export interface GovernanceRecord {
@@ -56,9 +78,11 @@ export interface GovernanceRecord {
   decision: string;
   rule: string;
   approvalId?: string;
+  /** v0.4.2: the REQUEST proposal whose gate state governed this call. */
+  proposalId?: string;
 }
 
-export type LedgerEntry = CimaRecord | CimaAssignment | GovernanceRecord | IntentRecord;
+export type LedgerEntry = CimaRecord | CimaAssignment | GovernanceRecord | IntentRecord | RequestTransitionRecord;
 
 export interface CimaRuntimeDeps {
   hiveRoot: () => string | null;
@@ -69,7 +93,7 @@ export interface CimaRuntimeDeps {
   /** The task an agent is currently on (tasks.json: assignee + status doing). */
   taskOf?: (agentId: string) => string | null;
   /** Push a governance/CIMA event to the UI. */
-  onEvent?: (e: { type: 'approval-request' | 'approval-decided' | 'supervised' | 'cima-record' | 'completion-blocked' | 'intent'; data: unknown }) => void;
+  onEvent?: (e: { type: 'approval-request' | 'approval-decided' | 'supervised' | 'cima-record' | 'completion-blocked' | 'intent' | 'request'; data: unknown }) => void;
   /** The provider an agent runs on, for the ledger. */
   providerOf?: (agentId: string) => string | null;
   /** Test seam: replaces the risk classifier. */
@@ -96,6 +120,10 @@ export class CimaRuntimeService {
   private records: CimaRecord[] = [];
   private approvals: Approval[] = [];
   private assignments: CimaAssignment[] = [];
+  /** v0.4.2: REQUEST proposals (proposals.json) and the exact calls of governed
+   *  ACTION intents, which keep their own CIMA path while a request is open. */
+  private proposals: RequestProposal[] = [];
+  private actionFingerprints = new Set<string>();
   private loadedFor: string | null = null;
   private seq = 0;
 
@@ -117,6 +145,8 @@ export class CimaRuntimeService {
     this.records = [];
     this.approvals = [];
     this.assignments = [];
+    this.proposals = [];
+    this.actionFingerprints = new Set();
     if (!dir) return;
     const readLines = (f: string): unknown[] => {
       const p = join(dir, f);
@@ -129,9 +159,16 @@ export class CimaRuntimeService {
     const ledger = readLines('cima-ledger.jsonl') as LedgerEntry[];
     this.records = ledger.filter((e): e is CimaRecord => e?.kind === 'cima');
     this.assignments = ledger.filter((e): e is CimaAssignment => e?.kind === 'cima-assignment');
+    for (const e of ledger) {
+      if (e?.kind === 'intent' && e.type === 'ACTION' && e.status === 'GOVERNED' && e.fingerprint && e.target?.tool) this.actionFingerprints.add(e.fingerprint);
+    }
     try {
       const a = JSON.parse(readFileSync(join(dir, 'approvals.json'), 'utf8'));
       if (Array.isArray(a)) this.approvals = a;
+    } catch { /* none yet */ }
+    try {
+      const r = JSON.parse(readFileSync(join(dir, 'proposals.json'), 'utf8'));
+      if (Array.isArray(r)) this.proposals = r;
     } catch { /* none yet */ }
   }
 
@@ -151,16 +188,25 @@ export class CimaRuntimeService {
   }
 
   private saveApprovals(): boolean {
+    return this.writeState('approvals.json', this.approvals);
+  }
+
+  private saveProposals(): boolean {
+    return this.writeState('proposals.json', this.proposals);
+  }
+
+  /** Atomic JSON state write (tmp + rename). */
+  private writeState(file: string, value: unknown): boolean {
     const dir = this.dir();
     if (!dir) return false;
     try {
       mkdirSync(dir, { recursive: true });
-      const tmp = join(dir, 'approvals.json.tmp');
-      writeFileSync(tmp, JSON.stringify(this.approvals, null, 2));
-      renameSync(tmp, join(dir, 'approvals.json'));
+      const tmp = join(dir, `${file}.tmp`);
+      writeFileSync(tmp, JSON.stringify(value, null, 2));
+      renameSync(tmp, join(dir, file));
       return true;
     } catch (e) {
-      console.error('[lapitaya] approvals write failed:', e);
+      console.error(`[lapitaya] ${file} write failed:`, e);
       return false;
     }
   }
@@ -201,6 +247,17 @@ export class CimaRuntimeService {
       classify: this.deps.classify
     });
 
+    // v0.4.2 REQUEST execution gate. An unconfirmed REQUEST blocks every
+    // non-planning call on the floor (LOW included); a confirmed one bounds
+    // non-HIGH calls by its scope. It runs BEFORE approvals, so it never raises
+    // or consumes one, and a confirmation never stands in for a HIGH approval.
+    let proposalId: string | undefined;
+    if (auth.decision !== 'DENY') {
+      const rg = requestGate(this.proposals, auth, this.actionFingerprints);
+      proposalId = rg.proposalId;
+      if (!rg.allow) auth = { ...auth, decision: 'DENY', rule: rg.code, reason: rg.reason, approvalId: undefined };
+    }
+
     // Decision gate at the tool boundary: a write to the task ledger that would
     // mark a CIMA task done without a runtime DECISION PASS does not run.
     if (isExecutable(auth.decision) && TASK_WRITE_TOOLS.has(tool)) {
@@ -230,7 +287,7 @@ export class CimaRuntimeService {
 
     // Every executed call must be auditable: if the decision cannot be written
     // to the ledger, the call does not run.
-    if (!this.recordDecision(agentId, tool, auth) && isExecutable(auth.decision)) {
+    if (!this.recordDecision(agentId, tool, auth, proposalId) && isExecutable(auth.decision)) {
       if (auth.decision === 'APPROVED' && auth.approvalId) {
         const a = this.approvals.find((x) => x.id === auth.approvalId);
         if (a) { a.status = 'approved'; this.saveApprovals(); }
@@ -306,13 +363,150 @@ export class CimaRuntimeService {
 
   /** Append one intent record to the ledger and publish it on the event stream. */
   recordIntent(rec: IntentRecord): boolean {
+    this.load();
     const ok = this.append('cima-ledger.jsonl', rec);
+    // A governed ACTION's exact call keeps its own CIMA path while a REQUEST is open.
+    if (ok && rec.type === 'ACTION' && rec.status === 'GOVERNED' && rec.fingerprint && rec.target?.tool) this.actionFingerprints.add(rec.fingerprint);
     this.deps.onEvent?.({ type: 'intent', data: rec });
     return ok;
   }
 
+  // ─── REQUEST execution gate (v0.4.2) ─────────────────────────────────────
+
+  private proposalFingerprint(p: RequestProposal): string {
+    return fnv1a(JSON.stringify([p.id, p.intentId, p.executor, p.requestedBy, p.source, p.message, p.taskId, p.target, p.scope, p.createdAt]));
+  }
+
+  private transition(p: RequestProposal, transition: RequestTransitionRecord['transition'], by: string, extra: { code?: string; reason?: string } = {}): void {
+    const rec: RequestTransitionRecord = {
+      kind: 'request', ts: this.now(), proposalId: p.id, intentId: p.intentId, transition,
+      status: p.status, by, scope: p.scope, ...extra
+    };
+    this.append('cima-ledger.jsonl', rec);
+    this.deps.onEvent?.({ type: 'request', data: { ...rec, message: p.message, taskId: p.taskId, executor: p.executor } });
+  }
+
+  /**
+   * Open the runtime proposal for a forwarded REQUEST. Ids and the confirmation
+   * token are generated here, never taken from the producer. A newer request
+   * for the same task supersedes an older unconfirmed one. Returns null if the
+   * proposal cannot be persisted (the caller must then not forward it).
+   */
+  openRequest(input: {
+    intentId: string; executor: string; requestedBy: string; source: string;
+    message: string; taskId: string | null; target: IntentTarget | null; signals: string[];
+  }): RequestProposal | null {
+    this.load();
+    const p: RequestProposal = {
+      id: this.nextId('req'), intentId: input.intentId, executor: input.executor,
+      requestedBy: input.requestedBy, source: input.source, message: input.message,
+      taskId: input.taskId, target: input.target, signals: [...input.signals],
+      scope: requestScope(input.message), status: 'PROPOSED', createdAt: this.now(),
+      fingerprint: '', token: randomBytes(16).toString('hex')
+    };
+    p.fingerprint = this.proposalFingerprint(p);
+    const superseded = input.taskId
+      ? this.proposals.filter((x) => x.status === 'PROPOSED' && x.taskId === input.taskId)
+      : [];
+    for (const x of superseded) { x.status = 'SUPERSEDED'; x.closedAt = p.createdAt; x.closedBy = 'runtime'; x.token = null; }
+    this.proposals.push(p);
+    if (!this.saveProposals()) {
+      this.proposals.pop();
+      for (const x of superseded) x.status = 'PROPOSED';
+      return null;
+    }
+    for (const x of superseded) this.transition(x, 'SUPERSEDED', 'runtime', { reason: `superseded by ${p.id}` });
+    this.transition(p, 'PROPOSED', input.source);
+    return { ...p };
+  }
+
+  /** A proposal that never reached the orchestrator is withdrawn (intent boundary only). */
+  withdrawRequest(proposalId: string, reason: string): void {
+    this.load();
+    const p = this.proposals.find((x) => x.id === proposalId && x.status === 'PROPOSED');
+    if (!p) return;
+    p.status = 'BLOCKED'; p.closedAt = this.now(); p.closedBy = 'runtime'; p.reason = reason; p.token = null;
+    this.saveProposals();
+    this.transition(p, 'BLOCKED', 'runtime', { reason });
+  }
+
+  listRequests(): RequestProposal[] {
+    this.load();
+    return this.proposals.map((p) => ({ ...p })).sort((a, b) => b.createdAt - a.createdAt);
+  }
+
+  /**
+   * The HUMAN's confirmation of one proposal. Authority is the caller: only the
+   * human-facing IPC passes by='human'; no agent, intent producer or message can reach
+   * this. Validates existence, context, confirmability, the single-use token
+   * and the proposal's integrity; re-validates its classification; then moves
+   * PROPOSED → CONFIRMED (durably) and consumes the token. Executes nothing and
+   * raises no approval.
+   */
+  confirmRequest(proposalId: unknown, ctx: { by?: unknown; token?: unknown; intentId?: unknown } = {}): RequestConfirmation {
+    this.load();
+    const p = typeof proposalId === 'string' ? this.proposals.find((x) => x.id === proposalId) : undefined;
+    const deny = (code: string, reason: string): RequestConfirmation => {
+      if (p) this.transition(p, 'CONFIRMATION_DENIED', typeof ctx.by === 'string' ? ctx.by.slice(0, 50) : '?', { code, reason });
+      return { ok: false, code, reason };
+    };
+    if (ctx.by !== 'human') return deny('NOT_AUTHORIZED', 'only the human confirms a request');
+    if (typeof proposalId !== 'string' || !proposalId) return deny('INVALID_CONFIRMATION', 'missing proposal id');
+    if (!p) return deny('UNKNOWN_PROPOSAL', `no proposal ${proposalId.slice(0, 80)}`);
+    if (ctx.intentId !== undefined && ctx.intentId !== p.intentId) return deny('WRONG_CONTEXT', `proposal ${p.id} belongs to intent ${p.intentId}`);
+    if (p.executor !== this.deps.godId()) return deny('WRONG_CONTEXT', `proposal ${p.id} was made for orchestrator ${p.executor}`);
+    if (p.status !== 'PROPOSED') return deny('NOT_CONFIRMABLE', `proposal ${p.id} is ${p.status}`);
+    if (typeof ctx.token !== 'string' || !ctx.token) return deny('INVALID_CONFIRMATION', 'missing confirmation token');
+    if (!p.token || ctx.token !== p.token) return deny('TAMPERED', 'the confirmation token does not match this proposal');
+    if (this.proposalFingerprint(p) !== p.fingerprint) return deny('TAMPERED', `proposal ${p.id} changed after it was proposed`);
+    // Re-validation: the words must still read as a REQUEST under today's rules.
+    const now = classifyIntentMessage(p.message, p.target);
+    if (now.type !== 'REQUEST') {
+      p.status = 'BLOCKED'; p.closedAt = this.now(); p.closedBy = 'runtime'; p.token = null;
+      p.reason = `re-validation classified it as ${now.type}`;
+      this.saveProposals();
+      this.transition(p, 'BLOCKED', 'runtime', { code: 'STALE_PROPOSAL', reason: p.reason });
+      return { ok: false, code: 'STALE_PROPOSAL', reason: p.reason };
+    }
+    this.transition(p, 'REVALIDATED', 'runtime', { reason: `still REQUEST; scope ${p.scope}` });
+    const token = p.token;
+    p.status = 'CONFIRMED'; p.confirmedAt = this.now(); p.confirmedBy = 'human'; p.token = null;
+    if (!this.saveProposals()) {
+      p.status = 'PROPOSED'; p.confirmedAt = undefined; p.confirmedBy = undefined; p.token = token;
+      return deny('LEDGER_UNAVAILABLE', 'the confirmation could not be persisted');
+    }
+    this.transition(p, 'CONFIRMED', 'human');
+    return { ok: true, proposal: { ...p } };
+  }
+
+  /** The human withdraws a proposal (PROPOSED or CONFIRMED → CANCELLED). */
+  cancelRequest(proposalId: unknown, by: unknown): RequestConfirmation {
+    return this.closeRequest(proposalId, by, ['PROPOSED', 'CONFIRMED'], 'CANCELLED');
+  }
+
+  /** The human closes a confirmed request once its work is done (CONFIRMED → COMPLETED). */
+  completeRequest(proposalId: unknown, by: unknown): RequestConfirmation {
+    return this.closeRequest(proposalId, by, ['CONFIRMED'], 'COMPLETED');
+  }
+
+  private closeRequest(proposalId: unknown, by: unknown, from: RequestStatus[], to: 'CANCELLED' | 'COMPLETED'): RequestConfirmation {
+    this.load();
+    if (by !== 'human') return { ok: false, code: 'NOT_AUTHORIZED', reason: 'only the human closes a request' };
+    const p = typeof proposalId === 'string' ? this.proposals.find((x) => x.id === proposalId) : undefined;
+    if (!p) return { ok: false, code: 'UNKNOWN_PROPOSAL', reason: 'no such proposal' };
+    if (!from.includes(p.status)) return { ok: false, code: 'NOT_CONFIRMABLE', reason: `proposal ${p.id} is ${p.status}` };
+    const prev = { status: p.status, token: p.token };
+    p.status = to; p.closedAt = this.now(); p.closedBy = 'human'; p.token = null;
+    if (!this.saveProposals()) {
+      p.status = prev.status; p.token = prev.token; p.closedAt = undefined; p.closedBy = undefined;
+      return { ok: false, code: 'LEDGER_UNAVAILABLE', reason: 'the change could not be persisted' };
+    }
+    this.transition(p, to, 'human');
+    return { ok: true, proposal: { ...p } };
+  }
+
   /** Append one governance decision to the ledger. Returns false if it could not be written. */
-  private recordDecision(agentId: string, tool: string, auth: Authorization): boolean {
+  private recordDecision(agentId: string, tool: string, auth: Authorization, proposalId?: string): boolean {
     let taskId: string | null = null;
     let phase: CimaPhase | null = null;
     let provider: string | null = null;
@@ -333,7 +527,8 @@ export class CimaRuntimeService {
       mode: auth.mode,
       decision: auth.decision,
       rule: auth.rule,
-      ...(auth.approvalId ? { approvalId: auth.approvalId } : {})
+      ...(auth.approvalId ? { approvalId: auth.approvalId } : {}),
+      ...(proposalId ? { proposalId } : {})
     };
     return this.append('cima-ledger.jsonl', rec);
   }

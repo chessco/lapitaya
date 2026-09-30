@@ -1,0 +1,30 @@
+== lapitaya-cima-runtime
+ℹ tests 25
+ℹ pass 25
+ℹ fail 0
+ℹ duration_ms 44848.7325
+== lapitaya-cima-runtime-v03
+ℹ tests 35
+ℹ pass 35
+ℹ fail 0
+ℹ duration_ms 64113.7835
+== lapitaya-cima-runtime-v031
+ℹ tests 9
+ℹ pass 9
+ℹ fail 0
+ℹ duration_ms 27694.1414
+== lapitaya-alicia-v04
+ℹ tests 19
+ℹ pass 19
+ℹ fail 0
+ℹ duration_ms 42392.1193
+== lapitaya-alicia-v041
+ℹ tests 16
+ℹ pass 16
+ℹ fail 0
+ℹ duration_ms 34819.3234
+== lapitaya-foundation
+ℹ tests 25
+ℹ pass 25
+ℹ fail 0
+ℹ duration_ms 1049.9346

@@ -88,6 +88,9 @@
       "intent_forwarded": { "title": "Enviada a El Inge", "message": "Tu solicitud llegó a El Inge como propuesta; no se ejecuta nada hasta que tú confirmes." },
       "intent_governed": { "title": "Acción gobernada por CIMA", "message": "CIMA evaluó tu acción: riesgo {{risk}}, decisión {{decision}}. {{explanation}}" },
       "intent_blocked": { "title": "Solicitud bloqueada", "message": "Tu solicitud no se envió: CIMA la bloqueó ({{rule}}). {{explanation}}" },
+      "request_proposed": { "title": "Propuesta pendiente de tu confirmación", "message": "El Inge recibió tu solicitud como propuesta. {{explanation}}" },
+      "request_confirmed": { "title": "Propuesta confirmada", "message": "Confirmaste la propuesta. Cada acción sigue pasando por CIMA; las de riesgo alto necesitan tu aprobación aparte." },
+      "request_closed": { "title": "Propuesta cerrada", "message": "La propuesta quedó cerrada ({{decision}})." },
       "error": { "title": "Error", "message": "Ocurrió un error. Consulta el detalle técnico." }
     },
     "explain": {
@@ -111,6 +114,14 @@
       "INTENT_MISMATCH": "Lo que pediste implica más riesgo que la acción propuesta, así que CIMA no la envió.",
       "DELIVERY_FAILED": "No se pudo entregar la solicitud a El Inge.",
       "BOUNDARY_UNAVAILABLE": "El control de solicitudes no respondió; no se hizo nada.",
+      "REQUEST_CONFIRMATION_REQUIRED": "Nada se ejecuta hasta que confirmes la propuesta; mientras tanto solo se permite leer, analizar y responder.",
+      "REQUEST_SCOPE_EXCEEDED": "La acción va más allá de lo que confirmaste en la propuesta, así que no se ejecutó.",
+      "NOT_CONFIRMABLE": "La propuesta ya no se puede confirmar (ya se confirmó, se canceló o se cerró).",
+      "TAMPERED": "La confirmación no coincide con la propuesta, así que se rechazó.",
+      "STALE_PROPOSAL": "La propuesta ya no es válida; hay que volver a pedirla.",
+      "UNKNOWN_PROPOSAL": "No existe esa propuesta.",
+      "WRONG_CONTEXT": "La confirmación no corresponde a esta propuesta.",
+      "INVALID_CONFIRMATION": "La confirmación estaba incompleta.",
       "UNKNOWN": "La regla {{rule}} lo impidió. Consulta el detalle técnico."
     },
     "evidence": {

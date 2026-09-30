@@ -88,6 +88,9 @@
       "intent_forwarded": { "title": "Sent to El Inge", "message": "Your request reached El Inge as a proposal; nothing runs until you confirm." },
       "intent_governed": { "title": "Action governed by CIMA", "message": "CIMA evaluated your action: risk {{risk}}, decision {{decision}}. {{explanation}}" },
       "intent_blocked": { "title": "Request blocked", "message": "Your request was not sent: CIMA blocked it ({{rule}}). {{explanation}}" },
+      "request_proposed": { "title": "Proposal waiting for your confirmation", "message": "El Inge received your request as a proposal. {{explanation}}" },
+      "request_confirmed": { "title": "Proposal confirmed", "message": "You confirmed the proposal. Every action still goes through CIMA; high-risk ones need your separate approval." },
+      "request_closed": { "title": "Proposal closed", "message": "The proposal was closed ({{decision}})." },
       "error": { "title": "Error", "message": "Something went wrong. See the technical detail." }
     },
     "explain": {
@@ -111,6 +114,14 @@
       "INTENT_MISMATCH": "What you asked for carries more risk than the proposed action, so CIMA did not send it.",
       "DELIVERY_FAILED": "The request could not be delivered to El Inge.",
       "BOUNDARY_UNAVAILABLE": "The request boundary did not answer; nothing was done.",
+      "REQUEST_CONFIRMATION_REQUIRED": "Nothing runs until you confirm the proposal; meanwhile only reading, analysis and replies are allowed.",
+      "REQUEST_SCOPE_EXCEEDED": "The action goes beyond what you confirmed in the proposal, so it did not run.",
+      "NOT_CONFIRMABLE": "The proposal can no longer be confirmed (already confirmed, cancelled or closed).",
+      "TAMPERED": "The confirmation does not match the proposal, so it was rejected.",
+      "STALE_PROPOSAL": "The proposal is no longer valid; it has to be requested again.",
+      "UNKNOWN_PROPOSAL": "There is no such proposal.",
+      "WRONG_CONTEXT": "The confirmation does not belong to this proposal.",
+      "INVALID_CONFIRMATION": "The confirmation was incomplete.",
       "UNKNOWN": "Rule {{rule}} stopped it. See the technical detail."
     },
     "evidence": {
