@@ -11,7 +11,7 @@
  *     pre-fills name, sprite, description and goal; the human still reviews the
  *     command and clicks spawn, exactly like any other hire.
  *   - Alicia is a NEW capability (AI companion), not a hive worker. Her boundary
- *     lives in ./alicia.ts and she is not spawned in this phase.
+ *     lives in ./alicia/ and she is never spawned as a hive agent.
  *
  * Names are identity, never translated. The only locale difference is spelling:
  * es-MX keeps the accents, en-US uses the exact ASCII form.

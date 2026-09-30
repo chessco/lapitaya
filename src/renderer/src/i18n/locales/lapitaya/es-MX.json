@@ -64,5 +64,57 @@
       "rejected": "rechazada",
       "consumed": "ejecutada"
     }
+  },
+  "alicia": {
+    "notifications": {
+      "task_created": { "title": "Nueva tarea", "message": "Se creó la tarea {{task}}." },
+      "task_started": { "title": "Tarea en curso", "message": "{{agent}} está trabajando en la tarea {{task}}." },
+      "task_blocked": { "title": "Tarea bloqueada", "message": "La tarea {{task}} está bloqueada." },
+      "task_completed": { "title": "Tarea terminada", "message": "La tarea {{task}} quedó terminada." },
+      "agent_started": { "title": "Agente activo", "message": "{{agent}} inició su sesión." },
+      "agent_completed": { "title": "Agente en espera", "message": "{{agent}} terminó y quedó en espera." },
+      "agent_failed": { "title": "Falla de un agente", "message": "{{agent}} reportó una falla." },
+      "cima_phase_assigned": { "title": "CIMA · {{phaseLabel}}", "message": "{{from}} asignó {{phase}} a {{agent}}." },
+      "cima_phase_changed": { "title": "CIMA · {{phaseLabel}}", "message": "{{agent}} terminó {{phase}}: {{verdict}}." },
+      "governance_blocked": { "title": "Bloqueado por CIMA", "message": "La acción fue bloqueada por CIMA ({{rule}}). {{explanation}}" },
+      "governance_supervised": { "title": "Acción supervisada", "message": "{{agent}} ejecutó una acción de riesgo medio bajo supervisión. {{explanation}}" },
+      "approval_required": { "title": "Se requiere tu aprobación", "message": "Se requiere aprobación humana. {{explanation}}" },
+      "approval_granted": { "title": "Aprobación concedida", "message": "Aprobaste la acción de {{agent}}. Se ejecutará una sola vez." },
+      "approval_denied": { "title": "Aprobación rechazada", "message": "Rechazaste la acción de {{agent}}. No se ejecutará." },
+      "audit_completed": { "title": "Auditoría terminada", "message": "{{agent}} terminó la auditoría: {{verdict}}." },
+      "workflow_completed": { "title": "Trabajo aceptado", "message": "La tarea {{task}} tiene DECISION PASS registrada por el runtime." },
+      "error": { "title": "Error", "message": "Ocurrió un error. Consulta el detalle técnico." }
+    },
+    "explain": {
+      "HUMAN_APPROVAL_REQUIRED": "Esta acción requiere tu aprobación porque está clasificada como {{riskLabel}}.",
+      "SUPERVISED": "Se permitió bajo supervisión y quedó registrada en el ledger.",
+      "APPROVED": "Se ejecutó una sola vez con tu aprobación.",
+      "HUMAN_APPROVED": "Tú la aprobaste; permite una sola ejecución de esa llamada exacta.",
+      "HUMAN_REJECTED": "Tú la rechazaste; no se ejecutará.",
+      "DENY": "La Pitaya no pudo autorizar esta acción, así que no se ejecutó.",
+      "DECISION_GATE": "La tarea no puede marcarse como terminada sin una DECISION PASS registrada por el runtime.",
+      "EVIDENCE_FIRST": "El resultado no tiene evidencia que el harness haya observado.",
+      "BUILDER_NOT_AUDITOR": "Quien construyó el cambio no puede aprobar sus propias pruebas ni su auditoría.",
+      "AUDITOR_MODIFIED_CODE": "El auditor modificó archivos después del BUILD; un auditor no cambia lo que audita.",
+      "TRANSITION": "Faltan fases previas de CIMA para aceptar este paso.",
+      "DECISION_AUTHORITY": "Solo El Inge o el humano pueden aceptar el trabajo.",
+      "MALFORMED": "El reporte CIMA no tiene el formato requerido.",
+      "UNKNOWN": "La regla {{rule}} lo impidió. Consulta el detalle técnico."
+    },
+    "evidence": {
+      "completed": "{{agent}} completó {{phase}}",
+      "recorded": "{{agent}} registró {{phase}}: {{verdict}}",
+      "verified": "{{verified}}/{{total}} evidencias verificadas por el harness",
+      "none": "Sin evidencia registrada"
+    },
+    "presence": {
+      "IDLE": "En espera",
+      "THINKING": "Pensando",
+      "NOTIFYING": "Avisando",
+      "WAITING_APPROVAL": "Esperando tu aprobación",
+      "CELEBRATING": "Celebrando",
+      "WARNING": "Atención",
+      "BLOCKED": "Bloqueado"
+    }
   }
 }

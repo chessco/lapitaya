@@ -1,0 +1,203 @@
+# Alicia v0.4 — boundary inventory (generated 2026-09-30T06:40:18Z)
+
+## Files (src/shared/lapitaya/alicia/)
+  183 src/shared/lapitaya/alicia/companion.ts
+  143 src/shared/lapitaya/alicia/context.ts
+   76 src/shared/lapitaya/alicia/conversation.ts
+  201 src/shared/lapitaya/alicia/events.ts
+   70 src/shared/lapitaya/alicia/evidence.ts
+   35 src/shared/lapitaya/alicia/identity.ts
+   38 src/shared/lapitaya/alicia/index.ts
+  120 src/shared/lapitaya/alicia/intent.ts
+  117 src/shared/lapitaya/alicia/messages.ts
+  122 src/shared/lapitaya/alicia/notifications.ts
+   24 src/shared/lapitaya/alicia/presence.ts
+   49 src/shared/lapitaya/alicia/provider.ts
+   52 src/shared/lapitaya/alicia/registry.ts
+  120 src/shared/lapitaya/alicia/status.ts
+ 1350 total
+
+## Exported surface per file
+--- src/shared/lapitaya/alicia/companion.ts
+  interface AliciaPreferences
+  const DEFAULT_ALICIA_PREFERENCES
+  function resolveAliciaPreferences
+  interface AliciaPorts
+  interface AliciaCompanionState
+  interface AliciaRequestResult
+  interface AliciaCompanion
+  function createAliciaCompanion
+--- src/shared/lapitaya/alicia/context.ts
+  const MAX_RECENT_EVENTS
+  const MAX_CONTEXT_NOTIFICATIONS
+  type ContextProvenance
+  interface AliciaContext
+  interface AliciaContextSources
+  function deriveAliciaContext
+--- src/shared/lapitaya/alicia/conversation.ts
+  interface AliciaUserMessage
+  interface AliciaCitation
+  interface AliciaAssistantResponse
+  interface AliciaTurn
+  interface AliciaConversation
+  function groundedCitations
+  function knownRefs
+--- src/shared/lapitaya/alicia/events.ts
+  const ALICIA_EVENT_TYPES
+  type AliciaEventType
+  type AliciaSource
+  interface AliciaTechnical
+  interface AliciaEvent
+  function isAliciaEventType
+  interface RuntimeEventLike
+  function fromRuntimeEvent
+  function fromHookEvent
+  function taskEvents
+--- src/shared/lapitaya/alicia/evidence.ts
+  interface PresentedEvidenceItem
+  interface EvidencePresentation
+  function presentEvidence
+--- src/shared/lapitaya/alicia/identity.ts
+  const ALICIA_ACTOR_ID
+  const ALICIA_VERSION
+  interface AliciaIdentity
+  const ALICIA_IDENTITY
+--- src/shared/lapitaya/alicia/index.ts
+--- src/shared/lapitaya/alicia/intent.ts
+  const ALICIA_INTENT_KINDS
+  type AliciaIntentKind
+  const ORCHESTRATOR_INTENTS
+  interface AliciaProposedAction
+  interface AliciaIntent
+  interface GovernancePreview
+  interface OrchestratorRequest
+  const ALICIA_REQUEST_MARKER
+  function isAliciaIntentKind
+  function parseAliciaIntent
+  function previewGovernance
+  function toOrchestratorRequest
+--- src/shared/lapitaya/alicia/messages.ts
+  type AliciaLocale
+  function aliciaLocale
+  function aliciaText
+  function phaseLabel
+  function riskLabel
+  type AgentNameResolver
+  function displayAgent
+  interface GovernanceExplanation
+  function explainGovernance
+--- src/shared/lapitaya/alicia/notifications.ts
+  const ALICIA_NOTIFICATION_TYPES
+  type AliciaNotificationType
+  const ALICIA_SEVERITIES
+  type AliciaSeverity
+  interface AliciaNotificationAction
+  interface AliciaNotification
+  function severityAtLeast
+  function notificationFor
+--- src/shared/lapitaya/alicia/presence.ts
+  const ALICIA_PRESENCE_STATES
+  type AliciaPresence
+  function derivePresence
+--- src/shared/lapitaya/alicia/provider.ts
+  interface AliciaProviderRequest
+  interface AliciaProviderResponse
+  interface AliciaProvider
+  const ALICIA_SYSTEM_BOUNDARY
+--- src/shared/lapitaya/alicia/registry.ts
+  interface AliciaCapability
+  const ALICIA_DISABLED
+  function registerAlicia
+  function alicia
+--- src/shared/lapitaya/alicia/status.ts
+  interface CimaPhaseStatus
+  interface CimaStatus
+  interface CimaStatusSources
+  function deriveCimaStatus
+
+## Imports of the Alicia layer (must be shared-only: no electron, fs, DOM, main)
+import enUS from '../../../renderer/src/i18n/locales/lapitaya/en-US.json';
+import esMX from '../../../renderer/src/i18n/locales/lapitaya/es-MX.json';
+import type { AliciaCapability } from './registry';
+import type { AliciaCitation } from './conversation';
+import type { AliciaContext } from './context';
+import type { AliciaEvent } from './events';
+import type { AliciaEvent, AliciaEventType, AliciaSource, AliciaTechnical } from './events';
+import type { AliciaIntent } from './intent';
+import type { AliciaNotification } from './notifications';
+import type { AliciaTechnical } from './events';
+import type { Approval } from '../governance';
+import type { CimaAssignment, CimaRecord, RuntimeVerdict, VerifiedEvidence } from '../cimaRuntime';
+import type { CimaPhase } from '../cima';
+import type { CimaRecord, VerifiedEvidence } from '../cimaRuntime';
+import type { CimaStatus } from './status';
+import type { HookEvent } from '../../hookEvents';
+import type { RiskLevel } from '../autonomy';
+import type { VerifiedEvidence } from '../cimaRuntime';
+import {
+import { ALICIA_ACTOR_ID } from './identity';
+import { ALICIA_IDENTITY, type AliciaIdentity } from './identity';
+import { CIMA_WORKFLOW, type CimaPhase } from '../cima';
+import { DEFAULT_AUTONOMY_STAGE, type AutonomyStage } from '../autonomy';
+import { LA_PITAYA_AGENT_BY_ID } from '../agents';
+import { LA_PITAYA_ORGANIZATION, LA_PITAYA_ORIGIN } from '../brand';
+import { agentByName, agentDisplayName } from '../agents';
+import { aliciaText, displayAgent, explainGovernance, phaseLabel, type AgentNameResolver } from './messages';
+import { aliciaText, displayAgent, type AgentNameResolver } from './messages';
+import { authorizeToolCall, type AuthorizationDecision } from '../governance';
+import { deriveAliciaContext, type AliciaContext } from './context';
+import { derivePresence, type AliciaPresence } from './presence';
+import { displayAgent, type AgentNameResolver } from './messages';
+import { explainGovernance, type AgentNameResolver, type GovernanceExplanation } from './messages';
+import { isCimaPhase, type CimaPhase } from '../cima';
+import { isSpanish } from '../locales';
+import { notificationFor, severityAtLeast, type AliciaNotification, type AliciaSeverity } from './notifications';
+import { resolveLocaleSettings, type LocaleSettings } from '../locales';
+
+## Governance/CIMA files that mention alicia (must be empty)
+(none)
+
+## Alicia wiring in the host (src/main/index.ts, src/preload/index.ts)
+src/main/index.ts:36:  alicia, registerAlicia, createAliciaCompanion, fromRuntimeEvent, deriveCimaStatus, parseAliciaIntent,
+src/main/index.ts:38:} from '../shared/lapitaya/alicia';
+src/main/index.ts:274:    // Alicia observes the same events; alicia() contains any failure.
+src/main/index.ts:275:    try { for (const ev of fromRuntimeEvent(e, Date.now())) alicia().notify(ev); } catch { /* never break governance */ }
+src/main/index.ts:278:// La Pitaya Alicia v0.4 — the companion layer. She is lent READ-ONLY views of
+src/main/index.ts:280:// 'alicia'). No governance, CIMA or task-status write path is handed to her.
+src/main/index.ts:281:const aliciaCompanion = createAliciaCompanion({
+src/main/index.ts:305:registerAlicia(aliciaCompanion);
+src/main/index.ts:4031:// Alicia v0.4: a read-only snapshot (rendered in the locales the UI passes,
+src/main/index.ts:4034:ipcMain.handle('alicia:snapshot', (_evt, opts: unknown) => {
+src/main/index.ts:4038:  return aliciaCompanion.snapshot({
+src/main/index.ts:4043:ipcMain.handle('alicia:markRead', (_evt, id: unknown) => typeof id === 'string' && aliciaCompanion.markRead(id));
+src/main/index.ts:4044:ipcMain.handle('alicia:request', (_evt, raw: unknown) => {
+src/main/index.ts:4045:  const intent = parseAliciaIntent(raw);
+src/main/index.ts:4047:  return aliciaCompanion.request(intent);
+src/preload/index.ts:19:import type { AliciaCompanionState, AliciaIntent, AliciaRequestResult } from '../shared/lapitaya/alicia';
+src/preload/index.ts:1093:  // ─── Alicia v0.4 (companion layer: observe, explain, relay to El Inge) ────
+src/preload/index.ts:1094:  /** Alicia's context, notifications and presence, rendered in the given locales. */
+src/preload/index.ts:1095:  aliciaSnapshot: (opts?: { locales?: Partial<LocaleSettings>; focusTaskId?: string | null }): Promise<AliciaCompanionState> =>
+src/preload/index.ts:1096:    ipcRenderer.invoke('alicia:snapshot', opts ?? {}),
+src/preload/index.ts:1097:  aliciaMarkRead: (id: string): Promise<boolean> => ipcRenderer.invoke('alicia:markRead', id),
+src/preload/index.ts:1099:  aliciaRequest: (intent: AliciaIntent): Promise<AliciaRequestResult> => ipcRenderer.invoke('alicia:request', intent),
+
+## Ports lent to the companion (AliciaPorts)
+export interface AliciaPorts {
+  cimaStatus?(taskId: string): CimaStatus | null;
+  tasks?(): unknown;
+  project?(): { root: string | null; name: string | null } | null;
+  agentName?: AgentNameResolver;
+  autonomyStage?(): AutonomyStage;
+  orchestratorId(): string;
+  sendToOrchestrator(request: OrchestratorRequest): { ok: boolean; error?: string };
+}
+
+## Registry entry
+    id: 'alicia',
+    name: 'Alicia',
+    role: 'companion',
+    roleLabel: 'AI Companion',
+    runtime: 'capability',
+    cimaPhases: [],
+    upstream: 'new capability (not a replacement for any upstream agent)'
+  }

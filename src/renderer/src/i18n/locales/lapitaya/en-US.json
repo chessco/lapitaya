@@ -64,5 +64,57 @@
       "rejected": "rejected",
       "consumed": "executed"
     }
+  },
+  "alicia": {
+    "notifications": {
+      "task_created": { "title": "New task", "message": "Task {{task}} was created." },
+      "task_started": { "title": "Task in progress", "message": "{{agent}} is working on task {{task}}." },
+      "task_blocked": { "title": "Task blocked", "message": "Task {{task}} is blocked." },
+      "task_completed": { "title": "Task done", "message": "Task {{task}} is done." },
+      "agent_started": { "title": "Agent active", "message": "{{agent}} started a session." },
+      "agent_completed": { "title": "Agent idle", "message": "{{agent}} finished and is idle." },
+      "agent_failed": { "title": "Agent failure", "message": "{{agent}} reported a failure." },
+      "cima_phase_assigned": { "title": "CIMA · {{phaseLabel}}", "message": "{{from}} assigned {{phase}} to {{agent}}." },
+      "cima_phase_changed": { "title": "CIMA · {{phaseLabel}}", "message": "{{agent}} finished {{phase}}: {{verdict}}." },
+      "governance_blocked": { "title": "Blocked by CIMA", "message": "The action was blocked by CIMA ({{rule}}). {{explanation}}" },
+      "governance_supervised": { "title": "Supervised action", "message": "{{agent}} ran a medium-risk action under supervision. {{explanation}}" },
+      "approval_required": { "title": "Your approval is needed", "message": "Human approval is required. {{explanation}}" },
+      "approval_granted": { "title": "Approval granted", "message": "You approved the action from {{agent}}. It will run once." },
+      "approval_denied": { "title": "Approval rejected", "message": "You rejected the action from {{agent}}. It will not run." },
+      "audit_completed": { "title": "Audit finished", "message": "{{agent}} finished the audit: {{verdict}}." },
+      "workflow_completed": { "title": "Work accepted", "message": "Task {{task}} has a DECISION PASS recorded by the runtime." },
+      "error": { "title": "Error", "message": "Something went wrong. See the technical detail." }
+    },
+    "explain": {
+      "HUMAN_APPROVAL_REQUIRED": "This action needs your approval because it is classified as {{riskLabel}}.",
+      "SUPERVISED": "It was allowed under supervision and recorded in the ledger.",
+      "APPROVED": "It ran once with your approval.",
+      "HUMAN_APPROVED": "You approved it; that allows one run of that exact call.",
+      "HUMAN_REJECTED": "You rejected it; it will not run.",
+      "DENY": "La Pitaya could not authorize this action, so it did not run.",
+      "DECISION_GATE": "The task cannot be marked done without a DECISION PASS recorded by the runtime.",
+      "EVIDENCE_FIRST": "The result has no evidence the harness observed.",
+      "BUILDER_NOT_AUDITOR": "Whoever built the change cannot pass its own tests or audit.",
+      "AUDITOR_MODIFIED_CODE": "The auditor modified files after BUILD; an auditor never changes what it audits.",
+      "TRANSITION": "Earlier CIMA phases are missing, so this step cannot be accepted.",
+      "DECISION_AUTHORITY": "Only El Inge or the human can accept the work.",
+      "MALFORMED": "The CIMA report is not in the required format.",
+      "UNKNOWN": "Rule {{rule}} stopped it. See the technical detail."
+    },
+    "evidence": {
+      "completed": "{{agent}} completed {{phase}}",
+      "recorded": "{{agent}} recorded {{phase}}: {{verdict}}",
+      "verified": "{{verified}}/{{total}} evidence items verified by the harness",
+      "none": "No evidence recorded"
+    },
+    "presence": {
+      "IDLE": "Idle",
+      "THINKING": "Thinking",
+      "NOTIFYING": "Notifying",
+      "WAITING_APPROVAL": "Waiting for your approval",
+      "CELEBRATING": "Celebrating",
+      "WARNING": "Heads up",
+      "BLOCKED": "Blocked"
+    }
   }
 }

@@ -1,49 +1,51 @@
 # Alicia
 
-**Rol:** AI Companion. **Estado en Foundation v0.1:** solo la frontera arquitectónica; no está
-implementada.
+**Rol:** AI Companion. **Estado en v0.4:** arquitectura transversal implementada y probada; sin UI,
+sin personalidad, sin voz. Documento de arquitectura:
+[LA_PITAYA_ALICIA_ARCHITECTURE_04.md](../LA_PITAYA_ALICIA_ARCHITECTURE_04.md).
 
 Alicia es una asistente persistente inspirada en los asistentes de escritorio de los 90,
 reinterpretada con IA moderna. **No reemplaza a ningún agente.** Es una capacidad nueva de La
-Pitaya, no un worker del hive.
+Pitaya, no un worker del hive: no tiene fase CIMA, no emite veredictos, no tiene autoridad de
+DECISION y no orquesta. El Inge sigue siendo el orquestador.
 
 ## Frontera (lo que existe hoy)
 
-[`src/shared/lapitaya/alicia.ts`](../../src/shared/lapitaya/alicia.ts):
+Capa: [`src/shared/lapitaya/alicia/`](../../src/shared/lapitaya/alicia/).
 
 ```text
-core (hive, El Inge, CIMA) ──AliciaEvent──▶ alicia().notify(event) ──▶ AliciaCapability
+core (hive, El Inge, CIMA) ──AliciaEvent──▶ alicia().notify(event) ──▶ companion
+humano ──▶ Alicia ──intent──▶ solicitud en el hive ──▶ El Inge ──▶ CIMA / gobernanza
 ```
 
-- `AliciaEvent` es la unión de eventos que el core puede emitir: `agent-activity`, `cima-phase`,
-  `finding`, `verdict`, `error` y `approval-needed`.
-- `AliciaCapability` es la interfaz de una implementación (`id`, `enabled`, `notify`).
-- `ALICIA_DISABLED` es el default, un no-op.
-- `registerAlicia(impl)` instala una implementación y devuelve la función para restaurar la
-  anterior.
-- `alicia()` es el único punto de entrada del core. Si una implementación lanza una excepción,
-  `alicia()` la contiene: Alicia nunca puede romper el hive.
+- `registry.ts`: la costura de v0.1 (`alicia()`, `registerAlicia()`, `ALICIA_DISABLED`).
+- `events.ts`: modelo de eventos y adaptadores de las fuentes existentes; no hay bus nuevo.
+- `status.ts`, `evidence.ts`: `CimaStatus` derivado del runtime y evidencia citada textual.
+- `messages.ts`, `notifications.ts`: texto localizado alrededor de identificadores intactos.
+- `context.ts`, `presence.ts`: `AliciaContext` (derivado, mínimo, auditable) y `AliciaPresence`.
+- `intent.ts`: la única salida. `prepare` y `request` se convierten en una solicitud del hive a El
+  Inge, enviada como `alicia`.
+- `conversation.ts`, `provider.ts`: solo interfaces.
+- `companion.ts`: estado, preferencias y los *ports* que el host le presta.
 
 Reglas del contrato:
 
-1. **Solo lectura respecto al hive.** Alicia explica; no actúa. Lo que sugiera pasa por El Inge y
-   la política de autonomía.
-2. **La evidencia no se altera.** Los eventos traen la salida original en `evidence`. Alicia la
-   explica en `notificationLocale`.
-3. **Fire-and-forget.** `notify` no bloquea ni devuelve nada al core.
-
-Incorporar Alicia después no requiere tocar el core: se registra una implementación en el arranque
-del renderer y se agregan llamadas `alicia().notify(...)` en los puntos de emisión.
+1. **Solo lectura respecto al core.** Alicia explica y retransmite; no ejecuta, no aprueba, no
+   decide y no cambia el estado de CIMA ni de las tareas.
+2. **La evidencia no se altera.** Se cita textual; Alicia solo agrega palabras alrededor.
+3. **Sin privilegios.** La gobernanza no reconoce el id `alicia` como especial: una acción HIGH
+   recibe `HUMAN_APPROVAL_REQUIRED`, igual que con cualquier otro actor.
 
 ## Roadmap (no implementado)
 
 | Fase | Capacidad |
 | --- | --- |
-| ALICIA | Explicar actividad de agentes, findings, ciclos CIMA y errores; notificaciones; presencia en la UI |
-| DESKTOP COMPANION | Presencia de escritorio fuera de la ventana |
+| ALICIA UI | Panel y notificaciones en la app usando `aliciaSnapshot()` |
+| CONVERSATION | Implementar `AliciaConversation` sobre un `AliciaProvider` |
+| DESKTOP COMPANION | Presencia de escritorio fuera de la ventana (Companion Protocol) |
 | PETS | Mascotas: ciclo de vida, cuidado, interacción con Alicia |
 | PITAYA HARDWARE | Conexión con hardware PitayaCode |
 
-Explícitamente fuera de esta fase: pets (ciclo de vida, muerte, breeding), desktop companion,
-hardware y su protocolo, asistente de voz, marketplace de criaturas, personalidad avanzada,
-despliegue autónomo a producción y agentes que se modifican a sí mismos.
+Explícitamente fuera de v0.4: pets (ciclo de vida, muerte, breeding), transformaciones, desktop
+companion, hardware y su protocolo, voz, RAG, memoria de largo plazo, personalidad avanzada,
+autonomía de Alicia.

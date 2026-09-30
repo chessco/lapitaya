@@ -32,6 +32,10 @@ import { AUTONOMY_STAGES, DEFAULT_AUTONOMY_STAGE, type AutonomyStage } from '../
 import { phaseForAgent } from '../shared/lapitaya/agents';
 import { recordBanner } from '../shared/lapitaya/cimaRuntime';
 import { LA_PITAYA_NAME } from '../shared/lapitaya/brand';
+import {
+  alicia, registerAlicia, createAliciaCompanion, fromRuntimeEvent, deriveCimaStatus, parseAliciaIntent,
+  ALICIA_ACTOR_ID
+} from '../shared/lapitaya/alicia';
 import { CircuitBreaker, type BreakerInput } from './breaker';
 import { CumulativeSampleGate, type UsageProvider } from './usage';
 import { MemoryManager } from './memory';
@@ -252,13 +256,14 @@ const control = new ControlRegistry();
 // La Pitaya — runtime governance + CIMA. Authorizes every PreToolUse (via the
 // HookServer below), records what really ran as evidence, and evaluates the
 // `cima` claims agents attach to hive messages (via the router).
+const lapitayaStage = (): AutonomyStage => {
+  const s = (readConfig() as { lapitayaAutonomyStage?: unknown }).lapitayaAutonomyStage;
+  return (AUTONOMY_STAGES as readonly unknown[]).includes(s) ? (s as AutonomyStage) : DEFAULT_AUTONOMY_STAGE;
+};
 const lapitaya = new CimaRuntimeService({
   hiveRoot: () => hive.root(),
   godId: () => hive.registry().godId ?? 'god',
-  stage: () => {
-    const s = (readConfig() as { lapitayaAutonomyStage?: unknown }).lapitayaAutonomyStage;
-    return (AUTONOMY_STAGES as readonly unknown[]).includes(s) ? (s as AutonomyStage) : DEFAULT_AUTONOMY_STAGE;
-  },
+  stage: lapitayaStage,
   phaseOf: (agentId) => phaseForAgent(hive.registry(), agentId),
   taskOf: (agentId) => {
     const t = (hive.tasks() as { tasks?: Array<{ id?: string; assignee?: string; status?: string }> })?.tasks ?? [];
@@ -266,8 +271,38 @@ const lapitaya = new CimaRuntimeService({
   },
   onEvent: (e) => {
     try { liveWebContents()?.send('lapitaya:governance', e); } catch { /* window gone */ }
+    // Alicia observes the same events; alicia() contains any failure.
+    try { for (const ev of fromRuntimeEvent(e, Date.now())) alicia().notify(ev); } catch { /* never break governance */ }
   }
 });
+// La Pitaya Alicia v0.4 — the companion layer. She is lent READ-ONLY views of
+// the runtime plus ONE outbound channel (a hive request to El Inge, sent as
+// 'alicia'). No governance, CIMA or task-status write path is handed to her.
+const aliciaCompanion = createAliciaCompanion({
+  ports: {
+    cimaStatus: (taskId) => deriveCimaStatus({
+      taskId,
+      records: lapitaya.cimaRecords(taskId),
+      approvals: lapitaya.listApprovals(),
+      completion: lapitaya.completionGate(taskId)
+    }),
+    tasks: () => hive.tasks(),
+    project: () => {
+      const reg = hive.registry();
+      const cwd = reg.godId ? reg.agents[reg.godId]?.cwd ?? null : null;
+      return cwd ? { root: cwd, name: basename(cwd) } : null;
+    },
+    agentName: (id) => hive.registry().agents[id]?.name,
+    autonomyStage: lapitayaStage,
+    orchestratorId: () => hive.registry().godId ?? 'god',
+    sendToOrchestrator: (req) => {
+      if (!hive.enabled()) return { ok: false, error: 'hive disabled (no harnessHome)' };
+      hive.send(req, ALICIA_ACTOR_ID);
+      return { ok: true };
+    }
+  }
+});
+registerAlicia(aliciaCompanion);
 hive.setCimaHandler((from, cima, messageId, to) => recordBanner(lapitaya.handle(from, to, cima, messageId)));
 hive.setCompletionGate(
   (taskId) => lapitaya.completionGate(taskId),
@@ -3992,6 +4027,24 @@ ipcMain.handle('lapitaya:approvals', () => lapitaya.listApprovals());
 ipcMain.handle('lapitaya:decide', (_evt, id: unknown, approve: unknown) => {
   if (typeof id !== 'string' || typeof approve !== 'boolean') return null;
   return lapitaya.decide(id, approve, 'human');
+});
+// Alicia v0.4: a read-only snapshot (rendered in the locales the UI passes,
+// since uiLocale/notificationLocale live in the renderer) and the request path
+// to El Inge. Neither can approve, decide, record CIMA or change a task.
+ipcMain.handle('alicia:snapshot', (_evt, opts: unknown) => {
+  const o = (opts && typeof opts === 'object' ? opts : {}) as Record<string, unknown>;
+  const l = (o.locales && typeof o.locales === 'object' ? o.locales : {}) as Record<string, unknown>;
+  const pick = (v: unknown) => (typeof v === 'string' && v.length <= 20 ? v : undefined);
+  return aliciaCompanion.snapshot({
+    locales: { uiLocale: pick(l.uiLocale), agentLocale: pick(l.agentLocale), notificationLocale: pick(l.notificationLocale) },
+    focusTaskId: typeof o.focusTaskId === 'string' ? o.focusTaskId.slice(0, 200) : null
+  });
+});
+ipcMain.handle('alicia:markRead', (_evt, id: unknown) => typeof id === 'string' && aliciaCompanion.markRead(id));
+ipcMain.handle('alicia:request', (_evt, raw: unknown) => {
+  const intent = parseAliciaIntent(raw);
+  if (!intent) return { delivered: false, to: null, preview: null, executed: false, error: 'invalid intent' };
+  return aliciaCompanion.request(intent);
 });
 ipcMain.handle('lapitaya:ledger', (_evt, limit: unknown) =>
   lapitaya.ledger(typeof limit === 'number' && limit > 0 ? Math.min(limit, 5000) : 200));

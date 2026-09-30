@@ -18,7 +18,7 @@ const agents = loadTs('src/shared/lapitaya/agents.ts');
 const cima = loadTs('src/shared/lapitaya/cima.ts');
 const autonomy = loadTs('src/shared/lapitaya/autonomy.ts');
 const locales = loadTs('src/shared/lapitaya/locales.ts');
-const alicia = loadTs('src/shared/lapitaya/alicia.ts');
+const alicia = loadTs('src/shared/lapitaya/alicia/index.ts');
 const { CIMA_GOD_BRIEFING } = loadTs('src/shared/lapitaya/cimaBriefing.ts');
 const { DEFAULT_GOD_NAME } = loadTs('src/shared/godIdentity.ts');
 
@@ -183,19 +183,19 @@ test('no autonomy stage can switch off Human Governance', () => {
 
 test('Alicia is disabled by default and her calls are no-ops', () => {
   assert.equal(alicia.alicia().enabled, false);
-  assert.doesNotThrow(() => alicia.alicia().notify({ type: 'error', message: 'x' }));
+  assert.doesNotThrow(() => alicia.alicia().notify({ type: 'error', ts: 0, source: 'hive' }));
 });
 
 test('a registered Alicia receives events, and a throwing one cannot break the caller', () => {
   const seen = [];
   const restore = alicia.registerAlicia({ id: 'test', enabled: true, notify: (e) => seen.push(e.type) });
-  alicia.alicia().notify({ type: 'cima-phase', phase: 'TEST' });
+  alicia.alicia().notify({ type: 'cima.phase.changed', ts: 0, source: 'cima-runtime', phase: 'TEST' });
   restore();
-  assert.deepEqual(seen, ['cima-phase']);
+  assert.deepEqual(seen, ['cima.phase.changed']);
   assert.equal(alicia.alicia().id, 'none');
 
   const restoreBad = alicia.registerAlicia({ id: 'bad', enabled: true, notify: () => { throw new Error('boom'); } });
-  assert.doesNotThrow(() => alicia.alicia().notify({ type: 'error', message: 'x' }));
+  assert.doesNotThrow(() => alicia.alicia().notify({ type: 'error', ts: 0, source: 'hive' }));
   restoreBad();
 });
 
