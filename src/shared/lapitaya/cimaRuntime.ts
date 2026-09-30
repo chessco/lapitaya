@@ -108,6 +108,8 @@ export interface CimaState {
   traces: readonly ExecutionTrace[];
   /** Hive id of the orchestrator (El Inge). */
   godId: string;
+  /** Phase hand-offs; a task with any is CIMA-governed (decision gate). */
+  assignments?: readonly CimaAssignment[];
 }
 
 /** Evidence types whose `source` is a command the agent must have run. */
@@ -255,6 +257,91 @@ const PREREQ: Partial<Record<CimaPhase, CimaPhase>> = {
   DECISION: 'AUDIT'
 };
 
+/** Phases that must all stand at PASS for work to be accepted and completed. */
+export const DECISION_CHAIN: readonly CimaPhase[] = ['BUILD', 'TEST', 'AUDIT'];
+
+// ─── Decision gate (v0.3): when may a task be marked done? ──────────────────
+
+export interface CompletionVerdict {
+  /** The task has CIMA history (a record or an assignment) — the gate applies. */
+  governed: boolean;
+  allowed: boolean;
+  reason: string;
+}
+
+/**
+ * A CIMA-governed task may be COMPLETED only when the runtime itself recorded
+ * DECISION PASS (never an agent's say-so): the latest accepted DECISION is PASS,
+ * BUILD/TEST/AUDIT still stand at PASS, and nothing was rebuilt after the
+ * decision. A task with no CIMA history is outside the workflow and ungated.
+ */
+export function completionVerdict(state: CimaState, taskId: string): CompletionVerdict {
+  const recs = taskRecords(state, taskId);
+  const assigned = (state.assignments ?? []).some((a) => a.taskId === taskId);
+  const governed = recs.length > 0 || assigned;
+  if (!governed) return { governed: false, allowed: true, reason: 'not a CIMA task' };
+  const accepted = recs.filter((r) => r.violations.length === 0);
+  const decision = [...accepted].reverse().find((r) => r.phase === 'DECISION');
+  if (!decision) return { governed, allowed: false, reason: `DECISION_GATE: task ${taskId} has no DECISION recorded by the runtime` };
+  if (decision.verdict !== 'PASS') {
+    return { governed, allowed: false, reason: `DECISION_GATE: task ${taskId} DECISION is ${decision.verdict}, not PASS` };
+  }
+  const v = taskPhaseVerdicts(state, taskId);
+  const broken = DECISION_CHAIN.filter((p) => v[p] !== 'PASS');
+  if (broken.length) {
+    return { governed, allowed: false, reason: `DECISION_GATE: task ${taskId} no longer stands — ${broken.map((p) => `${p}=${v[p] ?? 'none'}`).join(', ')}` };
+  }
+  const rebuilt = accepted.some((r) => r.phase === 'BUILD' && r.ts > decision.ts);
+  if (rebuilt) return { governed, allowed: false, reason: `DECISION_GATE: task ${taskId} was rebuilt after its DECISION; decide again` };
+  return { governed, allowed: true, reason: `DECISION PASS recorded at ${new Date(decision.ts).toISOString()}` };
+}
+
+interface TaskLike { id?: unknown; status?: unknown }
+
+function statusMap(text: string): Map<string, string> {
+  const parsed = JSON.parse(text) as { tasks?: TaskLike[] } | TaskLike[];
+  const list = Array.isArray(parsed) ? parsed : parsed?.tasks;
+  if (!Array.isArray(list)) throw new Error('tasks.json has no tasks array');
+  const m = new Map<string, string>();
+  for (const t of list) if (t && typeof t.id === 'string') m.set(t.id, typeof t.status === 'string' ? t.status : '');
+  return m;
+}
+
+/** Tasks that move INTO 'done' between two versions of the task ledger. */
+export function newlyCompleted(beforeText: string | null, afterText: string): string[] {
+  const after = statusMap(afterText);
+  let before = new Map<string, string>();
+  if (beforeText) { try { before = statusMap(beforeText); } catch { before = new Map(); } }
+  return [...after].filter(([id, s]) => s === 'done' && before.get(id) !== 'done').map(([id]) => id);
+}
+
+/**
+ * Project what a Write/Edit/MultiEdit tool call would leave in a file, so the
+ * gate can judge the RESULT before the call runs. Returns null when the result
+ * cannot be determined (the edit would not apply) — callers deny on null.
+ */
+export function projectFileWrite(tool: string, input: unknown, current: string | null): string | null {
+  const i = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
+  const applyEdit = (text: string, oldS: unknown, newS: unknown, all: unknown): string | null => {
+    if (typeof oldS !== 'string' || typeof newS !== 'string' || !oldS) return null;
+    if (!text.includes(oldS)) return null;
+    return all === true ? text.split(oldS).join(newS) : text.replace(oldS, () => newS);
+  };
+  if (tool === 'Write') return typeof i.content === 'string' ? i.content : null;
+  if (current === null) return null;
+  if (tool === 'Edit') return applyEdit(current, i.old_string, i.new_string, i.replace_all);
+  if (tool === 'MultiEdit') {
+    if (!Array.isArray(i.edits)) return null;
+    let text: string | null = current;
+    for (const e of i.edits as Array<Record<string, unknown>>) {
+      if (text === null) return null;
+      text = applyEdit(text, e?.old_string, e?.new_string, e?.replace_all);
+    }
+    return text;
+  }
+  return null;
+}
+
 /**
  * Decide what the runtime records for one submission. Never throws.
  * @param agentId  the SENDER as the router knows it (the outbox owner), never a
@@ -330,6 +417,16 @@ export function evaluateSubmission(
       if (prior !== 'PASS') {
         violations.push('TRANSITION');
         reasons.push(`TRANSITION: ${sub.phase} PASS requires ${prereq} PASS for task ${sub.taskId} (found ${prior ?? 'none'}).`);
+      }
+    }
+    // v0.3: accepting work needs the WHOLE chain to stand right now — a later
+    // genuine TEST/BUILD failure after the audit must stop a DECISION PASS.
+    if (sub.phase === 'DECISION') {
+      const v = taskPhaseVerdicts(state, sub.taskId);
+      const broken = DECISION_CHAIN.filter((p) => v[p] !== 'PASS');
+      if (broken.length && !violations.includes('TRANSITION')) {
+        violations.push('TRANSITION');
+        reasons.push(`TRANSITION: DECISION PASS requires ${DECISION_CHAIN.join(', ')} PASS for task ${sub.taskId}; not PASS: ${broken.map((p) => `${p}=${v[p] ?? 'none'}`).join(', ')}.`);
       }
     }
     if (sub.phase === 'DECISION' && agentId !== state.godId && agentId !== 'human') {

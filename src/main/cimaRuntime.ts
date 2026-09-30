@@ -24,13 +24,18 @@
  */
 
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync, renameSync } from 'node:fs';
-import { join } from 'node:path';
-import { authorizeToolCall, type Approval, type Authorization } from '../shared/lapitaya/governance';
+import { join, resolve } from 'node:path';
+import { authorizeToolCall, denyAuthorization, isExecutable, type Approval, type Authorization } from '../shared/lapitaya/governance';
+import type { ToolCallContext, ToolRisk } from '../shared/lapitaya/toolRisk';
 import { DEFAULT_AUTONOMY_STAGE, type AutonomyStage } from '../shared/lapitaya/autonomy';
 import { classifyToolCall } from '../shared/lapitaya/toolRisk';
 import {
-  evaluateSubmission, parseAssignment, type CimaRecord, type CimaAssignment, type ExecutionTrace, type CimaState
+  evaluateSubmission, parseAssignment, completionVerdict, newlyCompleted, projectFileWrite,
+  type CimaRecord, type CimaAssignment, type ExecutionTrace, type CimaState, type CompletionVerdict
 } from '../shared/lapitaya/cimaRuntime';
+
+/** Tools whose write to the task ledger is judged by the decision gate. */
+const TASK_WRITE_TOOLS: ReadonlySet<string> = new Set(['Write', 'Edit', 'MultiEdit']);
 import type { CimaPhase } from '../shared/lapitaya/cima';
 
 /** A governance decision as it lands in the ledger. */
@@ -38,6 +43,8 @@ export interface GovernanceRecord {
   kind: 'governance';
   ts: number;
   agentId: string;
+  /** The agent's provider (claude, codex, …) — governance is the same for all. */
+  provider?: string;
   taskId: string | null;
   phase: CimaPhase | null;
   tool: string;
@@ -61,7 +68,11 @@ export interface CimaRuntimeDeps {
   /** The task an agent is currently on (tasks.json: assignee + status doing). */
   taskOf?: (agentId: string) => string | null;
   /** Push a governance/CIMA event to the UI. */
-  onEvent?: (e: { type: 'approval-request' | 'approval-decided' | 'supervised' | 'cima-record'; data: unknown }) => void;
+  onEvent?: (e: { type: 'approval-request' | 'approval-decided' | 'supervised' | 'cima-record' | 'completion-blocked'; data: unknown }) => void;
+  /** The provider an agent runs on, for the ledger. */
+  providerOf?: (agentId: string) => string | null;
+  /** Test seam: replaces the risk classifier. */
+  classify?: (tool: string, input: unknown, ctx?: ToolCallContext) => ToolRisk;
   now?: () => number;
 }
 
@@ -83,6 +94,7 @@ export class CimaRuntimeService {
   private traces: ExecutionTrace[] = [];
   private records: CimaRecord[] = [];
   private approvals: Approval[] = [];
+  private assignments: CimaAssignment[] = [];
   private loadedFor: string | null = null;
   private seq = 0;
 
@@ -103,6 +115,7 @@ export class CimaRuntimeService {
     this.traces = [];
     this.records = [];
     this.approvals = [];
+    this.assignments = [];
     if (!dir) return;
     const readLines = (f: string): unknown[] => {
       const p = join(dir, f);
@@ -112,34 +125,42 @@ export class CimaRuntimeService {
       });
     };
     this.traces = (readLines('traces.jsonl') as ExecutionTrace[]).slice(-MAX_TRACES_IN_MEMORY);
-    this.records = (readLines('cima-ledger.jsonl') as LedgerEntry[]).filter((e): e is CimaRecord => e?.kind === 'cima');
+    const ledger = readLines('cima-ledger.jsonl') as LedgerEntry[];
+    this.records = ledger.filter((e): e is CimaRecord => e?.kind === 'cima');
+    this.assignments = ledger.filter((e): e is CimaAssignment => e?.kind === 'cima-assignment');
     try {
       const a = JSON.parse(readFileSync(join(dir, 'approvals.json'), 'utf8'));
       if (Array.isArray(a)) this.approvals = a;
     } catch { /* none yet */ }
   }
 
-  private append(file: string, entry: unknown): void {
+  /** Append one JSON line. Returns false when it could not be written — callers
+   *  that need an audit trail (authorization) deny on false. */
+  private append(file: string, entry: unknown): boolean {
     const dir = this.dir();
-    if (!dir) return;
+    if (!dir) return false;
     try {
       mkdirSync(dir, { recursive: true });
       appendFileSync(join(dir, file), JSON.stringify(entry) + '\n');
+      return true;
     } catch (e) {
       console.error('[lapitaya] ledger write failed:', e);
+      return false;
     }
   }
 
-  private saveApprovals(): void {
+  private saveApprovals(): boolean {
     const dir = this.dir();
-    if (!dir) return;
+    if (!dir) return false;
     try {
       mkdirSync(dir, { recursive: true });
       const tmp = join(dir, 'approvals.json.tmp');
       writeFileSync(tmp, JSON.stringify(this.approvals, null, 2));
       renameSync(tmp, join(dir, 'approvals.json'));
+      return true;
     } catch (e) {
       console.error('[lapitaya] approvals write failed:', e);
+      return false;
     }
   }
 
@@ -149,20 +170,53 @@ export class CimaRuntimeService {
 
   // ─── 1. authorization at PreToolUse ──────────────────────────────────────
 
+  /**
+   * The runtime's decision for ONE tool call. v0.3 contract: this always returns
+   * an explicit decision, and every condition that prevents establishing
+   * authorization — missing governance state, missing identity, an unusable risk
+   * classification, a ledger that cannot record the decision, an approval that
+   * cannot be durably consumed — returns DENY. Never ALLOW by default.
+   */
   authorize(agentId: string, tool: string, input: unknown): Authorization {
-    this.load();
-    const auth = authorizeToolCall({
+    const deny = (code: string, detail: string): Authorization => {
+      const d = denyAuthorization(code, detail, agentId || '?', tool || '?', input);
+      this.recordDecision(agentId || '?', tool || '?', d); // best effort: the call is denied either way
+      return d;
+    };
+    const root = this.deps.hiveRoot();
+    if (!root) return deny('GOVERNANCE_STATE_UNAVAILABLE', 'no hive root');
+    if (!agentId || !tool) return deny('GOVERNANCE_STATE_UNAVAILABLE', `missing ${!agentId ? 'agent identity' : 'tool name'}`);
+    try { this.load(); } catch (e) {
+      return deny('GOVERNANCE_STATE_UNAVAILABLE', `cannot load governance state: ${String(e).slice(0, 120)}`);
+    }
+
+    let auth = authorizeToolCall({
       agentId,
       tool,
       input,
       stage: this.deps.stage?.() ?? DEFAULT_AUTONOMY_STAGE,
       approvals: this.approvals,
-      ctx: { hiveRoot: this.deps.hiveRoot() }
+      ctx: { hiveRoot: root },
+      classify: this.deps.classify
     });
 
+    // Decision gate at the tool boundary: a write to the task ledger that would
+    // mark a CIMA task done without a runtime DECISION PASS does not run.
+    if (isExecutable(auth.decision) && TASK_WRITE_TOOLS.has(tool)) {
+      const gate = this.taskLedgerWriteGate(root, tool, input);
+      if (gate) auth = denyAuthorization('DECISION_GATE', gate, agentId, tool, input);
+    }
+
     if (auth.decision === 'APPROVED' && auth.approvalId) {
+      // One-shot: the approval must be durably consumed BEFORE the call runs,
+      // or it could be replayed. If that cannot be persisted, deny.
       const a = this.approvals.find((x) => x.id === auth.approvalId);
-      if (a) { a.status = 'consumed'; this.saveApprovals(); }
+      if (!a) return deny('GOVERNANCE_STATE_UNAVAILABLE', 'approval vanished');
+      a.status = 'consumed';
+      if (!this.saveApprovals()) {
+        a.status = 'approved';
+        return deny('LEDGER_UNAVAILABLE', `cannot persist consumption of approval ${a.id}`);
+      }
     }
     if (auth.decision === 'HUMAN_APPROVAL_REQUIRED') {
       // One pending request per distinct call — a retry loop must not spam the human.
@@ -189,12 +243,33 @@ export class CimaRuntimeService {
       this.deps.onEvent?.({ type: 'supervised', data: { agentId, tool, summary: auth.summary, category: auth.category } });
     }
 
+    // Every executed call must be auditable: if the decision cannot be written
+    // to the ledger, the call does not run.
+    if (!this.recordDecision(agentId, tool, auth) && isExecutable(auth.decision)) {
+      if (auth.decision === 'APPROVED' && auth.approvalId) {
+        const a = this.approvals.find((x) => x.id === auth.approvalId);
+        if (a) { a.status = 'approved'; this.saveApprovals(); }
+      }
+      return denyAuthorization('LEDGER_UNAVAILABLE', 'the governance ledger could not record this decision', agentId, tool, input);
+    }
+    return auth;
+  }
+
+  /** Append one governance decision to the ledger. Returns false if it could not be written. */
+  private recordDecision(agentId: string, tool: string, auth: Authorization): boolean {
+    let taskId: string | null = null;
+    let phase: CimaPhase | null = null;
+    let provider: string | null = null;
+    try { taskId = this.deps.taskOf?.(agentId) ?? null; } catch { /* optional context */ }
+    try { phase = this.deps.phaseOf?.(agentId) ?? null; } catch { /* optional context */ }
+    try { provider = this.deps.providerOf?.(agentId) ?? null; } catch { /* optional context */ }
     const rec: GovernanceRecord = {
       kind: 'governance',
       ts: this.now(),
       agentId,
-      taskId: this.deps.taskOf?.(agentId) ?? null,
-      phase: this.deps.phaseOf?.(agentId) ?? null,
+      ...(provider ? { provider } : {}),
+      taskId,
+      phase,
       tool,
       action: auth.summary,
       category: auth.category,
@@ -204,8 +279,65 @@ export class CimaRuntimeService {
       rule: auth.rule,
       ...(auth.approvalId ? { approvalId: auth.approvalId } : {})
     };
-    this.append('cima-ledger.jsonl', rec);
-    return auth;
+    return this.append('cima-ledger.jsonl', rec);
+  }
+
+  // ─── decision gate ───────────────────────────────────────────────────────
+
+  private cimaState(): CimaState {
+    return { records: this.records, traces: this.traces, godId: this.deps.godId(), assignments: this.assignments };
+  }
+
+  /** May this task be marked done? (Runtime-recorded DECISION PASS only.) */
+  completionGate(taskId: string): CompletionVerdict {
+    this.load();
+    return completionVerdict(this.cimaState(), taskId);
+  }
+
+  /**
+   * Judge a change of the task ledger (before → after text). Returns the tasks
+   * whose move to 'done' is NOT allowed, with the reason. An unreadable `after`
+   * cannot be judged and is reported as a violation for `*`.
+   */
+  blockedCompletions(beforeText: string | null, afterText: string): Array<{ taskId: string; reason: string }> {
+    this.load();
+    let done: string[];
+    try { done = newlyCompleted(beforeText, afterText); } catch (e) {
+      return [{ taskId: '*', reason: `DECISION_GATE: cannot parse the resulting task ledger (${String(e).slice(0, 80)})` }];
+    }
+    const state = this.cimaState();
+    return done.flatMap((taskId) => {
+      const v = completionVerdict(state, taskId);
+      return v.allowed ? [] : [{ taskId, reason: v.reason }];
+    });
+  }
+
+  /** Log a completion the runtime blocked (from any path: tool, hive API, reconciler). */
+  recordBlockedCompletion(taskId: string, reason: string, via: string, agentId = 'runtime'): void {
+    this.append('cima-ledger.jsonl', {
+      kind: 'governance', ts: this.now(), agentId, taskId, phase: 'DECISION' as CimaPhase, tool: via,
+      action: `complete task ${taskId}`, category: 'governance-tamper', risk: 'HIGH', mode: 'HUMAN_APPROVAL',
+      decision: 'DENY', rule: 'DECISION_GATE'
+    } satisfies GovernanceRecord);
+    this.deps.onEvent?.({ type: 'completion-blocked', data: { taskId, reason, via } });
+  }
+
+  /** PreToolUse view of the gate: returns a denial reason, or null to allow. */
+  private taskLedgerWriteGate(root: string, tool: string, input: unknown): string | null {
+    const i = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
+    const path = typeof i.file_path === 'string' ? i.file_path : '';
+    const tasksPath = join(root, 'tasks.json');
+    if (!path || resolve(path).toLowerCase() !== resolve(tasksPath).toLowerCase()) return null;
+    let current: string | null = null;
+    try { current = existsSync(tasksPath) ? readFileSync(tasksPath, 'utf8') : null; } catch {
+      return 'DECISION_GATE: cannot read the current task ledger';
+    }
+    const next = projectFileWrite(tool, input, current);
+    if (next === null) return 'DECISION_GATE: cannot determine the resulting task ledger from this edit';
+    const blocked = this.blockedCompletions(current, next);
+    if (!blocked.length) return null;
+    for (const b of blocked) this.recordBlockedCompletion(b.taskId, b.reason, tool);
+    return blocked.map((b) => b.reason).join('; ');
   }
 
   // ─── human approval ──────────────────────────────────────────────────────
@@ -272,6 +404,7 @@ export class CimaRuntimeService {
     this.load();
     const assignment = parseAssignment(cima, from, to, this.now(), messageId);
     if (assignment) {
+      this.assignments.push(assignment);
       this.append('cima-ledger.jsonl', assignment);
       this.deps.onEvent?.({ type: 'cima-record', data: assignment });
       return assignment;
@@ -281,8 +414,7 @@ export class CimaRuntimeService {
 
   submit(agentId: string, cima: unknown, messageId?: string): CimaRecord {
     this.load();
-    const state: CimaState = { records: this.records, traces: this.traces, godId: this.deps.godId() };
-    const rec = evaluateSubmission(state, cima, agentId, this.now(), messageId);
+    const rec = evaluateSubmission(this.cimaState(), cima, agentId, this.now(), messageId);
     this.records.push(rec);
     this.append('cima-ledger.jsonl', rec);
     this.deps.onEvent?.({ type: 'cima-record', data: rec });

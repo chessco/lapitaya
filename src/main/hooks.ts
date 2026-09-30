@@ -20,6 +20,7 @@ import type { CircuitBreaker } from './breaker';
 import { estimateCostUsd } from './pricing';
 import { validateHookEvent } from '../shared/hookEvents';
 import type { CimaRuntimeService } from './cimaRuntime';
+import { isExecutable } from '../shared/lapitaya/governance';
 
 /** Maximum JSON payload bytes in one newline-delimited hook frame. */
 const MAX_HOOK_FRAME_BYTES = 256 * 1024;
@@ -72,6 +73,25 @@ export class HookServer {
    *  prompt only bloats the transcript. One entry per agent is sufficient: an
    *  agent has one live session, and a new session id replaces the old entry. */
   private deliveredGoalByAgent = new Map<string, { sessionId: string | null; goal: string | null }>();
+  /**
+   * v0.3 FAIL-CLOSED slot: the governance decision for the CURRENT PreToolUse call.
+   *
+   * handle() is invoked synchronously, once per connection. We use a field
+   * rather than a return-value thread because handle() must return a single shape
+   * and multiple early-return paths set this before returning. The field is reset
+   * at the top of handle() so stale values never carry over across calls.
+   *
+   * Possible values:
+   *   undefined         — not a PreToolUse, or governance not wired
+   *   'ALLOW'           — LOW risk, runs
+   *   'SUPERVISED'      — MEDIUM risk, runs + logged
+   *   'APPROVED'        — HIGH risk with a one-shot human approval, runs
+   *   'HUMAN_APPROVAL_REQUIRED' — HIGH risk, denied
+   *   'DENY'            — governance error / state unavailable, denied
+   *   'HALT'            — operator halt at this boundary
+   *   'OPERATOR_DENY'   — operator tool gate
+   */
+  private preDecision: string | undefined;
 
   constructor(
     private hive: HiveManager,
@@ -157,7 +177,31 @@ export class HookServer {
     return this.contextById.get(agentId);
   }
 
+  /**
+   * v0.3 FAIL-CLOSED: build a deny response and record it on this.preDecision.
+   * Every denial path — governance error, missing state, HIGH unapproved, DENY
+   * from authorize() — flows through here. Never returns ALLOW by default.
+   */
+  private denyPre(
+    agentId: string | undefined,
+    p: HookPayload,
+    code: string,
+    reason: string
+  ): unknown {
+    this.preDecision = code;
+    this.emit(agentId, p.hook_event_name ?? 'PreToolUse', p, true);
+    return {
+      hookSpecificOutput: {
+        hookEventName: 'PreToolUse',
+        permissionDecision: 'deny',
+        permissionDecisionReason: reason
+      }
+    };
+  }
+
   private handle(p: HookPayload): unknown {
+    // Reset the per-call governance slot at the top of every invocation.
+    this.preDecision = undefined;
     const agentId = p.agent_id ?? undefined;
     const event = p.hook_event_name ?? 'Unknown';
     this.onEvent?.(agentId, event, p.message);
@@ -200,6 +244,7 @@ export class HookServer {
     // killing the PTY. session_id is in the payload for a later --resume.
     if (agentId && this.control?.shouldHalt(agentId)) {
       this.emit(agentId, event, p);
+      if (event === 'PreToolUse') this.preDecision = 'HALT';
       return { continue: false, stopReason: 'Halted by the operator from the floor.' };
     }
 
@@ -293,6 +338,7 @@ export class HookServer {
       if (d.deny) {
         this.emitControl(agentId, p.tool_name, d.reason);
         this.emit(agentId, event, p);
+        this.preDecision = 'OPERATOR_DENY';
         return {
           hookSpecificOutput: {
             hookEventName: 'PreToolUse',
@@ -308,34 +354,31 @@ export class HookServer {
     // a human approves the identical call. This is a hook decision, so it holds
     // in autoMode (bypassPermissions only silences the CLI's own prompts) and no
     // prompt can talk the agent past it.
-    if (event === 'PreToolUse' && agentId && this.governance && p.tool_name) {
-      let auth: ReturnType<CimaRuntimeService['authorize']> | null = null;
+    //
+    // v0.3 FAIL-CLOSED: when governance is wired, a PreToolUse ALWAYS ends in an
+    // explicit decision (this.preDecision, stamped on the reply by respond()).
+    // Missing identity, a throwing authorize(), or any non-executable decision →
+    // deny. The shims deny too when no stamped decision comes back at all.
+    if (event === 'PreToolUse' && this.governance) {
+      if (!agentId || !p.tool_name) {
+        return this.denyPre(agentId, p, 'DENY',
+          'GOVERNANCE_STATE_UNAVAILABLE — the hook payload has no agent identity or tool name, so the call cannot be authorized and was NOT executed.');
+      }
+      let auth: ReturnType<CimaRuntimeService['authorize']>;
       try { auth = this.governance.authorize(agentId, p.tool_name, p.tool_input); } catch (e) {
-        // Fail CLOSED: if governance cannot decide, the call does not run.
-        // (Ledger/approval writes already swallow their own I/O errors, so only
-        // a programming error reaches here.)
         console.error('[lapitaya] authorize failed:', e);
-        this.emit(agentId, event, p, true);
-        return {
-          hookSpecificOutput: {
-            hookEventName: 'PreToolUse',
-            permissionDecision: 'deny',
-            permissionDecisionReason: 'GOVERNANCE_ERROR — La Pitaya could not authorize this call, so it was NOT executed. Report it to the human.'
-          }
-        };
+        return this.denyPre(agentId, p, 'DENY',
+          'GOVERNANCE_ERROR — La Pitaya could not authorize this call, so it was NOT executed. Report it to the human.');
       }
-      if (auth?.decision === 'HUMAN_APPROVAL_REQUIRED') {
-        this.emitControl(agentId, p.tool_name, auth.reason);
-        this.notify(agentId, `needs approval: ${auth.summary}`);
-        this.emit(agentId, event, p, true);
-        return {
-          hookSpecificOutput: {
-            hookEventName: 'PreToolUse',
-            permissionDecision: 'deny',
-            permissionDecisionReason: auth.reason ?? 'HUMAN_APPROVAL_REQUIRED'
-          }
-        };
+      if (!auth || !isExecutable(auth.decision)) {
+        if (auth?.decision === 'HUMAN_APPROVAL_REQUIRED') {
+          this.emitControl(agentId, p.tool_name, auth.reason);
+          this.notify(agentId, `needs approval: ${auth.summary}`);
+        }
+        return this.denyPre(agentId, p, auth?.decision === 'HUMAN_APPROVAL_REQUIRED' ? 'HUMAN_APPROVAL_REQUIRED' : 'DENY',
+          auth?.reason ?? 'DENY — La Pitaya governance returned no usable decision; the call was NOT executed.');
       }
+      this.preDecision = auth.decision;
     }
 
     // 7C.2 — mid-run steering: inject queued operator guidance as context on the
@@ -449,4 +492,7 @@ export class HookServer {
     }
     this.getWebContents()?.send('hive:hookEvent', payload);
   }
+
+  /** Expose the last PreToolUse governance decision for testing. */
+  get lastPreDecision(): string | undefined { return this.preDecision; }
 }

@@ -21,7 +21,8 @@
  */
 
 import { modeFor, DEFAULT_AUTONOMY_STAGE, type AutonomyMode, type AutonomyStage, type RiskLevel, type ActionCategory } from './autonomy';
-import { classifyToolCall, type ToolCallContext } from './toolRisk';
+import { classifyToolCall, type ToolCallContext, type ToolRisk } from './toolRisk';
+import { ACTION_RISK } from './autonomy';
 
 export type AuthorizationDecision =
   /** LOW: runs with no human involvement. */
@@ -31,7 +32,19 @@ export type AuthorizationDecision =
   /** HIGH (or anything under HUMAN_CONTROLLED): denied until a human approves. */
   | 'HUMAN_APPROVAL_REQUIRED'
   /** A previously-approved HIGH call, consumed now (one-shot). */
-  | 'APPROVED';
+  | 'APPROVED'
+  /** Explicit refusal: authorization could not be established (state, risk
+   *  classification or ledger unavailable) or a runtime gate said no. v0.3:
+   *  every failure to authorize ends here — never in ALLOW. */
+  | 'DENY';
+
+/** The decisions that let a call run. Anything else — including a value that
+ *  is not an AuthorizationDecision at all — means the call does not run. */
+export const EXECUTABLE_DECISIONS: ReadonlySet<string> = new Set(['ALLOW', 'SUPERVISED', 'APPROVED']);
+
+export function isExecutable(decision: unknown): boolean {
+  return typeof decision === 'string' && EXECUTABLE_DECISIONS.has(decision);
+}
 
 export interface Approval {
   id: string;
@@ -55,6 +68,8 @@ export interface AuthorizationInput {
   /** Approvals the human has granted and that are not consumed yet. */
   approvals?: readonly Approval[];
   ctx?: ToolCallContext;
+  /** Test seam: replaces the risk classifier. */
+  classify?: (tool: string, input: unknown, ctx?: ToolCallContext) => ToolRisk;
 }
 
 export interface Authorization {
@@ -97,8 +112,35 @@ export function toolCallFingerprint(agentId: string, tool: string, input: unknow
   return fnv1a(`${agentId}\u0000${tool}\u0000${canonical(input)}`);
 }
 
+/** A DENY authorization — the single shape every fail-closed path returns. */
+export function denyAuthorization(code: string, detail: string, agentId: string, tool: string, input: unknown): Authorization {
+  let fingerprint = '00000000';
+  try { fingerprint = toolCallFingerprint(agentId, tool, input); } catch { /* keep placeholder */ }
+  return {
+    decision: 'DENY', mode: 'HUMAN_APPROVAL', risk: 'HIGH', category: 'irreversible',
+    summary: detail.slice(0, 300), rule: code, fingerprint,
+    reason: `${code} — La Pitaya could not authorize this call, so it was NOT executed (${detail}). Report it to the human; do not work around it.`
+  };
+}
+
+function validRisk(cls: unknown): cls is ToolRisk {
+  if (!cls || typeof cls !== 'object') return false;
+  const c = cls as Partial<ToolRisk>;
+  return typeof c.category === 'string' && c.category in ACTION_RISK
+    && ACTION_RISK[c.category as keyof typeof ACTION_RISK] === c.risk
+    && typeof c.summary === 'string' && typeof c.rule === 'string';
+}
+
 export function authorizeToolCall(a: AuthorizationInput): Authorization {
-  const cls = classifyToolCall(a.tool, a.input, a.ctx);
+  // Risk classification must succeed and be coherent; otherwise nothing runs.
+  let cls: ToolRisk;
+  try {
+    const raw = (a.classify ?? classifyToolCall)(a.tool, a.input, a.ctx);
+    if (!validRisk(raw)) return denyAuthorization('RISK_CLASSIFICATION_UNAVAILABLE', `invalid classification for ${a.tool}`, a.agentId, a.tool, a.input);
+    cls = raw;
+  } catch (e) {
+    return denyAuthorization('RISK_CLASSIFICATION_UNAVAILABLE', `classifier failed for ${a.tool}: ${String(e).slice(0, 120)}`, a.agentId, a.tool, a.input);
+  }
   const stage = a.stage ?? DEFAULT_AUTONOMY_STAGE;
   const mode = modeFor(cls.category, stage);
   const fingerprint = toolCallFingerprint(a.agentId, a.tool, a.input);
