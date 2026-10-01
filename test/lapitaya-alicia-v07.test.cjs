@@ -544,3 +544,22 @@ test('[DC-INV] invariants: classic Governance panel stands down (no duplicate co
   // The mount the v0.5 contract pins is unchanged.
   assert.match(read('src/renderer/src/components/CommandCenterPanel.tsx'), /\{tab === 'human' && <><AliciaPanel \/><GovernancePanel \/><AskMeTab \/><\/>\}/);
 });
+
+// ─── code-review follow-ups ────────────────────────────────────────────────
+
+test('[DC-REV] after an accepted decision the stale card offers no second decision; the classic panel is the fallback without a projection', async (t) => {
+  const f = await floor(t);
+  const { apr } = await withPendingHigh(f);
+  const dc = await center(f);
+  const stale = project(f.lapitaya); // still lists the approval as pending
+  await dc.approve(apr.id);
+  const d = D.buildDecisionCenter(dc.requests.getSnapshot(), stale, dc.approvals.getSnapshot()).high.find((h) => h.approvalId === apr.id);
+  assert.equal(d.uiState, 'APPROVING', 'in progress until the projection confirms');
+  assert.equal(d.canDecide, false, 'no live Reject on a decision the runtime already applied');
+  assert.equal(dc.model().high.find((h) => h.approvalId === apr.id).uiState, 'APPROVED');
+  // No projection → the Decision Center must not claim to own HIGH approvals.
+  const hook = code(read('src/renderer/src/components/alicia/useDecisionCenter.ts'));
+  assert.match(hook, /const observed = !!view;/);
+  assert.match(hook, /observed \? markDecisionCenterMounted\(\) : undefined/);
+  assert.match(hook, /lapitayaObservability\(\)\.catch\(\(\) => null\)/);
+});

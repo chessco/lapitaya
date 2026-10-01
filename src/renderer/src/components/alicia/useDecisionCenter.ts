@@ -1,4 +1,4 @@
-import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import type { Approval } from '@shared/lapitaya/governance';
 import type { ObservabilityView } from '@shared/lapitaya/alicia/observability';
 import type { ConfirmationSnapshot } from './confirmationController';
@@ -22,15 +22,16 @@ export function ipcApprovalPort(): ApprovalPort {
  *  from the read-only projection, so the renderer never asks for the approvals'
  *  raw summaries (commands) or fingerprints. */
 export async function fetchPendingHighApprovals(): Promise<Pick<Approval, 'id' | 'status' | 'risk' | 'createdAt'>[]> {
-  const view = await window.cth.lapitayaObservability();
-  return (view.pendingApprovals ?? []).flatMap((o) => (o.approvalId && o.risk
+  // A projection failure must not take the REQUEST data down: no projection → no HIGH claims.
+  const view = await window.cth.lapitayaObservability().catch(() => null);
+  return (view?.pendingApprovals ?? []).flatMap((o) => (o.approvalId && o.risk
     ? [{ id: o.approvalId, status: 'pending' as const, risk: o.risk, createdAt: o.timestamp ?? 0 }] : []));
 }
 
 /** Pending human decisions (REQUEST confirmations + HIGH approvals), for the tab badge. */
 export async function fetchPendingDecisionCount(): Promise<number> {
-  const [requests, view] = await Promise.all([window.cth.lapitayaRequests(), window.cth.lapitayaObservability()]);
-  return requests.filter((p) => p.status === 'PROPOSED').length + (view.pendingApprovals?.length ?? 0);
+  const [requests, view] = await Promise.all([window.cth.lapitayaRequests(), window.cth.lapitayaObservability().catch(() => null)]);
+  return requests.filter((p) => p.status === 'PROPOSED').length + (view?.pendingApprovals?.length ?? 0);
 }
 
 export function useDecisionCenter(requests: ConfirmationSnapshot, view: ObservabilityView | null): {
@@ -40,6 +41,10 @@ export function useDecisionCenter(requests: ConfirmationSnapshot, view: Observab
   if (!ref.current) ref.current = createApprovalController(ipcApprovalPort());
   const controller = ref.current;
   const approvals = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
-  useEffect(() => markDecisionCenterMounted(), []);
-  return { model: buildDecisionCenter(requests, view, approvals), controller };
+  const model = useMemo(() => buildDecisionCenter(requests, view, approvals), [requests, view, approvals]);
+  // Stand the classic Governance panel down only once the projection is available: if the
+  // Decision Center cannot show HIGH approvals, the classic panel stays as the human's fallback.
+  const observed = !!view;
+  useEffect(() => (observed ? markDecisionCenterMounted() : undefined), [observed]);
+  return { model, controller };
 }

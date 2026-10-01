@@ -345,7 +345,7 @@
       },
       "relatedRequest": "It came up under REQUEST {{proposalId}}. Confirming that REQUEST did not approve this action.",
       "exactCallNote": "The approval is bound to the exact call CIMA stopped; the command is not shown here (sensitive-data boundary).",
-      "ack": "I reviewed the operation, the rule and the HIGH risk; I approve this exact call only.",
+      "ack": "I reviewed the operation, the rule and the HIGH risk; I approve one execution of the pending call identified above (its command is not shown here).",
       "decisionGroup": "Decision on the HIGH action",
       "approve": "Approve HIGH action",
       "reject": "Reject HIGH action",

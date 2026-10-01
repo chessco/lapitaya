@@ -177,6 +177,18 @@ failure classification), `reproduce.cjs`. No secrets are stored.
 - Reloading the renderer returns the app's hive picker (existing behavior).
 - The 20 baseline failures are unchanged from v0.6.
 
+## 23b. Code-review follow-up
+
+A high-effort review of this branch produced 10 findings. Fixed: the stale card after an accepted
+decision (now stays APPROVING/REJECTING, no second decision offered); the missing fallback (the
+classic Governance panel now stands down only while the projection is available); projection
+failures no longer hide REQUESTs or the badge; the approval acknowledgement no longer claims
+knowledge of the command; the view model is memoized. Test `DC-REV`.
+Deferred: `lapitaya:approvals` still returns summaries to the renderer (unchanged since v0.5; the
+classic panel needs it as the fallback); pending approvals are labelled by their runtime risk, not
+filtered to HIGH; per-session cleanup of resolved cards; duplicated fallback mapping in the
+projection; test guards in `App.tsx`/`useResolvedGodName.ts`.
+
 ## 24. Limitations
 
 - The history window is bounded (default 20 resolved decisions).

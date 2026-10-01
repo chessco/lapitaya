@@ -104,6 +104,9 @@ export function deriveHighState(pending: boolean, resolution: HighDecisionView['
   if (inFlight === 'reject') return 'REJECTING';
   if (outcome?.code === 'IPC_ERROR') return pending ? 'ERROR' : resolution === 'APPROVAL_GRANTED' ? 'APPROVED' : resolution === 'APPROVAL_REJECTED' ? 'REJECTED' : 'ERROR';
   if (outcome?.code === 'ALREADY_RESOLVED') return 'ALREADY_RESOLVED';
+  // The runtime accepted this decision but the projection still lists it pending: keep it
+  // in progress (no live buttons) until the re-read confirms, never offer a second decision.
+  if (pending && outcome?.ok) return outcome.op === 'approve' ? 'APPROVING' : 'REJECTING';
   if (pending) return 'HUMAN_APPROVAL_REQUIRED';
   if (resolution === 'APPROVAL_GRANTED') return 'APPROVED';
   if (resolution === 'APPROVAL_REJECTED') return 'REJECTED';
@@ -128,7 +131,7 @@ export function buildDecisionCenter(requests: ConfirmationSnapshot, view: Observ
     high.push({
       approvalId: aid, fact, timeline, resolution, pending,
       uiState: deriveHighState(pending, resolution, op, outcome),
-      canDecide: pending && approvals.inFlight.size === 0,
+      canDecide: pending && approvals.inFlight.size === 0 && !outcome?.ok,
       busy: !!op, outcome
     });
   }

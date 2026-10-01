@@ -345,7 +345,7 @@
       },
       "relatedRequest": "Surgió bajo el REQUEST {{proposalId}}. Confirmar ese REQUEST no aprobó esta acción.",
       "exactCallNote": "La aprobación queda ligada a la llamada exacta que CIMA detuvo; el comando no se muestra aquí (límite de datos sensibles).",
-      "ack": "Revisé la operación, la regla y el riesgo HIGH; apruebo solo esta llamada exacta.",
+      "ack": "Revisé la operación, la regla y el riesgo HIGH; apruebo una sola ejecución de la llamada pendiente identificada arriba (su comando no se muestra aquí).",
       "decisionGroup": "Decisión sobre la acción HIGH",
       "approve": "Aprobar acción HIGH",
       "reject": "Rechazar acción HIGH",
