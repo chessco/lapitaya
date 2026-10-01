@@ -46,6 +46,12 @@ export function AliciaPanel() {
   // v0.7: Human Decisions — REQUEST confirmations (v0.5 controller) + HIGH approvals (existing lapitaya:decide).
   const { model: decisions, controller: approvals } = useDecisionCenter(snapshot, observability);
   const [highAcknowledged, setHighAcknowledged] = useState<Set<string>>(new Set());
+  // An acknowledgement is only meaningful while the runtime still lists that approval as pending
+  // (it may have been decided elsewhere): drop the rest.
+  useEffect(() => {
+    const live = new Set(decisions.high.filter((d) => d.pending).map((d) => d.approvalId));
+    setHighAcknowledged((s) => (s.size && [...s].some((id) => !live.has(id)) ? new Set([...s].filter((id) => live.has(id))) : s));
+  }, [decisions.high]);
 
   const locales = useCallback(() => ({ ...getLocaleSettings(), uiLocale: i18n.language }), [i18n.language]);
   const refreshAlicia = useCallback(() => {
