@@ -1,0 +1,620 @@
+✔ [ALICIA-01] Alicia can read CIMA status (derived from the runtime, not stored) (10169.5007ms)
+✔ [ALICIA-02] Alicia presents existing evidence verbatim and never fabricates any (8900.8332ms)
+✔ [ALICIA-03] Alicia receives governance events from the existing runtime event stream (9699.6992ms)
+✔ [ALICIA-04] Alicia produces a localized explanation and keeps the technical detail intact (1.009ms)
+✔ [ALICIA-05] Alicia cannot directly execute a HIGH-risk action (7063.6325ms)
+✔ [ALICIA-06] Alicia cannot become DECISION authority (10537.1548ms)
+✔ [ALICIA-07] Alicia does not appear as a CIMA worker (6724.1315ms)
+✔ [ALICIA-08] Alicia respects uiLocale (and notificationLocale) without translating identifiers (8971.0028ms)
+✔ [ALICIA-09] Alicia cannot modify CIMA state directly (10205.2445ms)
+✔ [ALICIA-10] Alicia produces an intent that El Inge receives as a request (5980.507ms)
+✔ [NEG-01] Alicia → direct HIGH-risk tool → BLOCKED at PreToolUse (5348.3966ms)
+✔ [NEG-02] Alicia → DECISION PASS through the real router → BLOCKED, not authority (10016.1568ms)
+✔ [NEG-03] Alicia → modify CIMA state (ledger / approvals) → BLOCKED (4835.7628ms)
+✔ [NEG-04] Alicia → bypass completionGate → BLOCKED (8669.2153ms)
+✔ event adapters: hooks and task ledger map to Alicia events; noise and junk are dropped (16.8517ms)
+✔ presence is derived by priority: approval > blocked > warning > celebrating > notifying > idle (0.7488ms)
+✔ context is minimal and bounded; read state is the only thing the human changes (4863.2793ms)
+✔ conversation citations must point at runtime-recorded refs (8925.9282ms)
+✔ the lapitaya barrel exposes the Alicia layer; alicia i18n keys match across es-MX and en-US (19.4605ms)
+✔ [INTENT-CLS] the deterministic classifier separates CONVERSATION / REQUEST / ACTION (24.6219ms)
+✔ [INTENT-01] CONVERSATION → Alicia responds; no CIMA, no ledger, no El Inge, no approval (5734.0356ms)
+✔ [INTENT-02] REQUEST → El Inge receives a structured, stamped request → proposal only, no execution (5483.2875ms)
+✔ [INTENT-03] ACTION LOW → CIMA → AUTO; El Inge executes through PreToolUse (ALLOW) (6325.7808ms)
+✔ [INTENT-04] ACTION MEDIUM → CIMA → SUPERVISED (5996.2107ms)
+✔ [INTENT-05] ACTION HIGH → HUMAN_APPROVAL_REQUIRED → Alicia explains → human approves → one execution (6850.2892ms)
+✔ [INTENT-NEG-01] Alicia tries to execute HIGH directly → BLOCKED (6385.7609ms)
+✔ [INTENT-NEG-02] Alicia labels HIGH as LOW (and as CONVERSATION) → runtime reclassifies → HUMAN_APPROVAL_REQUIRED (7957.2014ms)
+✖ [INTENT-NEG-03] Alicia sends an intent directly to a tool or a worker → BLOCKED (6245.1712ms)
+✔ [INTENT-NEG-04] Alicia tries to produce DECISION PASS or approve → NOT_AUTHORIZED (9274.807ms)
+✔ [INTENT-NEG-05] Alicia tries task.status = done without DECISION PASS → BLOCKED by completionGate (11931.8864ms)
+✔ [INTENT-NEG-06] malformed intents (missing id / source / type, bad status, not an object) → DENY / INVALID (4943.767ms)
+✔ [INTENT-ARCH-01] the Alicia layer has no path to a tool, the hive or governance authority (29.9784ms)
+✔ [INTENT-ARCH-02] ALICIA → ACTION INTENT → (boundary) → CIMA → EL INGE; never ALICIA → TOOL (11272.424ms)
+✔ [INTENT-ARCH-03] governance classification: governance files protected, Alicia not special, provider-neutral (4.5778ms)
+✔ [INTENT-EVENTS] intents are observable on the EXISTING runtime event stream; conversation is silent (6768.2678ms)
+✔ [REQ-01] REQUEST + LOW + no confirmation → El Inge attempts execution → BLOCKED (7093.5702ms)
+✔ [REQ-02] REQUEST + MEDIUM + no confirmation → BLOCKED (6292.1764ms)
+✔ [REQ-03] REQUEST + HIGH + no confirmation → BLOCKED, and no approval is even raised (6247.5974ms)
+✔ [REQ-04] REQUEST + valid human confirmation → CIMA → LOW → AUTO → execution allowed (6113.7727ms)
+✔ [REQ-05] REQUEST (change scope) + confirmation → CIMA → MEDIUM → SUPERVISED (6937.543ms)
+✔ [REQ-06] REQUEST + confirmation + HIGH → existing HUMAN_APPROVAL flow; confirmation ≠ approval (8367.502ms)
+✔ [REQ-07] confirmation replay: one confirmation → one transition; it can never unlock another proposal (8339.0345ms)
+✔ [REQ-08] Alicia attempts confirmation → NOT_AUTHORIZED (runtime API, words, and metadata) (6551.4297ms)
+✔ [REQ-09] El Inge attempts self-confirmation → NOT_AUTHORIZED; messages and tool writes change nothing (6681.783ms)
+✔ [REQ-10] confirmed REQUEST + actual HIGH action → HIGH policy applies (never inherits the request) (7058.0451ms)
+✔ [REQ-11] confirmed harmless REQUEST + incompatible actual action → runtime re-classifies → not permitted (6647.3716ms)
+✔ [REQ-12] CONVERSATION stays side-effect free (no proposal, no ledger, no gate) (5458.7479ms)
+✔ [REQ-13] ACTION behaviour is unchanged, even while a REQUEST is pending (7389.5537ms)
+✔ [REQ-14] completionGate still blocks unauthorized completion (9870.2597ms)
+✔ [REQ-15] direct tool bypass without confirmation stays blocked — any agent, any provider (8455.4718ms)
+✔ [REQ-NEG] only the human confirms; metadata never authorizes; malformed confirmations deny safely (9424.0724ms)
+✔ [REQ-NEG-TAMPER] a proposal edited on disk is refused; re-validation blocks a stale proposal (5525.2118ms)
+✖ [REQ-ARCH] structural: gate in authorize before approvals; human-only confirmation call sites; no bypass (18.5784ms)
+✔ [REQ-EVENTS] proposal transitions ride the EXISTING runtime stream; Alicia shows them, humanOnly (5551.685ms)
+✔ [UI-01] a pending REQUEST appears visually (6783.8029ms)
+✔ [UI-02] the proposal shows the data the runtime returned — no second source of truth (6235.7197ms)
+✔ [UI-03] the risk shown is the runtime scope; the UI never computes it (5964.5849ms)
+✔ [UI-04] Confirm calls only the authorized IPC: preload → lapitaya:confirmRequest → runtime (by human) (5371.5015ms)
+✔ [UI-05] a successful confirmation updates the state from the runtime (5845.214ms)
+✔ [UI-06] a successful cancellation updates the state; the runtime processes it (6994.9404ms)
+✔ [UI-07] double-click / double-submit sends ONE confirmation; buttons disabled while in flight (6601.3669ms)
+✔ [UI-08] stale / changed-elsewhere / replaced proposals show the runtime state; nothing is retried (9379.8995ms)
+✔ [UI-09] a tampered proposal / forged token is refused by the runtime and shown as an error (11270.9944ms)
+✔ [UI-10] HIGH: confirming the REQUEST is not an approval — CIMA still requires HUMAN_APPROVAL (7380.7023ms)
+✔ [UI-11] Alicia (and her UI) get no execution API (5176.6817ms)
+✔ [UI-12] the renderer has no direct access to the runtime, filesystem, ledger or providers (38.2459ms)
+✔ [UI-13] no UI → El Inge / hive path; UI-14: no UI → tool path (9.4656ms)
+✔ [UI-15][UI-16] i18n: es-MX and en-US are complete, identical key trees, no fallback, no hardcoded text (201.0245ms)
+✔ [UI-17] keyboard: native controls only; Confirm needs a deliberate acknowledgement; no key shortcut confirms (5951.2388ms)
+✔ [UI-18] accessible names, descriptions, live regions and visible focus (6084.136ms)
+✔ [UI-E2E] USER → ALICIA UI → REQUEST → PROPOSED → Confirm → runtime → CIMA → authorize → PreToolUse → execution (6619.24ms)
+✔ [UI-E2E-NEG] REQUEST → PROPOSED → NO confirm → agent attempts a tool → BLOCKED, with or without the UI (13094.313ms)
+✔ [OBS-01] REQUEST_PROPOSED → correct, evidence-backed explanation (6698.0097ms)
+✔ [OBS-02] REQUEST_CONFIRMATION_REQUIRED → blocked, rule, runtime risk, "no se ejecutó" (6343.9875ms)
+✔ [OBS-03] REQUEST_SCOPE_EXCEEDED → correct explanation (MEDIUM stays MEDIUM) (5858.7982ms)
+✔ [OBS-04] STALE_PROPOSAL → correct explanation (4928.4268ms)
+✔ [OBS-05] TAMPERED → correct explanation (5994.9668ms)
+✔ [OBS-06] NOT_AUTHORIZED → correct explanation (7133.1545ms)
+✔ [OBS-07] HUMAN_APPROVAL_REQUIRED → "not an approval", then approval → execution, all linked (7317.5603ms)
+✔ [OBS-08][OBS-09][OBS-10] Alicia cannot modify the event, the risk or the decision (7969.5688ms)
+✔ [OBS-11] no second ledger: Alicia persists nothing; the projection reads the runtime files only (6356.6895ms)
+✔ [OBS-12] no explanation without evidence: unlinked traces claim nothing; every fact carries its source (6917.5417ms)
+✔ [OBS-13][OBS-14] the timeline is exactly the real facts, in order, and read only (7588.0408ms)
+✔ [OBS-15] no tokens, secrets, commands, paths or outputs in the projection or the UI (6508.8791ms)
+✔ [OBS-16][OBS-17] es-MX and en-US: identical trees, every key the projection can emit exists, no fallback (7041.5266ms)
+✔ [OBS-18] governance explanation has no LLM / provider / network dependency (3.8994ms)
+✔ [OBS-19] the governance event stream still works; the new signals raise no notifications (6714.9269ms)
+✔ [OBS-20][OBS-21] REQUEST confirmation and HIGH approval behave exactly as in v0.5 (5832.5708ms)
+✔ [OBS-22][OBS-23] an unconfirmed REQUEST still blocks; removing Alicia UI or projection removes no guarantee (12217.0448ms)
+✔ [OBS-NEG-01] Alicia cannot fabricate PASS, DENY, HIGH, evidence, approval or confirmation (6048.9793ms)
+✔ [OBS-NEG-02] missing event / rule / risk / evidence / unknown code → "information unavailable", never an inference (2.6909ms)
+✔ [DC-01][DC-02][DC-03] a pending REQUEST appears, with runtime scope and resolvable evidence (7137.3668ms)
+✔ [DC-04][DC-05] confirm and cancel go through lapitaya:confirmRequest / lapitaya:cancelRequest only (6278.9411ms)
+✔ [DC-06][DC-07] a pending HIGH approval appears with the actual runtime risk, operation and explanation (6102.6849ms)
+✔ [DC-08][DC-09] approve / reject use the existing human approval (lapitaya:decide → decide(id, approve, "human")) (6519.7415ms)
+✔ [DC-10][DC-11] REQUEST confirmation ≠ HIGH approval, in both directions (9412.8692ms)
+✔ [DC-12][DC-13][DC-14] stale cannot be confirmed; consumed tokens/approvals cannot be replayed; tampered cannot execute (9220.6587ms)
+✔ [DC-15][DC-16] double confirm / double approve / confirm+cancel and approve+reject races are one-shot (19208.4664ms)
+✔ [DC-25] runtime state overrides a stale UI (7733.2119ms)
+✔ [DC-17][DC-18][DC-19][DC-20] the Decision Center cannot alter risk/autonomy, execute, or write the ledger (6532.2735ms)
+✔ [DC-21][DC-22][DC-23][DC-24] no secrets, commands, paths or tokens in the DOM; evidence resolves; timelines are read only (7840.5298ms)
+✔ [DC-26][DC-27] es-MX and en-US: identical decisions trees, every state rendered, no fallback, ASCII agent names (7574.6422ms)
+✔ [DC-28] accessibility: named sections, labelled groups, deliberate Approve, no shortcuts, keyboard order (6385.5026ms)
+✔ [DC-NEG] Alicia cannot approve or confirm; renderer cannot fabricate; identity, replay, tamper and staleness are refused (6924.9854ms)
+✔ [DC-INV] invariants: classic Governance panel stands down (no duplicate controls); removing the UI removes no guarantee (6070.622ms)
+✔ [DC-REV] after an accepted decision the stale card offers no second decision; the classic panel is the fallback without a projection (6754.7901ms)
+✔ [ID-01] a trusted human identity is resolved: stable id, display name, session, window (8.5263ms)
+✔ [ID-02][ID-15] the renderer cannot define identity; a sender that is not our window gets none (1.0782ms)
+✔ [ID-03][ID-07] REQUEST confirmation records the trusted human, in the runtime and in the ledger (6821.1271ms)
+✔ [ID-04] REQUEST cancellation records the trusted human (5781.4361ms)
+✔ [ID-05][ID-06] HIGH approval and rejection record the trusted human; the existing approval record is unchanged (6182.9727ms)
+✔ [ID-08][ID-23][ID-24][ID-25] the projection shows the owner (id + display name) and nothing internal (6176.2771ms)
+✔ [ID-09][ID-10][ID-11][ID-12] fake identity, confirmedBy, approvedBy, rejectedBy are ignored or refused (15945.1047ms)
+✔ [ID-13][ID-14][ID-17][ID-18] replay, stale and second attempts cannot change ownership; the owner is immutable (14313.4996ms)
+✔ [ID-16] cross-window: one decision, one owner; the other window sees it resolved and cannot redo it (6020.2986ms)
+✔ [ID-19][ID-20][ID-21][ID-22] identity does not alter risk or autonomy and does not bypass CIMA, authorize() or the REQUEST gate (8135.9334ms)
+✔ [ID-02][IPC] the human channel never accepts identity from the renderer; lapitaya:approvals stays intact (136.3083ms)
+✔ [ID-26][ID-27][ID-28] es-MX / en-US show who decided (no missing keys), and the identity UI adds no controls (8200.2497ms)
+✔ [ID-18] the runtime state files are the only store: the ledger carries the owner and no second store appears (5742.4454ms)
+✔ [LEG-01][LEG-09][LEG-10][LEG-11][LEG-26] Legacy dependency audit & IPC absence (10.6878ms)
+✔ [LEG-02][LEG-03][LEG-08][LEG-13] Decision Center functional parity & observability backed (6525.3874ms)
+✔ [LEG-04][LEG-05][LEG-06][LEG-07][LEG-08] HIGH decision & REQUEST lifecycle with identity (7159.77ms)
+✔ [LEG-12][LEG-14] Runtime approval state preserved, no second store (6319.2487ms)
+✔ [LEG-15][LEG-16][LEG-17][LEG-18] Cross-window sync & replay protection (5967.4508ms)
+✔ [LEG-19][LEG-20] Security: no secrets or raw tokens in renderer model (5343.4494ms)
+✔ [LEG-21][LEG-22][LEG-23] i18n es-MX / en-US & Accessibility in Decision Center (3.4867ms)
+✔ [NEG-01][NEG-02][NEG-03][NEG-04] Negative security boundary checks (6851.8015ms)
+[lapitaya] authorize failed: Error: simulated crash
+    at f.lapitaya.authorize (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v03.test.cjs:118:40)
+    at HookServer.handle (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:376:40)
+    at hook (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v03.test.cjs:64:12)
+    at Object.pre (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v03.test.cjs:66:5)
+    at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v03.test.cjs:119:21)
+    at async Test.run (node:internal/test_runner/test:1125:7)
+    at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+✔ [FC-01] normal LOW authorization -> ALLOW (5476.403ms)
+✔ [FC-02] governance-tamper -> HUMAN_APPROVAL_REQUIRED (denied) (5449.4075ms)
+✔ [FC-03] HIGH risk -> REQUIRE_HUMAN_APPROVAL, NOT executed, pending approval created (5597.1507ms)
+✔ [FC-04] authorize() throws -> DENY (fail closed) (5298.5698ms)
+✔ [FC-05] authorize() returns null (invalid) -> DENY (6183.6969ms)
+✔ [FC-06] authorize() returns non-executable decision -> DENY (5995.8596ms)
+✔ [FC-07] risk classifier throws -> DENY (not ALLOW) (1.2696ms)
+✔ [FC-08] risk classifier returns invalid shape -> DENY (0.6019ms)
+✔ [FC-09] governance state unavailable (null hive root) -> DENY (2118.9765ms)
+✖ [FC-10] PreToolUse with no agentId -> DENY (4012.9741ms)
+✔ [FC-11] PreToolUse with no tool name -> DENY (3915.3363ms)
+✔ [FC-12] MEDIUM -> SUPERVISED, not denied (4135.359ms)
+✔ [FC-13] approved HIGH runs exactly once, then requires approval again (4027.4551ms)
+✔ [FC-14] autoMode:true does not bypass HIGH governance (3998.7272ms)
+✔ [DG-01] DECISION PASS -> task completion ALLOWED (8080.2186ms)
+✔ [DG-02] no DECISION -> task completion BLOCKED (4621.2975ms)
+✔ [DG-03] DECISION FAIL -> task completion BLOCKED (6476.6284ms)
+✔ [DG-04] DECISION BLOCKED (wrong sender) -> task completion BLOCKED (5266.6624ms)
+✔ [DG-05] ungoverned task (no CIMA history) is not gated (2993.2957ms)
+✔ [DG-06] Write to tasks.json marking CIMA task done without DECISION -> denied at PreToolUse (4669.3387ms)
+✔ [DG-07] rebuilding after DECISION invalidates completion gate (7099.7506ms)
+✔ [PI-01] governanceEnforcement classifies providers (0.6364ms)
+✔ [PI-02] blocking providers are allowed to spawn (0.3589ms)
+✔ [PI-03] non-blocking provider rejected by default (fail closed) (0.3886ms)
+✔ [PI-04] human override lets non-blocking through, logged (0.3858ms)
+✔ [PI-05] DeterministicTestProvider: MEDIUM -> SUPERVISED, HIGH -> REQUIRE_HUMAN_APPROVAL (3027.8883ms)
+✔ [PI-06] evidence and CIMA evaluation are provider-agnostic (0.8687ms)
+✔ [RG-01] BUILDER != AUDITOR still blocked after v0.3 hardening (4610.4566ms)
+✔ [RG-02] EVIDENCE FIRST still blocks PASS with no real trace (3327.0847ms)
+✔ [RG-03] AUTONOMY POLICY: LOW->ALLOW, MEDIUM->SUPERVISED, HIGH->DENY (3154.6633ms)
+✔ [RG-04] DECISION_AUTHORITY: only El Inge or human may accept work (3561.6049ms)
+✔ [RG-05] HIGH approval regression: deny->approve->one execution->deny again (2922.279ms)
+✔ [RG-06] TRANSITION: TEST PASS requires BUILD PASS (3016.4009ms)
+✔ [RG-07] assignment without verdict is not a claim (2239.0853ms)
+✔ [RG-08] full CIMA cycle records PASS at every phase and opens completion gate (4324.3909ms)
+✔ [API-01] CIMA task with FULL CIMA chain + DECISION PASS -> updateTaskStatus(done) ALLOWED (12099.532ms)
+✔ [API-02] CIMA task with BUILD/TEST/AUDIT PASS but NO DECISION -> updateTaskStatus(done) BLOCKED (9356.4159ms)
+✔ [API-03] DECISION FAIL -> updateTaskStatus(done) BLOCKED (6841.7641ms)
+✔ [API-04] DECISION BLOCKED -> updateTaskStatus(done) BLOCKED (4650.1128ms)
+✔ [API-05] DECISION PASS + BUILD after DECISION -> updateTaskStatus(done) BLOCKED (8582.316ms)
+✔ [API-06] unauthorized DECISION PASS -> updateTaskStatus(done) BLOCKED (4720.6618ms)
+✔ [API-07] non-CIMA task -> updateTaskStatus(done) ALLOWED (ungated) (4496.8402ms)
+✔ [API-08] tool boundary path (PreToolUse) continues to be protected (4844.2395ms)
+✔ [Negative Test — Direct API Bypass] updateTaskStatus, patchTask, writeTasks without DECISION PASS are ALL BLOCKED and recorded in ledger (4883.0048ms)
+[lapitaya] authorize failed: Error: boom
+    at f.lapitaya.authorize (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:186:40)
+    at HookServer.handle (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:376:40)
+    at hook (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:53:45)
+    at Object.pre (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:54:41)
+    at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:187:21)
+    at async Test.run (node:internal/test_runner/test:1125:7)
+    at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+✔ tool calls classify into LOW / MEDIUM / HIGH (27.5831ms)
+✔ inside the hive: coordination is LOW, the governance files are HIGH (1.9218ms)
+✔ LOW runs automatically and is logged ALLOW (6385.7117ms)
+✔ MEDIUM runs under supervision: not denied, logged SUPERVISED, surfaced live (5842.6096ms)
+✔ HIGH is denied with HUMAN_APPROVAL_REQUIRED and NOT executed — even in autoMode (4628.6857ms)
+✔ explicit approval lets the IDENTICAL call run exactly once (4617.9327ms)
+✔ another agent cannot use someone else's approval; rejection keeps it blocked (4473.0101ms)
+✔ an agent cannot switch its own guard off (governance-tamper is HIGH) (4399.5513ms)
+✔ if governance itself fails, the tool call is denied (fail closed) (4158.5927ms)
+✔ HUMAN_CONTROLLED stage puts MEDIUM behind approval too (1.7732ms)
+✔ EVIDENCE FIRST: a PASS citing nothing the harness observed is BLOCKED (4527.423ms)
+✔ EVIDENCE FIRST: a PASS citing a command the agent really ran is PASS (4446.0443ms)
+✔ EVIDENCE FIRST: evidence another agent produced does not count for this one (4301.9734ms)
+✔ the delivered message carries the runtime verdict, not just the sender's claim (3967.4585ms)
+✔ BUILDER != AUDITOR: El Beni cannot PASS the audit of his own build (negative test) (7129.7837ms)
+✔ an auditor who edits code after the build cannot PASS the audit (5851.7001ms)
+✔ TRANSITIONS: BUILD → accepted (DECISION PASS) without TEST/AUDIT is BLOCKED (5517.0536ms)
+✔ only El Inge (or the human) can accept work (3477.499ms)
+✖ FAIL backed by a real failing run is recorded FAIL; BLOCKED stays BLOCKED (never FAIL) (4621.1763ms)
+✔ a malformed claim is BLOCKED, not silently dropped (3295.5851ms)
+✔ the full CIMA cycle, one agent per role, records PASS at every phase (6904.3617ms)
+✔ the ledger persists across a restart of the service (3461.9446ms)
+✔ agent settings register PostToolUseFailure so failing runs become evidence (2.6376ms)
+✔ a `cima` tag without a verdict is a phase ASSIGNMENT, not a malformed claim (seen live in v0.2) (2908.1706ms)
+✔ evidence matching ignores annotations but still needs a real trace (live v0.2 fixtures) (1.5366ms)
+✔ [AUTH-01] Valid trusted agent context accepted (4426.5212ms)
+✔ [AUTH-02] Missing agent context denied (4240.8184ms)
+✔ [AUTH-03] Invalid agent context denied (3168.7661ms)
+✔ [AUTH-04] Payload agent_id cannot override trusted identity (3026.0008ms)
+✔ [AUTH-05] Agent A cannot impersonate Agent B (3140.3122ms)
+✔ [AUTH-06] Folder name cannot establish identity (3023.5071ms)
+✔ [AUTH-07] Message from cannot establish identity (2918.9049ms)
+✔ [AUTH-08] Agent cannot self-declare human (2754.437ms)
+✔ [AUTH-09] Human DECISION requires trusted human identity (2570.871ms)
+✔ [AUTH-10] Fake human identity denied (3022.7642ms)
+✔ [AUTH-11] Human identity from renderer payload ignored (2808.5228ms)
+✔ [AUTH-12] Human identity from trusted v0.8 IPC accepted (2601.0063ms)
+✔ [AUTH-13] Builder cannot impersonate Auditor (2896.9385ms)
+✔ [AUTH-14] Auditor cannot impersonate Builder (2604.5923ms)
+✔ [AUTH-15] Agent cannot manufacture BUILD PASS (2589.5699ms)
+✔ [AUTH-16] Agent cannot manufacture TEST PASS (2769.1804ms)
+✔ [AUTH-17] Agent cannot manufacture AUDIT PASS (2374.1968ms)
+✔ [AUTH-18] Agent cannot manufacture DECISION PASS (3775.2039ms)
+✔ [AUTH-19] Missing identity fails closed (2160.753ms)
+✔ [AUTH-20] Identity mismatch fails closed (2272.7246ms)
+✔ [AUTH-21] Identity is preserved in evidence (2677.5486ms)
+✔ [AUTH-22] Decision owner remains v0.8 trusted identity (2745.8192ms)
+✔ [AUTH-23] Cross-window human identity remains correct (2468.4906ms)
+✔ [AUTH-24] Replay of authenticated context rejected (2060.2878ms)
+✔ [AUTH-25] Wrong task context rejected (2312.6095ms)
+✔ [AUTH-26] Wrong agent assignment rejected (3223.315ms)
+✔ [AUTH-27] Tampered context rejected (2154.1274ms)
+✔ [AUTH-28] No secrets exposed (1.5077ms)
+✔ [AUTH-29] No raw credentials exposed (0.4298ms)
+✔ [AUTH-30] Real Electron human decision works (2233.43ms)
+✔ [ADVERSARIAL-CHAIN] Forged CIMA chain fails closed and breaks the chain (2186.6317ms)
+✔ [COVERAGE-01] Shell > mutation detected (10.1864ms)
+✔ [COVERAGE-02] Shell >> mutation detected (3.9662ms)
+✔ [COVERAGE-03] Shell 2> mutation detected (0.709ms)
+✔ [COVERAGE-04] Command substitution mutation detected (0.6802ms)
+✔ [COVERAGE-05] find -delete governed (0.6372ms)
+✔ [COVERAGE-06] find -exec governed (0.4676ms)
+✔ [COVERAGE-07] tee/cp/mv/rm governance (0.5764ms)
+✔ [COVERAGE-08] tasks.json shell mutation cannot bypass Decision Gate (1382.4139ms)
+✔ [COVERAGE-09] CIMA task cannot become DONE without DECISION PASS (1382.8004ms)
+✔ [COVERAGE-10] Shell cannot bypass completionGate (1642.518ms)
+✔ [COVERAGE-11] MCP cannot bypass completionGate (1033.1104ms)
+✔ [COVERAGE-12] Provider write cannot bypass completionGate (1267.0854ms)
+✔ [COVERAGE-13] Failed execution cannot satisfy evidence (1628.9864ms)
+✔ [COVERAGE-14] Matching command text without successful execution cannot PASS (1348.2453ms)
+✔ [COVERAGE-15] Wrong execution trace cannot satisfy evidence (945.1576ms)
+✔ [COVERAGE-16] Wrong actor cannot satisfy evidence (1305.7334ms)
+✔ [COVERAGE-17] Provider governance is consulted during actual spawn (1.0348ms)
+✔ [COVERAGE-18] Blocking provider cannot execute without governance (960.4543ms)
+✔ [COVERAGE-19] Non-blocking provider cannot self-authorize (0.3298ms)
+✔ [COVERAGE-20] Explicit valid exception follows runtime policy (0.3098ms)
+✔ [COVERAGE-21] CIMA task with no DECISION cannot complete (944.5509ms)
+✔ [COVERAGE-22] Non-CIMA task preserves intended behavior (1024.0438ms)
+✔ [COVERAGE-23] Ambiguous shell mutation fails closed (0.3669ms)
+✔ [COVERAGE-24] Governance failure fails closed (1034.5722ms)
+✔ [COVERAGE-25] Forged governance chain remains broken after v0.11 (1144.2025ms)
+✔ STATE-01: atomic JSON write produces complete valid JSON file (136.1004ms)
+✔ STATE-02: failed state write fails closed (21.4242ms)
+✔ STATE-03: failed ledger write fails closed (8.0025ms)
+✔ STATE-04: ledger write failure cannot produce PASS (9.6908ms)
+✔ STATE-05: malformed ledger handled deterministically (25.8406ms)
+✔ STATE-06: truncated ledger handled deterministically (12.4836ms)
+✔ STATE-07: corrupt proposal state fails closed (41.9962ms)
+✔ STATE-08: missing proposal state fails closed without failing open (11.2598ms)
+✔ STATE-09: corrupt approval state fails closed (27.7304ms)
+✔ STATE-10: missing approval state fails closed without failing open (11.4731ms)
+✔ STATE-11: expired REQUEST cannot execute (66.392ms)
+✔ STATE-12: expired HIGH approval cannot execute (90.7697ms)
+✔ STATE-13: agent cannot extend expiration (72.9215ms)
+✔ STATE-14: provider cannot extend expiration (48.1502ms)
+✔ STATE-15: human decision after expiration rejected (58.2331ms)
+✔ STATE-16: duplicate REQUEST confirmation rejected (75.0497ms)
+✔ STATE-17: duplicate HIGH approval rejected (93.3293ms)
+✔ STATE-18: confirm/cancel race produces one valid result (216.986ms)
+✔ STATE-19: approve/reject race produces one valid result (133.6139ms)
+✔ STATE-20: concurrent task write protected (59.5953ms)
+✔ STATE-21: concurrent ledger append safe (42.0313ms)
+✔ STATE-22: multi-instance same Hive protected (197.8648ms)
+✔ STATE-23: crash during state write recovered safely (50.4873ms)
+✔ STATE-24: crash between state and ledger handled safely (46.1114ms)
+✔ STATE-25: missing DECISION never recovered as PASS (26.3703ms)
+✔ STATE-26: missing evidence never recovered as valid (42.7927ms)
+✔ STATE-27: invalid state transition rejected (89.4451ms)
+✔ STATE-28: expired state cannot return to executable state (55.8693ms)
+✔ STATE-29: recovery does not invent governance facts (19.1118ms)
+✔ STATE-30: v0.10 authenticity preserved (15.143ms)
+✔ STATE-31: v0.11 shell governance preserved (66.5131ms)
+✔ STATE-32: v0.11 Decision Gate preserved (46.7768ms)
+✔ STATE-33: v0.11 provider governance preserved (16.413ms)
+✔ STATE-34: v0.11 evidence correlation preserved (29.9686ms)
+✔ STATE-35: forged governance chain remains blocked (16.0615ms)
+✔ ADVERSARIAL: corrupt proposal state blocks execution after restart (22.9663ms)
+✔ ADVERSARIAL: corrupt approval state blocks HIGH action after restart (27.9551ms)
+✔ ADVERSARIAL: delete DECISION evidence blocks DONE transition after restart (39.9209ms)
+✔ the brand has one source and the expected identity (7.2573ms)
+✔ visible surfaces read the brand constant instead of a literal (9.2732ms)
+✔ the updater polls the La Pitaya repository, never the upstream one (334.4871ms)
+✔ the orchestrator defaults to El Inge (1.7705ms)
+✔ an upstream hive that persisted "Michael" migrates to El Inge; real renames survive (0.7974ms)
+✔ the full roster is present with the right roles (3.6035ms)
+✔ es-MX keeps the accents; en-US uses the exact ASCII spelling (1.1269ms)
+✔ a typed name resolves in either spelling (0.7462ms)
+✔ hire presets carry a briefing and the CIMA hard rules (1.0806ms)
+✔ Alicia is a capability, not a hive agent or a replacement (0.9044ms)
+✔ agentLocale adds a language line only for non-English locales (0.6597ms)
+✔ El Inge is briefed on CIMA and the autonomy policy (1.7305ms)
+✔ CIMA phases are stable uppercase ids in workflow order (0.6249ms)
+✔ Builder != Auditor (0.5273ms)
+✔ Evidence First: no PASS without raw evidence or with a failing exit (0.8697ms)
+✔ risk maps to mode: LOW→AUTO, MEDIUM→SUPERVISED, HIGH→HUMAN_APPROVAL (1.6063ms)
+✔ unknown actions are HIGH risk (0.5131ms)
+✔ no autonomy stage can switch off Human Governance (0.476ms)
+✔ Alicia is disabled by default and her calls are no-ops (0.7723ms)
+✔ a registered Alicia receives events, and a throwing one cannot break the caller (0.8061ms)
+✔ es-MX is the default and en-US the fallback; future locales are declared, not active (0.4079ms)
+✔ uiLocale, agentLocale and notificationLocale resolve independently (0.9212ms)
+✔ the La Pitaya namespace exists for es-MX and en-US with identical keys (6.4916ms)
+✔ the en-US La Pitaya strings contain no accented characters (1.6513ms)
+✔ es-MX translates every key of en.json (none left as a copied English string of note) (63.1633ms)
+ℹ tests 315
+ℹ suites 0
+ℹ pass 311
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 232023.485
+
+✖ failing tests:
+
+test at test\lapitaya-alicia-v041.test.cjs:181:1
+✖ [INTENT-NEG-03] Alicia sends an intent directly to a tool or a worker → BLOCKED (6245.1712ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /ipcMain\.handle\('hive:send'[\s\S]{0,400}sender\.trim\(\)\.toLowerCase\(\) === ALICIA_ACTOR_ID[\s\S]{0,80}return \{ ok: false/. Input:
+  
+  "import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, powerMonitor, powerSaveBlocker, screen, shell, Notification } from 'electron';\r\n" +
+    "import { spawn } from 'node:child_process';\r\n" +
+    'import {\r\n' +
+    '  rmSync, existsSync, readFileSync, readdirSync, statSync, cpSync, writeFileSync,\r\n' +
+    '  unlinkSync, mkdirSync, renameSync, createWriteStream, copyFileSync, lstatSync,\r\n' +
+    '  readlinkSync, symlinkSync\r\n' +
+    "} from 'node:fs';\r\n" +
+    "import { randomBytes, createHash, timingSafeEqual } from 'node:crypto';\r\n" +
+    "import { join, resolve, sep, basename, dirname, isAbsolute } from 'node:path';\r\n" +
+    "import { homedir, userInfo } from 'node:os';\r\n" +
+    "import { pathToFileURL } from 'node:url';\r\n" +
+    "import { request as httpsRequest } from 'node:https';\r\n" +
+    "import { PtyManager, type SpawnOptions } from './pty';\r\n" +
+    "import { resolveCommand as resolveCliCommand, isSafeCommandName } from './shellEnv';\r\n" +
+    "import { initAutoUpdater, abortPendingRestart } from './updater';\r\n" +
+    "import { RealtimeFloorWatcher } from './realtimeFloorWatcher';\r\n" +
+    'import {\r\n' +
+    '  readConfig, writeConfig, setAgentTokenCap, resetConfig, onConfigWritten, ensureHarnessHome, ensureClaudePermissionsAccepted,\r\n' +
+    '  modelForRole, OPS_STANDUP_MISSION, HEARTBEAT_MISSION, COMPACT_MAINTENANCE_MISSION, type HarnessConfig, type ScheduledMission\r\n' +
+    "} from './config';\r\n" +
+    "import { listDir, readFileText, readFileBinary, writeFileText, statAbs, expandTilde } from './fs';\r\n" +
+    "import { normalizeWeekly, weeklyDelayMs } from '../shared/weeklySchedule';\r\n" +
+    'import {\r\n' +
+    '  getBranch, getStatus, getLog, getBranches, getAheadBehind, isRepo, getDiff, mainRepoRoot,\r\n' +
+    '  addWorktree, removeWorktree, worktreeHasUnintegratedWork, worktreeIsGcSafe,\r\n' +
+    '  getLogGraph, getCommitFiles, getFileAtRev, compareRefs, listWorktrees, checkoutRef\r\n' +
+    "} from './git';\r\n" +
+    "import { linkWorktreeDeps, unlinkWorktreeDeps } from './worktreeDeps';\r\n" +
+    "import { HiveManager, type AgentMeta, type HiveMessage, type HiveTask } from './hive';\r\n" +
+    "import { HookServer } from './hooks';\r\n" +
+    "import { CimaRuntimeService } from './cimaRuntime';\r\n" +
+    "import { createHumanIdentityService, newSessionId } from './humanIdentity';\r\n" +
+    "import { createHumanGovernanceHandlers, resolveRendererSender } from './humanGovernanceIpc';\r\n" +
+    "import { loadOrCreateKey } from './authBinding';\r\n" +
+    "import { AUTONOMY_STAGES, DEFAULT_AUTONOMY_STAGE, type AutonomyStage } from '../shared/lapitaya/autonomy';\r\n" +
+    "import { phaseForAgent } from '../shared/lapitaya/agents';\r\n" +
+    "import { recordBanner } from '../shared/lapitaya/cimaRuntime';\r\n" +
+    "import { LA_PITAYA_NAME } from '../shared/lapitaya/brand';\r\n" +
+    'import {\r\n' +
+    '  alicia, registerAlicia, createAliciaCompanion, fromRuntimeEvent, deriveCimaStatus, projectObservability, ALICIA_ACTOR_ID\r\n' +
+    "} from '../shared/lapitaya/alicia';\r\n" +
+    "import { IntentBoundary } from './intentBoundary';\r\n" +
+    "import { CircuitBreaker, type BreakerInput } from './breaker';\r\n" +
+    "import { CumulativeSampleGate, type UsageProvider } from './usage';\r\n" +
+    "import { MemoryManager } from './memory';\r\n" +
+    "import { KnowledgeManager } from './knowledge';\r\n" +
+    "import { MemoryReflector, type ReflectSettings } from './reflect';\r\n" +
+    "import { PersistStore } from './db';\r\n" +
+    "import { readAgentUsage, readContextTokens, seedSessionTranscript, resolveSessionCwd } from './transcript';\r\n" +
+    "import { listIssues, listCIRuns } from './github';\r\n" +
+    "import { SlackWebhookServer, SlackReplyServer, postSlackReply, type SlackEventFile } from './slack';\r\n" +
+    'import {\r\n' +
+    '  WebhookServer,\r\n' +
+    '  type WebhookDispatch, type WebhookEndpointRef, type WebhookInbound, type WebhookTaskStatus\r\n' +
+    "} from './webhook';\r\n" +
+    'import {\r\n' +
+    '  classifyInboundKind, isAutoAllowed,\r\n' +
+    '  DEFAULT_CONTEXT_TRIGGER, DEFAULT_ORG_TRIGGER, DEFAULT_TRIGGER_MODE, DEFAULT_WEBHOOK_SCHEMA,\r\n' +
+    '  type ContextRule, type ContextTriggerConfig, type InboundKind, type OrgTriggerConfig,\r\n' +
+    '  type TriggerHistoryEntry, type TriggerMode, type WebhookTrigger\r\n' +
+    "} from '../shared/triggers';\r\n" +
+    'import {\r\n' +
+    '  appendTriggerHistory, clearTriggerHistory, listTriggerHistory, updateTriggerHistory\r\n' +
+    "} from './triggerHistory';\r\n" +
+    "import { transcribeWithGroq, DEFAULT_GROQ_MODEL } from './freeflow';\r\n" +
+    "import { registerRealtimeIpc } from './realtime';\r\n" +
+    "import { registerRealtimeActionIpc } from './realtimeActions';\r\n" +
+    "import { initCompletionWatcher } from './realtimeCompletionWatcher';\r\n" +
+    "import type { TaskCard, InboxMessage } from './realtimeCompletionWatcher';\r\n" +
+    "import { TelemetryCollector } from './telemetry';\r\n" +
+    "import { CostLedgerTotals } from './costLifetime';\r\n" +
+    "import { analytics, isRendererMessageSurface } from './analytics';\r\n" +
+    "import type { SpawnFailReason } from './analytics';\r\n" +
+    "import { IntegrationBroker } from './integrationBroker';\r\n" +
+    "import * as integrations from './integrations';\r\n" +
+    "import { validateBaseUrl, buildAuthHeaders, resolveUpstreamUrl, secretRefFor, INTEGRATION_TEMPLATES } from '../shared/integrations';\r\n" +
+    "import { RosterStore } from './roster';\r\n" +
+    "import { buildWorkerLaunch } from './workerLaunch';\r\n" +
+    "import { ControlRegistry } from './control';\r\n" +
+    "import { WorkerWakeWatchdog, type WorkerWakeFacts } from './workerWake';\r\n" +
+    "import { inboxNudgeText } from '../shared/hiveNudge';\r\n" +
+    "import { resolveGodName } from '../shared/godIdentity';\r\n" +
+    "import { fetchHireManifest, readHireManifestFiles } from './hire';\r\n" +
+    "import { parseHireDeepLink, type HireManifest } from '../shared/hire';\r\n" +
+    "import { ClosingTimeController } from './closingTime';\r\n" +
+    'import {\r\n' +
+    '  argsWithAutoModeFlag,\r\n' +
+    '  inferAgentProvider,\r\n' +
+    '  isClaudeProvider,\r\n' +
+    '  nonInteractiveEnvForProvider,\r\n' +
+    '  providerPreset,\r\n' +
+    '  installInfoForProvider,\r\n' +
+    '  type AgentProvider\r\n' +
+    "} from '../shared/agentProvider';\r\n" +
+    "import { buildMissingCliScript, chooseInstallRung } from './cliInstall';\r\n" +
+    "import { detectNodeVersion, nodeIsUsable, resolveNodeInstaller } from './nodeInstall';\r\n" +
+    "import { toolCatalog, type ToolStatus } from '../shared/toolCatalog';\r\n" +
+    "import { listLocalSkills, loadCatalog, installSkill, uninstallSkill, type LocalSkill } from './skills';\r\n" +
+    "import { loadHero } from './hero';\r\n" +
+    "import { loadModelCatalog } from './modelCatalog';\r\n" +
+    'import {\r\n' +
+    '  CODEX_REMOTE_SOCKET_RELATIVE,\r\n' +
+    '  codexRemoteAliasPath,\r\n' +
+    '  codexRemoteEndpoint,\r\n' +
+    '  codexRemoteSocketFits,\r\n' +
+    '  withCodexRemoteArgs\r\n' +
+    "} from '../shared/codexRemote';\r\n" +
+    '\r\n' +
+    'const isDev = !!process.env.ELECTRON_RENDERER_URL;\r\n' +
+    '\r\n' +
+    '// Keep the main process alive on an unexpected throw/rejection. The harness is a\r\n' +
+    "// multi-agent supervisor — a single stray throw (e.g. node-pty's ConPTY console\r\n" +
+    "// helper choking when a fast-exiting agent CLI's console is already gone) must\r\n" +
+    '// NOT take the whole app and every running agent down with it. Log and continue\r\n' +
+    '// rather than letting the default handler exit the process.\r\n' +
+    "// (Restored during the #71 merge — the PR's rebase dropped these handlers.)\r\n" +
+    "process.on('uncaughtException', (err) => {\r\n" +
+    "  console.error('[main] uncaughtException (kept alive):', err);\r\n" +
+    '});\r\n' +
+    "process.on('unhandledRejection', (reason) => {\r\n" +
+    "  console.error('[main] unhandledRejection (kept alive):', reason);\r\n" +
+    '});\r\n' +
+    '\r\n' +
+    'const ptyManager = new PtyManager();\r\n' +
+    '\r\n' +
+    'function runCodexDaemonCommand(\r\n' +
+    '  executable: string,\r\n' +
+    '  args: string[],\r\n' +
+    '  env: NodeJS.ProcessEnv,\r\n' +
+    '  timeoutMs = 20_000\r\n' +
+    '): Promise<{ ok: boolean; error?: string }> {\r\n' +
+    '  return new Promise((resolveResult) => {\r\n' +
+    '    let settled = false;\r\n' +
+    "    let stderr = '';\r\n" +
+    '    let child: ReturnType<typeof spawn>;\r\n' +
+    '    try {\r\n' +
+    '      child = spawn(executable, args, {\r\n' +
+    '        env,\r\n' +
+    "        stdio: ['ignore', 'ignore', 'pipe'],\r\n" +
+    '        windowsHide: true\r\n' +
+    '      });\r\n' +
+    '    } catch (e) {\r\n' +
+    '      resolveResult({ ok: false, error: e instanceof Error ? e.message : String(e) });\r\n' +
+    '      return;\r\n' +
+    '    }\r\n' +
+    '    let timer: NodeJS.Timeout;\r\n' +
+    '    const finish = (result: { ok: boolean; error?: string }): void => {\r\n' +
+    '      if (settled) return;\r\n' +
+    '      settled = true;\r\n' +
+    '      clearTimeout(timer);\r\n' +
+    '      resolveResult(result);\r\n' +
+    '    };\r\n' +
+    "    child.stderr?.on('data', (chunk) => {\r\n" +
+    '      if (stderr.length < 8_000) stderr += String(chunk);\r\n' +
+    '    });\r\n' +
+    "    child.once('error', (e) => finish({ ok: false, error: e.message }));\r\n" +
+    "    child.once('exit', (code) => {\r\n" +
+    '      finish(code === 0\r\n' +
+    '        ? { ok: true }\r\n' +
+    "        : { ok: false, error: stderr.trim() || `Codex exited with code ${code ?? 'unknown'}` });\r\n" +
+    '    });\r\n' +
+    '    timer = setTimeout(() => {\r\n' +
+    '      try { child.kill(); } catch { /* already exited */ }\r\n' +
+    '      finish({ ok: false, error: `Codex daemon command timed out after ${timeoutMs}ms` });\r\n' +
+    '    }, timeoutMs);\r\n' +
+    '  });\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    '/** Start/enable one managed remote-control daemon for this isolated Codex home,\r\n' +
+    ' * then point the TUI at its app-server socket. Failure is non-fatal: the worker\r\n' +
+    ' * still starts as a normal local Codex session. */\r\n' +
+    'async function enableCodexRemoteForSpawn(\r\n' +
+    '  opts: SpawnOptions & { hive?: AgentMeta },\r\n' +
+    '  agentId: string\r\n' +
+    '): Promise<boolean> {\r\n' +
+    "  if (process.platform === 'win32') return false;\r\n" +
+    '  const realHome = opts.env?.CODEX_HOME;\r\n' +
+    '  if (!realHome) return false;\r\n' +
+    '  try {\r\n' +
+    '    const alias = codexRemoteAliasPath(realHome, agentId);\r\n' +
+    '    // Bail before touching the filesystem if even the short alias would exceed\r\n' +
+    '    // sun_path — the daemon would start and then die on bind, and the warning\r\n' +
+    '    // below names the real reason instead of a generic readiness timeout.\r\n' +
+    '    if (!codexRemoteSocketFits(alias)) {\r\n' +
+    "      console.warn('[codex-remote] socket path exceeds sun_path; starting local TUI:', alias);\r\n" +
+    '      return false;\r\n' +
+    '    }\r\n' +
+    '    const aliasRoot = dirname(alias);\r\n' +
+    '    mkdirSync(aliasRoot, { recursive: true });\r\n' +
+    '    if (existsSync(alias)) {\r\n' +
+    '      const st = lstatSync(alias);\r\n' +
+    '      if (!st.isSymbolicLink() || resolve(dirname(alias), readlinkSync(alias)) !== resolve(realHome)) {\r\n' +
+    "        console.warn('[codex-remote] short home alias is occupied; starting local TUI:', alias);\r\n" +
+    '        return false;\r\n' +
+    '      }\r\n' +
+    '    } else {\r\n' +
+    "      symlinkSync(realHome, alias, 'dir');\r\n" +
+    '    }\r\n' +
+    '\r\n' +
+    '    const socket = join(alias, CODEX_REMOTE_SOCKET_RELATIVE);\r\n' +
+    '    const env: NodeJS.ProcessEnv = {\r\n' +
+    '      ...process.env,\r\n' +
+    '      ...(opts.env ?? {}),\r\n' +
+    '      CODEX_HOME: alias\r\n' +
+    '    };\r\n' +
+    "    // shellEnv's resolver mirrors PtyManager's (which is private + returns\r\n" +
+    '    // {path, found}); the daemon just needs the best executable path.\r\n' +
+    '    const executable = re'... 290221 more characters
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v041.test.cjs:191:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, powerMonitor, powerSaveBlocker, screen, shell, Notification } from 'electron';\r\nimport { spawn } from 'node:child_process';\r\nimport {\r\n  rmSync, existsSync, readFileSync, readdirSync, statSync, cpSync, writeFileSync,\r\n  unlinkSync, mkdirSync, renameSync, createWriteStream, copyFileSync, lstatSync,\r\n  readlinkSync, symlinkSync\r\n} from 'node:fs';\r\nimport { randomBytes, createHash, timingSafeEqual } from 'node:crypto';\r\nimport { join, resolve, sep, basename, dirname, isAbsolute } from 'node:path';\r\nimport { homedir, userInfo } from 'node:os';\r\nimport { pathToFileURL } from 'node:url';\r\nimport { request as httpsRequest } from 'node:https';\r\nimport { PtyManager, type SpawnOptions } from './pty';\r\nimport { resolveCommand as resolveCliCommand, isSafeCommandName } from './shellEnv';\r\nimport { initAutoUpdater, abortPendingRestart } from './updater';\r\nimport { RealtimeFloorWatcher } from './realtimeFloorWatcher';\r\nimport {\r\n  readConfig, writeConfig, setAgentTokenCap, resetConfig, onConfigWritten, ensureHarnessHome, ensureClaudePermissionsAccepted,\r\n  modelForRole, OPS_STANDUP_MISSION, HEARTBEAT_MISSION, COMPACT_MAINTENANCE_MISSION, type HarnessConfig, type ScheduledMission\r\n} from './config';\r\nimport { listDir, readFileText, readFileBinary, writeFileText, statAbs, expandTilde } from './fs';\r\nimport { normalizeWeekly, weeklyDelayMs } from '../shared/weeklySchedule';\r\nimport {\r\n  getBranch, getStatus, getLog, getBranches, getAheadBehind, isRepo, getDiff, mainRepoRoot,\r\n  addWorktree, removeWorktree, worktreeHasUnintegratedWork, worktreeIsGcSafe,\r\n  getLogGraph, getCommitFiles, getFileAtRev, compareRefs, listWorktrees, checkoutRef\r\n} from './git';\r\nimport { linkWorktreeDeps, unlinkWorktreeDeps } from './worktreeDeps';\r\nimport { HiveManager, type AgentMeta, type HiveMessage, type HiveTask } from './hive';\r\nimport { HookServer } from './hooks';\r\nimport { CimaRuntimeService } from './cimaRuntime';\r\nimport { createHumanIdentityService, newSessionId } from './humanIdentity';\r\nimport { createHumanGovernanceHandlers, resolveRendererSender } from './humanGovernanceIpc';\r\nimport { loadOrCreateKey } from './authBinding';\r\nimport { AUTONOMY_STAGES, DEFAULT_AUTONOMY_STAGE, type AutonomyStage } from '../shared/lapitaya/autonomy';\r\nimport { phaseForAgent } from '../shared/lapitaya/agents';\r\nimport { recordBanner } from '../shared/lapitaya/cimaRuntime';\r\nimport { LA_PITAYA_NAME } from '../shared/lapitaya/brand';\r\nimport {\r\n  alicia, registerAlicia, createAliciaCompanion, fromRuntimeEvent, deriveCimaStatus, projectObservability, ALICIA_ACTOR_ID\r\n} from '../shared/lapitaya/alicia';\r\nimport { IntentBoundary } from './intentBoundary';\r\nimport { CircuitBreaker, type BreakerInput } from './breaker';\r\nimport { CumulativeSampleGate, type UsageProvider } from './usage';\r\nimport { MemoryManager } from './memory';\r\nimport { KnowledgeManager } from './knowledge';\r\nimport { MemoryReflector, type ReflectSettings } from './reflect';\r\nimport { PersistStore } from './db';\r\nimport { readAgentUsage, readContextTokens, seedSessionTranscript, resolveSessionCwd } from './transcript';\r\nimport { listIssues, listCIRuns } from './github';\r\nimport { SlackWebhookServer, SlackReplyServer, postSlackReply, type SlackEventFile } from './slack';\r\nimport {\r\n  WebhookServer,\r\n  type WebhookDispatch, type WebhookEndpointRef, type WebhookInbound, type WebhookTaskStatus\r\n} from './webhook';\r\nimport {\r\n  classifyInboundKind, isAutoAllowed,\r\n  DEFAULT_CONTEXT_TRIGGER, DEFAULT_ORG_TRIGGER, DEFAULT_TRIGGER_MODE, DEFAULT_WEBHOOK_SCHEMA,\r\n  type ContextRule, type ContextTriggerConfig, type InboundKind, type OrgTriggerConfig,\r\n  type TriggerHistoryEntry, type TriggerMode, type WebhookTrigger\r\n} from '../shared/triggers';\r\nimport {\r\n  appendTriggerHistory, clearTriggerHistory, listTriggerHistory, updateTriggerHistory\r\n} from './triggerHistory';\r\nimport { transcribeWithGroq, DEFAULT_GROQ_MODEL } from './freeflow';\r\nimport { registerRealtimeIpc } from './realtime';\r\nimport { registerRealtimeActionIpc } from './realtimeActions';\r\nimport { initCompletionWatcher } from './realtimeCompletionWatcher';\r\nimport type { TaskCard, InboxMessage } from './realtimeCompletionWatcher';\r\nimport { TelemetryCollector } from './telemetry';\r\nimport { CostLedgerTotals } from './costLifetime';\r\nimport { analytics, isRendererMessageSurface } from './analytics';\r\nimport type { SpawnFailReason } from './analytics';\r\nimport { IntegrationBroker } from './integrationBroker';\r\nimport * as integrations from './integrations';\r\nimport { validateBaseUrl, buildAuthHeaders, resolveUpstreamUrl, secretRefFor, INTEGRATION_TEMPLATES } from '../shared/integrations';\r\nimport { RosterStore } from './roster';\r\nimport { buildWorkerLaunch } from './workerLaunch';\r\nimport { ControlRegistry } from './control';\r\nimport { WorkerWakeWatchdog, type WorkerWakeFacts } from './workerWake';\r\nimport { inboxNudgeText } from '../shared/hiveNudge';\r\nimport { resolveGodName } from '../shared/godIdentity';\r\nimport { fetchHireManifest, readHireManifestFiles } from './hire';\r\nimport { parseHireDeepLink, type HireManifest } from '../shared/hire';\r\nimport { ClosingTimeController } from './closingTime';\r\nimport {\r\n  argsWithAutoModeFlag,\r\n  inferAgentProvider,\r\n  isClaudeProvider,\r\n  nonInteractiveEnvForProvider,\r\n  providerPreset,\r\n  installInfoForProvider,\r\n  type AgentProvider\r\n} from '../shared/agentProvider';\r\nimport { buildMissingCliScript, chooseInstallRung } from './cliInstall';\r\nimport { detectNodeVersion, nodeIsUsable, resolveNodeInstaller } from './nodeInstall';\r\nimport { toolCatalog, type ToolStatus } from '../shared/toolCatalog';\r\nimport { listLocalSkills, loadCatalog, installSkill, uninstallSkill, type LocalSkill } from './skills';\r\nimport { loadHero } from './hero';\r\nimport { loadModelCatalog } from './modelCatalog';\r\nimport {\r\n  CODEX_REMOTE_SOCKET_RELATIVE,\r\n  codexRemoteAliasPath,\r\n  codexRemoteEndpoint,\r\n  codexRemoteSocketFits,\r\n  withCodexRemoteArgs\r\n} from '../shared/codexRemote';\r\n\r\nconst isDev = !!process.env.ELECTRON_RENDERER_URL;\r\n\r\n// Keep the main process alive on an unexpected throw/rejection. The harness is a\r\n// multi-agent supervisor — a single stray throw (e.g. node-pty's ConPTY console\r\n// helper choking when a fast-exiting agent CLI's console is already gone) must\r\n// NOT take the whole app and every running agent down with it. Log and continue\r\n// rather than letting the default handler exit the process.\r\n// (Restored during the #71 merge — the PR's rebase dropped these handlers.)\r\nprocess.on('uncaughtException', (err) => {\r\n  console.error('[main] uncaughtException (kept alive):', err);\r\n});\r\nprocess.on('unhandledRejection', (reason) => {\r\n  console.error('[main] unhandledRejection (kept alive):', reason);\r\n});\r\n\r\nconst ptyManager = new PtyManager();\r\n\r\nfunction runCodexDaemonCommand(\r\n  executable: string,\r\n  args: string[],\r\n  env: NodeJS.ProcessEnv,\r\n  timeoutMs = 20_000\r\n): Promise<{ ok: boolean; error?: string }> {\r\n  return new Promise((resolveResult) => {\r\n    let settled = false;\r\n    let stderr = '';\r\n    let child: ReturnType<typeof spawn>;\r\n    try {\r\n      child = spawn(executable, args, {\r\n        env,\r\n        stdio: ['ignore', 'ignore', 'pipe'],\r\n        windowsHide: true\r\n      });\r\n    } catch (e) {\r\n      resolveResult({ ok: false, error: e instanceof Error ? e.message : String(e) });\r\n      return;\r\n    }\r\n    let timer: NodeJS.Timeout;\r\n    const finish = (result: { ok: boolean; error?: string }): void => {\r\n      if (settled) return;\r\n      settled = true;\r\n      clearTimeout(timer);\r\n      resolveResult(result);\r\n    };\r\n    child.stderr?.on('data', (chunk) => {\r\n      if (stderr.length < 8_000) stderr += String(chunk);\r\n    });\r\n    child.once('error', (e) => finish({ ok: false, error: e.message }));\r\n    child.once('exit', (code) => {\r\n      finish(code === 0\r\n        ? { ok: true }\r\n        : { ok: false, error: stderr.trim() || `Codex exited with code ${code ?? 'unknown'}` });\r\n    });\r\n    timer = setTimeout(() => {\r\n      try { child.kill(); } catch { /* already exited */ }\r\n      finish({ ok: false, error: `Codex daemon command timed out after ${timeoutMs}ms` });\r\n    }, timeoutMs);\r\n  });\r\n}\r\n\r\n/** Start/enable one managed remote-control daemon for this isolated Codex home,\r\n * then point the TUI at its app-server socket. Failure is non-fatal: the worker\r\n * still starts as a normal local Codex session. */\r\nasync function enableCodexRemoteForSpawn(\r\n  opts: SpawnOptions & { hive?: AgentMeta },\r\n  agentId: string\r\n): Promise<boolean> {\r\n  if (process.platform === 'win32') return false;\r\n  const realHome = opts.env?.CODEX_HOME;\r\n  if (!realHome) return false;\r\n  try {\r\n    const alias = codexRemoteAliasPath(realHome, agentId);\r\n    // Bail before touching the filesystem if even the short alias would exceed\r\n    // sun_path — the daemon would start and then die on bind, and the warning\r\n    // below names the real reason instead of a generic readiness timeout.\r\n    if (!codexRemoteSocketFits(alias)) {\r\n      console.warn('[codex-remote] socket path exceeds sun_path; starting local TUI:', alias);\r\n      return false;\r\n    }\r\n    const aliasRoot = dirname(alias);\r\n    mkdirSync(aliasRoot, { recursive: true });\r\n    if (existsSync(alias)) {\r\n      const st = lstatSync(alias);\r\n      if (!st.isSymbolicLink() || resolve(dirname(alias), readlinkSync(alias)) !== resolve(realHome)) {\r\n        console.warn('[codex-remote] short home alias is occupied; starting local TUI:', alias);\r\n        return false;\r\n      }\r\n    } else {\r\n      symlinkSync(realHome, alias, 'dir');\r\n    }\r\n\r\n    const socket = join(alias, CODEX_REMOTE_SOCKET_RELATIVE);\r\n    const env: NodeJS.ProcessEnv = {\r\n      ...process.env,\r\n      ...(opts.env ?? {}),\r\n      CODEX_HOME: alias\r\n    };\r\n    // shellEnv's resolver mirrors PtyManager's (which is private + returns\r\n    // {path, found}); the daemon just needs the best executable path.\r\n    const executable = re"... 290221 more characters,
+    expected: /ipcMain\.handle\('hive:send'[\s\S]{0,400}sender\.trim\(\)\.toLowerCase\(\) === ALICIA_ACTOR_ID[\s\S]{0,80}return \{ ok: false/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v042.test.cjs:298:1
+✖ [REQ-ARCH] structural: gate in authorize before approvals; human-only confirmation call sites; no bypass (18.5784ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(authorizeBody.includes('requestGate(this.proposals, auth, this.actionFingerprints)'))
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v042.test.cjs:302:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime-v03.test.cjs:180:1
+✖ [FC-10] PreToolUse with no agentId -> DENY (4012.9741ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /GOVERNANCE_STATE_UNAVAILABLE/. Input:
+  
+  'ACTOR_CONTEXT_MISSING — missing or untrusted agent execution context'
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v03.test.cjs:184:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'ACTOR_CONTEXT_MISSING — missing or untrusted agent execution context',
+    expected: /GOVERNANCE_STATE_UNAVAILABLE/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime.test.cjs:298:1
+✖ FAIL backed by a real failing run is recorded FAIL; BLOCKED stays BLOCKED (never FAIL) (4621.1763ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  'BLOCKED' !== 'FAIL'
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:303:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'BLOCKED',
+    expected: 'FAIL',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -45,7 +45,8 @@ async function floor(t) {
   const hive = new HiveManager(() => home);
   await hive.ensureAgent({ id: 'jim-1', name: 'Jim', provider: 'claude', cwd: home });
   const server = new HookServer(hive, () => null, () => CONFIG, undefined, undefined);
-  const fire = (payload) => server.handle({ agent_id: 'jim-1', session_id: 's1', ...payload });
+  // v0.10: every hook is authenticated by the agent's capability token (the production registry's).
+  const fire = (payload) => server.handle({ agent_id: 'jim-1', agent_token: hive.registerAgentToken('jim-1'), session_id: 's1', ...payload });
   notifications.length = 0;
   return { home, hive, server, fire };
 }
@@ -108,7 +109,7 @@ test('notifications setting off suppresses the OS toast but the hook still resol
   await hive.ensureAgent({ id: 'jim-1', name: 'Jim', provider: 'claude', cwd: home });
   const server = new HookServer(hive, () => null, () => ({ notifications: false }), undefined, undefined);
   notifications.length = 0;
-  const res = await server.handle({ agent_id: 'jim-1', session_id: 's1', hook_event_name: 'Stop' });
+  const res = await server.handle({ agent_id: 'jim-1', agent_token: hive.registerAgentToken('jim-1'), session_id: 's1', hook_event_name: 'Stop' });
   assert.equal(notifications.length, 0, 'notifications:false must suppress the OS toast');
   assert.deepEqual(res, {}, 'the hook itself still resolves normally');
 });

@@ -1,0 +1,25 @@
+✔ [AUTHBIND-01] an approval of CALL A cannot authorize CALL B that has the same FNV-32 (adversarial, permanent) (6205.3844ms)
+✔ [AUTHBIND-03] a different command is denied (7389.1402ms)
+✔ [AUTHBIND-04] a different argument (extra input field) is denied (4734.397ms)
+✔ [AUTHBIND-05] a different target is denied (4880.0774ms)
+✔ [AUTHBIND-06] a different NORMALIZED target is denied even when the text barely differs (4416.7001ms)
+✔ [AUTHBIND-07] a different tool is denied (4506.8846ms)
+✔ [AUTHBIND-08] a different provider is denied (4369.5028ms)
+✔ [AUTHBIND-09] a different agent is denied (5176.1799ms)
+✔ [AUTHBIND-10] a different task is denied (5435.1343ms)
+✔ [AUTHBIND-11] a different risk classification is denied (7319.4011ms)
+✔ [AUTHBIND-12] a different autonomy stage is denied (6099.6607ms)
+✔ [AUTHBIND-35] REQUEST-gate exemption is keyed by the cryptographic call fingerprint (an FNV collision cannot slip through) (8881.3054ms)
+✔ [AUTHBIND-36] END-TO-END ATTACK 1: benign approval → colliding destructive command → preserved approval id → execute: DENIED (6290.9096ms)
+✔ [AUTHBIND-37] END-TO-END ATTACK 2: approval for agent A used from agent B: DENIED (5303.1803ms)
+✔ [AUTHBIND-38] END-TO-END ATTACK 3: approval for path A, used through traversal / alternate spelling: DENIED (5888.168ms)
+✔ [AUTHBIND-39] approval self-forgery through the tools is closed: the governance directory is HIGH, canonically (6078.9666ms)
+✔ [AUTHBIND-40] a REQUEST proposal is bound by a keyed SHA-256 (not FNV-32): re-signing a hand edit fails, legacy fingerprints are stale (5752.4175ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 103045.127

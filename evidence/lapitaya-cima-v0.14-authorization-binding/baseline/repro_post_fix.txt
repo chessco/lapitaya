@@ -1,0 +1,24 @@
+CALL A first call                              ["HUMAN_APPROVAL_REQUIRED","HIGH"]
+CALL A  FNV-32                                 7e8dbd9e
+CALL B                                         rm -rf /important/data # 9 LUpT
+CALL B  FNV-32                                 7e8dbd9e
+R1 RESULT authorize(B) after approving A       ["HUMAN_APPROVAL_REQUIRED","data-deletion","shell:recursive-delete"]
+R1 authorize(A) after B consumed approval      ["APPROVED"]
+R3 Write /v14-FcKOeM/hive/lapitaya/approvals.json ["HUMAN_APPROVAL_REQUIRED","governance-tamper","hive-governance-path"]
+R3 Write /v14-FcKOeM/hive/lapitaya/approvals.json ["HUMAN_APPROVAL_REQUIRED","governance-tamper","hive-governance-path"]
+R3 Write e/agents/x/../../lapitaya/approvals.json ["HUMAN_APPROVAL_REQUIRED","governance-tamper","hive-governance-path"]
+R3 Write 14-FcKOeM/hive\lapitaya\.\approvals.json ["HUMAN_APPROVAL_REQUIRED","governance-tamper","hive-governance-path"]
+R3 Write /v14-FcKOeM/hive/LAPITAYA/approvals.json ["HUMAN_APPROVAL_REQUIRED","governance-tamper","hive-governance-path"]
+R3 Write v14-FcKOeM/hive/lapitaya./approvals.json ["HUMAN_APPROVAL_REQUIRED","governance-tamper","hive-governance-path"]
+R3 Write 14-FcKOeM/hive//lapitaya//approvals.json ["HUMAN_APPROVAL_REQUIRED","governance-tamper","hive-governance-path"]
+R3 Write lapitaya/approvals.json               ["SUPERVISED","config-change","config-path"]
+R4 authorize while another holds the lock      ["DENY","LOCK_UNAVAILABLE","ms=3043","lockFileStillThere=true"]
+R5 decide() with ledger down                   [null]
+R5 submit() with ledger down                   ["BLOCKED"]
+R5 recordTrace() with traces ledger ok         true
+R5 records in memory                           0
+R5 approvals.json status after                 ["pending"]
+R5 ledger has HUMAN_APPROVED?                  false
+R2 routed / victim inbox senders               [1,["god:x"]]
+R2 authorize Write into god outbox             ["DENY","SENDER_IDENTITY"]
+R2 authorize shell > god outbox                ["DENY","SENDER_IDENTITY"]

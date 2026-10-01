@@ -75,7 +75,7 @@ async function floor(t, companionPrefs) {
 
   const server = new HookServer(hive, () => null, () => ({ autoMode: true, notifications: false }),
     undefined, undefined, undefined, undefined, lapitaya);
-  const hook = (agentId, payload) => server.handle({ agent_id: agentId, session_id: 's-' + agentId, ...payload });
+  const hook = (agentId, payload) => server.handle({ agent_id: agentId, agent_token: hive.registerAgentToken(agentId), session_id: 's-' + agentId, ...payload });
   const pre = (agentId, tool, input) => hook(agentId, { hook_event_name: 'PreToolUse', tool_name: tool, tool_input: input });
   const post = (agentId, tool, input, response) => hook(agentId, { hook_event_name: 'PostToolUse', tool_name: tool, tool_input: input, tool_response: response ?? {} });
   const ran = (agentId, command, stdout) => post(agentId, 'Bash', { command }, { stdout, stderr: '', interrupted: false });

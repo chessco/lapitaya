@@ -53,7 +53,7 @@ async function floor(t, config) {
   const server = new HookServer(hive, () => null, () => config,
     undefined, undefined, undefined, undefined, lapitaya);
   const hook   = (agentId, payload) =>
-    server.handle({ agent_id: agentId, session_id: 's-'+agentId, ...payload });
+    server.handle({ agent_id: agentId, agent_token: hive.registerAgentToken(agentId), session_id: 's-'+agentId, ...payload });
   const pre    = async (agentId, tool, input) =>
     await hook(agentId, { hook_event_name: 'PreToolUse', tool_name: tool, tool_input: input });
   const ran    = async (agentId, command, stdout, failed) =>

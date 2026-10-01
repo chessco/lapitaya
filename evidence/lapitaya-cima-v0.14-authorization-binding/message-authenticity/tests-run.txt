@@ -1,0 +1,16 @@
+✔ [AUTHBIND-20] an agent cannot write into another agent's outbox/inbox (Write tools and shell) (5302.692ms)
+✔ [AUTHBIND-21] a fake agent_id is denied (token mismatch / no token) (4312.4156ms)
+✔ [AUTHBIND-22] a fake from / agent_id / sender inside an outbox file is neutralized; a foreign token is quarantined (4173.7517ms)
+✔ [AUTHBIND-23] a fake human identity is denied (renderer send, CIMA DECISION, hook payload) (6465.99ms)
+✔ [AUTHBIND-24] a provider cannot impersonate another agent (3858.5882ms)
+✔ [AUTHBIND-25] a provider cannot impersonate the human (identity, decide, confirm) (3952.1067ms)
+✔ [AUTHBIND-26] the renderer cannot provide an arbitrary identity (6040.6083ms)
+✔ [AUTHBIND-30] the forged v0.10 governance chain remains blocked (16280.0371ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 54252.7753

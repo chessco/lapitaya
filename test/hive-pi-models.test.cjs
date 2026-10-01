@@ -38,7 +38,7 @@ async function setupPi(t, { get, id }) {
   }
 
   const hive = new HiveManager(() => hiveHome);
-  const injection = await hive.ensureAgent({ id, name: 'Pi Agent', provider: 'pi', cwd: hiveHome });
+  const injection = await hive.ensureAgent({ id, name: 'Pi Agent', provider: 'pi', cwd: hiveHome }, { allowUngovernedProviders: true });
   return injection.env.PI_CODING_AGENT_DIR;
 }
 

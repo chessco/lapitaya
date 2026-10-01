@@ -1,0 +1,12 @@
+✔ [AUTHBIND-27] lock acquisition failure fails closed — nothing runs, a foreign lock is never removed (5123.5817ms)
+✔ [AUTHBIND-27b] a stale lock (>5 s) is recovered; the holder removes only its own lock (4082.4017ms)
+✔ [AUTHBIND-27c] REAL multi-process contention: a lock held by another process serializes (waits), then proceeds (4787.921ms)
+✔ [AUTHBIND-27d] REAL multi-process contention: three processes appending concurrently keep the ledger whole (6513.6414ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 24718.0793

@@ -50,7 +50,7 @@ async function floor(t, config = { autoMode: true, notifications: false }) {
   });
   hive.setCimaHandler((from, cima, id, to) => recordBanner(lapitaya.handle(from, to, cima, id)));
   const server = new HookServer(hive, () => null, () => config, undefined, undefined, undefined, undefined, lapitaya);
-  const hook = (agentId, payload) => server.handle({ agent_id: agentId, session_id: `s-${agentId}`, ...payload });
+  const hook = (agentId, payload) => server.handle({ agent_id: agentId, agent_token: hive.registerAgentToken(agentId), session_id: `s-${agentId}`, ...payload });
   const pre = (agentId, tool, input) => hook(agentId, { hook_event_name: 'PreToolUse', tool_name: tool, tool_input: input });
   const ran = (agentId, command, stdout, failed = false) => hook(agentId, failed
     ? { hook_event_name: 'PostToolUseFailure', tool_name: 'Bash', tool_input: { command }, error: stdout }

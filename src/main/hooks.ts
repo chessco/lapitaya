@@ -222,12 +222,14 @@ export class HookServer {
         `IDENTITY_MISMATCH — payload agent_id '${claimedAgentId}' does not match trusted invocation token identity '${trustedAgentId}'`);
     }
 
-    if (claimedAgentId && !trustedAgentId && this.hive?.hasRegisteredTokens()) {
+    // v0.14: with governance wired there is no "no tokens registered yet" fallback — a claimed agent_id
+    // that no capability token vouches for is never an actor (provider/agent spoof).
+    if (claimedAgentId && !trustedAgentId && (this.hive?.hasRegisteredTokens() || this.governance)) {
       return this.denyPre(claimedAgentId, p, 'IDENTITY_UNTRUSTED',
         `IDENTITY_UNTRUSTED — missing or invalid agent capability token for '${claimedAgentId}'`);
     }
 
-    const agentId = trustedAgentId || (this.hive?.hasRegisteredTokens() ? undefined : claimedAgentId);
+    const agentId = trustedAgentId || ((this.hive?.hasRegisteredTokens() || this.governance) ? undefined : claimedAgentId);
 
     if (event === 'PreToolUse' && !agentId) {
       return this.denyPre(claimedAgentId, p, 'ACTOR_CONTEXT_MISSING',

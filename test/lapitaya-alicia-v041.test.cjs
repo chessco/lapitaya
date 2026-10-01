@@ -188,7 +188,7 @@ test('[INTENT-NEG-03] Alicia sends an intent directly to a tool or a worker → 
   assert.equal(f.traces().length, 0);
   // And no one can post into the hive AS Alicia outside the boundary (IPC guard in main).
   const main = fs.readFileSync(path.join(ROOT, 'src/main/index.ts'), 'utf8');
-  assert.match(main, /ipcMain\.handle\('hive:send'[\s\S]{0,400}sender\.trim\(\)\.toLowerCase\(\) === ALICIA_ACTOR_ID[\s\S]{0,80}return \{ ok: false/);
+  assert.match(main, /ipcMain\.handle\('hive:send'[\s\S]{0,400}\.trim\(\)\.toLowerCase\(\) === ALICIA_ACTOR_ID[\s\S]{0,80}return \{ ok: false/);
 });
 
 test('[INTENT-NEG-04] Alicia tries to produce DECISION PASS or approve → NOT_AUTHORIZED', async (t) => {

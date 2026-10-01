@@ -30,7 +30,8 @@ import { HiveManager, type AgentMeta, type HiveMessage, type HiveTask } from './
 import { HookServer } from './hooks';
 import { CimaRuntimeService } from './cimaRuntime';
 import { createHumanIdentityService, newSessionId } from './humanIdentity';
-import { createHumanGovernanceHandlers } from './humanGovernanceIpc';
+import { createHumanGovernanceHandlers, resolveRendererSender } from './humanGovernanceIpc';
+import { loadOrCreateKey } from './authBinding';
 import { AUTONOMY_STAGES, DEFAULT_AUTONOMY_STAGE, type AutonomyStage } from '../shared/lapitaya/autonomy';
 import { phaseForAgent } from '../shared/lapitaya/agents';
 import { recordBanner } from '../shared/lapitaya/cimaRuntime';
@@ -263,10 +264,20 @@ const lapitayaStage = (): AutonomyStage => {
   const s = (readConfig() as { lapitayaAutonomyStage?: unknown }).lapitayaAutonomyStage;
   return (AUTONOMY_STAGES as readonly unknown[]).includes(s) ? (s as AutonomyStage) : DEFAULT_AUTONOMY_STAGE;
 };
+// v0.14: the approval-seal key lives in the app's own user-data directory — outside the hive, so no
+// agent workspace or governance path of the hive reaches it. Created once; null (→ fail closed) if unreadable.
+let lapitayaSealKey: Buffer | null | undefined;
+const lapitayaSealKeyFile = (): Buffer | null => {
+  if (lapitayaSealKey === undefined) lapitayaSealKey = loadOrCreateKey(join(app.getPath('userData'), 'lapitaya-governance-seal.key'));
+  return lapitayaSealKey;
+};
 const lapitaya = new CimaRuntimeService({
   hiveRoot: () => hive.root(),
   godId: () => hive.registry().godId ?? 'god',
   stage: lapitayaStage,
+  sealKey: lapitayaSealKeyFile,
+  cwdOf: (agentId) => hive.registry().agents[agentId]?.cwd ?? null,
+  providerOf: (agentId) => hive.registry().agents[agentId]?.provider ?? null,
   phaseOf: (agentId) => phaseForAgent(hive.registry(), agentId),
   taskOf: (agentId) => {
     const t = (hive.tasks() as { tasks?: Array<{ id?: string; assignee?: string; status?: string }> })?.tasks ?? [];
@@ -3565,18 +3576,15 @@ ipcMain.handle('hive:messages', (_evt, opts: unknown) =>
 );
 ipcMain.handle('hive:send', (_evt, partial: Partial<HiveMessage>, from: unknown) => {
   if (!hive.enabled()) return { ok: false, error: 'hive disabled (no harnessHome)' };
-  const sender = typeof from === 'string' ? from : 'system';
   // Alicia v0.4.1: messages under Alicia's id exist only through the intent
   // boundary (validated, re-classified, governed). Nothing may forge one here.
-  if (sender.trim().toLowerCase() === ALICIA_ACTOR_ID) {
+  if ((typeof from === 'string' ? from : '').trim().toLowerCase() === ALICIA_ACTOR_ID) {
     return { ok: false, error: 'messages from alicia go through the intent boundary (alicia:submit)' };
   }
-  if (sender === 'human' || (partial && partial.from === 'human')) {
-    const humanCtx = humanIdentity.resolve(_evt);
-    if (!humanCtx) {
-      return { ok: false, error: 'HUMAN_IDENTITY_REQUIRED — human message sender requires trusted human context' };
-    }
-  }
+  // v0.14: the renderer is not a trusted actor — it can speak only as the human, with a trusted context.
+  const who = resolveRendererSender(humanIdentity, _evt, from, partial);
+  if (!who.ok) return { ok: false, error: who.error };
+  const sender = who.sender;
   const msg = hive.send(partial ?? {}, sender);
   // Count only what a PERSON sent. Every renderer surface that dispatches on a
   // human's behalf passes 'human' (Command Center dispatch, thread replies, ASK

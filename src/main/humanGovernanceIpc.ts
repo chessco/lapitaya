@@ -66,3 +66,35 @@ export function createHumanGovernanceHandlers({ runtime, identity }: HumanGovern
   };
 }
 export type HumanGovernanceHandlers = ReturnType<typeof createHumanGovernanceHandlers>;
+
+export type RendererSendDecision =
+  | { ok: true; sender: string }
+  | { ok: false; code: 'SENDER_NOT_PERMITTED' | 'HUMAN_IDENTITY_REQUIRED'; error: string };
+
+/**
+ * v0.14 — WHO a message sent from the renderer is from. The renderer is not a trusted actor: it can
+ * speak as exactly one identity, the human, and only when main resolves a trusted human context for
+ * the sending window. Every other identity (an agent, the orchestrator, Alicia, "system" by name) is
+ * refused, and a `from` inside the payload that disagrees with the resolved sender is a forgery.
+ * (A send with no `from` at all is the harness relaying on the human's behalf, as before.)
+ */
+export function resolveRendererSender(
+  identity: { resolve(evt: unknown): HumanContext | null },
+  evt: unknown,
+  from: unknown,
+  partial: unknown
+): RendererSendDecision {
+  const claimedInPayload = partial && typeof partial === 'object' ? (partial as { from?: unknown }).from : undefined;
+  const requested = typeof from === 'string' ? from : undefined;
+  const wantsHuman = requested === 'human' || claimedInPayload === 'human';
+  if (requested !== undefined && requested !== 'human') {
+    return { ok: false, code: 'SENDER_NOT_PERMITTED', error: `SENDER_NOT_PERMITTED — the renderer may only send as the human (not "${requested.slice(0, 40)}")` };
+  }
+  if (claimedInPayload !== undefined && claimedInPayload !== null && claimedInPayload !== '' && claimedInPayload !== (requested ?? 'system')) {
+    return { ok: false, code: 'SENDER_NOT_PERMITTED', error: 'SENDER_NOT_PERMITTED — the message names a sender different from the one main resolved' };
+  }
+  if (wantsHuman && !identity.resolve(evt)) {
+    return { ok: false, code: 'HUMAN_IDENTITY_REQUIRED', error: 'HUMAN_IDENTITY_REQUIRED — human message sender requires trusted human context' };
+  }
+  return { ok: true, sender: requested ?? 'system' };
+}

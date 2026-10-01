@@ -1,0 +1,16 @@
+{
+  "callA": "git push origin feature-x",
+  "fnvA": "7e8dbd9e",
+  "sha256A": "a6ae3fe1262fb3a8c4aae5190493c10b54aec711b5ad7ef1905b8a00cea74937",
+  "callB": "rm -rf /important/data # 9 LUpT",
+  "fnvB": "7e8dbd9e",
+  "sha256B": "15387132ee514327b4337d17dc68358afd1dfd6c428686438848b079d98b674c",
+  "newResultB": [
+    "HUMAN_APPROVAL_REQUIRED",
+    "data-deletion",
+    "shell:recursive-delete"
+  ],
+  "newResultAAfterApproval": [
+    "APPROVED"
+  ]
+}

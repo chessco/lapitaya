@@ -16,11 +16,17 @@
  */
 
 import { ACTION_RISK, type ActionCategory, type RiskLevel } from './autonomy';
+import { canonicalizePath, isInside, type CanonicalPath } from './authSubject';
 
 export interface ToolCallContext {
   /** Absolute hive root (`<harnessHome>/hive`). Writes inside it are hive
    *  coordination, except the governance files listed below. */
   hiveRoot?: string | null;
+  /** v0.14: the agent's working directory, so a relative path has one meaning. */
+  cwd?: string | null;
+  /** v0.14: realpath-aware canonicalizer supplied by main (symlinks, junctions, 8.3 names).
+   *  Without it the pure lexical canonicalization is used. */
+  resolvePath?: (raw: string) => CanonicalPath;
 }
 
 export interface ToolRisk {
@@ -64,13 +70,39 @@ const DOC_PATH = /\.(md|mdx|txt|rst|adoc)$/;
 const TEST_PATH = /(^|\/)(test|tests|__tests__|spec)\/|\.(test|spec)\.[cm]?[jt]sx?$/;
 const CONFIG_PATH = /\.(json|ya?ml|toml|ini|cfg|conf)$|(^|\/)\.[a-z]+rc(\.[a-z]+)?$/;
 
-/** Classify a path an agent is about to WRITE. */
-export function classifyWritePath(path: string, ctx: ToolCallContext = {}): ToolRisk {
-  const p = norm(path);
-  const root = ctx.hiveRoot ? norm(ctx.hiveRoot).replace(/\/+$/, '') + '/' : null;
-  if (root && p.startsWith(root)) {
-    const rel = p.slice(root.length);
-    if (HIVE_GOVERNANCE.test(rel)) return result('governance-tamper', `write hive governance file ${path}`, 'hive-governance-path');
+/** v0.14: every canonical meaning a path may have. A path the caller can resolve to ONE object
+ *  (absolute, or relative with a known cwd, or a main-side resolver) has one candidate; a relative
+ *  path with no known base is judged as itself AND as if it sat in the hive, and the stricter
+ *  reading wins — an actor cannot pick the spelling that gets the lighter classification. */
+function pathCandidates(path: string, ctx: ToolCallContext): CanonicalPath[] {
+  const first = ctx.resolvePath ? ctx.resolvePath(path) : canonicalizePath(path, { base: ctx.cwd ?? null });
+  if (first.absolute || first.ambiguous || !ctx.hiveRoot) return [first];
+  const root = ctx.resolvePath ? ctx.resolvePath(ctx.hiveRoot) : canonicalizePath(ctx.hiveRoot);
+  if (root.ambiguous || !root.absolute) return [first];
+  return [first, canonicalizePath(path, { base: root.display })];
+}
+
+function hiveRootKey(ctx: ToolCallContext): string | null {
+  if (!ctx.hiveRoot) return null;
+  const c = ctx.resolvePath ? ctx.resolvePath(ctx.hiveRoot) : canonicalizePath(ctx.hiveRoot);
+  return c.ambiguous || !c.absolute ? null : c.key.replace(/\/+$/, '');
+}
+
+const RISK_RANK: Record<RiskLevel, number> = { LOW: 0, MEDIUM: 1, HIGH: 2 };
+
+function stricter(a: ToolRisk | null, b: ToolRisk): ToolRisk {
+  if (!a) return b;
+  if (RISK_RANK[b.risk] !== RISK_RANK[a.risk]) return RISK_RANK[b.risk] > RISK_RANK[a.risk] ? b : a;
+  return b.category === 'governance-tamper' ? b : a;
+}
+
+function classifyCanonicalWrite(path: string, c: CanonicalPath, ctx: ToolCallContext): ToolRisk {
+  if (c.ambiguous) return result('governance-tamper', `write ambiguous path ${path} (${c.reason})`, 'path-ambiguous');
+  const p = c.key;
+  const root = hiveRootKey(ctx);
+  if (root && isInside(p, root)) {
+    const rel = p === root ? '' : p.slice(root.length + 1);
+    if (rel === '' || HIVE_GOVERNANCE.test(rel)) return result('governance-tamper', `write hive governance file ${path}`, 'hive-governance-path');
     return result('hive-coordination', `write hive file ${path}`, 'hive-path');
   }
   if (GOVERNANCE_PATH.test(p)) return result('governance-tamper', `write governance file ${path}`, 'governance-path');
@@ -83,10 +115,18 @@ export function classifyWritePath(path: string, ctx: ToolCallContext = {}): Tool
   return result('code-change', `write ${path}`, 'code-path');
 }
 
-/** Classify a path an agent is about to READ. Only secrets are sensitive. */
-export function classifyReadPath(path: string): ToolRisk {
-  const p = norm(path);
-  if (SECRET_PATH.test(p)) return result('secrets', `read secret-bearing file ${path}`, 'secret-path');
+/** Classify a path an agent is about to WRITE. The path is canonicalized FIRST (v0.14). */
+export function classifyWritePath(path: string, ctx: ToolCallContext = {}): ToolRisk {
+  let out: ToolRisk | null = null;
+  for (const c of pathCandidates(path, ctx)) out = stricter(out, classifyCanonicalWrite(path, c, ctx));
+  return out!;
+}
+
+/** Classify a path an agent is about to READ. Only secrets are sensitive. The raw spelling and
+ *  every canonical meaning are all checked, so `a/../.env` is the secret it is. */
+export function classifyReadPath(path: string, ctx: ToolCallContext = {}): ToolRisk {
+  const keys = [norm(path), ...pathCandidates(path, ctx).filter((c) => !c.ambiguous).map((c) => c.key)];
+  if (keys.some((k) => SECRET_PATH.test(k))) return result('secrets', `read secret-bearing file ${path}`, 'secret-path');
   return result('read-code', `read ${path}`, 'read');
 }
 
@@ -131,6 +171,49 @@ export function shellSegments(command: string): string[] {
 /** Shell redirection, command substitution, file mutation, or destructive find options. */
 const SHELL_MUTATION_OP = /(>|>>|1>|2>|>&|\|&|\$\(|\b(tee|cp|mv|rm|touch|truncate|dd)\b|\bfind\b[^\n;&]*-(delete|exec|execdir|ok|okdir)\b|`[^`]+`)/i;
 
+/** v0.14: a shell command mutates, as far as its text says (redirection, tee, cp, mv, rm, touch, …). */
+export function isShellMutation(command: string): boolean {
+  return SHELL_MUTATION_OP.test(command);
+}
+
+const AGENT_DIR_ID = '([^/\\s"\'`=;|&<>()]+)';
+const FOREIGN_DIR_PATTERNS: readonly RegExp[] = [
+  new RegExp(`agents/${AGENT_DIR_ID}/(?:outbox|inbox)\\b`, 'gi'),
+  new RegExp(`\\.\\./${AGENT_DIR_ID}/(?:outbox|inbox)\\b`, 'gi')
+];
+
+/**
+ * v0.14 sender authenticity (lexical, shell side): the ids of OTHER agents whose outbox/inbox a command
+ * names, after separators and `x/..` hops are folded. An agent sends only through its own outbox, so
+ * a mutating command that names someone else's is a forged sender. Variables (`$D/outbox`) cannot be
+ * resolved here — see docs, remaining risks.
+ */
+export function foreignAgentDirsInCommand(command: string, selfId: string): string[] {
+  const text = command.replace(/\\/g, '/');
+  const folded = (() => {
+    let t = text;
+    for (let i = 0; i < 20; i++) {
+      const n = t.replace(/[^/\s"'`=;|&<>()]+\/\.\.(?=\/|\s|$|["'`])/g, '');
+      if (n === t) break;
+      t = n;
+    }
+    return t;
+  })();
+  const self = selfId.trim().toLowerCase();
+  const found = new Set<string>();
+  for (const t of [text, folded]) {
+    for (const re of FOREIGN_DIR_PATTERNS) {
+      re.lastIndex = 0;
+      for (let m = re.exec(t); m; m = re.exec(t)) {
+        const id = m[1].toLowerCase();
+        if (id === self || /^[$%~.]/.test(id)) continue;
+        found.add(id);
+      }
+    }
+  }
+  return [...found];
+}
+
 export function classifyShell(command: string): ToolRisk {
   const cmd = command.trim();
   for (const [re, category, rule] of HIGH_SHELL) {
@@ -169,7 +252,7 @@ export function classifyToolCall(tool: string, input: unknown, ctx: ToolCallCont
   }
   if (READ_TOOLS.has(tool)) {
     const path = str(i.file_path) || str(i.path);
-    if (path) return classifyReadPath(path);
+    if (path) return classifyReadPath(path, ctx);
     return result('read-code', `${tool}`, 'read-tool');
   }
   if (DELEGATE_TOOLS.has(tool)) return result('analysis', `${tool}: ${str(i.description)}`, 'delegate');

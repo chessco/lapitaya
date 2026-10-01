@@ -1,0 +1,6 @@
+Bash                 trace.kind = command
+PowerShell           trace.kind = command
+shell                trace.kind = tool
+run_shell_command    trace.kind = tool
+evidence of codex-style shell trace -> PASS []
+agent with ONLY shell/run_shell_command traces -> BLOCKED [ 'EVIDENCE_FIRST' ]

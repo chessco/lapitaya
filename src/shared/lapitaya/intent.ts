@@ -78,6 +78,9 @@ export interface IntentRecord {
   reason?: string;
   approvalId?: string;
   fingerprint?: string;
+  /** v0.14: SHA-256 of the call part (agent, provider, tool, targets, input digest) — the key of the
+   *  REQUEST-gate exemption. The FNV `fingerprint` above is a legacy correlation id only. */
+  callFingerprint?: string;
   target: { agent?: string; path?: string; tool?: string; input?: string; taskId?: string } | null;
   /** The task the intent is about (target or context), if any. */
   taskId: string | null;

@@ -261,7 +261,8 @@ test('[OBS-11] no second ledger: Alicia persists nothing; the projection reads t
   await f.ran('god', 'npm test', 'ok');
   for (let i = 0; i < 3; i++) project(f.lapitaya);
   const files = fs.readdirSync(path.join(f.hive.root(), 'lapitaya')).sort();
-  assert.deepEqual(files.filter((x) => !['approvals.json', 'cima-ledger.jsonl', 'proposals.json', 'traces.jsonl'].includes(x)), [], `unexpected files: ${files}`);
+  // '.seal.key' (v0.14) is the RUNTIME's own approval-seal key — Alicia still persists nothing.
+  assert.deepEqual(files.filter((x) => !['approvals.json', 'cima-ledger.jsonl', 'proposals.json', 'traces.jsonl', '.seal.key'].includes(x)), [], `unexpected files: ${files}`);
   const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : [e.name]));
   assert.equal(walk(f.hive.root()).filter((n) => /alicia|observ/i.test(n)).length, 0);
   const handler = code(read('src/main/index.ts'));

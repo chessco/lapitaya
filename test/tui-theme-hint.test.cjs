@@ -47,7 +47,7 @@ test('crush: light theme writes options.tui.transparent and COLORFGBG', async (t
 
   const injection = await hive.ensureAgent(
     { id: 'crush-t', name: 'Crush', provider: 'crush', cwd: home },
-    { theme: 'light' }
+    { theme: 'light', allowUngovernedProviders: true }
   );
   assert.equal(injection.env.COLORFGBG, '0;15');
   if (!proxyBridgeBound(injection, path.join(home, 'hive', 'agents', 'crush-t'))) return;
@@ -64,7 +64,7 @@ test('crush: dark theme sends the dark hint and still goes transparent', async (
 
   const injection = await hive.ensureAgent(
     { id: 'crush-d', name: 'Crush', provider: 'crush', cwd: home },
-    { theme: 'dark' }
+    { theme: 'dark', allowUngovernedProviders: true }
   );
   assert.equal(injection.env.COLORFGBG, '15;0');
   if (!proxyBridgeBound(injection, path.join(home, 'hive', 'agents', 'crush-d'))) return;
@@ -78,7 +78,7 @@ test('no theme passed: no hint, no options block (old behaviour)', async (t) => 
   const hive = new HiveManager(() => home);
   t.after(() => { try { hive.stopAllProxyBridges(); } catch { /* already gone */ } });
 
-  const injection = await hive.ensureAgent({ id: 'crush-n', name: 'Crush', provider: 'crush', cwd: home });
+  const injection = await hive.ensureAgent({ id: 'crush-n', name: 'Crush', provider: 'crush', cwd: home }, { allowUngovernedProviders: true });
   assert.equal(injection.env.COLORFGBG, undefined);
   if (!proxyBridgeBound(injection, path.join(home, 'hive', 'agents', 'crush-n'))) return;
   const config = JSON.parse(fs.readFileSync(path.join(home, 'hive', 'agents', 'crush-n', 'crush.json'), 'utf8'));
@@ -92,7 +92,7 @@ test('opencode: theme lands in the per agent config dir as the system theme', as
 
   const injection = await hive.ensureAgent(
     { id: 'oc-1', name: 'OpenCode', provider: 'opencode', cwd: home },
-    { theme: 'light' }
+    { theme: 'light', allowUngovernedProviders: true }
   );
   const dir = injection.env.OPENCODE_CONFIG_DIR;
   assert.ok(dir, 'OPENCODE_CONFIG_DIR is set');

@@ -1,0 +1,16 @@
+P1 A first call                          ["HUMAN_APPROVAL_REQUIRED","HIGH","7e8dbd9e"]
+P1 crafted B (ms to craft)               ["rm -rf /important/data # 9 LUpT",10,110]
+P1 fp(A) vs fp(B)                        ["7e8dbd9e","7e8dbd9e"]
+P1 authorize(B) using approval of A      ["APPROVED","data-deletion","shell:recursive-delete","apr-mupxl28c-1"]
+P1 approval record after                 ["consumed","run: git push origin feature-x"]
+P2b Write 13-0jMssF/hive/lapitaya/approvals.json ["HUMAN_APPROVAL_REQUIRED","governance-tamper","hive-governance-path"]
+P2b Write 13-0jMssF/hive/lapitaya/approvals.json ["SUPERVISED","config-change","config-path"]
+P5b A.listApprovals() len (disk has 1)   0
+P5b A.cimaRecords() len (disk has 1)     0
+P5b fresh instance sees                  [1,1]
+P5b A.decide (locked) finds approval     true
+P6b lines / lines containing 2 records   [2,1]
+P6b parseable / total                    [1,2]
+P10 two instances, lock held, approvals  2
+P11 pending expired -> re-asks           ["HUMAN_APPROVAL_REQUIRED",["pending","expired"]]
+P12 note                                 actionFingerprints is a Set<fnv32> never pruned (code ref cimaRuntime.ts:134,246,521)

@@ -1,0 +1,13 @@
+PASS  A0  the real application booted and its renderer page loaded from the app bundle  [file:///C:/PitayaCode/LaPitaya/out/renderer/index.html]
+PASS  A1  the preload bridge is present  [207]
+PASS  A2  the renderer bridge exposes no authorize/execute/approve-by-id capability beyond the human channel  [[]]
+PASS  A3  the real renderer is recognized as the human by the real main process (trusted URL + own window)  [hum-ddaedd5a1873f278062a]
+PASS  A4  real hive:send refuses a renderer-supplied agent identity (god)  [{"ok":false,"error":"SENDER_NOT_PERMITTED — the renderer may only send as the human (not \"god\")"}]
+PASS  A5  real hive:send refuses Alicia as a renderer sender (intent boundary only)  [{"ok":false,"error":"messages from alicia go through the intent boundary (alicia:submit)"}]
+PASS  A6  real hive:send refuses a payload "from" that disagrees with the resolved sender  [{"ok":false,"error":"SENDER_NOT_PERMITTED — the message names a sender different from the one main resolved"}]
+PASS  A7  real hive:send accepts the human, attributed to "human", from the trusted renderer  [true]
+PASS  A8  deciding an unknown approval does nothing (null)  [""]
+PASS  A9  the real runtime answers the governance read channels  [0]
+PASS  A10  no renderer console errors or uncaught exceptions during the session  [{"consoleErrors":[],"exceptions":[]}]
+PASS  A11  the main process logged no uncaught exception / crash
+PASS  A12  the main process log carries no agent token  [""]

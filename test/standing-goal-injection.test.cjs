@@ -15,12 +15,20 @@ require.cache[electron] = {
 };
 
 const { HookServer } = loadTs('src/main/hooks.ts');
+const { HiveManager } = loadTs('src/main/hive.ts');
+const os = require('node:os');
 
 function harness(initialGoal = 'Ship the release safely.') {
   let goal = initialGoal;
+  // v0.10: hooks are authenticated by capability token. The stub delegates to the PRODUCTION token registry.
+  const tokens = new HiveManager(() => os.tmpdir());
   const hive = {
     recordSession() {},
-    isGod() { return false; }
+    isGod() { return false; },
+    registerAgentToken: (id) => tokens.registerAgentToken(id),
+    verifyAgentToken: (id, token) => tokens.verifyAgentToken(id, token),
+    getAgentForToken: (token) => tokens.getAgentForToken(token),
+    hasRegisteredTokens: () => tokens.hasRegisteredTokens()
   };
   const server = new HookServer(
     hive,
@@ -32,6 +40,7 @@ function harness(initialGoal = 'Ship the release safely.') {
   );
   const fire = (event, sessionId = 'session-1', agentId = 'jim-1') => server.handle({
     agent_id: agentId,
+    agent_token: hive.registerAgentToken(agentId),
     hook_event_name: event,
     session_id: sessionId
   });

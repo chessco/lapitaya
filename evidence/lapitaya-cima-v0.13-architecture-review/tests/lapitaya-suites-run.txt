@@ -1,0 +1,1988 @@
+✖ [ALICIA-01] Alicia can read CIMA status (derived from the runtime, not stored) (4337.9122ms)
+✖ [ALICIA-02] Alicia presents existing evidence verbatim and never fabricates any (3927.1773ms)
+✖ [ALICIA-03] Alicia receives governance events from the existing runtime event stream (2594.5815ms)
+✔ [ALICIA-04] Alicia produces a localized explanation and keeps the technical detail intact (2.5455ms)
+✔ [ALICIA-05] Alicia cannot directly execute a HIGH-risk action (2975.7754ms)
+✔ [ALICIA-06] Alicia cannot become DECISION authority (4266.9255ms)
+✔ [ALICIA-07] Alicia does not appear as a CIMA worker (3508.5661ms)
+✖ [ALICIA-08] Alicia respects uiLocale (and notificationLocale) without translating identifiers (4697.7332ms)
+✔ [ALICIA-09] Alicia cannot modify CIMA state directly (4566.9878ms)
+✔ [ALICIA-10] Alicia produces an intent that El Inge receives as a request (3439.5513ms)
+✖ [NEG-01] Alicia → direct HIGH-risk tool → BLOCKED at PreToolUse (3091.7378ms)
+✔ [NEG-02] Alicia → DECISION PASS through the real router → BLOCKED, not authority (4496.2911ms)
+✔ [NEG-03] Alicia → modify CIMA state (ledger / approvals) → BLOCKED (3053.1596ms)
+✖ [NEG-04] Alicia → bypass completionGate → BLOCKED (4598.0647ms)
+✔ event adapters: hooks and task ledger map to Alicia events; noise and junk are dropped (1.0418ms)
+✔ presence is derived by priority: approval > blocked > warning > celebrating > notifying > idle (0.464ms)
+✔ context is minimal and bounded; read state is the only thing the human changes (3169.9445ms)
+✖ conversation citations must point at runtime-recorded refs (4726.323ms)
+✔ the lapitaya barrel exposes the Alicia layer; alicia i18n keys match across es-MX and en-US (3.2323ms)
+✔ [INTENT-CLS] the deterministic classifier separates CONVERSATION / REQUEST / ACTION (45.9224ms)
+✔ [INTENT-01] CONVERSATION → Alicia responds; no CIMA, no ledger, no El Inge, no approval (2727.469ms)
+✔ [INTENT-02] REQUEST → El Inge receives a structured, stamped request → proposal only, no execution (2991.6398ms)
+✖ [INTENT-03] ACTION LOW → CIMA → AUTO; El Inge executes through PreToolUse (ALLOW) (2956.9097ms)
+✖ [INTENT-04] ACTION MEDIUM → CIMA → SUPERVISED (2912.5799ms)
+✖ [INTENT-05] ACTION HIGH → HUMAN_APPROVAL_REQUIRED → Alicia explains → human approves → one execution (3128.9299ms)
+✔ [INTENT-NEG-01] Alicia tries to execute HIGH directly → BLOCKED (3160.61ms)
+✔ [INTENT-NEG-02] Alicia labels HIGH as LOW (and as CONVERSATION) → runtime reclassifies → HUMAN_APPROVAL_REQUIRED (4552.5699ms)
+✔ [INTENT-NEG-03] Alicia sends an intent directly to a tool or a worker → BLOCKED (3361.2292ms)
+✔ [INTENT-NEG-04] Alicia tries to produce DECISION PASS or approve → NOT_AUTHORIZED (4600.132ms)
+✖ [INTENT-NEG-05] Alicia tries task.status = done without DECISION PASS → BLOCKED by completionGate (4642.7001ms)
+✔ [INTENT-NEG-06] malformed intents (missing id / source / type, bad status, not an object) → DENY / INVALID (2892.4694ms)
+✔ [INTENT-ARCH-01] the Alicia layer has no path to a tool, the hive or governance authority (5.255ms)
+✔ [INTENT-ARCH-02] ALICIA → ACTION INTENT → (boundary) → CIMA → EL INGE; never ALICIA → TOOL (5585.3302ms)
+✔ [INTENT-ARCH-03] governance classification: governance files protected, Alicia not special, provider-neutral (2.8639ms)
+✔ [INTENT-EVENTS] intents are observable on the EXISTING runtime event stream; conversation is silent (4085.7816ms)
+✖ [REQ-01] REQUEST + LOW + no confirmation → El Inge attempts execution → BLOCKED (3266.5684ms)
+✖ [REQ-02] REQUEST + MEDIUM + no confirmation → BLOCKED (2919.7274ms)
+✖ [REQ-03] REQUEST + HIGH + no confirmation → BLOCKED, and no approval is even raised (2991.0194ms)
+✖ [REQ-04] REQUEST + valid human confirmation → CIMA → LOW → AUTO → execution allowed (2910.601ms)
+✖ [REQ-05] REQUEST (change scope) + confirmation → CIMA → MEDIUM → SUPERVISED (3063.3741ms)
+✖ [REQ-06] REQUEST + confirmation + HIGH → existing HUMAN_APPROVAL flow; confirmation ≠ approval (3261.4809ms)
+✖ [REQ-07] confirmation replay: one confirmation → one transition; it can never unlock another proposal (3731.2078ms)
+✔ [REQ-08] Alicia attempts confirmation → NOT_AUTHORIZED (runtime API, words, and metadata) (3850.1484ms)
+✔ [REQ-09] El Inge attempts self-confirmation → NOT_AUTHORIZED; messages and tool writes change nothing (3876.7338ms)
+✖ [REQ-10] confirmed REQUEST + actual HIGH action → HIGH policy applies (never inherits the request) (3176.6939ms)
+✖ [REQ-11] confirmed harmless REQUEST + incompatible actual action → runtime re-classifies → not permitted (3277.5986ms)
+✖ [REQ-12] CONVERSATION stays side-effect free (no proposal, no ledger, no gate) (2832.9781ms)
+✖ [REQ-13] ACTION behaviour is unchanged, even while a REQUEST is pending (3496.4951ms)
+✔ [REQ-14] completionGate still blocks unauthorized completion (5070.6084ms)
+✔ [REQ-15] direct tool bypass without confirmation stays blocked — any agent, any provider (4058.1365ms)
+✔ [REQ-NEG] only the human confirms; metadata never authorizes; malformed confirmations deny safely (5220.3196ms)
+✔ [REQ-NEG-TAMPER] a proposal edited on disk is refused; re-validation blocks a stale proposal (4652.4796ms)
+✔ [REQ-ARCH] structural: gate in authorize before approvals; human-only confirmation call sites; no bypass (128.5455ms)
+✔ [REQ-EVENTS] proposal transitions ride the EXISTING runtime stream; Alicia shows them, humanOnly (3747.9461ms)
+✔ [UI-01] a pending REQUEST appears visually (3166.8563ms)
+✔ [UI-02] the proposal shows the data the runtime returned — no second source of truth (3252.1741ms)
+✔ [UI-03] the risk shown is the runtime scope; the UI never computes it (3438.0114ms)
+✔ [UI-04] Confirm calls only the authorized IPC: preload → lapitaya:confirmRequest → runtime (by human) (2874.0444ms)
+✔ [UI-05] a successful confirmation updates the state from the runtime (3109.6959ms)
+✔ [UI-06] a successful cancellation updates the state; the runtime processes it (3565.9426ms)
+✔ [UI-07] double-click / double-submit sends ONE confirmation; buttons disabled while in flight (3779.7368ms)
+✔ [UI-08] stale / changed-elsewhere / replaced proposals show the runtime state; nothing is retried (5034.5964ms)
+✔ [UI-09] a tampered proposal / forged token is refused by the runtime and shown as an error (6477.2695ms)
+✖ [UI-10] HIGH: confirming the REQUEST is not an approval — CIMA still requires HUMAN_APPROVAL (3332.4796ms)
+✔ [UI-11] Alicia (and her UI) get no execution API (2995.2718ms)
+✔ [UI-12] the renderer has no direct access to the runtime, filesystem, ledger or providers (4.4067ms)
+✔ [UI-13] no UI → El Inge / hive path; UI-14: no UI → tool path (13.4966ms)
+✔ [UI-15][UI-16] i18n: es-MX and en-US are complete, identical key trees, no fallback, no hardcoded text (126.9707ms)
+✔ [UI-17] keyboard: native controls only; Confirm needs a deliberate acknowledgement; no key shortcut confirms (3502.3213ms)
+✔ [UI-18] accessible names, descriptions, live regions and visible focus (3568.7636ms)
+✖ [UI-E2E] USER → ALICIA UI → REQUEST → PROPOSED → Confirm → runtime → CIMA → authorize → PreToolUse → execution (3462.6295ms)
+✖ [UI-E2E-NEG] REQUEST → PROPOSED → NO confirm → agent attempts a tool → BLOCKED, with or without the UI (3528.6404ms)
+✔ [OBS-01] REQUEST_PROPOSED → correct, evidence-backed explanation (2983.796ms)
+✖ [OBS-02] REQUEST_CONFIRMATION_REQUIRED → blocked, rule, runtime risk, "no se ejecutó" (2962.1215ms)
+✖ [OBS-03] REQUEST_SCOPE_EXCEEDED → correct explanation (MEDIUM stays MEDIUM) (3120.5972ms)
+✔ [OBS-04] STALE_PROPOSAL → correct explanation (2733.1233ms)
+✔ [OBS-05] TAMPERED → correct explanation (3143.2184ms)
+✔ [OBS-06] NOT_AUTHORIZED → correct explanation (3419.5857ms)
+✖ [OBS-07] HUMAN_APPROVAL_REQUIRED → "not an approval", then approval → execution, all linked (3477.9578ms)
+✖ [OBS-08][OBS-09][OBS-10] Alicia cannot modify the event, the risk or the decision (3643.2978ms)
+✔ [OBS-11] no second ledger: Alicia persists nothing; the projection reads the runtime files only (3653.5463ms)
+✔ [OBS-12] no explanation without evidence: unlinked traces claim nothing; every fact carries its source (3347.4454ms)
+✖ [OBS-13][OBS-14] the timeline is exactly the real facts, in order, and read only (3128.8779ms)
+✖ [OBS-15] no tokens, secrets, commands, paths or outputs in the projection or the UI (3459.9702ms)
+✔ [OBS-16][OBS-17] es-MX and en-US: identical trees, every key the projection can emit exists, no fallback (3507.4692ms)
+✔ [OBS-18] governance explanation has no LLM / provider / network dependency (2.0816ms)
+✖ [OBS-19] the governance event stream still works; the new signals raise no notifications (3541.5049ms)
+✖ [OBS-20][OBS-21] REQUEST confirmation and HIGH approval behave exactly as in v0.5 (3556.7555ms)
+✖ [OBS-22][OBS-23] an unconfirmed REQUEST still blocks; removing Alicia UI or projection removes no guarantee (3470.9051ms)
+✔ [OBS-NEG-01] Alicia cannot fabricate PASS, DENY, HIGH, evidence, approval or confirmation (3524.5113ms)
+✔ [OBS-NEG-02] missing event / rule / risk / evidence / unknown code → "information unavailable", never an inference (1.7877ms)
+✔ [DC-01][DC-02][DC-03] a pending REQUEST appears, with runtime scope and resolvable evidence (3154.7653ms)
+✔ [DC-04][DC-05] confirm and cancel go through lapitaya:confirmRequest / lapitaya:cancelRequest only (3330.2582ms)
+✖ [DC-06][DC-07] a pending HIGH approval appears with the actual runtime risk, operation and explanation (3085.9955ms)
+✖ [DC-08][DC-09] approve / reject use the existing human approval (lapitaya:decide → decide(id, approve, "human")) (2888.4902ms)
+✖ [DC-10][DC-11] REQUEST confirmation ≠ HIGH approval, in both directions (3155.0947ms)
+✖ [DC-12][DC-13][DC-14] stale cannot be confirmed; consumed tokens/approvals cannot be replayed; tampered cannot execute (3411.4014ms)
+✖ [DC-15][DC-16] double confirm / double approve / confirm+cancel and approve+reject races are one-shot (10824.1661ms)
+✖ [DC-25] runtime state overrides a stale UI (3272.9461ms)
+✖ [DC-17][DC-18][DC-19][DC-20] the Decision Center cannot alter risk/autonomy, execute, or write the ledger (3054.2023ms)
+✖ [DC-21][DC-22][DC-23][DC-24] no secrets, commands, paths or tokens in the DOM; evidence resolves; timelines are read only (4077.396ms)
+✖ [DC-26][DC-27] es-MX and en-US: identical decisions trees, every state rendered, no fallback, ASCII agent names (3381.5124ms)
+✖ [DC-28] accessibility: named sections, labelled groups, deliberate Approve, no shortcuts, keyboard order (3817.7287ms)
+✖ [DC-NEG] Alicia cannot approve or confirm; renderer cannot fabricate; identity, replay, tamper and staleness are refused (3555.1648ms)
+✖ [DC-INV] invariants: classic Governance panel stands down (no duplicate controls); removing the UI removes no guarantee (3562.3193ms)
+✖ [DC-REV] after an accepted decision the stale card offers no second decision; the classic panel is the fallback without a projection (3596.5883ms)
+✔ [ID-01] a trusted human identity is resolved: stable id, display name, session, window (4.854ms)
+✔ [ID-02][ID-15] the renderer cannot define identity; a sender that is not our window gets none (0.7555ms)
+✔ [ID-03][ID-07] REQUEST confirmation records the trusted human, in the runtime and in the ledger (3247.1583ms)
+✔ [ID-04] REQUEST cancellation records the trusted human (3000.9319ms)
+✖ [ID-05][ID-06] HIGH approval and rejection record the trusted human; the existing approval record is unchanged (3029.1769ms)
+✖ [ID-08][ID-23][ID-24][ID-25] the projection shows the owner (id + display name) and nothing internal (2983.6365ms)
+✖ [ID-09][ID-10][ID-11][ID-12] fake identity, confirmedBy, approvedBy, rejectedBy are ignored or refused (7170.0285ms)
+✖ [ID-13][ID-14][ID-17][ID-18] replay, stale and second attempts cannot change ownership; the owner is immutable (8183.1143ms)
+✖ [ID-16] cross-window: one decision, one owner; the other window sees it resolved and cannot redo it (3207.0506ms)
+✖ [ID-19][ID-20][ID-21][ID-22] identity does not alter risk or autonomy and does not bypass CIMA, authorize() or the REQUEST gate (3002.2721ms)
+✔ [ID-02][IPC] the human channel never accepts identity from the renderer; lapitaya:approvals stays intact (66.289ms)
+✖ [ID-26][ID-27][ID-28] es-MX / en-US show who decided (no missing keys), and the identity UI adds no controls (3284.9952ms)
+✔ [ID-18] the runtime state files are the only store: the ledger carries the owner and no second store appears (3408.1636ms)
+✔ [LEG-01][LEG-09][LEG-10][LEG-11][LEG-26] Legacy dependency audit & IPC absence (11.8627ms)
+✖ [LEG-02][LEG-03][LEG-08][LEG-13] Decision Center functional parity & observability backed (3471.0743ms)
+✖ [LEG-04][LEG-05][LEG-06][LEG-07][LEG-08] HIGH decision & REQUEST lifecycle with identity (3503.2767ms)
+✖ [LEG-12][LEG-14] Runtime approval state preserved, no second store (3499.1123ms)
+✖ [LEG-15][LEG-16][LEG-17][LEG-18] Cross-window sync & replay protection (4577.9455ms)
+✔ [LEG-19][LEG-20] Security: no secrets or raw tokens in renderer model (3769.0089ms)
+✔ [LEG-21][LEG-22][LEG-23] i18n es-MX / en-US & Accessibility in Decision Center (2.1502ms)
+✖ [NEG-01][NEG-02][NEG-03][NEG-04] Negative security boundary checks (3657.5662ms)
+✖ [FC-01] normal LOW authorization -> ALLOW (3261.4375ms)
+✖ [FC-02] governance-tamper -> HUMAN_APPROVAL_REQUIRED (denied) (3046.4865ms)
+✖ [FC-03] HIGH risk -> REQUIRE_HUMAN_APPROVAL, NOT executed, pending approval created (4239.4165ms)
+✖ [FC-04] authorize() throws -> DENY (fail closed) (2896.537ms)
+✖ [FC-05] authorize() returns null (invalid) -> DENY (3206.3205ms)
+✖ [FC-06] authorize() returns non-executable decision -> DENY (2741.8101ms)
+✔ [FC-07] risk classifier throws -> DENY (not ALLOW) (6.3217ms)
+✔ [FC-08] risk classifier returns invalid shape -> DENY (0.4625ms)
+✖ [FC-09] governance state unavailable (null hive root) -> DENY (881.7957ms)
+✖ [FC-10] PreToolUse with no agentId -> DENY (2196.0128ms)
+✔ [FC-11] PreToolUse with no tool name -> DENY (2145.2677ms)
+✖ [FC-12] MEDIUM -> SUPERVISED, not denied (2313.0159ms)
+✖ [FC-13] approved HIGH runs exactly once, then requires approval again (2556.9616ms)
+✔ [FC-14] autoMode:true does not bypass HIGH governance (2145.745ms)
+✖ [DG-01] DECISION PASS -> task completion ALLOWED (3318.7573ms)
+✔ [DG-02] no DECISION -> task completion BLOCKED (2367.5171ms)
+✖ [DG-03] DECISION FAIL -> task completion BLOCKED (3160.5915ms)
+✔ [DG-04] DECISION BLOCKED (wrong sender) -> task completion BLOCKED (2186.0762ms)
+✔ [DG-05] ungoverned task (no CIMA history) is not gated (1933.7833ms)
+✖ [DG-06] Write to tasks.json marking CIMA task done without DECISION -> denied at PreToolUse (2059.1884ms)
+✖ [DG-07] rebuilding after DECISION invalidates completion gate (2890.8052ms)
+✔ [PI-01] governanceEnforcement classifies providers (0.4331ms)
+✔ [PI-02] blocking providers are allowed to spawn (0.2158ms)
+✔ [PI-03] non-blocking provider rejected by default (fail closed) (0.2278ms)
+✔ [PI-04] human override lets non-blocking through, logged (0.2204ms)
+✖ [PI-05] DeterministicTestProvider: MEDIUM -> SUPERVISED, HIGH -> REQUIRE_HUMAN_APPROVAL (884.6135ms)
+✔ [PI-06] evidence and CIMA evaluation are provider-agnostic (0.6413ms)
+✔ [RG-01] BUILDER != AUDITOR still blocked after v0.3 hardening (2395.65ms)
+✔ [RG-02] EVIDENCE FIRST still blocks PASS with no real trace (1961.4337ms)
+✖ [RG-03] AUTONOMY POLICY: LOW->ALLOW, MEDIUM->SUPERVISED, HIGH->DENY (1933.3589ms)
+✔ [RG-04] DECISION_AUTHORITY: only El Inge or human may accept work (1822.0324ms)
+✖ [RG-05] HIGH approval regression: deny->approve->one execution->deny again (1390.1387ms)
+✔ [RG-06] TRANSITION: TEST PASS requires BUILD PASS (1471.2444ms)
+✔ [RG-07] assignment without verdict is not a claim (1506.8902ms)
+✖ [RG-08] full CIMA cycle records PASS at every phase and opens completion gate (2948.7049ms)
+✖ [API-01] CIMA task with FULL CIMA chain + DECISION PASS -> updateTaskStatus(done) ALLOWED (5804.181ms)
+✔ [API-02] CIMA task with BUILD/TEST/AUDIT PASS but NO DECISION -> updateTaskStatus(done) BLOCKED (4381.4765ms)
+✖ [API-03] DECISION FAIL -> updateTaskStatus(done) BLOCKED (3186.2388ms)
+✔ [API-04] DECISION BLOCKED -> updateTaskStatus(done) BLOCKED (2631.9783ms)
+✖ [API-05] DECISION PASS + BUILD after DECISION -> updateTaskStatus(done) BLOCKED (4576.3367ms)
+✔ [API-06] unauthorized DECISION PASS -> updateTaskStatus(done) BLOCKED (2658.209ms)
+✔ [API-07] non-CIMA task -> updateTaskStatus(done) ALLOWED (ungated) (2608.4544ms)
+✖ [API-08] tool boundary path (PreToolUse) continues to be protected (2526.5411ms)
+✔ [Negative Test — Direct API Bypass] updateTaskStatus, patchTask, writeTasks without DECISION PASS are ALL BLOCKED and recorded in ledger (2740.9423ms)
+✔ tool calls classify into LOW / MEDIUM / HIGH (14.7969ms)
+✔ inside the hive: coordination is LOW, the governance files are HIGH (0.958ms)
+✖ LOW runs automatically and is logged ALLOW (3412.0535ms)
+✖ MEDIUM runs under supervision: not denied, logged SUPERVISED, surfaced live (3022.8775ms)
+✖ HIGH is denied with HUMAN_APPROVAL_REQUIRED and NOT executed — even in autoMode (2960.745ms)
+✖ explicit approval lets the IDENTICAL call run exactly once (2528.961ms)
+✖ another agent cannot use someone else's approval; rejection keeps it blocked (2179.659ms)
+✔ an agent cannot switch its own guard off (governance-tamper is HIGH) (2160.3955ms)
+✖ if governance itself fails, the tool call is denied (fail closed) (2498.4725ms)
+✔ HUMAN_CONTROLLED stage puts MEDIUM behind approval too (1.2661ms)
+✔ EVIDENCE FIRST: a PASS citing nothing the harness observed is BLOCKED (2914.9256ms)
+✖ EVIDENCE FIRST: a PASS citing a command the agent really ran is PASS (2344.4036ms)
+✔ EVIDENCE FIRST: evidence another agent produced does not count for this one (2243.7349ms)
+✔ the delivered message carries the runtime verdict, not just the sender's claim (2559.6449ms)
+✖ BUILDER != AUDITOR: El Beni cannot PASS the audit of his own build (negative test) (2337.568ms)
+✖ an auditor who edits code after the build cannot PASS the audit (2686.4645ms)
+✖ TRANSITIONS: BUILD → accepted (DECISION PASS) without TEST/AUDIT is BLOCKED (2265.0063ms)
+✔ only El Inge (or the human) can accept work (2046.6702ms)
+✖ FAIL backed by a real failing run is recorded FAIL; BLOCKED stays BLOCKED (never FAIL) (2040.1851ms)
+✔ a malformed claim is BLOCKED, not silently dropped (2017.8889ms)
+✖ the full CIMA cycle, one agent per role, records PASS at every phase (3303.9277ms)
+✔ the ledger persists across a restart of the service (2112.7938ms)
+✔ agent settings register PostToolUseFailure so failing runs become evidence (3.0547ms)
+✔ a `cima` tag without a verdict is a phase ASSIGNMENT, not a malformed claim (seen live in v0.2) (1804.2235ms)
+✔ evidence matching ignores annotations but still needs a real trace (live v0.2 fixtures) (0.8039ms)
+✔ [AUTH-01] Valid trusted agent context accepted (2592.2305ms)
+✔ [AUTH-02] Missing agent context denied (2154.0441ms)
+✔ [AUTH-03] Invalid agent context denied (2407.1914ms)
+✔ [AUTH-04] Payload agent_id cannot override trusted identity (2135.8242ms)
+✔ [AUTH-05] Agent A cannot impersonate Agent B (1725.3972ms)
+✔ [AUTH-06] Folder name cannot establish identity (1618.982ms)
+✔ [AUTH-07] Message from cannot establish identity (1893.8537ms)
+✔ [AUTH-08] Agent cannot self-declare human (1682.9961ms)
+✔ [AUTH-09] Human DECISION requires trusted human identity (1726.7737ms)
+✔ [AUTH-10] Fake human identity denied (1993.4215ms)
+✔ [AUTH-11] Human identity from renderer payload ignored (1631.8893ms)
+✔ [AUTH-12] Human identity from trusted v0.8 IPC accepted (1530.8735ms)
+✔ [AUTH-13] Builder cannot impersonate Auditor (1543.9061ms)
+✔ [AUTH-14] Auditor cannot impersonate Builder (1515.0888ms)
+✔ [AUTH-15] Agent cannot manufacture BUILD PASS (1561.149ms)
+✔ [AUTH-16] Agent cannot manufacture TEST PASS (1701.1414ms)
+✔ [AUTH-17] Agent cannot manufacture AUDIT PASS (1502.4072ms)
+✔ [AUTH-18] Agent cannot manufacture DECISION PASS (1482.5843ms)
+✔ [AUTH-19] Missing identity fails closed (1414.8382ms)
+✔ [AUTH-20] Identity mismatch fails closed (1391.6922ms)
+✔ [AUTH-21] Identity is preserved in evidence (1377.7105ms)
+✔ [AUTH-22] Decision owner remains v0.8 trusted identity (1405.6667ms)
+✔ [AUTH-23] Cross-window human identity remains correct (1347.5023ms)
+✔ [AUTH-24] Replay of authenticated context rejected (1316.6884ms)
+✔ [AUTH-25] Wrong task context rejected (1359.2711ms)
+✔ [AUTH-26] Wrong agent assignment rejected (1363.324ms)
+✔ [AUTH-27] Tampered context rejected (1328.1144ms)
+✔ [AUTH-28] No secrets exposed (0.9511ms)
+✔ [AUTH-29] No raw credentials exposed (0.2542ms)
+✔ [AUTH-30] Real Electron human decision works (1395.5087ms)
+✔ [ADVERSARIAL-CHAIN] Forged CIMA chain fails closed and breaks the chain (1411.6911ms)
+✔ [COVERAGE-01] Shell > mutation detected (7.7758ms)
+✔ [COVERAGE-02] Shell >> mutation detected (2.7236ms)
+✔ [COVERAGE-03] Shell 2> mutation detected (0.5027ms)
+✔ [COVERAGE-04] Command substitution mutation detected (0.3592ms)
+✔ [COVERAGE-05] find -delete governed (0.3798ms)
+✔ [COVERAGE-06] find -exec governed (0.3068ms)
+✔ [COVERAGE-07] tee/cp/mv/rm governance (0.485ms)
+✔ [COVERAGE-08] tasks.json shell mutation cannot bypass Decision Gate (882.7317ms)
+✔ [COVERAGE-09] CIMA task cannot become DONE without DECISION PASS (723.5359ms)
+✔ [COVERAGE-10] Shell cannot bypass completionGate (765.7996ms)
+✔ [COVERAGE-11] MCP cannot bypass completionGate (775.886ms)
+✔ [COVERAGE-12] Provider write cannot bypass completionGate (791.7189ms)
+✔ [COVERAGE-13] Failed execution cannot satisfy evidence (699.2848ms)
+✔ [COVERAGE-14] Matching command text without successful execution cannot PASS (768.043ms)
+✔ [COVERAGE-15] Wrong execution trace cannot satisfy evidence (679.0486ms)
+✔ [COVERAGE-16] Wrong actor cannot satisfy evidence (635.1751ms)
+✔ [COVERAGE-17] Provider governance is consulted during actual spawn (0.6087ms)
+✔ [COVERAGE-18] Blocking provider cannot execute without governance (704.9239ms)
+✔ [COVERAGE-19] Non-blocking provider cannot self-authorize (0.3001ms)
+✔ [COVERAGE-20] Explicit valid exception follows runtime policy (0.2358ms)
+✔ [COVERAGE-21] CIMA task with no DECISION cannot complete (752.4603ms)
+✔ [COVERAGE-22] Non-CIMA task preserves intended behavior (545.0259ms)
+✔ [COVERAGE-23] Ambiguous shell mutation fails closed (0.2471ms)
+✔ [COVERAGE-24] Governance failure fails closed (560.154ms)
+✔ [COVERAGE-25] Forged governance chain remains broken after v0.11 (626.5223ms)
+[lapitaya] proposals.json write failed: Error: ENOTDIR: not a directory, mkdir 'C:\Users\chess\AppData\Local\Temp\lapitaya-v0.12-test-mh5US2\blocker_file\sub\lapitaya'
+    at mkdirSync (node:fs:1349:26)
+    at CimaRuntimeService.writeState (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:280:37)
+    at CimaRuntimeService.saveProposals (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:272:21)
+    at eval (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:514:23)
+    at CimaRuntimeService.withLock (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:130:20)
+    at CimaRuntimeService.openRequest (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:492:21)
+    at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-v0.12.test.cjs:76:27)
+    at Test.runInAsyncScope (node:async_hooks:228:14)
+    at Test.run (node:internal/test_runner/test:1118:25)
+    at Test.processPendingSubtests (node:internal/test_runner/test:787:18) {
+  errno: -4052,
+  code: 'ENOTDIR',
+  syscall: 'mkdir',
+  path: 'C:\\Users\\chess\\AppData\\Local\\Temp\\lapitaya-v0.12-test-mh5US2\\blocker_file\\sub\\lapitaya'
+}
+[lapitaya] ledger write failed: Error: ENOTDIR: not a directory, mkdir 'C:\Users\chess\AppData\Local\Temp\lapitaya-v0.12-test-9okrZM\blocker_file\sub\lapitaya'
+    at mkdirSync (node:fs:1349:26)
+    at CimaRuntimeService.append (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:254:37)
+    at CimaRuntimeService.recordDecision (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:723:19)
+    at eval (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:377:23)
+    at CimaRuntimeService.withLock (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:130:20)
+    at CimaRuntimeService.authorize (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:307:21)
+    at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-v0.12.test.cjs:93:28)
+    at Test.runInAsyncScope (node:async_hooks:228:14)
+    at Test.run (node:internal/test_runner/test:1118:25)
+    at Test.processPendingSubtests (node:internal/test_runner/test:787:18) {
+  errno: -4052,
+  code: 'ENOTDIR',
+  syscall: 'mkdir',
+  path: 'C:\\Users\\chess\\AppData\\Local\\Temp\\lapitaya-v0.12-test-9okrZM\\blocker_file\\sub\\lapitaya'
+}
+[lapitaya] ledger write failed: Error: ENOTDIR: not a directory, mkdir 'C:\Users\chess\AppData\Local\Temp\lapitaya-v0.12-test-NA7YYm\blocker_file\sub\lapitaya'
+    at mkdirSync (node:fs:1349:26)
+    at CimaRuntimeService.append (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:254:37)
+    at eval (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:929:18)
+    at CimaRuntimeService.withLock (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:130:20)
+    at CimaRuntimeService.submit (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:925:21)
+    at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-v0.12.test.cjs:108:30)
+    at Test.runInAsyncScope (node:async_hooks:228:14)
+    at Test.run (node:internal/test_runner/test:1118:25)
+    at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+    at Test.postRun (node:internal/test_runner/test:1247:19) {
+  errno: -4052,
+  code: 'ENOTDIR',
+  syscall: 'mkdir',
+  path: 'C:\\Users\\chess\\AppData\\Local\\Temp\\lapitaya-v0.12-test-NA7YYm\\blocker_file\\sub\\lapitaya'
+}
+✔ STATE-01: atomic JSON write produces complete valid JSON file (47.5283ms)
+✔ STATE-02: failed state write fails closed (11.4089ms)
+✔ STATE-03: failed ledger write fails closed (8.8394ms)
+✔ STATE-04: ledger write failure cannot produce PASS (6.9328ms)
+✔ STATE-05: malformed ledger handled deterministically (27.7163ms)
+✔ STATE-06: truncated ledger handled deterministically (9.9408ms)
+✔ STATE-07: corrupt proposal state fails closed (23.8441ms)
+✔ STATE-08: missing proposal state fails closed without failing open (10.4062ms)
+✔ STATE-09: corrupt approval state fails closed (23.779ms)
+✔ STATE-10: missing approval state fails closed without failing open (7.7758ms)
+✔ STATE-11: expired REQUEST cannot execute (25.4278ms)
+✔ STATE-12: expired HIGH approval cannot execute (27.0136ms)
+✔ STATE-13: agent cannot extend expiration (39.173ms)
+✔ STATE-14: provider cannot extend expiration (41.4313ms)
+✔ STATE-15: human decision after expiration rejected (26.4383ms)
+✔ STATE-16: duplicate REQUEST confirmation rejected (56.819ms)
+✔ STATE-17: duplicate HIGH approval rejected (29.0342ms)
+✔ STATE-18: confirm/cancel race produces one valid result (56.9386ms)
+✔ STATE-19: approve/reject race produces one valid result (26.086ms)
+✔ STATE-20: concurrent task write protected (25.196ms)
+✔ STATE-21: concurrent ledger append safe (15.9922ms)
+✔ STATE-22: multi-instance same Hive protected (24.6348ms)
+✔ STATE-23: crash during state write recovered safely (6.5877ms)
+✔ STATE-24: crash between state and ledger handled safely (11.968ms)
+✔ STATE-25: missing DECISION never recovered as PASS (8.3963ms)
+✔ STATE-26: missing evidence never recovered as valid (10.2182ms)
+✔ STATE-27: invalid state transition rejected (36.6634ms)
+✔ STATE-28: expired state cannot return to executable state (35.9591ms)
+✔ STATE-29: recovery does not invent governance facts (8.3595ms)
+✔ STATE-30: v0.10 authenticity preserved (31.8439ms)
+✔ STATE-31: v0.11 shell governance preserved (20.9666ms)
+✔ STATE-32: v0.11 Decision Gate preserved (17.2668ms)
+✔ STATE-33: v0.11 provider governance preserved (7.8839ms)
+✔ STATE-34: v0.11 evidence correlation preserved (21.478ms)
+✔ STATE-35: forged governance chain remains blocked (7.634ms)
+✔ ADVERSARIAL: corrupt proposal state blocks execution after restart (7.7088ms)
+✔ ADVERSARIAL: corrupt approval state blocks HIGH action after restart (11.1048ms)
+✔ ADVERSARIAL: delete DECISION evidence blocks DONE transition after restart (12.2132ms)
+✔ the brand has one source and the expected identity (3.0415ms)
+✔ visible surfaces read the brand constant instead of a literal (3.8658ms)
+✔ the updater polls the La Pitaya repository, never the upstream one (33.618ms)
+✔ the orchestrator defaults to El Inge (0.3218ms)
+✔ an upstream hive that persisted "Michael" migrates to El Inge; real renames survive (0.4595ms)
+✔ the full roster is present with the right roles (1.9407ms)
+✔ es-MX keeps the accents; en-US uses the exact ASCII spelling (4.5367ms)
+✔ a typed name resolves in either spelling (0.6309ms)
+✔ hire presets carry a briefing and the CIMA hard rules (0.7626ms)
+✔ Alicia is a capability, not a hive agent or a replacement (0.689ms)
+✔ agentLocale adds a language line only for non-English locales (0.5062ms)
+✔ El Inge is briefed on CIMA and the autonomy policy (1.3846ms)
+✔ CIMA phases are stable uppercase ids in workflow order (0.4517ms)
+✔ Builder != Auditor (0.3832ms)
+✔ Evidence First: no PASS without raw evidence or with a failing exit (7.28ms)
+✔ risk maps to mode: LOW→AUTO, MEDIUM→SUPERVISED, HIGH→HUMAN_APPROVAL (0.3709ms)
+✔ unknown actions are HIGH risk (0.2122ms)
+✔ no autonomy stage can switch off Human Governance (0.4515ms)
+✔ Alicia is disabled by default and her calls are no-ops (1.0065ms)
+✔ a registered Alicia receives events, and a throwing one cannot break the caller (0.6241ms)
+✔ es-MX is the default and en-US the fallback; future locales are declared, not active (0.2561ms)
+✔ uiLocale, agentLocale and notificationLocale resolve independently (0.3943ms)
+✔ the La Pitaya namespace exists for es-MX and en-US with identical keys (3.1952ms)
+✔ the en-US La Pitaya strings contain no accented characters (0.7278ms)
+✔ es-MX translates every key of en.json (none left as a copied English string of note) (22.4439ms)
+ℹ tests 315
+ℹ suites 0
+ℹ pass 222
+ℹ fail 93
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 120368.2738
+
+✖ failing tests:
+
+test at test\lapitaya-alicia-v04.test.cjs:24:1
+✖ [ALICIA-01] Alicia can read CIMA status (derived from the runtime, not stored) (4337.9122ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + []
+  - [
+  -   'BUILD:PASS',
+  -   'TEST:PASS',
+  -   'AUDIT:PASS'
+  - ]
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v04.test.cjs:31:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ 'BUILD:PASS', 'TEST:PASS', 'AUDIT:PASS' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v04.test.cjs:45:1
+✖ [ALICIA-02] Alicia presents existing evidence verbatim and never fabricates any (3927.1773ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 2
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v04.test.cjs:51:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v04.test.cjs:70:1
+✖ [ALICIA-03] Alicia receives governance events from the existing runtime event stream (2594.5815ms)
+  AssertionError [ERR_ASSERTION]: approval.required reached Alicia
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v04.test.cjs:76:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v04.test.cjs:183:1
+✖ [ALICIA-08] Alicia respects uiLocale (and notificationLocale) without translating identifiers (4697.7332ms)
+  TypeError: Cannot read properties of undefined (reading 'message')
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v04.test.cjs:192:22)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at test\lapitaya-alicia-v04.test.cjs:242:1
+✖ [NEG-01] Alicia → direct HIGH-risk tool → BLOCKED at PreToolUse (3091.7378ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^HUMAN_APPROVAL_REQUIRED/. Input:
+  
+  "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'alicia'"
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v04.test.cjs:246:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'alicia'",
+    expected: /^HUMAN_APPROVAL_REQUIRED/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v04.test.cjs:280:1
+✖ [NEG-04] Alicia → bypass completionGate → BLOCKED (4598.0647ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /DECISION_GATE/. Input:
+  
+  "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'alicia'"
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v04.test.cjs:298:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'alicia'",
+    expected: /DECISION_GATE/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v04.test.cjs:339:1
+✖ conversation citations must point at runtime-recorded refs (4726.323ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + []
+  - [
+  -   undefined
+  - ]
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v04.test.cjs:348:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ undefined ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v041.test.cjs:93:1
+✖ [INTENT-03] ACTION LOW → CIMA → AUTO; El Inge executes through PreToolUse (ALLOW) (2956.9097ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" to be strictly unequal to:
+  
+  'deny'
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v041.test.cjs:102:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'deny',
+    expected: 'deny',
+    operator: 'notStrictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v041.test.cjs:108:1
+✖ [INTENT-04] ACTION MEDIUM → CIMA → SUPERVISED (2912.5799ms)
+  AssertionError [ERR_ASSERTION]: PreToolUse agrees
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'SUPERVISED'
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v041.test.cjs:115:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'SUPERVISED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v041.test.cjs:118:1
+✖ [INTENT-05] ACTION HIGH → HUMAN_APPROVAL_REQUIRED → Alicia explains → human approves → one execution (3128.9299ms)
+  AssertionError [ERR_ASSERTION]: one execution
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'APPROVED'
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v041.test.cjs:138:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'APPROVED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v041.test.cjs:213:1
+✖ [INTENT-NEG-05] Alicia tries task.status = done without DECISION PASS → BLOCKED by completionGate (4642.7001ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+  +   'BLOCKED',
+  +   'DENY',
+  +   'none'
+  -   'GOVERNED',
+  -   'ALLOW',
+  -   'orchestrator'
+    ]
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v041.test.cjs:225:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'BLOCKED', 'DENY', 'none' ],
+    expected: [ 'GOVERNED', 'ALLOW', 'orchestrator' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v042.test.cjs:51:1
+✖ [REQ-01] REQUEST + LOW + no confirmation → El Inge attempts execution → BLOCKED (3266.5684ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^REQUEST_CONFIRMATION_REQUIRED/. Input:
+  
+  "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'god'"
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v042.test.cjs:57:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'god'",
+    expected: /^REQUEST_CONFIRMATION_REQUIRED/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v042.test.cjs:68:1
+✖ [REQ-02] REQUEST + MEDIUM + no confirmation → BLOCKED (2919.7274ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^REQUEST_CONFIRMATION_REQUIRED/. Input:
+  
+  "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'god'"
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v042.test.cjs:73:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'god'",
+    expected: /^REQUEST_CONFIRMATION_REQUIRED/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v042.test.cjs:76:1
+✖ [REQ-03] REQUEST + HIGH + no confirmation → BLOCKED, and no approval is even raised (2991.0194ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^REQUEST_CONFIRMATION_REQUIRED/. Input:
+  
+  "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'god'"
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v042.test.cjs:81:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'god'",
+    expected: /^REQUEST_CONFIRMATION_REQUIRED/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v042.test.cjs:85:1
+✖ [REQ-04] REQUEST + valid human confirmation → CIMA → LOW → AUTO → execution allowed (2910.601ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+  +   true,
+  +   'IDENTITY_UNTRUSTED'
+  -   false,
+  -   'ALLOW'
+    ]
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v042.test.cjs:93:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ true, 'IDENTITY_UNTRUSTED' ],
+    expected: [ false, 'ALLOW' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v042.test.cjs:100:1
+✖ [REQ-05] REQUEST (change scope) + confirmation → CIMA → MEDIUM → SUPERVISED (3063.3741ms)
+  AssertionError [ERR_ASSERTION]: the autonomy policy still applies
+  + actual - expected
+  
+    [
+  +   true,
+  +   'IDENTITY_UNTRUSTED'
+  -   false,
+  -   'SUPERVISED'
+    ]
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v042.test.cjs:106:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ true, 'IDENTITY_UNTRUSTED' ],
+    expected: [ false, 'SUPERVISED' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v042.test.cjs:109:1
+✖ [REQ-06] REQUEST + confirmation + HIGH → existing HUMAN_APPROVAL flow; confirmation ≠ approval (3261.4809ms)
+  AssertionError [ERR_ASSERTION]: no automatic execution
+  + actual - expected
+  
+    [
+      true,
+  +   'IDENTITY_UNTRUSTED'
+  -   'HUMAN_APPROVAL_REQUIRED'
+    ]
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v042.test.cjs:114:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ true, 'IDENTITY_UNTRUSTED' ],
+    expected: [ true, 'HUMAN_APPROVAL_REQUIRED' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v042.test.cjs:124:1
+✖ [REQ-07] confirmation replay: one confirmation → one transition; it can never unlock another proposal (3731.2078ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v042.test.cjs:131:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v042.test.cjs:176:1
+✖ [REQ-10] confirmed REQUEST + actual HIGH action → HIGH policy applies (never inherits the request) (3176.6939ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+      true,
+  +   'IDENTITY_UNTRUSTED'
+  -   'HUMAN_APPROVAL_REQUIRED'
+    ]
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v042.test.cjs:182:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ true, 'IDENTITY_UNTRUSTED' ],
+    expected: [ true, 'HUMAN_APPROVAL_REQUIRED' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v042.test.cjs:186:1
+✖ [REQ-11] confirmed harmless REQUEST + incompatible actual action → runtime re-classifies → not permitted (3277.5986ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^REQUEST_SCOPE_EXCEEDED — the confirmed request .* allows LOW-risk work; this call is MEDIUM \(code-change\)/. Input:
+  
+  "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'god'"
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v042.test.cjs:192:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'god'",
+    expected: /^REQUEST_SCOPE_EXCEEDED — the confirmed request .* allows LOW-risk work; this call is MEDIUM \(code-change\)/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v042.test.cjs:196:1
+✖ [REQ-12] CONVERSATION stays side-effect free (no proposal, no ledger, no gate) (2832.9781ms)
+  AssertionError [ERR_ASSERTION]: no gate without a REQUEST
+  
+  true !== false
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v042.test.cjs:202:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v042.test.cjs:205:1
+✖ [REQ-13] ACTION behaviour is unchanged, even while a REQUEST is pending (3496.4951ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'ALLOW'
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v042.test.cjs:209:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'ALLOW',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v05.test.cjs:354:1
+✖ [UI-10] HIGH: confirming the REQUEST is not an approval — CIMA still requires HUMAN_APPROVAL (3332.4796ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v05.test.cjs:363:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v05.test.cjs:538:1
+✖ [UI-E2E] USER → ALICIA UI → REQUEST → PROPOSED → Confirm → runtime → CIMA → authorize → PreToolUse → execution (3462.6295ms)
+  AssertionError [ERR_ASSERTION]: IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'god'
+  
+  true !== false
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v05.test.cjs:544:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v05.test.cjs:555:1
+✖ [UI-E2E-NEG] REQUEST → PROPOSED → NO confirm → agent attempts a tool → BLOCKED, with or without the UI (3528.6404ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^REQUEST_CONFIRMATION_REQUIRED/. Input:
+  
+  "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'god'"
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v05.test.cjs:562:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'god'",
+    expected: /^REQUEST_CONFIRMATION_REQUIRED/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v06.test.cjs:119:1
+✖ [OBS-02] REQUEST_CONFIRMATION_REQUIRED → blocked, rule, runtime risk, "no se ejecutó" (2962.1215ms)
+  TypeError: Cannot read properties of undefined (reading 'decision')
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v06.test.cjs:124:23)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at test\lapitaya-alicia-v06.test.cjs:140:1
+✖ [OBS-03] REQUEST_SCOPE_EXCEEDED → correct explanation (MEDIUM stays MEDIUM) (3120.5972ms)
+  TypeError: Cannot read properties of undefined (reading 'decision')
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v06.test.cjs:146:23)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at test\lapitaya-alicia-v06.test.cjs:180:1
+✖ [OBS-07] HUMAN_APPROVAL_REQUIRED → "not an approval", then approval → execution, all linked (3477.9578ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v06.test.cjs:184:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v06.test.cjs:221:1
+✖ [OBS-08][OBS-09][OBS-10] Alicia cannot modify the event, the risk or the decision (3643.2978ms)
+  TypeError: Cannot read properties of undefined (reading 'keys')
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v06.test.cjs:231:104)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at test\lapitaya-alicia-v06.test.cjs:299:1
+✖ [OBS-13][OBS-14] the timeline is exactly the real facts, in order, and read only (3128.8779ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+  -   'ACTION_AUTHORIZED',
+  -   'EXECUTION_COMPLETED',
+      'INTENT_CLASSIFIED',
+      'INTENT_FORWARDED',
+      'INTENT_RECEIVED',
+  -   'REQUEST_CONFIRMATION_REQUIREDx2',
+      'REQUEST_CONFIRMED',
+      'REQUEST_PROPOSED',
+      'REQUEST_REVALIDATED',
+  -   'REQUEST_SCOPE_EXCEEDED'
+    ]
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v06.test.cjs:313:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'INTENT_CLASSIFIED', 'INTENT_FORWARDED', 'INTENT_RECEIVED', 'REQUEST_CONFIRMED', 'REQUEST_PROPOSED', 'REQUEST_REVALIDATED' ],
+    expected: [ 'ACTION_AUTHORIZED', 'EXECUTION_COMPLETED', 'INTENT_CLASSIFIED', 'INTENT_FORWARDED', 'INTENT_RECEIVED', 'REQUEST_CONFIRMATION_REQUIREDx2', 'REQUEST_CONFIRMED', 'REQUEST_PROPOSED', 'REQUEST_REVALIDATED', 'REQUEST_SCOPE_EXCEEDED' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v06.test.cjs:332:1
+✖ [OBS-15] no tokens, secrets, commands, paths or outputs in the projection or the UI (3459.9702ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(fingerprints.length > 0)
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v06.test.cjs:346:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v06.test.cjs:411:1
+✖ [OBS-19] the governance event stream still works; the new signals raise no notifications (3541.5049ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(types.includes('request') && types.includes('intent') && types.includes('governance'))
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v06.test.cjs:417:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v06.test.cjs:435:1
+✖ [OBS-20][OBS-21] REQUEST confirmation and HIGH approval behave exactly as in v0.5 (3556.7555ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v06.test.cjs:447:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v06.test.cjs:456:1
+✖ [OBS-22][OBS-23] an unconfirmed REQUEST still blocks; removing Alicia UI or projection removes no guarantee (3470.9051ms)
+  AssertionError [ERR_ASSERTION]: every blocked attempt is observable
+  
+  0 !== 4
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v06.test.cjs:465:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 4,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v07.test.cjs:169:1
+✖ [DC-06][DC-07] a pending HIGH approval appears with the actual runtime risk, operation and explanation (3085.9955ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at withPendingHigh (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v07.test.cjs:88:10)
+      at async TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v07.test.cjs:171:22)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v07.test.cjs:193:1
+✖ [DC-08][DC-09] approve / reject use the existing human approval (lapitaya:decide → decide(id, approve, "human")) (2888.4902ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at withPendingHigh (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v07.test.cjs:88:10)
+      at async TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v07.test.cjs:195:19)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v07.test.cjs:231:1
+✖ [DC-10][DC-11] REQUEST confirmation ≠ HIGH approval, in both directions (3155.0947ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at withPendingHigh (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v07.test.cjs:88:10)
+      at async TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v07.test.cjs:233:22)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v07.test.cjs:257:1
+✖ [DC-12][DC-13][DC-14] stale cannot be confirmed; consumed tokens/approvals cannot be replayed; tampered cannot execute (3411.4014ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v07.test.cjs:272:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v07.test.cjs:289:1
+✖ [DC-15][DC-16] double confirm / double approve / confirm+cancel and approve+reject races are one-shot (10824.1661ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at withPendingHigh (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v07.test.cjs:88:10)
+      at async TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v07.test.cjs:312:19)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v07.test.cjs:333:1
+✖ [DC-25] runtime state overrides a stale UI (3272.9461ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at withPendingHigh (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v07.test.cjs:88:10)
+      at async TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v07.test.cjs:335:19)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v07.test.cjs:356:1
+✖ [DC-17][DC-18][DC-19][DC-20] the Decision Center cannot alter risk/autonomy, execute, or write the ledger (3054.2023ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at withPendingHigh (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v07.test.cjs:88:10)
+      at async TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v07.test.cjs:358:19)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v07.test.cjs:395:1
+✖ [DC-21][DC-22][DC-23][DC-24] no secrets, commands, paths or tokens in the DOM; evidence resolves; timelines are read only (4077.396ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(tokens.length > 0 && fingerprints.length > 0)
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v07.test.cjs:408:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v07.test.cjs:442:1
+✖ [DC-26][DC-27] es-MX and en-US: identical decisions trees, every state rendered, no fallback, ASCII agent names (3381.5124ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at withPendingHigh (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v07.test.cjs:88:10)
+      at async TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v07.test.cjs:451:19)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v07.test.cjs:472:1
+✖ [DC-28] accessibility: named sections, labelled groups, deliberate Approve, no shortcuts, keyboard order (3817.7287ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at withPendingHigh (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v07.test.cjs:88:10)
+      at async TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v07.test.cjs:474:19)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v07.test.cjs:500:1
+✖ [DC-NEG] Alicia cannot approve or confirm; renderer cannot fabricate; identity, replay, tamper and staleness are refused (3555.1648ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at withPendingHigh (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v07.test.cjs:88:10)
+      at async TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v07.test.cjs:502:22)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v07.test.cjs:533:1
+✖ [DC-INV] invariants: classic Governance panel stands down (no duplicate controls); removing the UI removes no guarantee (3562.3193ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^REQUEST_CONFIRMATION_REQUIRED/. Input:
+  
+  "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'god'"
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v07.test.cjs:548:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'god'",
+    expected: /^REQUEST_CONFIRMATION_REQUIRED/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v07.test.cjs:555:1
+✖ [DC-REV] after an accepted decision the stale card offers no second decision; the classic panel is the fallback without a projection (3596.5883ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at withPendingHigh (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v07.test.cjs:88:10)
+      at async TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v07.test.cjs:557:19)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v08.test.cjs:156:1
+✖ [ID-05][ID-06] HIGH approval and rejection record the trusted human; the existing approval record is unchanged (3029.1769ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at withPendingHigh (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v08.test.cjs:72:10)
+      at async TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v08.test.cjs:158:19)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v08.test.cjs:177:1
+✖ [ID-08][ID-23][ID-24][ID-25] the projection shows the owner (id + display name) and nothing internal (2983.6365ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at withPendingHigh (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v08.test.cjs:72:10)
+      at async TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v08.test.cjs:179:22)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v08.test.cjs:203:1
+✖ [ID-09][ID-10][ID-11][ID-12] fake identity, confirmedBy, approvedBy, rejectedBy are ignored or refused (7170.0285ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at withPendingHigh (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v08.test.cjs:72:10)
+      at async TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v08.test.cjs:227:19)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v08.test.cjs:242:1
+✖ [ID-13][ID-14][ID-17][ID-18] replay, stale and second attempts cannot change ownership; the owner is immutable (8183.1143ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at withPendingHigh (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v08.test.cjs:72:10)
+      at async TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v08.test.cjs:277:19)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v08.test.cjs:291:1
+✖ [ID-16] cross-window: one decision, one owner; the other window sees it resolved and cannot redo it (3207.0506ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v08.test.cjs:306:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v08.test.cjs:329:1
+✖ [ID-19][ID-20][ID-21][ID-22] identity does not alter risk or autonomy and does not bypass CIMA, authorize() or the REQUEST gate (3002.2721ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^REQUEST_CONFIRMATION_REQUIRED/. Input:
+  
+  "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'god'"
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v08.test.cjs:336:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'god'",
+    expected: /^REQUEST_CONFIRMATION_REQUIRED/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v08.test.cjs:438:1
+✖ [ID-26][ID-27][ID-28] es-MX / en-US show who decided (no missing keys), and the identity UI adds no controls (3284.9952ms)
+  TypeError: Cannot read properties of undefined (reading 'id')
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v08.test.cjs:445:28)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at test\lapitaya-alicia-v09.test.cjs:97:1
+✖ [LEG-02][LEG-03][LEG-08][LEG-13] Decision Center functional parity & observability backed (3471.0743ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at withPendingHigh (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v09.test.cjs:72:10)
+      at async TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v09.test.cjs:99:19)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v09.test.cjs:137:1
+✖ [LEG-04][LEG-05][LEG-06][LEG-07][LEG-08] HIGH decision & REQUEST lifecycle with identity (3503.2767ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at withPendingHigh (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v09.test.cjs:72:10)
+      at async TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v09.test.cjs:139:19)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v09.test.cjs:160:1
+✖ [LEG-12][LEG-14] Runtime approval state preserved, no second store (3499.1123ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at withPendingHigh (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v09.test.cjs:72:10)
+      at async TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v09.test.cjs:162:19)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v09.test.cjs:174:1
+✖ [LEG-15][LEG-16][LEG-17][LEG-18] Cross-window sync & replay protection (4577.9455ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at withPendingHigh (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v09.test.cjs:72:10)
+      at async TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v09.test.cjs:176:19)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-alicia-v09.test.cjs:228:1
+✖ [NEG-01][NEG-02][NEG-03][NEG-04] Negative security boundary checks (3657.5662ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'HUMAN_APPROVAL_REQUIRED'
+  
+      at withPendingHigh (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v09.test.cjs:72:10)
+      at async TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-alicia-v09.test.cjs:238:19)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'HUMAN_APPROVAL_REQUIRED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime-v03.test.cjs:90:1
+✖ [FC-01] normal LOW authorization -> ALLOW (3261.4375ms)
+  AssertionError [ERR_ASSERTION]: LOW read must not be denied
+  
+  true !== false
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v03.test.cjs:93:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime-v03.test.cjs:97:1
+✖ [FC-02] governance-tamper -> HUMAN_APPROVAL_REQUIRED (denied) (3046.4865ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /HUMAN_APPROVAL_REQUIRED/. Input:
+  
+  "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'el-beni-1'"
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v03.test.cjs:102:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'el-beni-1'",
+    expected: /HUMAN_APPROVAL_REQUIRED/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime-v03.test.cjs:105:1
+✖ [FC-03] HIGH risk -> REQUIRE_HUMAN_APPROVAL, NOT executed, pending approval created (4239.4165ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /HUMAN_APPROVAL_REQUIRED/. Input:
+  
+  "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'el-beni-1'"
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v03.test.cjs:110:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'el-beni-1'",
+    expected: /HUMAN_APPROVAL_REQUIRED/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime-v03.test.cjs:115:1
+✖ [FC-04] authorize() throws -> DENY (fail closed) (2896.537ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /GOVERNANCE_ERROR/. Input:
+  
+  "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'valentin-1'"
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v03.test.cjs:121:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'valentin-1'",
+    expected: /GOVERNANCE_ERROR/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime-v03.test.cjs:127:1
+✖ [FC-05] authorize() returns null (invalid) -> DENY (3206.3205ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'DENY'
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v03.test.cjs:132:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'DENY',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime-v03.test.cjs:135:1
+✖ [FC-06] authorize() returns non-executable decision -> DENY (2741.8101ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'IDENTITY_UNTRUSTED'
+  - 'DENY'
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v03.test.cjs:140:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'IDENTITY_UNTRUSTED',
+    expected: 'DENY',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime-v03.test.cjs:160:1
+✖ [FC-09] governance state unavailable (null hive root) -> DENY (881.7957ms)
+  AssertionError [ERR_ASSERTION]: LOW read allowed
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v03.test.cjs:172:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime-v03.test.cjs:180:1
+✖ [FC-10] PreToolUse with no agentId -> DENY (2196.0128ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /GOVERNANCE_STATE_UNAVAILABLE/. Input:
+  
+  'ACTOR_CONTEXT_MISSING — missing or untrusted agent execution context'
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v03.test.cjs:184:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'ACTOR_CONTEXT_MISSING — missing or untrusted agent execution context',
+    expected: /GOVERNANCE_STATE_UNAVAILABLE/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime-v03.test.cjs:193:1
+✖ [FC-12] MEDIUM -> SUPERVISED, not denied (2313.0159ms)
+  AssertionError [ERR_ASSERTION]: MEDIUM must not be denied
+  
+  true !== false
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v03.test.cjs:196:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime-v03.test.cjs:201:1
+✖ [FC-13] approved HIGH runs exactly once, then requires approval again (2556.9616ms)
+  TypeError: Cannot read properties of undefined (reading 'id')
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v03.test.cjs:206:29)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at test\lapitaya-cima-runtime-v03.test.cjs:220:1
+✖ [DG-01] DECISION PASS -> task completion ALLOWED (3318.7573ms)
+  AssertionError [ERR_ASSERTION]: DECISION_GATE: task DG-T1 has no DECISION recorded by the runtime
+  
+  false !== true
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v03.test.cjs:235:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime-v03.test.cjs:248:1
+✖ [DG-03] DECISION FAIL -> task completion BLOCKED (3160.5915ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /DECISION_GATE.*FAIL/. Input:
+  
+  'DECISION_GATE: task DG-T3 has no DECISION recorded by the runtime'
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v03.test.cjs:261:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'DECISION_GATE: task DG-T3 has no DECISION recorded by the runtime',
+    expected: /DECISION_GATE.*FAIL/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime-v03.test.cjs:281:1
+✖ [DG-06] Write to tasks.json marking CIMA task done without DECISION -> denied at PreToolUse (2059.1884ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /DECISION_GATE/. Input:
+  
+  "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'el-beni-1'"
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v03.test.cjs:291:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'el-beni-1'",
+    expected: /DECISION_GATE/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime-v03.test.cjs:295:1
+✖ [DG-07] rebuilding after DECISION invalidates completion gate (2890.8052ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  false !== true
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v03.test.cjs:311:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime-v03.test.cjs:349:1
+✖ [PI-05] DeterministicTestProvider: MEDIUM -> SUPERVISED, HIGH -> REQUIRE_HUMAN_APPROVAL (884.6135ms)
+  AssertionError [ERR_ASSERTION]: MEDIUM must not deny
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v03.test.cjs:368:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime-v03.test.cjs:422:1
+✖ [RG-03] AUTONOMY POLICY: LOW->ALLOW, MEDIUM->SUPERVISED, HIGH->DENY (1933.3589ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v03.test.cjs:425:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime-v03.test.cjs:442:1
+✖ [RG-05] HIGH approval regression: deny->approve->one execution->deny again (1390.1387ms)
+  TypeError: Cannot read properties of undefined (reading 'id')
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v03.test.cjs:447:29)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at test\lapitaya-cima-runtime-v03.test.cjs:474:1
+✖ [RG-08] full CIMA cycle records PASS at every phase and opens completion gate (2948.7049ms)
+  AssertionError [ERR_ASSERTION]: CONTEXT: EVIDENCE_FIRST: PASS needs evidence the harness observed; none of the 1 cited item(s) matches a command or file this agent actually ran or read.
+  
+  'BLOCKED' !== 'PASS'
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v03.test.cjs:493:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'BLOCKED',
+    expected: 'PASS',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime-v031.test.cjs:89:1
+✖ [API-01] CIMA task with FULL CIMA chain + DECISION PASS -> updateTaskStatus(done) ALLOWED (5804.181ms)
+  AssertionError [ERR_ASSERTION]: updateTaskStatus should succeed when DECISION PASS exists
+  
+  false !== true
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v031.test.cjs:111:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime-v031.test.cjs:143:1
+✖ [API-03] DECISION FAIL -> updateTaskStatus(done) BLOCKED (3186.2388ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /DECISION is FAIL/. Input:
+  
+  'DECISION_GATE: task task-api-03 has no DECISION recorded by the runtime'
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v031.test.cjs:156:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'DECISION_GATE: task task-api-03 has no DECISION recorded by the runtime',
+    expected: /DECISION is FAIL/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime-v031.test.cjs:179:1
+✖ [API-05] DECISION PASS + BUILD after DECISION -> updateTaskStatus(done) BLOCKED (4576.3367ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /rebuilt after its DECISION/. Input:
+  
+  'DECISION_GATE: task task-api-05 has no DECISION recorded by the runtime'
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v031.test.cjs:203:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'DECISION_GATE: task task-api-05 has no DECISION recorded by the runtime',
+    expected: /rebuilt after its DECISION/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime-v031.test.cjs:236:1
+✖ [API-08] tool boundary path (PreToolUse) continues to be protected (2526.5411ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /DECISION_GATE/. Input:
+  
+  "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'valentin-1'"
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime-v031.test.cjs:253:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'valentin-1'",
+    expected: /DECISION_GATE/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime.test.cjs:115:1
+✖ LOW runs automatically and is logged ALLOW (3412.0535ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:118:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime.test.cjs:125:1
+✖ MEDIUM runs under supervision: not denied, logged SUPERVISED, surfaced live (3022.8775ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:128:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime.test.cjs:134:1
+✖ HIGH is denied with HUMAN_APPROVAL_REQUIRED and NOT executed — even in autoMode (2960.745ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^HUMAN_APPROVAL_REQUIRED/. Input:
+  
+  "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'el-beni-1'"
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:139:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'el-beni-1'",
+    expected: /^HUMAN_APPROVAL_REQUIRED/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime.test.cjs:148:1
+✖ explicit approval lets the IDENTICAL call run exactly once (2528.961ms)
+  TypeError: Cannot read properties of undefined (reading 'id')
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:154:29)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at test\lapitaya-cima-runtime.test.cjs:166:1
+✖ another agent cannot use someone else's approval; rejection keeps it blocked (2179.659ms)
+  TypeError: Cannot read properties of undefined (reading 'id')
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:171:23)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at test\lapitaya-cima-runtime.test.cjs:184:1
+✖ if governance itself fails, the tool call is denied (fail closed) (2498.4725ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^GOVERNANCE_ERROR/. Input:
+  
+  "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'valentin-1'"
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:189:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'valentin-1'",
+    expected: /^GOVERNANCE_ERROR/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime.test.cjs:212:1
+✖ EVIDENCE FIRST: a PASS citing a command the agent really ran is PASS (2344.4036ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  'BLOCKED' !== 'PASS'
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:217:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'BLOCKED',
+    expected: 'PASS',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime.test.cjs:238:1
+✖ BUILDER != AUDITOR: El Beni cannot PASS the audit of his own build (negative test) (2337.568ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  'BLOCKED' !== 'PASS'
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:242:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'BLOCKED',
+    expected: 'PASS',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime.test.cjs:263:1
+✖ an auditor who edits code after the build cannot PASS the audit (2686.4645ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(rec.violations.includes('AUDITOR_MODIFIED_CODE'))
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:273:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime.test.cjs:276:1
+✖ TRANSITIONS: BUILD → accepted (DECISION PASS) without TEST/AUDIT is BLOCKED (2265.0063ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+  +   from: null,
+  -   from: 'BUILD',
+      to: 'DECISION'
+    }
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:284:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { from: null, to: 'DECISION' },
+    expected: { from: 'BUILD', to: 'DECISION' },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime.test.cjs:298:1
+✖ FAIL backed by a real failing run is recorded FAIL; BLOCKED stays BLOCKED (never FAIL) (2040.1851ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  'BLOCKED' !== 'FAIL'
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:303:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'BLOCKED',
+    expected: 'FAIL',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\lapitaya-cima-runtime.test.cjs:316:1
+✖ the full CIMA cycle, one agent per role, records PASS at every phase (3303.9277ms)
+  AssertionError [ERR_ASSERTION]: CONTEXT: EVIDENCE_FIRST: PASS needs evidence the harness observed; none of the 1 cited item(s) matches a command or file this agent actually ran or read.
+  
+  'BLOCKED' !== 'PASS'
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:333:72)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'BLOCKED',
+    expected: 'PASS',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1775,6 +1775,22 @@ export class HiveManager {
     if (this.routerTimer) { clearInterval(this.routerTimer); this.routerTimer = null; }
   }
 
+  /** What an outbox file claims about WHO sent it, when that is not its owner. Null when it claims nothing forged. */
+  private senderForgery(partial: Record<string, unknown>, ownerId: string): { kind: 'claim' | 'token'; what: string } | null {
+    const owner = ownerId.trim().toLowerCase();
+    const known = new Set<string>(['human', 'alicia', 'system']);
+    try { for (const k of Object.keys(this.registry().agents)) known.add(k.toLowerCase()); } catch { /* registry unreadable: the fixed names still apply */ }
+    for (const field of ['from', 'agent_id', 'sender', 'actor']) {
+      const v = partial[field];
+      if (typeof v !== 'string' || !v.trim()) continue;
+      const claimed = v.trim().toLowerCase();
+      if (claimed !== owner && known.has(claimed)) return { kind: 'claim', what: `${field}=${claimed}` };
+    }
+    const token = partial.agent_token;
+    if (token !== undefined && token !== null && !this.verifyAgentToken(ownerId, token)) return { kind: 'token', what: 'agent_token does not belong to the owning agent' };
+    return null;
+  }
+
   routeOnce(): number {
     const root = this.root();
     if (!root) return 0;
@@ -1813,6 +1829,19 @@ export class HiveManager {
               repair: 'literal-line-break'
             });
           }
+          // v0.14 sender authenticity: the sender is the directory's OWNER (and governance refuses any
+          // governed write into another agent's outbox). A file that CLAIMS another sender (a known agent,
+          // the human, Alicia, the system) is a forgery attempt: the claim is logged and neutralized — the
+          // message is attributed to the owner regardless. A file carrying a capability token that is not
+          // the owner's cannot be genuine and is quarantined, never delivered.
+          const forged = this.senderForgery(partial as Record<string, unknown>, id);
+          if (forged?.kind === 'token') {
+            this.appendLog({ kind: 'drop', reason: 'sender-spoof', from: id, claimed: forged.what, file: f });
+            try { renameSync(full, join(outbox, '.sent', `bad-${f}`)); } catch { /* noop */ }
+            continue;
+          }
+          if (forged) this.appendLog({ kind: 'sender-spoof', from: id, claimed: forged.what, file: f });
+          delete (partial as { agent_token?: unknown }).agent_token; // a capability token is never relayed
           const msg = this.normalize(partial, id);
           msg.from = id; // sender is authoritative — the owning directory
           // La Pitaya CIMA: a `cima` field is a claim (task, phase, verdict,

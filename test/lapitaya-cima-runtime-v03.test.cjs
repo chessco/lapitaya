@@ -61,7 +61,7 @@ async function floor(t, config) {
   const server = new HookServer(hive, () => null, () => config,
     undefined, undefined, undefined, undefined, lapitaya);
   const hook   = (agentId, payload) =>
-    server.handle({ agent_id: agentId, session_id: 's-'+agentId, ...payload });
+    server.handle({ agent_id: agentId, agent_token: hive.registerAgentToken(agentId), session_id: 's-'+agentId, ...payload });
   const pre    = (agentId, tool, input) =>
     hook(agentId, { hook_event_name: 'PreToolUse', tool_name: tool, tool_input: input });
   const ran    = (agentId, command, stdout, failed) =>
@@ -166,7 +166,7 @@ test('[FC-09] governance state unavailable (null hive root) -> DENY', async (t) 
   const lapitaya = new CimaRuntimeService({ hiveRoot: () => rootSpy.returns, godId: () => 'god' });
   const server = new HookServer(hive, () => null, () => ({ autoMode:true, notifications:false }),
     undefined, undefined, undefined, undefined, lapitaya);
-  const hook = (agentId, payload) => server.handle({ agent_id: agentId, session_id: 's-'+agentId, ...payload });
+  const hook = (agentId, payload) => server.handle({ agent_id: agentId, agent_token: hive.registerAgentToken(agentId), session_id: 's-'+agentId, ...payload });
   // Normal call works
   const r0 = hook('god', { hook_event_name:'PreToolUse', tool_name:'Read', tool_input:{file_path:'x'} });
   assert.ok(!r0 || r0.hookSpecificOutput === undefined || r0.hookSpecificOutput.permissionDecision !== 'deny', 'LOW read allowed');
@@ -181,7 +181,8 @@ test('[FC-10] PreToolUse with no agentId -> DENY', async (t) => {
   const f = await floor(t);
   const r = f.server.handle({ hook_event_name:'PreToolUse', tool_name:'Read', tool_input:{file_path:'x'} });
   assert.equal(r && r.hookSpecificOutput && r.hookSpecificOutput.permissionDecision, 'deny');
-  assert.match(r.hookSpecificOutput.permissionDecisionReason, /GOVERNANCE_STATE_UNAVAILABLE/);
+  // v0.10: an absent/untrusted actor is refused with the explicit ACTOR_CONTEXT_MISSING contract.
+  assert.match(r.hookSpecificOutput.permissionDecisionReason, /ACTOR_CONTEXT_MISSING|GOVERNANCE_STATE_UNAVAILABLE/);
 });
 
 test('[FC-11] PreToolUse with no tool name -> DENY', async (t) => {
@@ -364,7 +365,7 @@ test('[PI-05] DeterministicTestProvider: MEDIUM -> SUPERVISED, HIGH -> REQUIRE_H
   hive.setCimaHandler((from, cima, id, to) => recordBanner(lapitayaMed.handle(from, to, cima, id)));
   const serverMed = new HookServer(hive, () => null, () => ({autoMode:true, notifications:false}),
     undefined, undefined, undefined, undefined, lapitayaMed);
-  const r1 = serverMed.handle({ agent_id:'mock-agent', session_id:'s1', hook_event_name:'PreToolUse', tool_name:'Read', tool_input:{file_path:'x'} });
+  const r1 = serverMed.handle({ agent_id:'mock-agent', agent_token: hive.registerAgentToken('mock-agent'), session_id:'s1', hook_event_name:'PreToolUse', tool_name:'Read', tool_input:{file_path:'x'} });
   assert.ok(!r1 || !r1.hookSpecificOutput || r1.hookSpecificOutput.permissionDecision !== 'deny', 'MEDIUM must not deny');
   assert.ok(events.some(e => e.type === 'supervised'));
 
@@ -376,7 +377,7 @@ test('[PI-05] DeterministicTestProvider: MEDIUM -> SUPERVISED, HIGH -> REQUIRE_H
   });
   const serverHigh = new HookServer(hive, () => null, () => ({autoMode:true, notifications:false}),
     undefined, undefined, undefined, undefined, lapitayaHigh);
-  const r2 = serverHigh.handle({ agent_id:'mock-agent', session_id:'s2', hook_event_name:'PreToolUse', tool_name:'Bash', tool_input:{command:'anything'} });
+  const r2 = serverHigh.handle({ agent_id:'mock-agent', agent_token: hive.registerAgentToken('mock-agent'), session_id:'s2', hook_event_name:'PreToolUse', tool_name:'Bash', tool_input:{command:'anything'} });
   assert.equal(r2 && r2.hookSpecificOutput && r2.hookSpecificOutput.permissionDecision, 'deny');
   assert.match(r2.hookSpecificOutput.permissionDecisionReason, /HUMAN_APPROVAL_REQUIRED/);
   assert.ok(events.some(e => e.type === 'approval-request'));

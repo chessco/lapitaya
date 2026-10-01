@@ -55,8 +55,17 @@ export interface Approval {
   category: ActionCategory;
   risk: RiskLevel;
   summary: string;
-  status: 'pending' | 'approved' | 'rejected' | 'consumed';
+  /** `expired` (TTL) and `invalid` (legacy unbound, or its seal/binding does not verify) never authorize. */
+  status: 'pending' | 'approved' | 'rejected' | 'consumed' | 'expired' | 'invalid';
   createdAt: number;
+  /** v0.14: after this instant the approval can be neither decided nor used (pending AND approved). */
+  expiresAt?: number;
+  consumedAt?: number;
+  /** v0.14: the authorization subject this approval is bound to (SHA-256 over the canonical subject). */
+  binding?: { v: number; alg: 'sha256'; fingerprint: string; subject: unknown };
+  /** v0.14: HMAC-SHA256 seal over the fields that decide usability (written by the runtime only). */
+  seal?: string;
+  invalidReason?: string;
   decidedAt?: number;
   decidedBy?: string;
   /** v0.8: the trusted human who decided (runtime-recorded; write-once). */
@@ -73,6 +82,10 @@ export interface AuthorizationInput {
   ctx?: ToolCallContext;
   /** Test seam: replaces the risk classifier. */
   classify?: (tool: string, input: unknown, ctx?: ToolCallContext) => ToolRisk;
+  /** v0.14: the runtime-computed authorization fingerprint of THIS call (src/main/authBinding.ts).
+   *  Without it no approval can match: the legacy FNV fingerprint never authorizes. */
+  authFingerprint?: string;
+  now?: number;
 }
 
 export interface Authorization {
@@ -82,7 +95,13 @@ export interface Authorization {
   category: ActionCategory;
   summary: string;
   rule: string;
+  /** LEGACY correlation id (FNV-32). Links a decision to its trace for the observability projection;
+   *  it is NOT an authorization binding and never authorizes anything (v0.14). */
   fingerprint: string;
+  /** v0.14: SHA-256 authorization fingerprint — the only thing an approval is matched on. */
+  authFingerprint?: string;
+  /** v0.14: SHA-256 of the call part alone (agent, provider, tool, targets, input digest). */
+  callFingerprint?: string;
   /** Set when an approval was consumed by this call. */
   approvalId?: string;
   /** What the agent is told when the call is denied. */
@@ -153,8 +172,10 @@ export function authorizeToolCall(a: AuthorizationInput): Authorization {
   if (mode === 'SUPERVISED') return { ...base, decision: 'SUPERVISED' };
 
   // HUMAN_APPROVAL: only an explicit, matching, unconsumed approval lets it run.
-  const approval = (a.approvals ?? []).find((x) =>
-    x.status === 'approved' && x.agentId === a.agentId && x.fingerprint === fingerprint);
+  const now = a.now ?? Date.now();
+  const approval = a.authFingerprint ? (a.approvals ?? []).find((x) =>
+    x.status === 'approved' && x.agentId === a.agentId && !!x.binding && x.binding.fingerprint === a.authFingerprint
+    && (x.expiresAt === undefined || now <= x.expiresAt)) : undefined;
   if (approval) return { ...base, decision: 'APPROVED', approvalId: approval.id };
   return {
     ...base,

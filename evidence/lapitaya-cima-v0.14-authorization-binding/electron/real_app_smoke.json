@@ -1,0 +1,83 @@
+{
+  "electron": "32.x (node_modules)",
+  "results": [
+    {
+      "id": "A0",
+      "desc": "the real application booted and its renderer page loaded from the app bundle",
+      "pass": true,
+      "detail": "file:///C:/PitayaCode/LaPitaya/out/renderer/index.html"
+    },
+    {
+      "id": "A1",
+      "desc": "the preload bridge is present",
+      "pass": true,
+      "detail": "207"
+    },
+    {
+      "id": "A2",
+      "desc": "the renderer bridge exposes no authorize/execute/approve-by-id capability beyond the human channel",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "id": "A3",
+      "desc": "the real renderer is recognized as the human by the real main process (trusted URL + own window)",
+      "pass": true,
+      "detail": "hum-ddaedd5a1873f278062a"
+    },
+    {
+      "id": "A4",
+      "desc": "real hive:send refuses a renderer-supplied agent identity (god)",
+      "pass": true,
+      "detail": "{\"ok\":false,\"error\":\"SENDER_NOT_PERMITTED — the renderer may only send as the human (not \\\"god\\\")\"}"
+    },
+    {
+      "id": "A5",
+      "desc": "real hive:send refuses Alicia as a renderer sender (intent boundary only)",
+      "pass": true,
+      "detail": "{\"ok\":false,\"error\":\"messages from alicia go through the intent boundary (alicia:submit)\"}"
+    },
+    {
+      "id": "A6",
+      "desc": "real hive:send refuses a payload \"from\" that disagrees with the resolved sender",
+      "pass": true,
+      "detail": "{\"ok\":false,\"error\":\"SENDER_NOT_PERMITTED — the message names a sender different from the one main resolved\"}"
+    },
+    {
+      "id": "A7",
+      "desc": "real hive:send accepts the human, attributed to \"human\", from the trusted renderer",
+      "pass": true,
+      "detail": "true"
+    },
+    {
+      "id": "A8",
+      "desc": "deciding an unknown approval does nothing (null)",
+      "pass": true,
+      "detail": "\"\""
+    },
+    {
+      "id": "A9",
+      "desc": "the real runtime answers the governance read channels",
+      "pass": true,
+      "detail": "0"
+    },
+    {
+      "id": "A10",
+      "desc": "no renderer console errors or uncaught exceptions during the session",
+      "pass": true,
+      "detail": "{\"consoleErrors\":[],\"exceptions\":[]}"
+    },
+    {
+      "id": "A11",
+      "desc": "the main process logged no uncaught exception / crash",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "A12",
+      "desc": "the main process log carries no agent token",
+      "pass": true,
+      "detail": "\"\""
+    }
+  ]
+}

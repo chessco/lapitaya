@@ -299,7 +299,7 @@ test('[REQ-ARCH] structural: gate in authorize before approvals; human-only conf
   const runtime = read('src/main/cimaRuntime.ts');
   const authorizeBody = runtime.slice(runtime.indexOf('authorize(agentId: string, tool: string, input: unknown): Authorization {'), runtime.indexOf('private requestApproval('));
   // 2 + 6. The gate is inside authorize(), before approval consumption/creation.
-  assert.ok(authorizeBody.includes('requestGate(this.proposals, auth, this.actionFingerprints)'));
+  assert.ok(authorizeBody.includes('requestGate(this.proposals, {') && authorizeBody.includes('this.actionFingerprints)'));
   assert.ok(authorizeBody.indexOf('requestGate(') < authorizeBody.indexOf("auth.decision === 'APPROVED'"));
   assert.ok(authorizeBody.indexOf('requestGate(') < authorizeBody.indexOf('this.requestApproval('));
   // 5. PreToolUse still goes through authorize() and denies anything non-executable.

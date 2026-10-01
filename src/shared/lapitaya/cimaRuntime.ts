@@ -65,8 +65,10 @@ export interface ExecutionTrace {
   ok: boolean;
   /** First part of the real output, as the tool returned it. */
   outputHead?: string;
-  /** v0.6: exact-call fingerprint, equal to the PreToolUse governance record's. */
+  /** v0.6: exact-call fingerprint, equal to the PreToolUse governance record's (legacy FNV-32 correlation id). */
   fingerprint?: string;
+  /** v0.14: SHA-256 call fingerprint, equal to the PreToolUse decision's `callFingerprint`. */
+  callFingerprint?: string;
 }
 
 export interface CimaSubmission {
@@ -83,7 +85,8 @@ export type CimaRuleId =
   | 'BUILDER_NOT_AUDITOR'
   | 'AUDITOR_MODIFIED_CODE'
   | 'TRANSITION'
-  | 'DECISION_AUTHORITY';
+  | 'DECISION_AUTHORITY'
+  | 'STATE_UNAVAILABLE';
 
 export interface VerifiedEvidence extends EvidenceItem {
   verified: boolean;
@@ -233,16 +236,18 @@ export function citedPaths(source: string): string[] {
 /** Match one evidence item against this agent's traces. Command evidence needs a
  *  command trace that contains the cited command; file evidence needs a read or
  *  write of a cited path (or a command that touched it). */
-export function verifyEvidence(item: EvidenceItem, traces: readonly ExecutionTrace[]): VerifiedEvidence {
+export function verifyEvidence(item: EvidenceItem, traces: readonly ExecutionTrace[], forVerdict?: RuntimeVerdict): VerifiedEvidence {
   const cmd = norm(citedCommand(item.source));
   const paths = citedPaths(item.source).filter((p) => p.length >= 4);
+  // v0.11: a failed run can never satisfy PASS evidence. A FAIL verdict is exactly the claim a failed run backs.
+  const failedRunsCount = forVerdict === 'FAIL';
   const commandMatch = (t: ExecutionTrace) => {
-    if (t.kind !== 'command' || cmd.length < 3 || t.ok === false) return false;
+    if (t.kind !== 'command' || cmd.length < 3 || (t.ok === false && !failedRunsCount)) return false;
     const subject = norm(t.subject);
     return subject.includes(cmd) || cmd.includes(subject);
   };
   const pathMatch = (t: ExecutionTrace) => {
-    if (!paths.length || t.ok === false) return false;
+    if (!paths.length || (t.ok === false && !failedRunsCount)) return false;
     const subject = norm(t.subject);
     if (t.kind === 'read' || t.kind === 'write' || t.kind === 'tool') {
       return paths.some((p) => subject.endsWith(p) || p.endsWith(subject));
@@ -384,7 +389,7 @@ export function evaluateSubmission(
   // for it. (The first submission of a task may cite work done just before it.)
   const window = start === null ? 0 : start - 30 * 60 * 1000;
   const mine = state.traces.filter((t) => t.agentId === agentId && t.ts >= window && t.ts <= now);
-  const evidence = (sub.evidence ?? []).map((e) => verifyEvidence(e, mine));
+  const evidence = (sub.evidence ?? []).map((e) => verifyEvidence(e, mine, sub.verdict));
   const violations: CimaRuleId[] = [];
   const reasons: string[] = [];
 
@@ -454,6 +459,23 @@ export function evaluateSubmission(
     kind: 'cima', ts: now, taskId: sub.taskId, phase: sub.phase, agentId,
     claimed: sub.verdict, verdict, violations, reasons, evidence,
     transition: { from, to: sub.phase }, summary: sub.summary, messageId
+  };
+}
+
+/**
+ * v0.14: what the runtime records (and returns) when it cannot durably record a claim — the state is
+ * corrupt, locked, or the ledger write failed. A claim that is not durably recorded is never PASS.
+ */
+export function stateUnavailableRecord(raw: unknown, agentId: string, now: number, reason: string, messageId?: string): CimaRecord {
+  const r = (raw && typeof raw === 'object' ? raw : {}) as { taskId?: unknown; phase?: unknown; verdict?: unknown };
+  const named = String(r.phase ?? '').toUpperCase();
+  const phase: CimaPhase = isCimaPhase(named) ? named : 'CONTEXT';
+  const claimed = ['PASS', 'FAIL', 'BLOCKED'].includes(String(r.verdict ?? '').toUpperCase())
+    ? (String(r.verdict).toUpperCase() as RuntimeVerdict) : 'BLOCKED';
+  return {
+    kind: 'cima', ts: now, taskId: String(r.taskId ?? '?'), phase, agentId, claimed, verdict: 'BLOCKED',
+    violations: ['STATE_UNAVAILABLE'], reasons: [`STATE_UNAVAILABLE: ${reason}; the claim was NOT recorded.`],
+    evidence: [], transition: { from: null, to: phase }, messageId
   };
 }
 

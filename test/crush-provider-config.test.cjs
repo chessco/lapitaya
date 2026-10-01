@@ -49,7 +49,7 @@ test('crush provider points CRUSH_GLOBAL_CONFIG at the agent directory', async (
     name: 'Crush Worker',
     provider: 'crush',
     cwd: home
-  });
+  }, { allowUngovernedProviders: true });
 
   const agentDir = path.join(home, 'hive', 'agents', 'crush-1');
   if (!proxyBridgeBound(injection, agentDir)) return;

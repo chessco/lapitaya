@@ -197,6 +197,7 @@ export class IntentBoundary {
     const rec = {
       ...base, reclassified: reclassified(type, auth.risk), risk: auth.risk, category: auth.category,
       decision: auth.decision, rule: auth.rule, mode: auth.mode, fingerprint: auth.fingerprint,
+      ...(auth.callFingerprint ? { callFingerprint: auth.callFingerprint } : {}),
       ...(auth.approvalId ? { approvalId: auth.approvalId } : {}),
       ...(auth.reason && auth.decision === 'DENY' ? { reason: auth.reason } : {})
     };
