@@ -188,8 +188,12 @@ test('[UI-04] Confirm calls only the authorized IPC: preload → lapitaya:confir
   assert.match(preload, /lapitayaConfirmRequest: \(id: string, token: string\)[^=]*=>\s*ipcRenderer\.invoke\('lapitaya:confirmRequest', id, token\)/);
   assert.match(preload, /lapitayaCancelRequest: \(id: string\)[^=]*=> ipcRenderer\.invoke\('lapitaya:cancelRequest', id\)/);
   const main = code(read('src/main/index.ts'));
-  assert.match(main, /ipcMain\.handle\('lapitaya:confirmRequest', \(_evt, id: unknown, token: unknown\) =>\s*lapitaya\.confirmRequest\(id, \{ by: 'human', token \}\)\)/);
-  assert.match(main, /ipcMain\.handle\('lapitaya:cancelRequest', \(_evt, id: unknown\) => lapitaya\.cancelRequest\(id, 'human'\)\)/);
+  // v0.8: the handlers delegate to the human governance module, which resolves WHO from the trusted sender.
+  assert.match(main, /ipcMain\.handle\('lapitaya:confirmRequest', \(evt, id: unknown, token: unknown\) => humanGov\.confirmRequest\(evt, id, token\)\)/);
+  assert.match(main, /ipcMain\.handle\('lapitaya:cancelRequest', \(evt, id: unknown\) => humanGov\.cancelRequest\(evt, id\)\)/);
+  const gov = code(read('src/main/humanGovernanceIpc.ts'));
+  assert.match(gov, /runtime\.confirmRequest\(id, ctx \? \{ by: 'human', token, human: ctx \} : \{ by: 'untrusted-sender', token \}\)/);
+  assert.match(gov, /ctx \? runtime\.cancelRequest\(id, 'human', ctx\) : UNTRUSTED/);
   // No other confirmation path was added (v0.4.2's single handler still stands).
   assert.equal((main.match(/confirmRequest\(/g) ?? []).length, 1);
 });

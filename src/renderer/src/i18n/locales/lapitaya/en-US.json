@@ -319,6 +319,17 @@
       "historyToggle": "Show resolved decisions ({{count}})",
       "historyTitle": "Resolved decisions (per the runtime, read only)",
       "historyEmpty": "No resolved decisions yet.",
+      "owner": {
+        "actingAs": "You are deciding as {{name}} ({{id}}). The app resolves this identity; this screen cannot change it.",
+        "unresolved": "Your identity could not be resolved by the app, so decisions from this window are refused.",
+        "by": "by {{name}} ({{id}})",
+        "person": "{{name}} ({{id}})",
+        "decidedBy": "Decided by",
+        "requestedBy": "Requested by",
+        "confirmedBy": "Confirmed by",
+        "cancelledBy": "Cancelled by",
+        "completedBy": "Completed by"
+      },
       "type": {
         "REQUEST_CONFIRMATION": "REQUEST CONFIRMATION",
         "HIGH_APPROVAL": "HIGH-RISK HUMAN APPROVAL"

@@ -1094,6 +1094,8 @@ const api = {
   /** Recent governance decisions and CIMA records (append-only ledger). */
   lapitayaLedger: (limit?: number): Promise<LedgerEntry[]> => ipcRenderer.invoke('lapitaya:ledger', limit),
   /** v0.6: read-only, human-safe projection of governance facts (Alicia's observability). */
+  /** v0.8 (read-only): the trusted human the Decision Center acts for. Main resolves it; this cannot set it. */
+  lapitayaIdentity: (): Promise<{ id: string; displayName: string; session: string } | null> => ipcRenderer.invoke('lapitaya:identity'),
   lapitayaObservability: (opts?: { recentLimit?: number }): Promise<ObservabilityView> =>
     ipcRenderer.invoke('lapitaya:observability', opts ?? {}),
   /** Live governance/CIMA events (approval requests, supervised calls, records). */

@@ -1,4 +1,5 @@
 import type { GovernanceObservation, ObservabilityView } from '@shared/lapitaya/alicia/observability';
+import type { SafeDecisionOwner } from '@shared/lapitaya/identity';
 import type { ConfirmationSnapshot, ProposalView } from './confirmationController';
 
 /**
@@ -81,6 +82,8 @@ export interface HighDecisionView {
   /** The runtime's own final decision, when there is one (APPROVAL_GRANTED / APPROVAL_REJECTED). */
   resolution: 'APPROVAL_GRANTED' | 'APPROVAL_REJECTED' | null;
   pending: boolean;
+  /** v0.8: the human who decided it, per the runtime's own APPROVAL_GRANTED / APPROVAL_REJECTED fact. */
+  decidedBy: SafeDecisionOwner | null;
   canDecide: boolean;
   busy: boolean;
   outcome: HighOutcome | null;
@@ -96,6 +99,8 @@ export interface DecisionCenterModel {
   history: readonly GovernanceObservation[];
   /** The projection was available (no projection → no claims, only the v0.5 REQUEST data). */
   observed: boolean;
+  /** v0.8: the trusted human main resolved for this window (read only); null = unresolved, decisions are refused. */
+  identity: SafeDecisionOwner | null;
 }
 
 /** Card state for one HIGH approval. The runtime's facts always win over what this UI did. */
@@ -113,7 +118,7 @@ export function deriveHighState(pending: boolean, resolution: HighDecisionView['
   return 'ALREADY_RESOLVED';
 }
 
-export function buildDecisionCenter(requests: ConfirmationSnapshot, view: ObservabilityView | null, approvals: ApprovalSnapshot): DecisionCenterModel {
+export function buildDecisionCenter(requests: ConfirmationSnapshot, view: ObservabilityView | null, approvals: ApprovalSnapshot, identity: SafeDecisionOwner | null = null): DecisionCenterModel {
   const pendingFacts = view?.pendingApprovals ?? [];
   const pendingIds = new Set(pendingFacts.map((o) => o.approvalId as string));
   const touched = [...approvals.outcomes.keys(), ...approvals.inFlight.keys()].filter((aid) => !pendingIds.has(aid));
@@ -129,7 +134,7 @@ export function buildDecisionCenter(requests: ConfirmationSnapshot, view: Observ
     const op = approvals.inFlight.get(aid);
     const outcome = approvals.outcomes.get(aid) ?? null;
     high.push({
-      approvalId: aid, fact, timeline, resolution, pending,
+      approvalId: aid, fact, timeline, resolution, pending, decidedBy: decided?.decisionOwner ?? null,
       uiState: deriveHighState(pending, resolution, op, outcome),
       canDecide: pending && approvals.inFlight.size === 0 && !outcome?.ok,
       busy: !!op, outcome
@@ -138,7 +143,7 @@ export function buildDecisionCenter(requests: ConfirmationSnapshot, view: Observ
   const pendingRequests = requests.views.filter((v) => v.status === 'PROPOSED').length;
   return {
     counts: { total: pendingRequests + pendingIds.size, requests: pendingRequests, high: pendingIds.size },
-    high, requests: requests.views, history: view?.history ?? [], observed: !!view
+    high, requests: requests.views, history: view?.history ?? [], observed: !!view, identity
   };
 }
 

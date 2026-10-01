@@ -93,6 +93,8 @@ export const CATEGORY_WHY: ReadonlySet<ObservationCategory> = new Set<Observatio
 
 // ─── the observation ───────────────────────────────────────────────────────
 
+import { readOwner, safeOwner, type SafeDecisionOwner } from '../identity';
+
 export interface ObservationEvidence {
   /** `EVT-<fnv1a of the exact ledger line>`, the trace's own id, or (v0.7) the approval's own id. */
   ref: string;
@@ -122,6 +124,9 @@ export interface GovernanceObservation {
   rule: string | null;
   requiredHumanAction: RequiredHumanAction | null;
   nextState: NextState;
+  /** v0.8: the trusted human behind a human decision (confirm / cancel / approve / reject / refused attempt),
+   *  read from the runtime's own record. Id + display name only: never a session, window, token or fingerprint. */
+  decisionOwner: SafeDecisionOwner | null;
   evidence: ObservationEvidence | null;
   /** Repeated identical facts collapsed into this one (agent retry loops). */
   count: number;
@@ -231,10 +236,11 @@ function nextFor(o: Pick<GovernanceObservation, 'category' | 'proposalId' | 'app
   }
 }
 
-function build(fields: Omit<GovernanceObservation, 'requiredHumanAction' | 'nextState' | 'count' | 'keys'>, fromRecordRule: boolean, ctx: Ctx): GovernanceObservation {
+function build(fields: Omit<GovernanceObservation, 'requiredHumanAction' | 'nextState' | 'count' | 'keys' | 'decisionOwner'> & { decisionOwner?: SafeDecisionOwner | null }, fromRecordRule: boolean, ctx: Ctx): GovernanceObservation {
   const { next, action } = nextFor(fields, ctx);
   const o: GovernanceObservation = {
     ...fields,
+    decisionOwner: fields.decisionOwner ?? null,
     requiredHumanAction: action,
     nextState: next,
     count: 1,
@@ -279,7 +285,8 @@ export function observeLedgerRecord(record: unknown, ctx: Ctx = { pendingProposa
       intentId: null, proposalId: id(r.proposalId), approvalId: id(r.approvalId), taskId: id(r.taskId),
       agent: id(r.agentId), operation: tool ? (cat ? `${tool} · ${cat}` : tool) : null, intentType: null,
       runtimeStatus: decision, risk: inSet(RISKS, r.risk), scope: null, autonomy: inSet(AUTONOMY, r.mode),
-      decision, rule, evidence
+      decision, rule, evidence,
+      decisionOwner: decision === 'HUMAN_APPROVED' || decision === 'HUMAN_REJECTED' ? safeOwner(readOwner(r.human)) : null
     }, true, ctx)];
   }
   if (r.kind === 'request') {
@@ -291,7 +298,8 @@ export function observeLedgerRecord(record: unknown, ctx: Ctx = { pendingProposa
       eventId: ref, category, timestamp: num(r.ts), intentId: id(r.intentId), proposalId: id(r.proposalId),
       approvalId: null, taskId: null, agent: id(r.by), operation: null, intentType: 'REQUEST',
       runtimeStatus: id(r.status), risk: null, scope: inSet(new Set(['LOW', 'MEDIUM']), r.scope), autonomy: null,
-      decision: null, rule: code, evidence
+      decision: null, rule: code, evidence,
+      decisionOwner: transition && HUMAN_TRANSITIONS.has(transition) ? safeOwner(readOwner(r.human)) : null
     }, !!code, ctx)];
   }
   if (r.kind === 'intent') {
@@ -319,8 +327,11 @@ export function observeLedgerRecord(record: unknown, ctx: Ctx = { pendingProposa
 
 // ─── projection ────────────────────────────────────────────────────────────
 
+/** REQUEST transitions a human performs (or attempts): the runtime records WHO beside them. */
+const HUMAN_TRANSITIONS: ReadonlySet<string> = new Set(['CONFIRMED', 'CANCELLED', 'COMPLETED', 'CONFIRMATION_DENIED']);
+
 const sameFact = (a: GovernanceObservation, b: GovernanceObservation) =>
-  a.category === b.category && a.agent === b.agent && a.operation === b.operation && a.rule === b.rule &&
+  a.category === b.category && a.decisionOwner?.id === b.decisionOwner?.id && a.agent === b.agent && a.operation === b.operation && a.rule === b.rule &&
   a.decision === b.decision && a.proposalId === b.proposalId && a.approvalId === b.approvalId && a.nextState === b.nextState;
 
 function collapse(list: GovernanceObservation[]): GovernanceObservation[] {

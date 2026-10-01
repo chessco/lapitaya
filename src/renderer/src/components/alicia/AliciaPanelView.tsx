@@ -118,6 +118,18 @@ export function AliciaProposalCard({ t, view, acknowledged, onAcknowledge, onCon
         </>)}
         <dt>proposalId</dt>
         <dd data-field="proposalId" style={{ margin: 0 }}><code style={mono}>{view.id}</code></dd>
+        {view.requestedBy && (<>
+          <dt>{t('lapitaya:alicia.decisions.owner.requestedBy')}</dt>
+          <dd data-field="requested-by" style={{ margin: 0 }}>{t('lapitaya:alicia.decisions.owner.person', { name: view.requestedBy.displayName, id: view.requestedBy.id })}</dd>
+        </>)}
+        {view.confirmedBy && (<>
+          <dt>{t('lapitaya:alicia.decisions.owner.confirmedBy')}</dt>
+          <dd data-field="confirmed-by" style={{ margin: 0 }}>{t('lapitaya:alicia.decisions.owner.person', { name: view.confirmedBy.displayName, id: view.confirmedBy.id })}</dd>
+        </>)}
+        {view.closedBy && (<>
+          <dt>{t(view.status === 'COMPLETED' ? 'lapitaya:alicia.decisions.owner.completedBy' : 'lapitaya:alicia.decisions.owner.cancelledBy')}</dt>
+          <dd data-field="closed-by" style={{ margin: 0 }}>{t('lapitaya:alicia.decisions.owner.person', { name: view.closedBy.displayName, id: view.closedBy.id })}</dd>
+        </>)}
         <dt>{t(`${NS}.fields.created`)}</dt>
         <dd data-field="createdAt" style={{ margin: 0 }}>{new Date(view.createdAt).toISOString().replace('T', ' ').slice(0, 19)}</dd>
       </dl>

@@ -7,7 +7,8 @@ import {
 } from 'node:fs';
 import { randomBytes, createHash, timingSafeEqual } from 'node:crypto';
 import { join, resolve, sep, basename, dirname, isAbsolute } from 'node:path';
-import { homedir } from 'node:os';
+import { homedir, userInfo } from 'node:os';
+import { pathToFileURL } from 'node:url';
 import { request as httpsRequest } from 'node:https';
 import { PtyManager, type SpawnOptions } from './pty';
 import { resolveCommand as resolveCliCommand, isSafeCommandName } from './shellEnv';
@@ -28,6 +29,8 @@ import { linkWorktreeDeps, unlinkWorktreeDeps } from './worktreeDeps';
 import { HiveManager, type AgentMeta, type HiveMessage, type HiveTask } from './hive';
 import { HookServer } from './hooks';
 import { CimaRuntimeService } from './cimaRuntime';
+import { createHumanIdentityService, newSessionId } from './humanIdentity';
+import { createHumanGovernanceHandlers } from './humanGovernanceIpc';
 import { AUTONOMY_STAGES, DEFAULT_AUTONOMY_STAGE, type AutonomyStage } from '../shared/lapitaya/autonomy';
 import { phaseForAgent } from '../shared/lapitaya/agents';
 import { recordBanner } from '../shared/lapitaya/cimaRuntime';
@@ -270,7 +273,8 @@ const lapitaya = new CimaRuntimeService({
     return t.find((x) => x?.assignee === agentId && x?.status === 'doing')?.id ?? null;
   },
   onEvent: (e) => {
-    try { liveWebContents()?.send('lapitaya:governance', e); } catch { /* window gone */ }
+    // v0.8: every own window hears it — a decision made in one window must reach the others.
+    for (const w of BrowserWindow.getAllWindows()) { try { if (!w.isDestroyed()) w.webContents.send('lapitaya:governance', e); } catch { /* window gone */ } }
     // Alicia observes the same events; alicia() contains any failure.
     try { for (const ev of fromRuntimeEvent(e, Date.now())) alicia().notify(ev); } catch { /* never break governance */ }
   }
@@ -4033,21 +4037,42 @@ ipcMain.handle('control:setBreakerState', (_evt, state: unknown) => {
 // La Pitaya governance — the human's side of HUMAN_APPROVAL_REQUIRED, and a
 // read-only view of the CIMA ledger for the UI and for evidence export.
 ipcMain.handle('lapitaya:approvals', () => lapitaya.listApprovals());
-ipcMain.handle('lapitaya:decide', (_evt, id: unknown, approve: unknown) => {
-  if (typeof id !== 'string' || typeof approve !== 'boolean') return null;
-  const a = lapitaya.decide(id, approve, 'human');
-  // v0.7: the renderer gets the decision's outcome, never the call's summary
-  // (the command) or fingerprint. null = not pending (unknown, already decided).
-  return a ? { id: a.id, status: a.status, decidedAt: a.decidedAt ?? null, decidedBy: a.decidedBy ?? null } : null;
+// v0.8: WHO decides is resolved here from the trusted sender, never taken from the renderer
+// (see humanIdentity.ts / humanGovernanceIpc.ts); extra renderer arguments are ignored.
+const humanIdentity = createHumanIdentityService({
+  readHumanId: () => readConfig().humanId ?? null,
+  writeHumanId: (id) => { writeConfig({ humanId: id }); },
+  osUserName: () => { try { return userInfo().username; } catch { return 'human'; } },
+  sessionId: newSessionId(),
+  describeSender: (evt) => {
+    const e = evt as { sender?: Electron.WebContents; senderFrame?: Electron.WebFrameMain | null } | null;
+    const wc = e?.sender;
+    if (!wc || typeof wc.id !== 'number') return null;
+    let url = '';
+    try { url = e?.senderFrame?.url ?? ''; } catch { url = ''; }
+    return {
+      webContentsId: wc.id, destroyed: wc.isDestroyed(),
+      isMainFrame: !!e?.senderFrame && e.senderFrame === wc.mainFrame,
+      url, ownWindow: !!BrowserWindow.fromWebContents(wc)
+    };
+  },
+  trustedUrlPrefixes: () => [
+    pathToFileURL(join(__dirname, '../renderer/')).href,
+    ...(isDev && process.env.ELECTRON_RENDERER_URL ? [process.env.ELECTRON_RENDERER_URL] : [])
+  ]
 });
+const humanGov = createHumanGovernanceHandlers({ runtime: lapitaya, identity: humanIdentity });
+// v0.7: the renderer gets the decision's outcome, never the call's summary
+// (the command) or fingerprint. null = not pending (unknown, already decided, untrusted sender).
+ipcMain.handle('lapitaya:decide', (evt, id: unknown, approve: unknown) => humanGov.decide(evt, id, approve));
+ipcMain.handle('lapitaya:identity', (evt) => humanGov.whoAmI(evt));
 // v0.4.2 REQUEST execution gate — the human's channel, like lapitaya:decide.
 // These are the ONLY call sites of confirm/cancel/complete: no agent, no
 // Alicia and no hive message can reach them.
 ipcMain.handle('lapitaya:requests', () => lapitaya.listRequests());
-ipcMain.handle('lapitaya:confirmRequest', (_evt, id: unknown, token: unknown) =>
-  lapitaya.confirmRequest(id, { by: 'human', token }));
-ipcMain.handle('lapitaya:cancelRequest', (_evt, id: unknown) => lapitaya.cancelRequest(id, 'human'));
-ipcMain.handle('lapitaya:completeRequest', (_evt, id: unknown) => lapitaya.completeRequest(id, 'human'));
+ipcMain.handle('lapitaya:confirmRequest', (evt, id: unknown, token: unknown) => humanGov.confirmRequest(evt, id, token));
+ipcMain.handle('lapitaya:cancelRequest', (evt, id: unknown) => humanGov.cancelRequest(evt, id));
+ipcMain.handle('lapitaya:completeRequest', (evt, id: unknown) => humanGov.completeRequest(evt, id));
 // Alicia: a read-only snapshot (rendered in the locales the UI passes, since
 // uiLocale/notificationLocale live in the renderer) and, since v0.4.1, the
 // intent path — through the runtime intent boundary. Neither can approve,
@@ -4062,7 +4087,7 @@ ipcMain.handle('alicia:snapshot', (_evt, opts: unknown) => {
   });
 });
 ipcMain.handle('alicia:markRead', (_evt, id: unknown) => typeof id === 'string' && aliciaCompanion.markRead(id));
-ipcMain.handle('alicia:submit', (_evt, message: unknown, opts: unknown) => {
+ipcMain.handle('alicia:submit', (evt, message: unknown, opts: unknown) => {
   if (typeof message !== 'string' || !message.trim()) return { ok: false, error: 'message required' };
   const o = (opts && typeof opts === 'object' ? opts : {}) as Record<string, unknown>;
   const l = (o.locales && typeof o.locales === 'object' ? o.locales : {}) as Record<string, unknown>;
@@ -4073,6 +4098,9 @@ ipcMain.handle('alicia:submit', (_evt, message: unknown, opts: unknown) => {
     target: o.target && typeof o.target === 'object' ? (o.target as Record<string, unknown>) : null,
     locales: { uiLocale: pick(l.uiLocale), agentLocale: pick(l.agentLocale), notificationLocale: pick(l.notificationLocale) }
   });
+  // v0.8: WHO submitted a REQUEST — write-once, from the trusted sender; changes no state.
+  const outcome = (result as { outcome?: { type?: string; proposalId?: unknown } }).outcome;
+  if (outcome?.type === 'REQUEST') humanGov.attributeSubmitted(evt, outcome.proposalId);
   return { ok: true, ...result };
 });
 // v0.6 governance observability: a read-only, human-safe projection of what the

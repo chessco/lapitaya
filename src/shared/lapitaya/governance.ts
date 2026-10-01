@@ -19,6 +19,7 @@
  *
  * Pure: approvals are passed in; persistence lives in src/main/cimaRuntime.ts.
  */
+import type { DecisionOwner } from './identity';
 
 import { modeFor, DEFAULT_AUTONOMY_STAGE, type AutonomyMode, type AutonomyStage, type RiskLevel, type ActionCategory } from './autonomy';
 import { classifyToolCall, type ToolCallContext, type ToolRisk } from './toolRisk';
@@ -58,6 +59,8 @@ export interface Approval {
   createdAt: number;
   decidedAt?: number;
   decidedBy?: string;
+  /** v0.8: the trusted human who decided (runtime-recorded; write-once). */
+  decidedOwner?: DecisionOwner;
 }
 
 export interface AuthorizationInput {

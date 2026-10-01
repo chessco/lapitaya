@@ -252,7 +252,7 @@ test('[INTENT-NEG-06] malformed intents (missing id / source / type, bad status,
 
 test('[INTENT-ARCH-01] the Alicia layer has no path to a tool, the hive or governance authority', () => {
   const dir = path.join(ROOT, 'src/shared/lapitaya/alicia');
-  const allowed = /^(\.\/[\w]+|\.\.\/(locales|agents|brand|cima|cimaRuntime|intent)|\.\.\/\.\.\/\.\.\/renderer\/src\/i18n\/locales\/lapitaya\/(es-MX|en-US)\.json)$/;
+  const allowed = /^(\.\/[\w]+|\.\.\/(locales|agents|brand|cima|cimaRuntime|intent|identity)|\.\.\/\.\.\/\.\.\/renderer\/src\/i18n\/locales\/lapitaya\/(es-MX|en-US)\.json)$/;
   for (const file of fs.readdirSync(dir)) {
     const src = fs.readFileSync(path.join(dir, file), 'utf8');
     // Value imports only (type-only imports carry no capability).

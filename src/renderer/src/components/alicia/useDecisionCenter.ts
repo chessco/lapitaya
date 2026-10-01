@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { Approval } from '@shared/lapitaya/governance';
 import type { ObservabilityView } from '@shared/lapitaya/alicia/observability';
+import type { SafeDecisionOwner } from '@shared/lapitaya/identity';
 import type { ConfirmationSnapshot } from './confirmationController';
 import { buildDecisionCenter, createApprovalController, type ApprovalController, type ApprovalPort, type DecisionCenterModel } from './decisionCenter';
 import { markDecisionCenterMounted } from './decisionCenterPresence';
@@ -41,7 +42,14 @@ export function useDecisionCenter(requests: ConfirmationSnapshot, view: Observab
   if (!ref.current) ref.current = createApprovalController(ipcApprovalPort());
   const controller = ref.current;
   const approvals = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
-  const model = useMemo(() => buildDecisionCenter(requests, view, approvals), [requests, view, approvals]);
+  // v0.8: who this window acts for. Main resolves it (read only); the renderer cannot set it.
+  const [identity, setIdentity] = useState<SafeDecisionOwner | null>(null);
+  useEffect(() => {
+    let live = true;
+    try { void window.cth.lapitayaIdentity().then((i) => { if (live) setIdentity(i ? { id: i.id, displayName: i.displayName } : null); }).catch(() => undefined); } catch { /* no bridge */ }
+    return () => { live = false; };
+  }, []);
+  const model = useMemo(() => buildDecisionCenter(requests, view, approvals, identity), [requests, view, approvals, identity]);
   // Stand the classic Governance panel down only once the projection is available: if the
   // Decision Center cannot show HIGH approvals, the classic panel stays as the human's fallback.
   const observed = !!view;

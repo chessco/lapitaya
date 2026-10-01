@@ -14,6 +14,7 @@
  * Identifiers are universal and never translated: CONVERSATION, REQUEST,
  * ACTION, LOW/MEDIUM/HIGH, ALLOW/DENY/BLOCKED, PASS.
  */
+import type { DecisionOwner } from './identity';
 
 import { ACTION_RISK, type ActionCategory, type RiskLevel } from './autonomy';
 import { toAscii } from './locales';
@@ -338,6 +339,10 @@ export interface RequestProposal {
   confirmedBy?: string;
   closedAt?: number;
   closedBy?: string;
+  /** v0.8: the trusted human behind each human step (runtime-recorded; write-once). */
+  requestedOwner?: DecisionOwner;
+  confirmedOwner?: DecisionOwner;
+  closedOwner?: DecisionOwner;
   reason?: string;
 }
 

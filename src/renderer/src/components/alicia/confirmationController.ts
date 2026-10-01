@@ -1,4 +1,5 @@
 import type { RequestProposal, RequestStatus } from '@shared/lapitaya/intent';
+import type { DecisionOwner, SafeDecisionOwner } from '@shared/lapitaya/identity';
 import type { Approval } from '@shared/lapitaya/governance';
 
 /**
@@ -60,6 +61,10 @@ export const EXPLAINED_CODES: ReadonlySet<string> = new Set([
 ]);
 
 export interface ProposalView {
+  /** v0.8: who submitted / confirmed / closed it, as the runtime recorded (id + display name only). */
+  requestedBy: SafeDecisionOwner | null;
+  confirmedBy: SafeDecisionOwner | null;
+  closedBy: SafeDecisionOwner | null;
   id: string;
   intentId: string;
   /** The human's words, verbatim. */
@@ -114,6 +119,9 @@ export function deriveUiState(p: RequestProposal, inFlight: ConfirmationOp | und
   return 'ERROR';
 }
 
+/** v0.8: only the id and display name of a runtime-recorded owner reach the view (never session/window). */
+const whoView = (o: DecisionOwner | undefined): SafeDecisionOwner | null => (o ? { id: o.id, displayName: o.displayName } : null);
+
 export function createConfirmationController(port: ConfirmationPort, opts: { recentClosed?: number } = {}) {
   const recentClosed = opts.recentClosed ?? 3;
   let proposals: RequestProposal[] = [];
@@ -130,6 +138,7 @@ export function createConfirmationController(port: ConfirmationPort, opts: { rec
       const outcome = outcomes.get(p.id) ?? null;
       const op = inFlight.get(p.id);
       return {
+        requestedBy: whoView(p.requestedOwner), confirmedBy: whoView(p.confirmedOwner), closedBy: whoView(p.closedOwner),
         id: p.id, intentId: p.intentId, message: p.message, scope: p.scope, status: p.status,
         createdAt: p.createdAt, taskId: p.taskId, executor: p.executor, target: p.target,
         uiState: deriveUiState(p, op, outcome),

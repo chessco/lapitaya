@@ -70,6 +70,10 @@ export function HighApprovalCard({ t, d, acknowledged, onAcknowledge, onApprove,
         </>)}
         <dt>{t(`${NS}.fields.created`)}</dt>
         <dd data-field="created" style={{ margin: 0 }}>{time(o.timestamp)}</dd>
+        {d.decidedBy && (<>
+          <dt>{t(`${NS}.owner.decidedBy`)}</dt>
+          <dd data-field="decided-by" style={{ margin: 0 }}>{t(`${NS}.owner.person`, { name: d.decidedBy.displayName, id: d.decidedBy.id })}</dd>
+        </>)}
       </dl>
       {o.proposalId && <p data-field="not-a-confirmation" style={{ ...muted, margin: '0 0 6px' }}>{t(`${NS}.relatedRequest`, { proposalId: o.proposalId })}</p>}
       <p style={{ ...muted, margin: '0 0 6px' }}>{t(`${NS}.exactCallNote`)}</p>
@@ -119,6 +123,7 @@ export function DecisionHistory({ t, history }: { t: T; history: readonly Govern
           <code style={mono}>{o.category}</code>{' '}
           {t(`lapitaya:${o.keys.what}`, { proposalId: o.proposalId ?? '—', approvalId: o.approvalId ?? '—', agent: o.agent ?? '—', operation: o.operation ?? '—', decision: o.decision ?? '—' })}
           {o.rule && <> · <code style={mono}>{o.rule}</code></>}
+          {o.decisionOwner && <span data-field="decision-owner"> · {t(`${NS}.owner.by`, { name: o.decisionOwner.displayName, id: o.decisionOwner.id })}</span>}
           {o.evidence && <span style={{ ...muted, marginInlineStart: 4 }}>· {o.evidence.ref}</span>}
         </li>
       ))}
@@ -139,6 +144,9 @@ export function DecisionCenterSection({ t, model, requestCards, highCards }: {
         {model.counts.total
           ? t(`${NS}.counts`, { total: model.counts.total, requests: model.counts.requests, high: model.counts.high })
           : t(`${NS}.none`)}
+      </p>
+      <p data-field="acting-as" style={{ ...muted, margin: '0 0 4px' }}>
+        {model.identity ? t(`${NS}.owner.actingAs`, { name: model.identity.displayName, id: model.identity.id }) : t(`${NS}.owner.unresolved`)}
       </p>
       <p data-field="distinction" style={{ ...muted, margin: '0 0 6px' }}>{t(`${NS}.distinction`)}</p>
       {!model.observed && <p role="alert" style={{ ...muted, margin: '0 0 6px' }}>{t(`${NS}.unobserved`)}</p>}

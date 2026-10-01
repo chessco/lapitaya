@@ -400,7 +400,7 @@ test('[OBS-18] governance explanation has no LLM / provider / network dependency
     const src = code(read(file));
     const imports = [...src.matchAll(/from\s+'([^']+)'/g)].map((m) => m[1]);
     for (const imp of imports) {
-      assert.match(imp, /^(\.\/messages|\.\/confirmationController|\.\/GovernanceExplanationView|@shared\/lapitaya\/alicia(\/observability)?|react)$/, `${file} imports ${imp}`);
+      assert.match(imp, /^(\.\/messages|\.\/confirmationController|\.\/GovernanceExplanationView|@shared\/lapitaya\/alicia(\/observability)?|\.\.\/identity|react)$/, `${file} imports ${imp}`);
     }
     assert.doesNotMatch(src, /provider|openai|anthropic|fetch\(|XMLHttpRequest|WebSocket|complete\(|generate\(|model/i, file);
   }

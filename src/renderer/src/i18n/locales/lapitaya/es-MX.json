@@ -319,6 +319,17 @@
       "historyToggle": "Ver historial de decisiones resueltas ({{count}})",
       "historyTitle": "Decisiones resueltas (según el runtime, solo lectura)",
       "historyEmpty": "Todavía no hay decisiones resueltas.",
+      "owner": {
+        "actingAs": "Decides como {{name}} ({{id}}). La app resuelve esta identidad; esta pantalla no puede cambiarla.",
+        "unresolved": "La app no pudo resolver tu identidad, así que se rechazan las decisiones de esta ventana.",
+        "by": "por {{name}} ({{id}})",
+        "person": "{{name}} ({{id}})",
+        "decidedBy": "Decidió",
+        "requestedBy": "Solicitó",
+        "confirmedBy": "Confirmó",
+        "cancelledBy": "Canceló",
+        "completedBy": "Completó"
+      },
       "type": {
         "REQUEST_CONFIRMATION": "CONFIRMACIÓN DE REQUEST",
         "HIGH_APPROVAL": "APROBACIÓN HUMANA DE ALTO RIESGO (HIGH)"

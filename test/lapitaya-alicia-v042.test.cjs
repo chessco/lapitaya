@@ -316,9 +316,13 @@ test('[REQ-ARCH] structural: gate in authorize before approvals; human-only conf
     }
   };
   walk(path.join(ROOT, 'src'));
-  assert.deepEqual(callers, ['src/main/index.ts']);
+  // v0.8: the human-only call sites are the human governance handlers (the runtime call, by: 'human')
+  // and the IPC wiring that reaches them. Nothing else, and main never calls the runtime directly.
+  assert.deepEqual(callers, ['src/main/humanGovernanceIpc.ts', 'src/main/index.ts']);
   const main = read('src/main/index.ts');
-  assert.match(main, /ipcMain\.handle\('lapitaya:confirmRequest'[\s\S]{0,120}lapitaya\.confirmRequest\(id, \{ by: 'human', token \}\)/);
+  assert.doesNotMatch(code(main), /lapitaya\.(confirmRequest|cancelRequest|completeRequest)\(/);
+  assert.match(main, /ipcMain\.handle\('lapitaya:confirmRequest'[\s\S]{0,120}humanGov\.confirmRequest\(evt, id, token\)/);
+  assert.match(code(read('src/main/humanGovernanceIpc.ts')), /runtime\.confirmRequest\(id, ctx \? \{ by: 'human', token, human: ctx \}/);
   // withdraw/open are the boundary's only (a lock can be lifted by nothing else).
   for (const fn of ['withdrawRequest(', 'openRequest(']) {
     const users = ['src/main/index.ts', 'src/main/hooks.ts', 'src/main/hive.ts', 'src/preload/index.ts']

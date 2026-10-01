@@ -219,9 +219,13 @@ test('[DC-08][DC-09] approve / reject use the existing human approval (lapitaya:
   assert.match(preload, /lapitayaDecide: \(id: string, approve: boolean\)[^=]*=>\s*ipcRenderer\.invoke\('lapitaya:decide', id, approve\)/);
   const main = code(read('src/main/index.ts'));
   const h = main.slice(main.indexOf("ipcMain.handle('lapitaya:decide'"), main.indexOf("ipcMain.handle('lapitaya:requests'"));
-  assert.match(h, /const a = lapitaya\.decide\(id, approve, 'human'\);/);
-  assert.match(h, /return a \? \{ id: a\.id, status: a\.status, decidedAt: a\.decidedAt \?\? null, decidedBy: a\.decidedBy \?\? null \} : null;/);
-  assert.equal((main.match(/lapitaya\.decide\(/g) ?? []).length, 1, 'one call site, by human');
+  assert.match(h, /ipcMain\.handle\('lapitaya:decide', \(evt, id: unknown, approve: unknown\) => humanGov\.decide\(evt, id, approve\)\);/);
+  assert.equal((main.match(/lapitaya\.decide\(/g) ?? []).length, 0, 'main no longer calls the runtime directly');
+  // v0.8: the one call site is the human governance handler: by human, with the trusted context.
+  const gov = code(read('src/main/humanGovernanceIpc.ts'));
+  assert.match(gov, /const a = runtime\.decide\(id, approve, 'human', ctx\);/);
+  assert.match(gov, /return a \? \{ id: a\.id, status: a\.status, decidedAt: a\.decidedAt \?\? null, decidedBy: a\.decidedBy \?\? null \} : null;/);
+  assert.equal((gov.match(/runtime\.decide\(/g) ?? []).length, 1, 'one call site, by human');
 });
 
 test('[DC-10][DC-11] REQUEST confirmation ≠ HIGH approval, in both directions', async (t) => {
@@ -377,10 +381,11 @@ test('[DC-17][DC-18][DC-19][DC-20] the Decision Center cannot alter risk/autonom
     assert.doesNotMatch(src, /classifyTool|toolRisk|RISK_ORDER|ACTION_RISK|requestScope|authorize|executeTool|ptyWrite|ptySpawn|hive[A-Z]\w*\(|dispatch\w*\(|appendFile|writeFile|\bfs\b|lapitayaLedger|cima-ledger|lapitayaApprovals|confirmRequest\(/, file);
     for (const x of src.matchAll(/window\.cth\.(\w+)/g)) used.add(x[1]);
     for (const imp of [...src.matchAll(/from\s+'([^']+)'/g)].map((x) => x[1])) {
-      assert.match(imp, /^(react|\.\/[\w]+|@shared\/lapitaya\/alicia\/observability|@shared\/lapitaya\/governance)$/, `${file} imports ${imp}`);
+      assert.match(imp, /^(react|\.\/[\w]+|@shared\/lapitaya\/alicia\/observability|@shared\/lapitaya\/governance|@shared\/lapitaya\/identity)$/, `${file} imports ${imp}`);
     }
   }
-  assert.deepEqual([...used].sort(), ['lapitayaDecide', 'lapitayaObservability', 'lapitayaRequests']);
+  // v0.8 adds one READ-ONLY method (lapitayaIdentity: who main resolved for this window).
+  assert.deepEqual([...used].sort(), ['lapitayaDecide', 'lapitayaIdentity', 'lapitayaObservability', 'lapitayaRequests']);
   assert.deepEqual(Object.keys(D.createApprovalController({ decide: async () => null })).sort(), ['approve', 'getSnapshot', 'reject', 'subscribe']);
   const gov = read('src/shared/lapitaya/governance.ts');
   assert.match(code(read('src/renderer/src/components/alicia/useDecisionCenter.ts')), /import type \{ Approval \} from '@shared\/lapitaya\/governance'/, 'type only');

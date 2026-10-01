@@ -38,6 +38,7 @@ import {
 /** Tools whose write to the task ledger is judged by the decision gate. */
 const TASK_WRITE_TOOLS: ReadonlySet<string> = new Set(['Write', 'Edit', 'MultiEdit']);
 import type { CimaPhase } from '../shared/lapitaya/cima';
+import { ownerOf, parseHumanContext, type DecisionOwner } from '../shared/lapitaya/identity';
 import {
   requestGate, requestScope, classifyIntentMessage,
   type IntentRecord, type IntentTarget, type RequestProposal, type RequestStatus
@@ -52,6 +53,8 @@ export interface RequestTransitionRecord {
   transition: 'PROPOSED' | 'REVALIDATED' | 'CONFIRMED' | 'CONFIRMATION_DENIED' | 'COMPLETED' | 'CANCELLED' | 'SUPERSEDED' | 'BLOCKED';
   status: RequestStatus;
   by: string;
+  /** v0.8: the trusted human behind a human transition (confirm / cancel / complete / denied attempt). */
+  human?: DecisionOwner;
   scope: 'LOW' | 'MEDIUM';
   code?: string;
   reason?: string;
@@ -83,6 +86,8 @@ export interface GovernanceRecord {
   /** v0.6: the exact-call fingerprint (as approvals use it), so the call's
    *  PostToolUse trace can be linked to this decision without guessing. */
   fingerprint?: string;
+  /** v0.8: the trusted human behind a HUMAN_APPROVED / HUMAN_REJECTED decision. */
+  human?: DecisionOwner;
 }
 
 export type LedgerEntry = CimaRecord | CimaAssignment | GovernanceRecord | IntentRecord | RequestTransitionRecord;
@@ -380,10 +385,11 @@ export class CimaRuntimeService {
     return fnv1a(JSON.stringify([p.id, p.intentId, p.executor, p.requestedBy, p.source, p.message, p.taskId, p.target, p.scope, p.createdAt]));
   }
 
-  private transition(p: RequestProposal, transition: RequestTransitionRecord['transition'], by: string, extra: { code?: string; reason?: string } = {}): void {
+  private transition(p: RequestProposal, transition: RequestTransitionRecord['transition'], by: string, extra: { code?: string; reason?: string; human?: DecisionOwner | null } = {}): void {
+    const { human, ...rest } = extra;
     const rec: RequestTransitionRecord = {
       kind: 'request', ts: this.now(), proposalId: p.id, intentId: p.intentId, transition,
-      status: p.status, by, scope: p.scope, ...extra
+      status: p.status, by, ...(human ? { human } : {}), scope: p.scope, ...rest
     };
     this.append('cima-ledger.jsonl', rec);
     this.deps.onEvent?.({ type: 'request', data: { ...rec, message: p.message, taskId: p.taskId, executor: p.executor } });
@@ -423,6 +429,21 @@ export class CimaRuntimeService {
     return { ...p };
   }
 
+  /**
+   * v0.8: record WHO submitted a REQUEST. Write-once, only for a proposal that is still
+   * waiting, only with a well-formed trusted context. It changes no status, token,
+   * scope or fingerprint and decides nothing.
+   */
+  attributeRequest(proposalId: unknown, human: unknown): boolean {
+    this.load();
+    const hc = parseHumanContext(human);
+    const p = typeof proposalId === 'string' ? this.proposals.find((x) => x.id === proposalId) : undefined;
+    if (!hc || !p || p.status !== 'PROPOSED' || p.requestedOwner) return false;
+    p.requestedOwner = ownerOf(hc);
+    if (!this.saveProposals()) { p.requestedOwner = undefined; return false; }
+    return true;
+  }
+
   /** A proposal that never reached the orchestrator is withdrawn (intent boundary only). */
   withdrawRequest(proposalId: string, reason: string): void {
     this.load();
@@ -446,14 +467,19 @@ export class CimaRuntimeService {
    * PROPOSED → CONFIRMED (durably) and consumes the token. Executes nothing and
    * raises no approval.
    */
-  confirmRequest(proposalId: unknown, ctx: { by?: unknown; token?: unknown; intentId?: unknown } = {}): RequestConfirmation {
+  confirmRequest(proposalId: unknown, ctx: { by?: unknown; token?: unknown; intentId?: unknown; human?: unknown } = {}): RequestConfirmation {
     this.load();
     const p = typeof proposalId === 'string' ? this.proposals.find((x) => x.id === proposalId) : undefined;
+    // v0.8: the trusted human context (resolved in main, never by the renderer). Absent = legacy
+    // callers; PRESENT but malformed = refused, never silently downgraded to anonymous.
+    const hc = ctx.human === undefined ? null : parseHumanContext(ctx.human);
+    const owner = hc ? ownerOf(hc) : null;
     const deny = (code: string, reason: string): RequestConfirmation => {
-      if (p) this.transition(p, 'CONFIRMATION_DENIED', typeof ctx.by === 'string' ? ctx.by.slice(0, 50) : '?', { code, reason });
+      if (p) this.transition(p, 'CONFIRMATION_DENIED', typeof ctx.by === 'string' ? ctx.by.slice(0, 50) : '?', { code, reason, human: owner });
       return { ok: false, code, reason };
     };
     if (ctx.by !== 'human') return deny('NOT_AUTHORIZED', 'only the human confirms a request');
+    if (ctx.human !== undefined && !hc) return deny('NOT_AUTHORIZED', 'invalid human context');
     if (typeof proposalId !== 'string' || !proposalId) return deny('INVALID_CONFIRMATION', 'missing proposal id');
     if (!p) return deny('UNKNOWN_PROPOSAL', `no proposal ${proposalId.slice(0, 80)}`);
     if (ctx.intentId !== undefined && ctx.intentId !== p.intentId) return deny('WRONG_CONTEXT', `proposal ${p.id} belongs to intent ${p.intentId}`);
@@ -474,37 +500,42 @@ export class CimaRuntimeService {
     this.transition(p, 'REVALIDATED', 'runtime', { reason: `still REQUEST; scope ${p.scope}` });
     const token = p.token;
     p.status = 'CONFIRMED'; p.confirmedAt = this.now(); p.confirmedBy = 'human'; p.token = null;
+    if (owner) p.confirmedOwner = owner;
     if (!this.saveProposals()) {
-      p.status = 'PROPOSED'; p.confirmedAt = undefined; p.confirmedBy = undefined; p.token = token;
+      p.status = 'PROPOSED'; p.confirmedAt = undefined; p.confirmedBy = undefined; p.confirmedOwner = undefined; p.token = token;
       return deny('LEDGER_UNAVAILABLE', 'the confirmation could not be persisted');
     }
-    this.transition(p, 'CONFIRMED', 'human');
+    this.transition(p, 'CONFIRMED', 'human', { human: owner });
     return { ok: true, proposal: { ...p } };
   }
 
   /** The human withdraws a proposal (PROPOSED or CONFIRMED → CANCELLED). */
-  cancelRequest(proposalId: unknown, by: unknown): RequestConfirmation {
-    return this.closeRequest(proposalId, by, ['PROPOSED', 'CONFIRMED'], 'CANCELLED');
+  cancelRequest(proposalId: unknown, by: unknown, human?: unknown): RequestConfirmation {
+    return this.closeRequest(proposalId, by, ['PROPOSED', 'CONFIRMED'], 'CANCELLED', human);
   }
 
   /** The human closes a confirmed request once its work is done (CONFIRMED → COMPLETED). */
-  completeRequest(proposalId: unknown, by: unknown): RequestConfirmation {
-    return this.closeRequest(proposalId, by, ['CONFIRMED'], 'COMPLETED');
+  completeRequest(proposalId: unknown, by: unknown, human?: unknown): RequestConfirmation {
+    return this.closeRequest(proposalId, by, ['CONFIRMED'], 'COMPLETED', human);
   }
 
-  private closeRequest(proposalId: unknown, by: unknown, from: RequestStatus[], to: 'CANCELLED' | 'COMPLETED'): RequestConfirmation {
+  private closeRequest(proposalId: unknown, by: unknown, from: RequestStatus[], to: 'CANCELLED' | 'COMPLETED', human?: unknown): RequestConfirmation {
     this.load();
     if (by !== 'human') return { ok: false, code: 'NOT_AUTHORIZED', reason: 'only the human closes a request' };
+    const hc = human === undefined ? null : parseHumanContext(human);
+    if (human !== undefined && !hc) return { ok: false, code: 'NOT_AUTHORIZED', reason: 'invalid human context' };
+    const owner = hc ? ownerOf(hc) : null;
     const p = typeof proposalId === 'string' ? this.proposals.find((x) => x.id === proposalId) : undefined;
     if (!p) return { ok: false, code: 'UNKNOWN_PROPOSAL', reason: 'no such proposal' };
     if (!from.includes(p.status)) return { ok: false, code: 'NOT_CONFIRMABLE', reason: `proposal ${p.id} is ${p.status}` };
     const prev = { status: p.status, token: p.token };
     p.status = to; p.closedAt = this.now(); p.closedBy = 'human'; p.token = null;
+    if (owner) p.closedOwner = owner;
     if (!this.saveProposals()) {
-      p.status = prev.status; p.token = prev.token; p.closedAt = undefined; p.closedBy = undefined;
+      p.status = prev.status; p.token = prev.token; p.closedAt = undefined; p.closedBy = undefined; p.closedOwner = undefined;
       return { ok: false, code: 'LEDGER_UNAVAILABLE', reason: 'the change could not be persisted' };
     }
-    this.transition(p, to, 'human');
+    this.transition(p, to, 'human', { human: owner });
     return { ok: true, proposal: { ...p } };
   }
 
@@ -611,18 +642,23 @@ export class CimaRuntimeService {
   }
 
   /** The human's explicit decision. Only a PENDING request can be decided. */
-  decide(id: string, approve: boolean, by = 'human'): Approval | null {
+  decide(id: string, approve: boolean, by = 'human', human?: unknown): Approval | null {
     this.load();
+    // v0.8: a human context that is present but malformed decides nothing.
+    const hc = human === undefined ? null : parseHumanContext(human);
+    if (human !== undefined && !hc) return null;
     const a = this.approvals.find((x) => x.id === id);
     if (!a || a.status !== 'pending') return null;
     a.status = approve ? 'approved' : 'rejected';
     a.decidedAt = this.now();
     a.decidedBy = by;
+    if (hc) a.decidedOwner = ownerOf(hc);
     this.saveApprovals();
     this.append('cima-ledger.jsonl', {
       kind: 'governance', ts: a.decidedAt, agentId: a.agentId, taskId: null, phase: null,
       tool: a.tool, action: a.summary, category: a.category, risk: a.risk, mode: 'HUMAN_APPROVAL',
-      decision: approve ? 'HUMAN_APPROVED' : 'HUMAN_REJECTED', rule: 'human', approvalId: a.id
+      decision: approve ? 'HUMAN_APPROVED' : 'HUMAN_REJECTED', rule: 'human', approvalId: a.id,
+      ...(a.decidedOwner ? { human: a.decidedOwner } : {})
     } satisfies GovernanceRecord);
     this.deps.onEvent?.({ type: 'approval-decided', data: a });
     return a;
