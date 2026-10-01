@@ -1,0 +1,11 @@
+{
+  "decideIpcAnswerKeys": [
+    "decidedAt",
+    "decidedBy",
+    "id",
+    "status"
+  ],
+  "domLeaks": 0,
+  "evidenceRefs": 17,
+  "evidenceRefsResolved": 17
+}

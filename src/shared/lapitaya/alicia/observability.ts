@@ -94,9 +94,9 @@ export const CATEGORY_WHY: ReadonlySet<ObservationCategory> = new Set<Observatio
 // ─── the observation ───────────────────────────────────────────────────────
 
 export interface ObservationEvidence {
-  /** `EVT-<fnv1a of the exact ledger line>` or the trace's own id. */
+  /** `EVT-<fnv1a of the exact ledger line>`, the trace's own id, or (v0.7) the approval's own id. */
   ref: string;
-  source: 'cima-ledger.jsonl' | 'traces.jsonl';
+  source: 'cima-ledger.jsonl' | 'traces.jsonl' | 'approvals.json';
 }
 
 /** One runtime fact, human-safe. Every field is runtime data or null. */
@@ -141,7 +141,20 @@ export interface ObservabilityView {
   recent: readonly GovernanceObservation[];
   /** Per REQUEST proposal: its read-only timeline (oldest first) and latest fact. */
   byProposal: Readonly<Record<string, { timeline: readonly GovernanceObservation[]; latest: GovernanceObservation | null }>>;
+  /** v0.7 Decision Center: every HIGH approval STILL pending in the runtime,
+   *  newest first, each as its HUMAN_APPROVAL_REQUIRED fact. */
+  pendingApprovals?: readonly GovernanceObservation[];
+  /** v0.7: per approval (pending or decided): its read-only timeline and latest fact. */
+  byApproval?: Readonly<Record<string, { timeline: readonly GovernanceObservation[]; latest: GovernanceObservation | null }>>;
+  /** v0.7: resolved human decisions (REQUEST confirmations/closures, HIGH approvals/rejections), newest first. */
+  history?: readonly GovernanceObservation[];
 }
+
+/** The human decisions the Decision Center lists as resolved (runtime facts only). */
+export const RESOLVED_DECISION_CATEGORIES: ReadonlySet<ObservationCategory> = new Set<ObservationCategory>([
+  'REQUEST_CONFIRMED', 'REQUEST_CANCELLED', 'REQUEST_COMPLETED', 'REQUEST_CONFIRMATION_DENIED',
+  'REQUEST_BLOCKED', 'REQUEST_SUPERSEDED', 'APPROVAL_GRANTED', 'APPROVAL_REJECTED'
+]);
 
 // ─── field guards (whitelist: nothing free-form leaves this module) ─────────
 
@@ -332,7 +345,7 @@ function deepFreeze<T>(v: T): T {
  * The whole read-only view. Deterministic for the same sources; inputs are
  * never mutated; the result is deeply frozen.
  */
-export function projectObservability(src: ObservabilitySources, opts: { recentLimit?: number; timelineLimit?: number } = {}): ObservabilityView {
+export function projectObservability(src: ObservabilitySources, opts: { recentLimit?: number; timelineLimit?: number; historyLimit?: number } = {}): ObservabilityView {
   const recentLimit = opts.recentLimit ?? 12;
   const timelineLimit = opts.timelineLimit ?? 60;
   const ctx: Ctx = {
@@ -402,7 +415,36 @@ export function projectObservability(src: ObservabilitySources, opts: { recentLi
   // Execution is shown when it belongs to governed work (a REQUEST or a HIGH approval), not for every ALLOW.
   const relevant = ordered.filter(isRelevant);
   const recent = collapse(relevant).reverse().slice(0, recentLimit);
-  return deepFreeze({ recent, byProposal });
+
+  // ─── v0.7 Decision Center: pending HIGH approvals, per-approval timelines, history ───
+  const approvalState = new Map<string, Record<string, unknown>>();
+  for (const a of (src.approvals ?? []).map(obj)) { const aid = id(a.id); if (aid) approvalState.set(aid, a); }
+  const pendingApprovals: GovernanceObservation[] = [];
+  for (const [aid, a] of approvalState) {
+    if (a.status !== 'pending') continue;
+    const fact = [...ordered].reverse().find((o) => o.approvalId === aid && o.category === 'HUMAN_APPROVAL_REQUIRED');
+    if (fact) { pendingApprovals.push(fact); continue; }
+    // The ledger window no longer holds its decision record: the approval itself
+    // (approvals.json, written by the runtime) is the evidence. Enumerated fields only.
+    const tool = id(a.tool); const cat = id(a.category);
+    pendingApprovals.push(build({
+      eventId: aid, category: 'HUMAN_APPROVAL_REQUIRED', timestamp: num(a.createdAt), intentId: null, proposalId: null,
+      approvalId: aid, taskId: null, agent: id(a.agentId), operation: tool ? (cat ? `${tool} · ${cat}` : tool) : null,
+      intentType: null, runtimeStatus: 'pending', risk: inSet(RISKS, a.risk), scope: null, autonomy: 'HUMAN_APPROVAL',
+      decision: 'HUMAN_APPROVAL_REQUIRED', rule: null, evidence: { ref: aid, source: 'approvals.json' }
+    }, true, ctx));
+  }
+  pendingApprovals.sort((x, y) => (y.timestamp ?? 0) - (x.timestamp ?? 0));
+  const approvalIds = new Set<string>([...pendingApprovals.map((o) => o.approvalId as string),
+    ...ordered.filter((o) => o.approvalId && (o.category === 'APPROVAL_GRANTED' || o.category === 'APPROVAL_REJECTED')).map((o) => o.approvalId as string)]);
+  const byApproval: Record<string, { timeline: GovernanceObservation[]; latest: GovernanceObservation | null }> = {};
+  for (const aid of approvalIds) {
+    const timeline = collapse(ordered.filter((o) => o.approvalId === aid)).slice(-timelineLimit);
+    const pending = pendingApprovals.find((o) => o.approvalId === aid);
+    byApproval[aid] = { timeline: timeline.length ? timeline : pending ? [pending] : [], latest: pending ?? timeline[timeline.length - 1] ?? null };
+  }
+  const history = collapse(ordered.filter((o) => RESOLVED_DECISION_CATEGORIES.has(o.category))).reverse().slice(0, opts.historyLimit ?? 20);
+  return deepFreeze({ recent, byProposal, pendingApprovals, byApproval, history });
 }
 
 // ─── the same explanation as text (non-UI hosts, evidence, tests) ───────────

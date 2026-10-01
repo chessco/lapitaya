@@ -4,7 +4,9 @@ import type { AliciaCompanionState } from '@shared/lapitaya/alicia';
 import { getLocaleSettings } from '@/i18n';
 import { aliciaLineKey, createConfirmationController, type ConfirmationController, type ConfirmationPort } from './confirmationController';
 import { AliciaPanelView, lineForSubmit, NS, type AliciaLine } from './AliciaPanelView';
-import { useGovernanceObservability } from './useGovernanceObservability';
+import { requestObservabilityRefresh, useGovernanceObservability } from './useGovernanceObservability';
+import { fetchPendingDecisionCount, fetchPendingHighApprovals, useDecisionCenter } from './useDecisionCenter';
+import { highLineKey } from './decisionCenter';
 
 /**
  * La Pitaya Alicia v0.5 — Human Confirmation UI.
@@ -21,7 +23,8 @@ import { useGovernanceObservability } from './useGovernanceObservability';
 export function ipcConfirmationPort(): ConfirmationPort {
   return {
     requests: () => window.cth.lapitayaRequests(),
-    approvals: () => window.cth.lapitayaApprovals(),
+    // v0.7: pending HIGH approvals from the read-only projection (no command/fingerprint reaches the renderer).
+    approvals: () => fetchPendingHighApprovals(),
     confirm: (id, token) => window.cth.lapitayaConfirmRequest(id, token),
     cancel: (id) => window.cth.lapitayaCancelRequest(id)
   };
@@ -40,6 +43,9 @@ export function AliciaPanel() {
   const [sending, setSending] = useState(false);
   // v0.6: what the runtime recorded, explained (read only).
   const observability = useGovernanceObservability();
+  // v0.7: Human Decisions — REQUEST confirmations (v0.5 controller) + HIGH approvals (existing lapitaya:decide).
+  const { model: decisions, controller: approvals } = useDecisionCenter(snapshot, observability);
+  const [highAcknowledged, setHighAcknowledged] = useState<Set<string>>(new Set());
 
   const locales = useCallback(() => ({ ...getLocaleSettings(), uiLocale: i18n.language }), [i18n.language]);
   const refreshAlicia = useCallback(() => {
@@ -67,6 +73,20 @@ export function AliciaPanel() {
     const key = view ? aliciaLineKey(view) : null;
     if (key) say(t(`${NS}.said.${key}`, { code: res.ok ? '' : res.code }));
     setAcknowledged((s) => { const n = new Set(s); n.delete(id); return n; });
+    refreshAlicia();
+  };
+
+  const decideHigh = async (id: string, op: 'approve' | 'reject') => {
+    const pending = !!decisions.high.find((d) => d.approvalId === id && d.pending);
+    const res = op === 'approve' ? await approvals.approve(id, pending) : await approvals.reject(id, pending);
+    if (res === undefined) return; // dropped: another decision in flight, or no longer pending here
+    const d = { outcome: approvals.getSnapshot().outcomes.get(id) ?? null };
+    const key = highLineKey(d);
+    if (key) say(t(`lapitaya:alicia.decisions.said.${key}`));
+    setHighAcknowledged((s) => { const n = new Set(s); n.delete(id); return n; });
+    // Whatever the runtime answered, re-read it: the runtime's state is what the card shows.
+    requestObservabilityRefresh();
+    void controller.refresh();
     refreshAlicia();
   };
 
@@ -116,6 +136,11 @@ export function AliciaPanel() {
       onDraft={setDraft}
       onSend={() => void send()}
       observability={observability}
+      decisions={decisions}
+      highAcknowledged={highAcknowledged}
+      onAcknowledgeHigh={(id, v) => setHighAcknowledged((s) => { const n = new Set(s); if (v) n.add(id); else n.delete(id); return n; })}
+      onApproveHigh={(id) => void decideHigh(id, 'approve')}
+      onRejectHigh={(id) => void decideHigh(id, 'reject')}
     />
   );
 }
@@ -129,14 +154,13 @@ export function AliciaPendingBadge() {
     // bridge does, it may hide itself but never take the tab bar down.
     const load = () => {
       try {
-        void window.cth.lapitayaRequests()
-          .then((r) => setCount(r.filter((p) => p.status === 'PROPOSED').length))
-          .catch(() => setCount(0));
+        // v0.7: every pending human decision (REQUEST confirmations + HIGH approvals).
+        void fetchPendingDecisionCount().then(setCount).catch(() => setCount(0));
       } catch { setCount(0); }
     };
     load();
     try {
-      return window.cth.onLapitayaGovernance((e) => { if (e.type === 'request') load(); });
+      return window.cth.onLapitayaGovernance((e) => { if (e.type === 'request' || e.type === 'approval-request' || e.type === 'approval-decided') load(); });
     } catch { return undefined; }
   }, []);
   if (!count) return null;

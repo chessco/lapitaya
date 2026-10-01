@@ -1,0 +1,21 @@
+{
+  "i18n": {
+    "decisionKeys": 40,
+    "identicalKeyTrees": true,
+    "missingWhenRendered": {
+      "es-MX": [],
+      "en-US": []
+    }
+  },
+  "a11y": {
+    "decisionCenterLabelledSection": true,
+    "countsLiveStatus": true,
+    "highGroupLabelled": true,
+    "approveNeedsAcknowledgement": true,
+    "controlOrder": [
+      "acknowledge-high",
+      "reject-high",
+      "approve-high"
+    ]
+  }
+}

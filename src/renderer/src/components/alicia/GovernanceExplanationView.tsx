@@ -81,21 +81,30 @@ export function ProposalGovernance({ t, proposalId, entry }: {
     <div data-field="governance" style={{ margin: '6px 0', paddingTop: 6, borderTop: '1px dashed var(--cth-ink-300)' }}>
       <div style={{ ...muted, fontWeight: 700, marginBottom: 2 }}>{t(`${NS}.sectionTitle`)}</div>
       <ObservationExplanation t={t} obs={entry.latest} headingLevel="h5" />
-      <details data-field="timeline" style={{ marginTop: 4, fontSize: 11 }}>
-        <summary>{t(`${NS}.timelineToggle`, { count: entry.timeline.length })}</summary>
-        <ol id={listId} aria-label={t(`${NS}.timelineLabel`, { proposalId })} style={{ margin: '4px 0 0', paddingInlineStart: 18 }}>
-          {entry.timeline.map((o) => (
-            <li key={o.eventId} data-observation={o.category} data-event-id={o.eventId}>
-              <time style={mono}>{time(o.timestamp)}</time>{' '}
-              <code style={mono}>{o.category}</code>{' '}
-              {t(k(o.keys.what), vars(t, o))}
-              {o.count > 1 && <span style={{ ...muted, marginInlineStart: 4 }}>{t(`${NS}.repeated`, { count: o.count })}</span>}
-              {o.evidence && <span style={{ ...muted, marginInlineStart: 4 }}>· {o.evidence.ref}</span>}
-            </li>
-          ))}
-        </ol>
-      </details>
+      <FactTimeline t={t} id={listId} timeline={entry.timeline} labelKey={`${NS}.timelineLabel`} labelVars={{ proposalId }} />
     </div>
+  );
+}
+
+/** A read-only, keyboard-openable timeline of runtime facts (native <details>, no controls inside). */
+export function FactTimeline({ t, id, timeline, labelKey, labelVars }: {
+  t: T; id: string; timeline: readonly GovernanceObservation[]; labelKey: string; labelVars: Record<string, unknown>;
+}) {
+  return (
+    <details data-field="timeline" style={{ marginTop: 4, fontSize: 11 }}>
+      <summary>{t(`${NS}.timelineToggle`, { count: timeline.length })}</summary>
+      <ol id={id} aria-label={t(labelKey, labelVars)} style={{ margin: '4px 0 0', paddingInlineStart: 18 }}>
+        {timeline.map((o) => (
+          <li key={o.eventId} data-observation={o.category} data-event-id={o.eventId}>
+            <time style={mono}>{time(o.timestamp)}</time>{' '}
+            <code style={mono}>{o.category}</code>{' '}
+            {t(k(o.keys.what), vars(t, o))}
+            {o.count > 1 && <span style={{ ...muted, marginInlineStart: 4 }}>{t(`${NS}.repeated`, { count: o.count })}</span>}
+            {o.evidence && <span style={{ ...muted, marginInlineStart: 4 }}>· {o.evidence.ref}</span>}
+          </li>
+        ))}
+      </ol>
+    </details>
   );
 }
 

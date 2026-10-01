@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Approval } from '@shared/lapitaya/governance';
+import { isDecisionCenterPresent, useDecisionCenterPresent } from './alicia/decisionCenterPresence';
 
 /**
  * La Pitaya: the human side of HUMAN_APPROVAL_REQUIRED.
@@ -11,6 +12,15 @@ import type { Approval } from '@shared/lapitaya/governance';
  * the agent does, after the decision, through the same hook that denied it.
  */
 export function GovernancePanel() {
+  // v0.7: when Alicia's Decision Center is on screen (same #human tab), pending
+  // HIGH approvals are decided there — one set of Approve/Reject controls per
+  // runtime decision, not two competing ones. Standalone, this panel is unchanged.
+  const decisionCenter = useDecisionCenterPresent();
+  if (decisionCenter) return null;
+  return <GovernanceApprovalsList />;
+}
+
+function GovernanceApprovalsList() {
   const { t } = useTranslation();
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -20,10 +30,13 @@ export function GovernancePanel() {
   }, []);
 
   useEffect(() => {
-    refresh();
-    return window.cth.onLapitayaGovernance((e) => {
-      if (e.type === 'approval-request' || e.type === 'approval-decided') refresh();
+    // Mounted in the same commit as the Decision Center, it stands down before
+    // asking for the approvals (their summaries carry the commands).
+    const first = setTimeout(() => { if (!isDecisionCenterPresent()) refresh(); }, 0);
+    const off = window.cth.onLapitayaGovernance((e) => {
+      if ((e.type === 'approval-request' || e.type === 'approval-decided') && !isDecisionCenterPresent()) refresh();
     });
+    return () => { clearTimeout(first); off(); };
   }, [refresh]);
 
   const pending = approvals.filter((a) => a.status === 'pending');

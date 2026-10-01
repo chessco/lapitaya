@@ -3,6 +3,8 @@ import type { AliciaSubmitResult } from '@shared/lapitaya/alicia';
 import type { ObservabilityView } from '@shared/lapitaya/alicia/observability';
 import { EXPLAINED_CODES, type ConfirmationSnapshot, type ProposalView } from './confirmationController';
 import { GovernanceActivity, ProposalGovernance } from './GovernanceExplanationView';
+import type { AcknowledgedIds, DecisionCenterModel, HighDecisionView } from './decisionCenter';
+import { DecisionCenterSection, HighApprovalCard } from './DecisionCenterView';
 
 /**
  * La Pitaya Alicia v0.5 — the Human Confirmation UI, as a pure render of the
@@ -33,6 +35,12 @@ export interface AliciaPanelViewProps {
   onSend(): void;
   /** v0.6: the runtime's read-only governance projection (absent → nothing extra is shown). */
   observability?: ObservabilityView | null;
+  /** v0.7: the Human Decisions center (absent → the v0.5/v0.6 panel, unchanged). */
+  decisions?: DecisionCenterModel | null;
+  highAcknowledged?: AcknowledgedIds;
+  onAcknowledgeHigh?(id: string, value: boolean): void;
+  onApproveHigh?(id: string): void;
+  onRejectHigh?(id: string): void;
 }
 
 const box: CSSProperties = {
@@ -59,10 +67,12 @@ function refusalText(t: T, code: string): string {
   return t('lapitaya:alicia.explain.UNKNOWN', { rule: code });
 }
 
-export function AliciaProposalCard({ t, view, acknowledged, onAcknowledge, onConfirm, onCancel, observability }: {
+export function AliciaProposalCard({ t, view, acknowledged, onAcknowledge, onConfirm, onCancel, observability, decisionType }: {
   t: T; view: ProposalView; acknowledged: boolean;
   onAcknowledge(id: string, value: boolean): void; onConfirm(id: string): void; onCancel(id: string): void;
   observability?: ObservabilityView | null;
+  /** v0.7: labels the card as a REQUEST confirmation inside the Decision Center. */
+  decisionType?: 'REQUEST_CONFIRMATION';
 }) {
   const base = `alicia-proposal-${view.id}`;
   const active = view.status === 'PROPOSED' || view.status === 'CONFIRMED';
@@ -75,8 +85,15 @@ export function AliciaProposalCard({ t, view, acknowledged, onAcknowledge, onCon
       data-proposal-status={view.status}
       data-ui-state={view.uiState}
       data-scope={view.scope}
+      {...(decisionType ? { 'data-decision-type': decisionType } : {})}
       style={{ ...box, opacity: active || view.outcome ? 1 : 0.7 }}
     >
+      {decisionType && (<>
+        <span data-field="decision-type" style={{ display: 'inline-block', padding: '0 6px', marginBottom: 4, fontSize: 10, fontWeight: 700, boxShadow: 'inset 0 0 0 1px currentColor' }}>
+          {t(`lapitaya:alicia.decisions.type.${decisionType}`)}
+        </span>
+        <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700 }}>{t(`lapitaya:alicia.decisions.typeMeaning.${decisionType}`)}</p>
+      </>)}
       <div id={`${base}-h`} tabIndex={-1} style={{ fontWeight: 700, marginBottom: 4 }}>
         {t(`${NS}.state.${view.uiState}`)}
       </div>
@@ -196,7 +213,8 @@ export function AliciaPanelView(p: AliciaPanelViewProps) {
       {snapshot.loadError && <div role="alert" style={{ ...box, fontSize: 11 }}>{t(`${NS}.loadError`)}</div>}
       {snapshot.loaded && !snapshot.loadError && views.length === 0 && <div style={{ ...muted, marginBottom: 6 }}>{t(`${NS}.empty`)}</div>}
 
-      {views.map((v) => (
+      {p.decisions && <DecisionCenterBlock p={p} views={views} />}
+      {!p.decisions && views.map((v) => (
         <AliciaProposalCard
           key={v.id} t={t} view={v} acknowledged={p.acknowledged.has(v.id)}
           onAcknowledge={p.onAcknowledge} onConfirm={p.onConfirm} onCancel={p.onCancel}
@@ -234,6 +252,38 @@ export function AliciaPanelView(p: AliciaPanelViewProps) {
         </button>
       </form>
     </div>
+  );
+}
+
+/** v0.7: the Human Decisions center — pending HIGH approvals + the REQUEST cards, one surface. */
+function DecisionCenterBlock({ p, views }: { p: AliciaPanelViewProps; views: readonly ProposalView[] }) {
+  if (!p.decisions) return null;
+  return (
+    <DecisionCenterSection
+      t={p.t} model={p.decisions}
+      requestCards={views.map((v) => requestDecisionCard(p, v))}
+      highCards={p.decisions.high.map((d) => highDecisionCard(p, d))}
+    />
+  );
+}
+
+function requestDecisionCard(p: AliciaPanelViewProps, v: ProposalView) {
+  return (
+    <AliciaProposalCard
+      key={v.id} t={p.t} view={v} acknowledged={p.acknowledged.has(v.id)}
+      onAcknowledge={p.onAcknowledge} onConfirm={p.onConfirm} onCancel={p.onCancel}
+      observability={p.observability} decisionType="REQUEST_CONFIRMATION"
+    />
+  );
+}
+
+function highDecisionCard(p: AliciaPanelViewProps, d: HighDecisionView) {
+  const noop = () => { /* no handler wired: the card stays inert */ };
+  return (
+    <HighApprovalCard
+      key={d.approvalId} t={p.t} d={d} acknowledged={!!p.highAcknowledged?.has(d.approvalId)}
+      onAcknowledge={p.onAcknowledgeHigh ?? noop} onApprove={p.onApproveHigh ?? noop} onReject={p.onRejectHigh ?? noop}
+    />
   );
 }
 

@@ -7,6 +7,13 @@ import type { ObservabilityView } from '@shared/lapitaya/alicia';
  * computed in main from the runtime's own records; this hook only fetches it.
  * It has no way to write, decide, confirm or approve anything.
  */
+const refreshRequests = new Set<() => void>();
+/** v0.7: ask every mounted projection reader to re-read the runtime now (e.g.
+ *  after a decision the runtime refused, which emits no event). */
+export function requestObservabilityRefresh(): void {
+  for (const r of refreshRequests) r();
+}
+
 export function useGovernanceObservability(): ObservabilityView | null {
   const [view, setView] = useState<ObservabilityView | null>(null);
   useEffect(() => {
@@ -22,9 +29,10 @@ export function useGovernanceObservability(): ObservabilityView | null {
     // Tool calls can come in bursts: coalesce refreshes.
     const schedule = () => { if (timer) clearTimeout(timer); timer = setTimeout(load, 250); };
     load();
+    refreshRequests.add(load);
     let off: (() => void) | undefined;
     try { off = window.cth.onLapitayaGovernance(() => schedule()); } catch { off = undefined; }
-    return () => { alive = false; if (timer) clearTimeout(timer); off?.(); };
+    return () => { alive = false; refreshRequests.delete(load); if (timer) clearTimeout(timer); off?.(); };
   }, []);
   return view;
 }

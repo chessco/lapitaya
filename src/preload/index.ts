@@ -1081,7 +1081,7 @@ const api = {
   /** Every approval request the runtime has raised, newest first. */
   lapitayaApprovals: (): Promise<Approval[]> => ipcRenderer.invoke('lapitaya:approvals'),
   /** The human's explicit decision on one PENDING request. */
-  lapitayaDecide: (id: string, approve: boolean): Promise<Approval | null> =>
+  lapitayaDecide: (id: string, approve: boolean): Promise<Pick<Approval, 'id' | 'status'> & { decidedAt: number | null; decidedBy: string | null } | null> =>
     ipcRenderer.invoke('lapitaya:decide', id, approve),
   /** v0.4.2: REQUEST proposals waiting for (or holding) the human's confirmation. */
   lapitayaRequests: (): Promise<RequestProposal[]> => ipcRenderer.invoke('lapitaya:requests'),

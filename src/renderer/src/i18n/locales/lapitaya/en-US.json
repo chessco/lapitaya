@@ -156,7 +156,7 @@
       "empty": "No REQUEST proposals are waiting for you.",
       "pendingBanner": "Proposals waiting for your confirmation: {{count}}. Until you decide, nothing on the floor executes.",
       "goToProposal": "View proposal",
-      "pendingBadge": "REQUEST proposals waiting for your confirmation: {{count}}",
+      "pendingBadge": "Pending human decisions (REQUEST and HIGH): {{count}}",
       "understood": "I understood that you want:",
       "fields": {
         "risk": "Scope (runtime risk)",
@@ -170,14 +170,14 @@
         "MEDIUM": "If you confirm, LOW and MEDIUM risk actions may continue, each one still authorized by CIMA when it runs."
       },
       "meaning": "Confirming lets this REQUEST continue to CIMA governance. It does not execute anything by itself.",
-      "highNote": "Confirming the REQUEST is not approving a high-risk action: every HIGH action needs its own approval in Governance approvals.",
+      "highNote": "Confirming the REQUEST is not approving a high-risk action: every HIGH action needs its own approval in Human decisions.",
       "ack": "I have read the proposal and understand that confirming does not approve HIGH actions.",
       "decisionGroup": "Decision on the proposal",
       "confirm": "Confirm REQUEST",
       "cancel": "Cancel REQUEST",
       "noRetry": "Nothing is retried automatically.",
       "confirmedNote": "REQUEST confirmed — this is not an approval. Every action is still evaluated by CIMA, and HIGH actions need your separate approval.",
-      "highPending": "CIMA requires your approval for HIGH actions (HUMAN_APPROVAL_REQUIRED): {{count}} pending. Decide them in Governance approvals; confirming the REQUEST did not approve them.",
+      "highPending": "CIMA requires your approval for HIGH actions (HUMAN_APPROVAL_REQUIRED): {{count}} pending. Decide them in Human decisions; confirming the REQUEST did not approve them.",
       "state": {
         "PENDING": "Proposal waiting for your confirmation",
         "CONFIRMING": "Confirming with the runtime…",
@@ -284,7 +284,7 @@
       },
       "next": {
         "WAITING_HUMAN_CONFIRMATION": "Nothing executes until you confirm or cancel the proposal.",
-        "WAITING_HUMAN_APPROVAL": "Review the approval in Governance approvals. Confirming the REQUEST did not approve this HIGH action.",
+        "WAITING_HUMAN_APPROVAL": "Review the approval in Human decisions. Confirming the REQUEST did not approve this HIGH action.",
         "CONTINUES_UNDER_CIMA": "The work continues; every action is still evaluated by CIMA.",
         "MAY_EXECUTE": "The call may run; its execution will show once the harness records it.",
         "APPROVAL_ON_ATTEMPT": "When El Inge attempts that action, CIMA will ask for your HIGH approval of that exact call; without it nothing runs.",
@@ -304,7 +304,61 @@
       },
       "action": {
         "CONFIRM_REQUEST": "Confirm or cancel the proposal.",
-        "DECIDE_APPROVAL": "Approve or reject the HIGH action in Governance approvals."
+        "DECIDE_APPROVAL": "Approve or reject the HIGH action in Human decisions."
+      }
+    },
+    "decisions": {
+      "title": "HUMAN DECISIONS",
+      "counts": "Pending decisions: {{total}} · REQUESTs to confirm: {{requests}} · HIGH actions to approve: {{high}}",
+      "none": "No decisions are pending.",
+      "distinction": "Confirming a REQUEST and approving a HIGH action are different decisions: confirming lets the proposal continue within its scope; approving authorizes ONE run of one exact HIGH call. Neither replaces the other.",
+      "unobserved": "The runtime's explanation could not be read; without evidence nothing is claimed. Decisions still go through the runtime.",
+      "highTitle": "Pending HIGH approvals",
+      "noHigh": "No HIGH actions are waiting for your approval.",
+      "requestTitle": "REQUEST proposals",
+      "historyToggle": "Show resolved decisions ({{count}})",
+      "historyTitle": "Resolved decisions (per the runtime, read only)",
+      "historyEmpty": "No resolved decisions yet.",
+      "type": {
+        "REQUEST_CONFIRMATION": "REQUEST CONFIRMATION",
+        "HIGH_APPROVAL": "HIGH-RISK HUMAN APPROVAL"
+      },
+      "typeMeaning": {
+        "REQUEST_CONFIRMATION": "You confirm that this proposal may continue within its scope. It is not a HIGH approval.",
+        "HIGH_APPROVAL": "You authorize ONE run of this exact HIGH call. It confirms no REQUEST and approves no other action."
+      },
+      "highState": {
+        "HUMAN_APPROVAL_REQUIRED": "Waiting for your HIGH approval",
+        "APPROVING": "Approving with the runtime…",
+        "REJECTING": "Rejecting with the runtime…",
+        "APPROVED": "Approved by you: allows one run of that exact call",
+        "REJECTED": "Rejected by you: that call will not run",
+        "ALREADY_RESOLVED": "It was already resolved; showing the runtime state",
+        "ERROR": "The runtime did not answer; nothing changed"
+      },
+      "fields": {
+        "agent": "Agent",
+        "operation": "Operation",
+        "task": "Task",
+        "request": "Related REQUEST",
+        "created": "Requested"
+      },
+      "relatedRequest": "It came up under REQUEST {{proposalId}}. Confirming that REQUEST did not approve this action.",
+      "exactCallNote": "The approval is bound to the exact call CIMA stopped; the command is not shown here (sensitive-data boundary).",
+      "ack": "I reviewed the operation, the rule and the HIGH risk; I approve this exact call only.",
+      "decisionGroup": "Decision on the HIGH action",
+      "approve": "Approve HIGH action",
+      "reject": "Reject HIGH action",
+      "timelineLabel": "Timeline of approval {{approvalId}} (read only)",
+      "errors": {
+        "ALREADY_RESOLVED": "The runtime no longer had this approval pending (resolved elsewhere or unknown).",
+        "IPC_ERROR": "The runtime did not answer, so nothing changed."
+      },
+      "said": {
+        "approved": "Approved. The agent may retry that exact call once; CIMA authorizes it again.",
+        "rejected": "Rejected. That call will not run.",
+        "alreadyResolved": "That approval was already resolved; I am showing the runtime state.",
+        "failed": "I could not deliver your decision to the runtime; nothing changed."
       }
     }
   }

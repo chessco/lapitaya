@@ -4035,7 +4035,10 @@ ipcMain.handle('control:setBreakerState', (_evt, state: unknown) => {
 ipcMain.handle('lapitaya:approvals', () => lapitaya.listApprovals());
 ipcMain.handle('lapitaya:decide', (_evt, id: unknown, approve: unknown) => {
   if (typeof id !== 'string' || typeof approve !== 'boolean') return null;
-  return lapitaya.decide(id, approve, 'human');
+  const a = lapitaya.decide(id, approve, 'human');
+  // v0.7: the renderer gets the decision's outcome, never the call's summary
+  // (the command) or fingerprint. null = not pending (unknown, already decided).
+  return a ? { id: a.id, status: a.status, decidedAt: a.decidedAt ?? null, decidedBy: a.decidedBy ?? null } : null;
 });
 // v0.4.2 REQUEST execution gate — the human's channel, like lapitaya:decide.
 // These are the ONLY call sites of confirm/cancel/complete: no agent, no

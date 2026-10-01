@@ -1,0 +1,51 @@
+{
+  "pendingCounts": {
+    "total": 3,
+    "requests": 3,
+    "high": 0
+  },
+  "scopes": [
+    {
+      "id": "req-mywpj2ag-3",
+      "scope": "LOW"
+    },
+    {
+      "id": "req-mywpizz4-2",
+      "scope": "LOW"
+    },
+    {
+      "id": "req-mywpixns-1",
+      "scope": "MEDIUM"
+    }
+  ],
+  "tamperedToken": "TAMPERED",
+  "doubleConfirm": {
+    "first": true,
+    "second": "dropped by the UI"
+  },
+  "replayedToken": "NOT_CONFIRMABLE",
+  "cancel": true,
+  "staleConfirm": "STALE_PROPOSAL",
+  "transitions": {
+    "req-mywpixns-1": [
+      "PROPOSED(alicia)",
+      "CONFIRMATION_DENIED(human)",
+      "REVALIDATED(runtime)",
+      "CONFIRMED(human)",
+      "CONFIRMATION_DENIED(human)"
+    ],
+    "req-mywpizz4-2": [
+      "PROPOSED(alicia)",
+      "CANCELLED(human)"
+    ],
+    "req-mywpj2ag-3": [
+      "PROPOSED(alicia)",
+      "BLOCKED(runtime)"
+    ]
+  },
+  "ipcCalls": [
+    "lapitaya:confirmRequest req-mywpixns-1",
+    "lapitaya:cancelRequest req-mywpizz4-2",
+    "lapitaya:confirmRequest req-mywpj2ag-3"
+  ]
+}

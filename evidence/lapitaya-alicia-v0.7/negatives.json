@@ -1,0 +1,20 @@
+{
+  "aliciaApprovesHigh": "DENY",
+  "aliciaConfirmsRequest": "DENY",
+  "wrongIdentities": {
+    "alicia": "NOT_AUTHORIZED",
+    "god": "NOT_AUTHORIZED",
+    "el-beni-1": "NOT_AUTHORIZED"
+  },
+  "wrongProposalToken": "TAMPERED",
+  "fabricatedApprovalId": null,
+  "companionPorts": [],
+  "afterAll": {
+    "approval": "pending",
+    "request": "PROPOSED"
+  },
+  "highStillBlocked": {
+    "result": "DENIED",
+    "decision": "DENY"
+  }
+}

@@ -24,9 +24,13 @@ export type RequestResult =
 /** Everything the confirmation UI can reach — the existing human-channel IPC
  *  (preload: lapitayaRequests / lapitayaApprovals / lapitayaConfirmRequest /
  *  lapitayaCancelRequest). Nothing here executes, approves or decides. */
+/** The approval fields this UI reads — never the call's summary (command) or fingerprint. */
+export type ApprovalState = Pick<Approval, 'id' | 'status' | 'risk' | 'createdAt'>;
+
 export interface ConfirmationPort {
   requests(): Promise<RequestProposal[]>;
-  approvals(): Promise<Approval[]>;
+  /** Only what the pending-HIGH count needs (v0.7: no summary or fingerprint required). */
+  approvals(): Promise<ApprovalState[]>;
   confirm(id: string, token: string): Promise<RequestResult>;
   cancel(id: string): Promise<RequestResult>;
 }
@@ -113,7 +117,7 @@ export function deriveUiState(p: RequestProposal, inFlight: ConfirmationOp | und
 export function createConfirmationController(port: ConfirmationPort, opts: { recentClosed?: number } = {}) {
   const recentClosed = opts.recentClosed ?? 3;
   let proposals: RequestProposal[] = [];
-  let approvals: Approval[] = [];
+  let approvals: ApprovalState[] = [];
   let loaded = false;
   let loadError = false;
   const inFlight = new Map<string, ConfirmationOp>();
