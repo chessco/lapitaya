@@ -184,6 +184,8 @@ decision (now stays APPROVING/REJECTING, no second decision offered); the missin
 classic Governance panel now stands down only while the projection is available); projection
 failures no longer hide REQUESTs or the badge; the approval acknowledgement no longer claims
 knowledge of the command; the view model is memoized. Test `DC-REV`.
+The fixes were re-validated in the real Electron app (temp profile and temp hive):
+`evidence/lapitaya-alicia-v0.7/electron-revalidation-aad67b84/` (the two-window race was not repeated).
 Deferred: `lapitaya:approvals` still returns summaries to the renderer (unchanged since v0.5; the
 classic panel needs it as the fallback); pending approvals are labelled by their runtime risk, not
 filtered to HIGH; per-session cleanup of resolved cards; duplicated fallback mapping in the

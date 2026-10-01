@@ -1,0 +1,49 @@
+{
+  "before": [
+    {
+      "id": "req-mup3q41b-1",
+      "status": "CONFIRMED",
+      "hasToken": false
+    }
+  ],
+  "submitCancel": "ok",
+  "cancel": "ok",
+  "afterCancel": [
+    {
+      "id": "req-mup3r56y-a",
+      "status": "CANCELLED",
+      "hasToken": false
+    },
+    {
+      "id": "req-mup3q41b-1",
+      "status": "CONFIRMED",
+      "hasToken": false
+    }
+  ],
+  "submitForge": "ok",
+  "forged": {
+    "ok": false,
+    "code": "TAMPERED"
+  },
+  "wrongTarget": {
+    "ok": false,
+    "code": "UNKNOWN_PROPOSAL"
+  },
+  "replayConfirmed": {
+    "ok": false,
+    "code": "NOT_CONFIRMABLE"
+  },
+  "decideUnknown": null,
+  "decideBadArgs": null,
+  "dcHasHistory": true,
+  "errorsEs": [],
+  "pickerText": "SELECT A HARNESS CONFIG\n\nA harness confi",
+  "tabEn": "clicked",
+  "enHeading": true,
+  "enSample": "HUMAN DECISIONS\n\nPending decisions: 2 · REQUESTs to confirm: 1 · HIGH actions to approve: 1\n\nConfirming a REQUEST and approving a HIGH action are different decisions: confirming lets the proposal cont",
+  "leaksEn": {
+    "rm": false,
+    "srv": false
+  },
+  "errorsEn": []
+}
