@@ -4036,7 +4036,6 @@ ipcMain.handle('control:setBreakerState', (_evt, state: unknown) => {
 // All return the agent's fresh control snapshot so the UI can reflect state.
 // La Pitaya governance — the human's side of HUMAN_APPROVAL_REQUIRED, and a
 // read-only view of the CIMA ledger for the UI and for evidence export.
-ipcMain.handle('lapitaya:approvals', () => lapitaya.listApprovals());
 // v0.8: WHO decides is resolved here from the trusted sender, never taken from the renderer
 // (see humanIdentity.ts / humanGovernanceIpc.ts); extra renderer arguments are ignored.
 const humanIdentity = createHumanIdentityService({

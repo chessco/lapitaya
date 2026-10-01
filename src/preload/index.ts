@@ -1078,8 +1078,6 @@ const api = {
   },
 
   // ─── La Pitaya governance (HUMAN_APPROVAL_REQUIRED + CIMA ledger) ─────────
-  /** Every approval request the runtime has raised, newest first. */
-  lapitayaApprovals: (): Promise<Approval[]> => ipcRenderer.invoke('lapitaya:approvals'),
   /** The human's explicit decision on one PENDING request. */
   lapitayaDecide: (id: string, approve: boolean): Promise<Pick<Approval, 'id' | 'status'> & { decidedAt: number | null; decidedBy: string | null } | null> =>
     ipcRenderer.invoke('lapitaya:decide', id, approve),

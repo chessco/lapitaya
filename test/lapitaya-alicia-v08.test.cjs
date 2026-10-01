@@ -396,11 +396,9 @@ test('[ID-02][IPC] the human channel never accepts identity from the renderer; l
   has(main, /describeSender: \(evt\) =>/, 'describeSender');
   has(main, /BrowserWindow\.fromWebContents\(wc\)/, 'own window check');
   has(main, /e\.senderFrame === wc\.mainFrame/, 'main frame check');
-  // #5 is intentionally untouched: lapitaya:approvals and its preload bridge still exist, unchanged.
-  has(main, /ipcMain\.handle\('lapitaya:approvals', \(\) => lapitaya\.listApprovals\(\)\);/, '#5 handler untouched');
-  has(preload, /lapitayaApprovals: \(\): Promise<Approval\[\]> => ipcRenderer\.invoke\('lapitaya:approvals'\)/, '#5 preload untouched');
-  // The classic panel's fallback is intact.
-  has(code(read('src/renderer/src/components/GovernancePanel.tsx')), /window\.cth\.lapitayaApprovals\(\)/, 'classic panel fallback');
+  // v0.9: lapitaya:approvals and its preload bridge have been removed.
+  assert.doesNotMatch(main, /ipcMain\.handle\('lapitaya:approvals'/, '#5 handler removed');
+  assert.doesNotMatch(preload, /lapitayaApprovals:/, '#5 preload removed');
   // No second store: identity lives in the app config; decisions only in the existing ledger / state files.
   for (const file of ['src/main/humanIdentity.ts', 'src/main/humanGovernanceIpc.ts', 'src/shared/lapitaya/identity.ts']) {
     assert.doesNotMatch(read(file), /human-decisions|identity-ledger|approval-history|\.jsonl/, file);

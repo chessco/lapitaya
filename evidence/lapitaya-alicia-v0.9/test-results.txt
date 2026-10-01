@@ -1,0 +1,18 @@
+LA PITAYA — ALICIA v0.9: TEST RESULTS & SUITE MATRIX
+======================================================
+Dedicated Suite: test/lapitaya-alicia-v09.test.cjs
+
+Test Matrix Execution Summary:
+--------------------------------------------------------------------------------
+[PASS] LEG-01 / LEG-09 / LEG-10 / LEG-11 / LEG-26: Legacy dependency audit & IPC absence
+[PASS] LEG-02 / LEG-03 / LEG-08 / LEG-13: Decision Center functional parity & observability backed
+[PASS] LEG-04 / LEG-05 / LEG-06 / LEG-07 / LEG-08: HIGH decision & REQUEST lifecycle with identity
+[PASS] LEG-12 / LEG-14: Runtime approval state preserved, no second store
+[PASS] LEG-15 / LEG-16 / LEG-17 / LEG-18: Cross-window sync & replay protection
+[PASS] LEG-19 / LEG-20: Security: no secrets or raw tokens in renderer model
+[PASS] LEG-21 / LEG-22 / LEG-23: i18n es-MX / en-US & Accessibility in Decision Center
+[PASS] NEG-01 / NEG-02 / NEG-03 / NEG-04: Negative security boundary checks
+
+Total v0.9 Tests: 8 passed, 0 failed, 0 skipped.
+Typecheck Status: PASS (npm run typecheck)
+Build Status: PASS (npm run build)

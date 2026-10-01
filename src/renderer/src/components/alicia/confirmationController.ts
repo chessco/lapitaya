@@ -23,7 +23,7 @@ export type RequestResult =
   | { ok: false; code: string; reason: string };
 
 /** Everything the confirmation UI can reach — the existing human-channel IPC
- *  (preload: lapitayaRequests / lapitayaApprovals / lapitayaConfirmRequest /
+ *  (preload: lapitayaRequests / lapitayaObservability / lapitayaConfirmRequest /
  *  lapitayaCancelRequest). Nothing here executes, approves or decides. */
 /** The approval fields this UI reads — never the call's summary (command) or fingerprint. */
 export type ApprovalState = Pick<Approval, 'id' | 'status' | 'risk' | 'createdAt'>;

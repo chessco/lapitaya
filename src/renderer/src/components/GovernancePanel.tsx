@@ -26,7 +26,24 @@ function GovernanceApprovalsList() {
   const [busy, setBusy] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
-    void window.cth.lapitayaApprovals().then(setApprovals).catch(() => setApprovals([]));
+    void window.cth.lapitayaObservability().then((view) => {
+      const items = (view?.pendingApprovals ?? []).flatMap((o) =>
+        o.approvalId && o.risk
+          ? [{
+              id: o.approvalId,
+              agentId: o.agent ?? 'agent',
+              tool: o.operation ?? 'tool',
+              fingerprint: '',
+              category: o.category as any,
+              risk: o.risk,
+              summary: o.operation ?? '',
+              status: 'pending' as const,
+              createdAt: o.timestamp ?? Date.now()
+            }]
+          : []
+      );
+      setApprovals(items);
+    }).catch(() => setApprovals([]));
   }, []);
 
   useEffect(() => {
