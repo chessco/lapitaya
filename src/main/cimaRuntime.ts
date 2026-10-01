@@ -268,7 +268,8 @@ export class CimaRuntimeService {
 
     // Decision gate at the tool boundary: a write to the task ledger that would
     // mark a CIMA task done without a runtime DECISION PASS does not run.
-    if (isExecutable(auth.decision) && TASK_WRITE_TOOLS.has(tool)) {
+    const isShell = tool === 'Bash' || tool === 'PowerShell' || tool === 'shell' || tool === 'run_shell_command';
+    if (TASK_WRITE_TOOLS.has(tool) || isShell || tool.startsWith('mcp__')) {
       const gate = this.taskLedgerWriteGate(root, tool, input);
       if (gate) auth = denyAuthorization('DECISION_GATE', gate, agentId, tool, input);
     }
@@ -619,13 +620,32 @@ export class CimaRuntimeService {
   /** PreToolUse view of the gate: returns a denial reason, or null to allow. */
   private taskLedgerWriteGate(root: string, tool: string, input: unknown): string | null {
     const i = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
-    const path = typeof i.file_path === 'string' ? i.file_path : '';
     const tasksPath = join(root, 'tasks.json');
-    if (!path || resolve(path).toLowerCase() !== resolve(tasksPath).toLowerCase()) return null;
+    const isShell = tool === 'Bash' || tool === 'PowerShell' || tool === 'shell' || tool === 'run_shell_command';
+    const path = typeof i.file_path === 'string' ? i.file_path : typeof i.path === 'string' ? i.path : '';
+    const cmd = isShell ? String(i.command ?? '') : '';
+    const resolvedPath = path ? resolve(root, path) : '';
+
+    const touchesTasks = (resolvedPath && resolvedPath.toLowerCase() === resolve(tasksPath).toLowerCase()) ||
+                         (isShell && /tasks\.json/i.test(cmd));
+    if (!touchesTasks) return null;
+
     let current: string | null = null;
     try { current = existsSync(tasksPath) ? readFileSync(tasksPath, 'utf8') : null; } catch {
       return 'DECISION_GATE: cannot read the current task ledger';
     }
+
+    if (isShell) {
+      const isReadOnly = /^\s*(cat|type|head|tail|less|more|grep|rg|ag|jq|select-string|get-content)\b/i.test(cmd) && !/>|>>|1>|2>|>&|\|&|\$\(|\b(tee|cp|mv|rm|touch|truncate|sed|awk)\b/i.test(cmd);
+      if (isReadOnly) return null;
+      const blocked = this.blockedCompletions(current, '');
+      if (blocked.length) {
+        for (const b of blocked) this.recordBlockedCompletion(b.taskId, b.reason, tool);
+        return blocked.map((b) => b.reason).join('; ');
+      }
+      return null;
+    }
+
     const next = projectFileWrite(tool, input, current);
     if (next === null) return 'DECISION_GATE: cannot determine the resulting task ledger from this edit';
     const blocked = this.blockedCompletions(current, next);

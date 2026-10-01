@@ -237,12 +237,12 @@ export function verifyEvidence(item: EvidenceItem, traces: readonly ExecutionTra
   const cmd = norm(citedCommand(item.source));
   const paths = citedPaths(item.source).filter((p) => p.length >= 4);
   const commandMatch = (t: ExecutionTrace) => {
-    if (t.kind !== 'command' || cmd.length < 3) return false;
+    if (t.kind !== 'command' || cmd.length < 3 || t.ok === false) return false;
     const subject = norm(t.subject);
     return subject.includes(cmd) || cmd.includes(subject);
   };
   const pathMatch = (t: ExecutionTrace) => {
-    if (!paths.length) return false;
+    if (!paths.length || t.ok === false) return false;
     const subject = norm(t.subject);
     if (t.kind === 'read' || t.kind === 'write' || t.kind === 'tool') {
       return paths.some((p) => subject.endsWith(p) || p.endsWith(subject));
@@ -332,7 +332,7 @@ export function projectFileWrite(tool: string, input: unknown, current: string |
     if (!text.includes(oldS)) return null;
     return all === true ? text.split(oldS).join(newS) : text.replace(oldS, () => newS);
   };
-  if (tool === 'Write') return typeof i.content === 'string' ? i.content : null;
+  if (tool === 'Write' || typeof i.content === 'string') return typeof i.content === 'string' ? i.content : null;
   if (current === null) return null;
   if (tool === 'Edit') return applyEdit(current, i.old_string, i.new_string, i.replace_all);
   if (tool === 'MultiEdit') {

@@ -95,6 +95,7 @@ export function classifyReadPath(path: string): ToolRisk {
 /** HIGH shell patterns, checked against the WHOLE command (pipes included). */
 const HIGH_SHELL: Array<[RegExp, ActionCategory, string]> = [
   [/\b(rm\s+-[a-z]*r[a-z]*f?|rm\s+-[a-z]*f[a-z]*r|rmdir\s+\/s|del\s+\/[sq]|remove-item\b[^|;&]*-recurse|rd\s+\/s)\b/i, 'data-deletion', 'recursive-delete'],
+  [/\bfind\b[^\n;&]*-(delete|exec|execdir|ok|okdir)\b/i, 'data-deletion', 'find-destructive'],
   [/\bgit\s+(reset\s+--hard|clean\s+-[a-z]*[fd]|branch\s+-D|push\b[^|;&]*(--force|-f\b|--delete|:))/i, 'data-deletion', 'git-destructive'],
   [/\bgit\s+push\b/i, 'irreversible', 'git-push'],
   [/\b(drop\s+(table|database|schema|index)|truncate\s+(table\s+)?\w|delete\s+from\s+\w)/i, 'destructive-migration', 'sql-destructive'],
@@ -127,23 +128,30 @@ export function shellSegments(command: string): string[] {
   return command.split(/\s*(?:&&|\|\||;|\||\r?\n)\s*/).map((s) => s.trim()).filter(Boolean);
 }
 
+/** Shell redirection, command substitution, file mutation, or destructive find options. */
+const SHELL_MUTATION_OP = /(>|>>|1>|2>|>&|\|&|\$\(|\b(tee|cp|mv|rm|touch|truncate|dd)\b|\bfind\b[^\n;&]*-(delete|exec|execdir|ok|okdir)\b|`[^`]+`)/i;
+
 export function classifyShell(command: string): ToolRisk {
   const cmd = command.trim();
   for (const [re, category, rule] of HIGH_SHELL) {
     if (re.test(cmd)) return result(category, `run: ${cmd}`, `shell:${rule}`);
   }
-  const segs = shellSegments(cmd);
-  const lowCats = segs.map((s) => LOW_SHELL.find(([re]) => re.test(s))?.[1] ?? null);
-  if (segs.length && lowCats.every((c) => c !== null)) {
-    // Report the most meaningful LOW category (tests over plain reads).
-    const cat = lowCats.find((c) => c === 'run-tests') ?? lowCats.find((c) => c !== 'read-code') ?? 'read-code';
-    return result(cat as ActionCategory, `run: ${cmd}`, 'shell:low');
+  const isMutating = SHELL_MUTATION_OP.test(cmd);
+  if (isMutating && GOVERNANCE_STATE_REF.test(cmd)) {
+    return result('governance-tamper', `run: ${cmd}`, 'shell:governance-state');
   }
-  // v0.3: a shell command that is not read-only and touches the governance
-  // state (the task ledger — where "done" is decided —, the registry, the CIMA
-  // ledger/approvals, agent hook settings) could bypass the Edit/Write gates, so
-  // it is HIGH. Reading them stays LOW (handled above).
+  if (!isMutating) {
+    const segs = shellSegments(cmd);
+    const lowCats = segs.map((s) => LOW_SHELL.find(([re]) => re.test(s))?.[1] ?? null);
+    if (segs.length && lowCats.every((c) => c !== null)) {
+      // Report the most meaningful LOW category (tests over plain reads).
+      const cat = lowCats.find((c) => c === 'run-tests') ?? lowCats.find((c) => c !== 'read-code') ?? 'read-code';
+      return result(cat as ActionCategory, `run: ${cmd}`, 'shell:low');
+    }
+  }
+  // v0.3 / v0.11: a shell command that is not read-only and touches governance state
   if (GOVERNANCE_STATE_REF.test(cmd)) return result('governance-tamper', `run: ${cmd}`, 'shell:governance-state');
+  if (isMutating) return result('code-change', `run: ${cmd}`, 'shell:mutation');
   return result('shell-command', `run: ${cmd}`, 'shell:other');
 }
 

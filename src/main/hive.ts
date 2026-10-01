@@ -44,6 +44,7 @@ import { mergeTaskLedger } from '../shared/taskLedger';
 import { expandTilde } from './fs';
 import { resolveGodName } from '../shared/godIdentity';
 import { LA_PITAYA_NAME } from '../shared/lapitaya/brand';
+import { spawnGovernanceDecision } from '../shared/lapitaya/providerGovernance';
 
 /** The subset of HarnessConfig the hive consumes for the default-MCP merge.
  *  Kept as a local shape so hive.ts never imports the foundation-owned config
@@ -750,11 +751,19 @@ export class HiveManager {
        *  MemPalace dir, which `mempalace` mutates). Absolute paths; ignored
        *  for providers without a sandbox. */
       extraWritableDirs?: string[];
+      allowUngovernedProviders?: boolean;
     } = {}
   ): Promise<SpawnInjection> {
     const root = this.root();
     if (!root) return { args: [], env: {} };
     this.ensureHive();
+
+    const provider = meta.provider ?? 'claude';
+    const govDecision = spawnGovernanceDecision(provider, { allowUngoverned: opts.allowUngovernedProviders });
+    if (!govDecision.allowed) {
+      this.appendLog({ kind: 'spawn_denied', agentId: meta.id, name: meta.name, provider, reason: govDecision.reason });
+      throw new Error(govDecision.reason);
+    }
 
     const dir = this.agentDir(meta.id);
     mkdirSync(join(dir, 'inbox', '.done'), { recursive: true });
