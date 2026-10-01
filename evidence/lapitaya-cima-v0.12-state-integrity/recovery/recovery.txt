@@ -1,0 +1,5 @@
+STATE-23: Stale temporary state files (.tmp.*) left by process crashes are ignored on reload.
+STATE-24: Process crash between state mutation and ledger write leaves unlinked state that fails closed on restart.
+STATE-25: Missing DECISION record is never recovered as PASS (completionGate returns allowed: false).
+STATE-26: Missing trace evidence is never recovered as valid (submit returns verdict: BLOCKED).
+STATE-29: Runtime recovery never invents governance facts.

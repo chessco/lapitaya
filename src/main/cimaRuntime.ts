@@ -23,7 +23,7 @@
  * No electron import — unit-testable.
  */
 
-import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync, renameSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync, renameSync, openSync, closeSync, fsyncSync, rmSync, statSync, writeSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { authorizeToolCall, denyAuthorization, isExecutable, fnv1a, toolCallFingerprint, type Approval, type Authorization } from '../shared/lapitaya/governance';
@@ -50,7 +50,7 @@ export interface RequestTransitionRecord {
   ts: number;
   proposalId: string;
   intentId: string;
-  transition: 'PROPOSED' | 'REVALIDATED' | 'CONFIRMED' | 'CONFIRMATION_DENIED' | 'COMPLETED' | 'CANCELLED' | 'SUPERSEDED' | 'BLOCKED';
+  transition: 'PROPOSED' | 'REVALIDATED' | 'CONFIRMED' | 'CONFIRMATION_DENIED' | 'COMPLETED' | 'CANCELLED' | 'SUPERSEDED' | 'BLOCKED' | 'EXPIRED';
   status: RequestStatus;
   by: string;
   /** v0.8: the trusted human behind a human transition (confirm / cancel / complete / denied attempt). */
@@ -134,6 +134,7 @@ export class CimaRuntimeService {
   private actionFingerprints = new Set<string>();
   private loadedFor: string | null = null;
   private seq = 0;
+  private corruptedFiles = new Set<string>();
 
   constructor(private readonly deps: CimaRuntimeDeps) {}
 
@@ -142,6 +143,64 @@ export class CimaRuntimeService {
   private dir(): string | null {
     const root = this.deps.hiveRoot();
     return root ? join(root, 'lapitaya') : null;
+  }
+
+  private lockDepth = 0;
+
+  /** Execute an operation holding the hive governance file lock. */
+  private withLock<T>(fn: () => T): T {
+    const dir = this.dir();
+    if (!dir) return fn();
+    if (this.lockDepth > 0) {
+      this.lockDepth++;
+      try {
+        return fn();
+      } finally {
+        this.lockDepth--;
+      }
+    }
+
+    try {
+      mkdirSync(dir, { recursive: true });
+    } catch {
+      /* ignore directory creation errors */
+    }
+    const lockPath = join(dir, '.governance.lock');
+    const STALE_LOCK_MS = 5000;
+
+    if (existsSync(lockPath)) {
+      try {
+        const stat = statSync(lockPath);
+        if (this.now() - stat.mtimeMs > STALE_LOCK_MS) {
+          rmSync(lockPath, { force: true });
+        }
+      } catch { /* ignore */ }
+    }
+
+    let acquired = false;
+    for (let attempts = 0; attempts < 5; attempts++) {
+      try {
+        const fd = openSync(lockPath, 'wx');
+        closeSync(fd);
+        acquired = true;
+        break;
+      } catch {
+        // Simple retry
+      }
+    }
+
+    this.lockDepth = 1;
+    // Reset loadedFor so multi-instance updates on disk are re-read
+    this.loadedFor = null;
+
+    try {
+      return fn();
+    } finally {
+      this.lockDepth = 0;
+      if (acquired) {
+        try { rmSync(lockPath, { force: true }); } catch { /* ignore */ }
+      }
+    }
   }
 
   /** (Re)load persisted state when the hive root changes. */
@@ -155,14 +214,30 @@ export class CimaRuntimeService {
     this.assignments = [];
     this.proposals = [];
     this.actionFingerprints = new Set();
+    this.corruptedFiles.clear();
     if (!dir) return;
+
     const readLines = (f: string): unknown[] => {
       const p = join(dir, f);
       if (!existsSync(p)) return [];
-      return readFileSync(p, 'utf8').split('\n').filter(Boolean).flatMap((l) => {
-        try { return [JSON.parse(l)]; } catch { return []; }
-      });
+      try {
+        const raw = readFileSync(p, 'utf8');
+        const lines = raw.split('\n').filter(Boolean);
+        const parsed: unknown[] = [];
+        for (const line of lines) {
+          try {
+            parsed.push(JSON.parse(line));
+          } catch {
+            this.corruptedFiles.add(f);
+          }
+        }
+        return parsed;
+      } catch {
+        this.corruptedFiles.add(f);
+        return [];
+      }
     };
+
     this.traces = (readLines('traces.jsonl') as ExecutionTrace[]).slice(-MAX_TRACES_IN_MEMORY);
     const ledger = readLines('cima-ledger.jsonl') as LedgerEntry[];
     this.records = ledger.filter((e): e is CimaRecord => e?.kind === 'cima');
@@ -170,24 +245,76 @@ export class CimaRuntimeService {
     for (const e of ledger) {
       if (e?.kind === 'intent' && e.type === 'ACTION' && e.status === 'GOVERNED' && e.fingerprint && e.target?.tool) this.actionFingerprints.add(e.fingerprint);
     }
-    try {
-      const a = JSON.parse(readFileSync(join(dir, 'approvals.json'), 'utf8'));
-      if (Array.isArray(a)) this.approvals = a;
-    } catch { /* none yet */ }
-    try {
-      const r = JSON.parse(readFileSync(join(dir, 'proposals.json'), 'utf8'));
-      if (Array.isArray(r)) this.proposals = r;
-    } catch { /* none yet */ }
+    const approvalsPath = join(dir, 'approvals.json');
+    if (existsSync(approvalsPath)) {
+      try {
+        const a = JSON.parse(readFileSync(approvalsPath, 'utf8'));
+        if (Array.isArray(a)) {
+          this.approvals = a;
+        } else {
+          this.corruptedFiles.add('approvals.json');
+        }
+      } catch {
+        this.corruptedFiles.add('approvals.json');
+      }
+    }
+    const proposalsPath = join(dir, 'proposals.json');
+    if (existsSync(proposalsPath)) {
+      try {
+        const r = JSON.parse(readFileSync(proposalsPath, 'utf8'));
+        if (Array.isArray(r)) {
+          this.proposals = r;
+        } else {
+          this.corruptedFiles.add('proposals.json');
+        }
+      } catch {
+        this.corruptedFiles.add('proposals.json');
+      }
+    }
+
+    this.checkExpirations();
   }
 
-  /** Append one JSON line. Returns false when it could not be written — callers
-   *  that need an audit trail (authorization) deny on false. */
+  private checkExpirations(): void {
+    if (this.corruptedFiles.size > 0) return;
+    const now = this.now();
+    const TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+    let proposalsChanged = false;
+    for (const p of this.proposals) {
+      if (p.status === 'PROPOSED' && (now - p.createdAt > TTL)) {
+        p.status = 'EXPIRED';
+        p.closedAt = now;
+        p.closedBy = 'runtime';
+        p.token = null;
+        proposalsChanged = true;
+        this.transition(p, 'EXPIRED', 'runtime', { reason: 'proposal expired' });
+      }
+    }
+    if (proposalsChanged) this.saveProposals();
+
+    let approvalsChanged = false;
+    for (const a of this.approvals) {
+      if (a.status === 'pending' && (now - a.createdAt > TTL)) {
+        a.status = 'expired' as any;
+        approvalsChanged = true;
+      }
+    }
+    if (approvalsChanged) this.saveApprovals();
+  }
+
+  /** Append one JSON line with fsync durability. Returns false when write fails. */
   private append(file: string, entry: unknown): boolean {
     const dir = this.dir();
     if (!dir) return false;
     try {
       mkdirSync(dir, { recursive: true });
-      appendFileSync(join(dir, file), JSON.stringify(entry) + '\n');
+      const target = join(dir, file);
+      const line = JSON.stringify(entry) + '\n';
+      const fd = openSync(target, 'a');
+      writeSync(fd, line);
+      fsyncSync(fd);
+      closeSync(fd);
       return true;
     } catch (e) {
       console.error('[lapitaya] ledger write failed:', e);
@@ -203,14 +330,18 @@ export class CimaRuntimeService {
     return this.writeState('proposals.json', this.proposals);
   }
 
-  /** Atomic JSON state write (tmp + rename). */
+  /** Atomic JSON state write (tmp + writeSync + fsync + rename). */
   private writeState(file: string, value: unknown): boolean {
     const dir = this.dir();
     if (!dir) return false;
     try {
       mkdirSync(dir, { recursive: true });
-      const tmp = join(dir, `${file}.tmp`);
-      writeFileSync(tmp, JSON.stringify(value, null, 2));
+      const tmp = join(dir, `${file}.tmp.${randomBytes(4).toString('hex')}`);
+      const content = JSON.stringify(value, null, 2);
+      const fd = openSync(tmp, 'w');
+      writeSync(fd, content);
+      fsyncSync(fd);
+      closeSync(fd);
       renameSync(tmp, join(dir, file));
       return true;
     } catch (e) {
@@ -233,77 +364,82 @@ export class CimaRuntimeService {
    * cannot be durably consumed — returns DENY. Never ALLOW by default.
    */
   authorize(agentId: string, tool: string, input: unknown): Authorization {
-    const deny = (code: string, detail: string): Authorization => {
-      const d = denyAuthorization(code, detail, agentId || '?', tool || '?', input);
-      this.recordDecision(agentId || '?', tool || '?', d); // best effort: the call is denied either way
-      return d;
-    };
-    const root = this.deps.hiveRoot();
-    if (!root) return deny('GOVERNANCE_STATE_UNAVAILABLE', 'no hive root');
-    if (!agentId || !tool) return deny('ACTOR_CONTEXT_MISSING', `missing ${!agentId ? 'agent identity' : 'tool name'}`);
-    try { this.load(); } catch (e) {
-      return deny('GOVERNANCE_STATE_UNAVAILABLE', `cannot load governance state: ${String(e).slice(0, 120)}`);
-    }
-
-    let auth = authorizeToolCall({
-      agentId,
-      tool,
-      input,
-      stage: this.deps.stage?.() ?? DEFAULT_AUTONOMY_STAGE,
-      approvals: this.approvals,
-      ctx: { hiveRoot: root },
-      classify: this.deps.classify
-    });
-
-    // v0.4.2 REQUEST execution gate. An unconfirmed REQUEST blocks every
-    // non-planning call on the floor (LOW included); a confirmed one bounds
-    // non-HIGH calls by its scope. It runs BEFORE approvals, so it never raises
-    // or consumes one, and a confirmation never stands in for a HIGH approval.
-    let proposalId: string | undefined;
-    if (auth.decision !== 'DENY') {
-      const rg = requestGate(this.proposals, auth, this.actionFingerprints);
-      proposalId = rg.proposalId;
-      if (!rg.allow) auth = { ...auth, decision: 'DENY', rule: rg.code, reason: rg.reason, approvalId: undefined };
-    }
-
-    // Decision gate at the tool boundary: a write to the task ledger that would
-    // mark a CIMA task done without a runtime DECISION PASS does not run.
-    const isShell = tool === 'Bash' || tool === 'PowerShell' || tool === 'shell' || tool === 'run_shell_command';
-    if (TASK_WRITE_TOOLS.has(tool) || isShell || tool.startsWith('mcp__')) {
-      const gate = this.taskLedgerWriteGate(root, tool, input);
-      if (gate) auth = denyAuthorization('DECISION_GATE', gate, agentId, tool, input);
-    }
-
-    if (auth.decision === 'APPROVED' && auth.approvalId) {
-      // One-shot: the approval must be durably consumed BEFORE the call runs,
-      // or it could be replayed. If that cannot be persisted, deny.
-      const a = this.approvals.find((x) => x.id === auth.approvalId);
-      if (!a) return deny('GOVERNANCE_STATE_UNAVAILABLE', 'approval vanished');
-      a.status = 'consumed';
-      if (!this.saveApprovals()) {
-        a.status = 'approved';
-        return deny('LEDGER_UNAVAILABLE', `cannot persist consumption of approval ${a.id}`);
+    return this.withLock(() => {
+      const deny = (code: string, detail: string): Authorization => {
+        const d = denyAuthorization(code, detail, agentId || '?', tool || '?', input);
+        this.recordDecision(agentId || '?', tool || '?', d); // best effort: the call is denied either way
+        return d;
+      };
+      const root = this.deps.hiveRoot();
+      if (!root) return deny('GOVERNANCE_STATE_UNAVAILABLE', 'no hive root');
+      if (!agentId || !tool) return deny('ACTOR_CONTEXT_MISSING', `missing ${!agentId ? 'agent identity' : 'tool name'}`);
+      try { this.load(); } catch (e) {
+        return deny('GOVERNANCE_STATE_UNAVAILABLE', `cannot load governance state: ${String(e).slice(0, 120)}`);
       }
-    }
-    if (auth.decision === 'HUMAN_APPROVAL_REQUIRED') {
-      const pending = this.requestApproval(agentId, tool, auth);
-      auth.approvalId = pending.id;
-      auth.reason = `${auth.reason} (approval ${pending.id})`;
-    }
-    if (auth.decision === 'SUPERVISED') {
-      this.deps.onEvent?.({ type: 'supervised', data: { agentId, tool, summary: auth.summary, category: auth.category } });
-    }
+      if (this.corruptedFiles.size > 0) {
+        return deny('GOVERNANCE_STATE_CORRUPT', `governance state file corrupted: ${Array.from(this.corruptedFiles).join(', ')}`);
+      }
 
-    // Every executed call must be auditable: if the decision cannot be written
-    // to the ledger, the call does not run.
-    if (!this.recordDecision(agentId, tool, auth, proposalId) && isExecutable(auth.decision)) {
+      let auth = authorizeToolCall({
+        agentId,
+        tool,
+        input,
+        stage: this.deps.stage?.() ?? DEFAULT_AUTONOMY_STAGE,
+        approvals: this.approvals,
+        ctx: { hiveRoot: root },
+        classify: this.deps.classify
+      });
+
+      // v0.4.2 REQUEST execution gate. An unconfirmed REQUEST blocks every
+      // non-planning call on the floor (LOW included); a confirmed one bounds
+      // non-HIGH calls by its scope. It runs BEFORE approvals, so it never raises
+      // or consumes one, and a confirmation never stands in for a HIGH approval.
+      let proposalId: string | undefined;
+      if (auth.decision !== 'DENY') {
+        const rg = requestGate(this.proposals, auth, this.actionFingerprints);
+        proposalId = rg.proposalId;
+        if (!rg.allow) auth = { ...auth, decision: 'DENY', rule: rg.code, reason: rg.reason, approvalId: undefined };
+      }
+
+      // Decision gate at the tool boundary: a write to the task ledger that would
+      // mark a CIMA task done without a runtime DECISION PASS does not run.
+      const isShell = tool === 'Bash' || tool === 'PowerShell' || tool === 'shell' || tool === 'run_shell_command';
+      if (TASK_WRITE_TOOLS.has(tool) || isShell || tool.startsWith('mcp__')) {
+        const gate = this.taskLedgerWriteGate(root, tool, input);
+        if (gate) auth = denyAuthorization('DECISION_GATE', gate, agentId, tool, input);
+      }
+
       if (auth.decision === 'APPROVED' && auth.approvalId) {
+        // One-shot: the approval must be durably consumed BEFORE the call runs,
+        // or it could be replayed. If that cannot be persisted, deny.
         const a = this.approvals.find((x) => x.id === auth.approvalId);
-        if (a) { a.status = 'approved'; this.saveApprovals(); }
+        if (!a) return deny('GOVERNANCE_STATE_UNAVAILABLE', 'approval vanished');
+        a.status = 'consumed';
+        if (!this.saveApprovals()) {
+          a.status = 'approved';
+          return deny('LEDGER_UNAVAILABLE', `cannot persist consumption of approval ${a.id}`);
+        }
       }
-      return denyAuthorization('LEDGER_UNAVAILABLE', 'the governance ledger could not record this decision', agentId, tool, input);
-    }
-    return auth;
+      if (auth.decision === 'HUMAN_APPROVAL_REQUIRED') {
+        const pending = this.requestApproval(agentId, tool, auth);
+        auth.approvalId = pending.id;
+        auth.reason = `${auth.reason} (approval ${pending.id})`;
+      }
+      if (auth.decision === 'SUPERVISED') {
+        this.deps.onEvent?.({ type: 'supervised', data: { agentId, tool, summary: auth.summary, category: auth.category } });
+      }
+
+      // Every executed call must be auditable: if the decision cannot be written
+      // to the ledger, the call does not run.
+      if (!this.recordDecision(agentId, tool, auth, proposalId) && isExecutable(auth.decision)) {
+        if (auth.decision === 'APPROVED' && auth.approvalId) {
+          const a = this.approvals.find((x) => x.id === auth.approvalId);
+          if (a) { a.status = 'approved'; this.saveApprovals(); }
+        }
+        return denyAuthorization('LEDGER_UNAVAILABLE', 'the governance ledger could not record this decision', agentId, tool, input);
+      }
+      return auth;
+    });
   }
 
   /** The pending human-approval request for one exact call by one agent. One
@@ -347,37 +483,45 @@ export class CimaRuntimeService {
     raiseApproval?: boolean;
     classify?: (tool: string, input: unknown, ctx?: ToolCallContext) => ToolRisk;
   } = {}): Authorization {
-    const root = this.deps.hiveRoot();
-    if (!root) return denyAuthorization('GOVERNANCE_STATE_UNAVAILABLE', 'no hive root', executorId || '?', tool || '?', input);
-    if (!executorId || !tool) return denyAuthorization('GOVERNANCE_STATE_UNAVAILABLE', 'missing executor or tool', executorId || '?', tool || '?', input);
-    try { this.load(); } catch (e) {
-      return denyAuthorization('GOVERNANCE_STATE_UNAVAILABLE', `cannot load governance state: ${String(e).slice(0, 120)}`, executorId, tool, input);
-    }
-    let auth = authorizeToolCall({
-      agentId: executorId, tool, input,
-      stage: this.deps.stage?.() ?? DEFAULT_AUTONOMY_STAGE,
-      approvals: [],
-      ctx: { hiveRoot: root },
-      classify: opts.classify ?? this.deps.classify
+    return this.withLock(() => {
+      const root = this.deps.hiveRoot();
+      if (!root) return denyAuthorization('GOVERNANCE_STATE_UNAVAILABLE', 'no hive root', executorId || '?', tool || '?', input);
+      if (!executorId || !tool) return denyAuthorization('GOVERNANCE_STATE_UNAVAILABLE', 'missing executor or tool', executorId || '?', tool || '?', input);
+      try { this.load(); } catch (e) {
+        return denyAuthorization('GOVERNANCE_STATE_UNAVAILABLE', `cannot load governance state: ${String(e).slice(0, 120)}`, executorId, tool, input);
+      }
+      if (this.corruptedFiles.size > 0) {
+        return denyAuthorization('GOVERNANCE_STATE_CORRUPT', `governance state file corrupted: ${Array.from(this.corruptedFiles).join(', ')}`, executorId, tool, input);
+      }
+      let auth = authorizeToolCall({
+        agentId: executorId, tool, input,
+        stage: this.deps.stage?.() ?? DEFAULT_AUTONOMY_STAGE,
+        approvals: [],
+        ctx: { hiveRoot: root },
+        classify: opts.classify ?? this.deps.classify
+      });
+      if (isExecutable(auth.decision) && TASK_WRITE_TOOLS.has(tool)) {
+        const gate = this.taskLedgerWriteGate(root, tool, input);
+        if (gate) auth = denyAuthorization('DECISION_GATE', gate, executorId, tool, input);
+      }
+      if (auth.decision === 'HUMAN_APPROVAL_REQUIRED' && opts.raiseApproval) {
+        auth.approvalId = this.requestApproval(executorId, tool, auth).id;
+      }
+      return auth;
     });
-    if (isExecutable(auth.decision) && TASK_WRITE_TOOLS.has(tool)) {
-      const gate = this.taskLedgerWriteGate(root, tool, input);
-      if (gate) auth = denyAuthorization('DECISION_GATE', gate, executorId, tool, input);
-    }
-    if (auth.decision === 'HUMAN_APPROVAL_REQUIRED' && opts.raiseApproval) {
-      auth.approvalId = this.requestApproval(executorId, tool, auth).id;
-    }
-    return auth;
   }
 
   /** Append one intent record to the ledger and publish it on the event stream. */
   recordIntent(rec: IntentRecord): boolean {
-    this.load();
-    const ok = this.append('cima-ledger.jsonl', rec);
-    // A governed ACTION's exact call keeps its own CIMA path while a REQUEST is open.
-    if (ok && rec.type === 'ACTION' && rec.status === 'GOVERNED' && rec.fingerprint && rec.target?.tool) this.actionFingerprints.add(rec.fingerprint);
-    this.deps.onEvent?.({ type: 'intent', data: rec });
-    return ok;
+    return this.withLock(() => {
+      this.load();
+      if (this.corruptedFiles.size > 0) return false;
+      const ok = this.append('cima-ledger.jsonl', rec);
+      // A governed ACTION's exact call keeps its own CIMA path while a REQUEST is open.
+      if (ok && rec.type === 'ACTION' && rec.status === 'GOVERNED' && rec.fingerprint && rec.target?.tool) this.actionFingerprints.add(rec.fingerprint);
+      this.deps.onEvent?.({ type: 'intent', data: rec });
+      return ok;
+    });
   }
 
   // ─── REQUEST execution gate (v0.4.2) ─────────────────────────────────────
@@ -406,28 +550,31 @@ export class CimaRuntimeService {
     intentId: string; executor: string; requestedBy: string; source: string;
     message: string; taskId: string | null; target: IntentTarget | null; signals: string[];
   }): RequestProposal | null {
-    this.load();
-    const p: RequestProposal = {
-      id: this.nextId('req'), intentId: input.intentId, executor: input.executor,
-      requestedBy: input.requestedBy, source: input.source, message: input.message,
-      taskId: input.taskId, target: input.target, signals: [...input.signals],
-      scope: requestScope(input.message), status: 'PROPOSED', createdAt: this.now(),
-      fingerprint: '', token: randomBytes(16).toString('hex')
-    };
-    p.fingerprint = this.proposalFingerprint(p);
-    const superseded = input.taskId
-      ? this.proposals.filter((x) => x.status === 'PROPOSED' && x.taskId === input.taskId)
-      : [];
-    for (const x of superseded) { x.status = 'SUPERSEDED'; x.closedAt = p.createdAt; x.closedBy = 'runtime'; x.token = null; }
-    this.proposals.push(p);
-    if (!this.saveProposals()) {
-      this.proposals.pop();
-      for (const x of superseded) x.status = 'PROPOSED';
-      return null;
-    }
-    for (const x of superseded) this.transition(x, 'SUPERSEDED', 'runtime', { reason: `superseded by ${p.id}` });
-    this.transition(p, 'PROPOSED', input.source);
-    return { ...p };
+    return this.withLock(() => {
+      this.load();
+      if (this.corruptedFiles.size > 0) return null;
+      const p: RequestProposal = {
+        id: this.nextId('req'), intentId: input.intentId, executor: input.executor,
+        requestedBy: input.requestedBy, source: input.source, message: input.message,
+        taskId: input.taskId, target: input.target, signals: [...input.signals],
+        scope: requestScope(input.message), status: 'PROPOSED', createdAt: this.now(),
+        fingerprint: '', token: randomBytes(16).toString('hex')
+      };
+      p.fingerprint = this.proposalFingerprint(p);
+      const superseded = input.taskId
+        ? this.proposals.filter((x) => x.status === 'PROPOSED' && x.taskId === input.taskId)
+        : [];
+      for (const x of superseded) { x.status = 'SUPERSEDED'; x.closedAt = p.createdAt; x.closedBy = 'runtime'; x.token = null; }
+      this.proposals.push(p);
+      if (!this.saveProposals()) {
+        this.proposals.pop();
+        for (const x of superseded) x.status = 'PROPOSED';
+        return null;
+      }
+      for (const x of superseded) this.transition(x, 'SUPERSEDED', 'runtime', { reason: `superseded by ${p.id}` });
+      this.transition(p, 'PROPOSED', input.source);
+      return { ...p };
+    });
   }
 
   /**
@@ -436,23 +583,29 @@ export class CimaRuntimeService {
    * scope or fingerprint and decides nothing.
    */
   attributeRequest(proposalId: unknown, human: unknown): boolean {
-    this.load();
-    const hc = parseHumanContext(human);
-    const p = typeof proposalId === 'string' ? this.proposals.find((x) => x.id === proposalId) : undefined;
-    if (!hc || !p || p.status !== 'PROPOSED' || p.requestedOwner) return false;
-    p.requestedOwner = ownerOf(hc);
-    if (!this.saveProposals()) { p.requestedOwner = undefined; return false; }
-    return true;
+    return this.withLock(() => {
+      this.load();
+      if (this.corruptedFiles.size > 0) return false;
+      const hc = parseHumanContext(human);
+      const p = typeof proposalId === 'string' ? this.proposals.find((x) => x.id === proposalId) : undefined;
+      if (!hc || !p || p.status !== 'PROPOSED' || p.requestedOwner) return false;
+      p.requestedOwner = ownerOf(hc);
+      if (!this.saveProposals()) { p.requestedOwner = undefined; return false; }
+      return true;
+    });
   }
 
   /** A proposal that never reached the orchestrator is withdrawn (intent boundary only). */
   withdrawRequest(proposalId: string, reason: string): void {
-    this.load();
-    const p = this.proposals.find((x) => x.id === proposalId && x.status === 'PROPOSED');
-    if (!p) return;
-    p.status = 'BLOCKED'; p.closedAt = this.now(); p.closedBy = 'runtime'; p.reason = reason; p.token = null;
-    this.saveProposals();
-    this.transition(p, 'BLOCKED', 'runtime', { reason });
+    this.withLock(() => {
+      this.load();
+      if (this.corruptedFiles.size > 0) return;
+      const p = this.proposals.find((x) => x.id === proposalId && x.status === 'PROPOSED');
+      if (!p) return;
+      p.status = 'BLOCKED'; p.closedAt = this.now(); p.closedBy = 'runtime'; p.reason = reason; p.token = null;
+      this.saveProposals();
+      this.transition(p, 'BLOCKED', 'runtime', { reason });
+    });
   }
 
   listRequests(): RequestProposal[] {
@@ -469,45 +622,48 @@ export class CimaRuntimeService {
    * raises no approval.
    */
   confirmRequest(proposalId: unknown, ctx: { by?: unknown; token?: unknown; intentId?: unknown; human?: unknown } = {}): RequestConfirmation {
-    this.load();
-    const p = typeof proposalId === 'string' ? this.proposals.find((x) => x.id === proposalId) : undefined;
-    // v0.8: the trusted human context (resolved in main, never by the renderer). Absent = legacy
-    // callers; PRESENT but malformed = refused, never silently downgraded to anonymous.
-    const hc = ctx.human === undefined ? null : parseHumanContext(ctx.human);
-    const owner = hc ? ownerOf(hc) : null;
-    const deny = (code: string, reason: string): RequestConfirmation => {
-      if (p) this.transition(p, 'CONFIRMATION_DENIED', typeof ctx.by === 'string' ? ctx.by.slice(0, 50) : '?', { code, reason, human: owner });
-      return { ok: false, code, reason };
-    };
-    if (ctx.by !== 'human') return deny('NOT_AUTHORIZED', 'only the human confirms a request');
-    if (ctx.human !== undefined && !hc) return deny('NOT_AUTHORIZED', 'invalid human context');
-    if (typeof proposalId !== 'string' || !proposalId) return deny('INVALID_CONFIRMATION', 'missing proposal id');
-    if (!p) return deny('UNKNOWN_PROPOSAL', `no proposal ${proposalId.slice(0, 80)}`);
-    if (ctx.intentId !== undefined && ctx.intentId !== p.intentId) return deny('WRONG_CONTEXT', `proposal ${p.id} belongs to intent ${p.intentId}`);
-    if (p.executor !== this.deps.godId()) return deny('WRONG_CONTEXT', `proposal ${p.id} was made for orchestrator ${p.executor}`);
-    if (p.status !== 'PROPOSED') return deny('NOT_CONFIRMABLE', `proposal ${p.id} is ${p.status}`);
-    if (typeof ctx.token !== 'string' || !ctx.token) return deny('INVALID_CONFIRMATION', 'missing confirmation token');
-    if (!p.token || ctx.token !== p.token) return deny('TAMPERED', 'the confirmation token does not match this proposal');
-    if (this.proposalFingerprint(p) !== p.fingerprint) return deny('TAMPERED', `proposal ${p.id} changed after it was proposed`);
-    // Re-validation: the words must still read as a REQUEST under today's rules.
-    const now = classifyIntentMessage(p.message, p.target);
-    if (now.type !== 'REQUEST') {
-      p.status = 'BLOCKED'; p.closedAt = this.now(); p.closedBy = 'runtime'; p.token = null;
-      p.reason = `re-validation classified it as ${now.type}`;
-      this.saveProposals();
-      this.transition(p, 'BLOCKED', 'runtime', { code: 'STALE_PROPOSAL', reason: p.reason });
-      return { ok: false, code: 'STALE_PROPOSAL', reason: p.reason };
-    }
-    this.transition(p, 'REVALIDATED', 'runtime', { reason: `still REQUEST; scope ${p.scope}` });
-    const token = p.token;
-    p.status = 'CONFIRMED'; p.confirmedAt = this.now(); p.confirmedBy = 'human'; p.token = null;
-    if (owner) p.confirmedOwner = owner;
-    if (!this.saveProposals()) {
-      p.status = 'PROPOSED'; p.confirmedAt = undefined; p.confirmedBy = undefined; p.confirmedOwner = undefined; p.token = token;
-      return deny('LEDGER_UNAVAILABLE', 'the confirmation could not be persisted');
-    }
-    this.transition(p, 'CONFIRMED', 'human', { human: owner });
-    return { ok: true, proposal: { ...p } };
+    return this.withLock(() => {
+      this.load();
+      if (this.corruptedFiles.size > 0) return { ok: false, code: 'GOVERNANCE_STATE_CORRUPT', reason: `governance state file corrupted: ${Array.from(this.corruptedFiles).join(', ')}` };
+      const p = typeof proposalId === 'string' ? this.proposals.find((x) => x.id === proposalId) : undefined;
+      // v0.8: the trusted human context (resolved in main, never by the renderer). Absent = legacy
+      // callers; PRESENT but malformed = refused, never silently downgraded to anonymous.
+      const hc = ctx.human === undefined ? null : parseHumanContext(ctx.human);
+      const owner = hc ? ownerOf(hc) : null;
+      const deny = (code: string, reason: string): RequestConfirmation => {
+        if (p) this.transition(p, 'CONFIRMATION_DENIED', typeof ctx.by === 'string' ? ctx.by.slice(0, 50) : '?', { code, reason, human: owner });
+        return { ok: false, code, reason };
+      };
+      if (ctx.by !== 'human') return deny('NOT_AUTHORIZED', 'only the human confirms a request');
+      if (ctx.human !== undefined && !hc) return deny('NOT_AUTHORIZED', 'invalid human context');
+      if (typeof proposalId !== 'string' || !proposalId) return deny('INVALID_CONFIRMATION', 'missing proposal id');
+      if (!p) return deny('UNKNOWN_PROPOSAL', `no proposal ${proposalId.slice(0, 80)}`);
+      if (ctx.intentId !== undefined && ctx.intentId !== p.intentId) return deny('WRONG_CONTEXT', `proposal ${p.id} belongs to intent ${p.intentId}`);
+      if (p.executor !== this.deps.godId()) return deny('WRONG_CONTEXT', `proposal ${p.id} was made for orchestrator ${p.executor}`);
+      if (p.status !== 'PROPOSED') return deny('NOT_CONFIRMABLE', `proposal ${p.id} is ${p.status}`);
+      if (typeof ctx.token !== 'string' || !ctx.token) return deny('INVALID_CONFIRMATION', 'missing confirmation token');
+      if (!p.token || ctx.token !== p.token) return deny('TAMPERED', 'the confirmation token does not match this proposal');
+      if (this.proposalFingerprint(p) !== p.fingerprint) return deny('TAMPERED', `proposal ${p.id} changed after it was proposed`);
+      // Re-validation: the words must still read as a REQUEST under today's rules.
+      const now = classifyIntentMessage(p.message, p.target);
+      if (now.type !== 'REQUEST') {
+        p.status = 'BLOCKED'; p.closedAt = this.now(); p.closedBy = 'runtime'; p.token = null;
+        p.reason = `re-validation classified it as ${now.type}`;
+        this.saveProposals();
+        this.transition(p, 'BLOCKED', 'runtime', { code: 'STALE_PROPOSAL', reason: p.reason });
+        return { ok: false, code: 'STALE_PROPOSAL', reason: p.reason };
+      }
+      this.transition(p, 'REVALIDATED', 'runtime', { reason: `still REQUEST; scope ${p.scope}` });
+      const token = p.token;
+      p.status = 'CONFIRMED'; p.confirmedAt = this.now(); p.confirmedBy = 'human'; p.token = null;
+      if (owner) p.confirmedOwner = owner;
+      if (!this.saveProposals()) {
+        p.status = 'PROPOSED'; p.confirmedAt = undefined; p.confirmedBy = undefined; p.confirmedOwner = undefined; p.token = token;
+        return deny('LEDGER_UNAVAILABLE', 'the confirmation could not be persisted');
+      }
+      this.transition(p, 'CONFIRMED', 'human', { human: owner });
+      return { ok: true, proposal: { ...p } };
+    });
   }
 
   /** The human withdraws a proposal (PROPOSED or CONFIRMED → CANCELLED). */
@@ -521,23 +677,26 @@ export class CimaRuntimeService {
   }
 
   private closeRequest(proposalId: unknown, by: unknown, from: RequestStatus[], to: 'CANCELLED' | 'COMPLETED', human?: unknown): RequestConfirmation {
-    this.load();
-    if (by !== 'human') return { ok: false, code: 'NOT_AUTHORIZED', reason: 'only the human closes a request' };
-    const hc = human === undefined ? null : parseHumanContext(human);
-    if (human !== undefined && !hc) return { ok: false, code: 'NOT_AUTHORIZED', reason: 'invalid human context' };
-    const owner = hc ? ownerOf(hc) : null;
-    const p = typeof proposalId === 'string' ? this.proposals.find((x) => x.id === proposalId) : undefined;
-    if (!p) return { ok: false, code: 'UNKNOWN_PROPOSAL', reason: 'no such proposal' };
-    if (!from.includes(p.status)) return { ok: false, code: 'NOT_CONFIRMABLE', reason: `proposal ${p.id} is ${p.status}` };
-    const prev = { status: p.status, token: p.token };
-    p.status = to; p.closedAt = this.now(); p.closedBy = 'human'; p.token = null;
-    if (owner) p.closedOwner = owner;
-    if (!this.saveProposals()) {
-      p.status = prev.status; p.token = prev.token; p.closedAt = undefined; p.closedBy = undefined; p.closedOwner = undefined;
-      return { ok: false, code: 'LEDGER_UNAVAILABLE', reason: 'the change could not be persisted' };
-    }
-    this.transition(p, to, 'human', { human: owner });
-    return { ok: true, proposal: { ...p } };
+    return this.withLock(() => {
+      this.load();
+      if (this.corruptedFiles.size > 0) return { ok: false, code: 'GOVERNANCE_STATE_CORRUPT', reason: `governance state file corrupted: ${Array.from(this.corruptedFiles).join(', ')}` };
+      if (by !== 'human') return { ok: false, code: 'NOT_AUTHORIZED', reason: 'only the human closes a request' };
+      const hc = human === undefined ? null : parseHumanContext(human);
+      if (human !== undefined && !hc) return { ok: false, code: 'NOT_AUTHORIZED', reason: 'invalid human context' };
+      const owner = hc ? ownerOf(hc) : null;
+      const p = typeof proposalId === 'string' ? this.proposals.find((x) => x.id === proposalId) : undefined;
+      if (!p) return { ok: false, code: 'UNKNOWN_PROPOSAL', reason: 'no such proposal' };
+      if (!from.includes(p.status)) return { ok: false, code: 'NOT_CONFIRMABLE', reason: `proposal ${p.id} is ${p.status}` };
+      const prev = { status: p.status, token: p.token };
+      p.status = to; p.closedAt = this.now(); p.closedBy = 'human'; p.token = null;
+      if (owner) p.closedOwner = owner;
+      if (!this.saveProposals()) {
+        p.status = prev.status; p.token = prev.token; p.closedAt = undefined; p.closedBy = undefined; p.closedOwner = undefined;
+        return { ok: false, code: 'LEDGER_UNAVAILABLE', reason: 'the change could not be persisted' };
+      }
+      this.transition(p, to, 'human', { human: owner });
+      return { ok: true, proposal: { ...p } };
+    });
   }
 
   /** Append one governance decision to the ledger. Returns false if it could not be written. */
@@ -586,6 +745,9 @@ export class CimaRuntimeService {
   /** May this task be marked done? (Runtime-recorded DECISION PASS only.) */
   completionGate(taskId: string): CompletionVerdict {
     this.load();
+    if (this.corruptedFiles.size > 0) {
+      return { governed: false, allowed: false, reason: `DECISION_GATE: governance state file corrupted (${Array.from(this.corruptedFiles).join(', ')})` };
+    }
     return completionVerdict(this.cimaState(), taskId);
   }
 
@@ -596,6 +758,9 @@ export class CimaRuntimeService {
    */
   blockedCompletions(beforeText: string | null, afterText: string): Array<{ taskId: string; reason: string }> {
     this.load();
+    if (this.corruptedFiles.size > 0) {
+      return [{ taskId: '*', reason: `DECISION_GATE: governance state file corrupted (${Array.from(this.corruptedFiles).join(', ')})` }];
+    }
     let done: string[];
     try { done = newlyCompleted(beforeText, afterText); } catch (e) {
       return [{ taskId: '*', reason: `DECISION_GATE: cannot parse the resulting task ledger (${String(e).slice(0, 80)})` }];
@@ -663,60 +828,70 @@ export class CimaRuntimeService {
 
   /** The human's explicit decision. Only a PENDING request can be decided. */
   decide(id: string, approve: boolean, by = 'human', human?: unknown): Approval | null {
-    this.load();
-    // v0.8: a human context that is present but malformed decides nothing.
-    const hc = human === undefined ? null : parseHumanContext(human);
-    if (human !== undefined && !hc) return null;
-    const a = this.approvals.find((x) => x.id === id);
-    if (!a || a.status !== 'pending') return null;
-    a.status = approve ? 'approved' : 'rejected';
-    a.decidedAt = this.now();
-    a.decidedBy = by;
-    if (hc) a.decidedOwner = ownerOf(hc);
-    this.saveApprovals();
-    this.append('cima-ledger.jsonl', {
-      kind: 'governance', ts: a.decidedAt, agentId: a.agentId, taskId: null, phase: null,
-      tool: a.tool, action: a.summary, category: a.category, risk: a.risk, mode: 'HUMAN_APPROVAL',
-      decision: approve ? 'HUMAN_APPROVED' : 'HUMAN_REJECTED', rule: 'human', approvalId: a.id,
-      ...(a.decidedOwner ? { human: a.decidedOwner } : {})
-    } satisfies GovernanceRecord);
-    this.deps.onEvent?.({ type: 'approval-decided', data: a });
-    return a;
+    return this.withLock(() => {
+      this.load();
+      if (this.corruptedFiles.size > 0) return null;
+      // v0.8: a human context that is present but malformed decides nothing.
+      const hc = human === undefined ? null : parseHumanContext(human);
+      if (human !== undefined && !hc) return null;
+      const a = this.approvals.find((x) => x.id === id);
+      if (!a || a.status !== 'pending') return null;
+      const prevStatus = a.status;
+      a.status = approve ? 'approved' : 'rejected';
+      a.decidedAt = this.now();
+      a.decidedBy = by;
+      if (hc) a.decidedOwner = ownerOf(hc);
+      if (!this.saveApprovals()) {
+        a.status = prevStatus; a.decidedAt = undefined; a.decidedBy = undefined; a.decidedOwner = undefined;
+        return null;
+      }
+      this.append('cima-ledger.jsonl', {
+        kind: 'governance', ts: a.decidedAt, agentId: a.agentId, taskId: null, phase: null,
+        tool: a.tool, action: a.summary, category: a.category, risk: a.risk, mode: 'HUMAN_APPROVAL',
+        decision: approve ? 'HUMAN_APPROVED' : 'HUMAN_REJECTED', rule: 'human', approvalId: a.id,
+        ...(a.decidedOwner ? { human: a.decidedOwner } : {})
+      } satisfies GovernanceRecord);
+      this.deps.onEvent?.({ type: 'approval-decided', data: a });
+      return a;
+    });
   }
 
   // ─── 2. traces at PostToolUse / PostToolUseFailure ───────────────────────
 
   recordTrace(agentId: string, event: string, tool: string, input: unknown, response: unknown): ExecutionTrace | null {
     if (!agentId || !tool) return null;
-    this.load();
-    const i = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
-    const cls = classifyToolCall(tool, input, { hiveRoot: this.deps.hiveRoot() });
-    const isShell = tool === 'Bash' || tool === 'PowerShell';
-    const path = typeof i.file_path === 'string' ? i.file_path : typeof i.path === 'string' ? i.path : '';
-    const kind: ExecutionTrace['kind'] = isShell ? 'command'
-      : ['Write', 'Edit', 'MultiEdit', 'NotebookEdit'].includes(tool) ? 'write'
-      : path ? 'read' : 'tool';
-    const interrupted = !!(response && typeof response === 'object' && (response as Record<string, unknown>).interrupted);
-    const trace: ExecutionTrace = {
-      id: this.nextId('trc'),
-      ts: this.now(),
-      agentId,
-      kind,
-      tool,
-      subject: (isShell ? String(i.command ?? '') : path || tool).slice(0, 2000),
-      ok: event !== 'PostToolUseFailure' && !interrupted,
-      outputHead: outputHead(response)
-    };
-    // v0.6: the same exact-call fingerprint the PreToolUse decision recorded.
-    try { trace.fingerprint = toolCallFingerprint(agentId, tool, input); } catch { /* unlinked trace */ }
-    // Coordination writes inside the hive are not "modifying code".
-    if (kind === 'write' && cls.category === 'hive-coordination') trace.kind = 'tool';
-    this.traces.push(trace);
-    if (this.traces.length > MAX_TRACES_IN_MEMORY) this.traces.splice(0, this.traces.length - MAX_TRACES_IN_MEMORY);
-    this.append('traces.jsonl', trace);
-    // v0.6 observability: that a governed call ran — no command, path or output.
-    this.deps.onEvent?.({ type: 'trace', data: { id: trace.id, ts: trace.ts, agentId, tool, ok: trace.ok } });
-    return trace;
+    return this.withLock(() => {
+      this.load();
+      if (this.corruptedFiles.size > 0) return null;
+      const i = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
+      const cls = classifyToolCall(tool, input, { hiveRoot: this.deps.hiveRoot() });
+      const isShell = tool === 'Bash' || tool === 'PowerShell';
+      const path = typeof i.file_path === 'string' ? i.file_path : typeof i.path === 'string' ? i.path : '';
+      const kind: ExecutionTrace['kind'] = isShell ? 'command'
+        : ['Write', 'Edit', 'MultiEdit', 'NotebookEdit'].includes(tool) ? 'write'
+        : path ? 'read' : 'tool';
+      const interrupted = !!(response && typeof response === 'object' && (response as Record<string, unknown>).interrupted);
+      const trace: ExecutionTrace = {
+        id: this.nextId('trc'),
+        ts: this.now(),
+        agentId,
+        kind,
+        tool,
+        subject: (isShell ? String(i.command ?? '') : path || tool).slice(0, 2000),
+        ok: event !== 'PostToolUseFailure' && !interrupted,
+        outputHead: outputHead(response)
+      };
+      // v0.6: the same exact-call fingerprint the PreToolUse decision recorded.
+      try { trace.fingerprint = toolCallFingerprint(agentId, tool, input); } catch { /* unlinked trace */ }
+      // Coordination writes inside the hive are not "modifying code".
+      if (kind === 'write' && cls.category === 'hive-coordination') trace.kind = 'tool';
+      this.traces.push(trace);
+      if (this.traces.length > MAX_TRACES_IN_MEMORY) this.traces.splice(0, this.traces.length - MAX_TRACES_IN_MEMORY);
+      this.append('traces.jsonl', trace);
+      // v0.6 observability: that a governed call ran — no command, path or output.
+      this.deps.onEvent?.({ type: 'trace', data: { id: trace.id, ts: trace.ts, agentId, tool, ok: trace.ok } });
+      return trace;
+    });
   }
 
   /** The most recent execution traces (read-only; PostToolUse evidence). */
@@ -730,24 +905,28 @@ export class CimaRuntimeService {
   /** Route one `cima` field: a phase ASSIGNMENT (no verdict) is logged as a
    *  transition hand-off; anything else is a claim and is evaluated. */
   handle(from: string, to: string, cima: unknown, messageId?: string, humanCtx?: DecisionOwner | null): CimaRecord | CimaAssignment {
-    this.load();
-    const assignment = parseAssignment(cima, from, to, this.now(), messageId);
-    if (assignment) {
-      this.assignments.push(assignment);
-      this.append('cima-ledger.jsonl', assignment);
-      this.deps.onEvent?.({ type: 'cima-record', data: assignment });
-      return assignment;
-    }
-    return this.submit(from, cima, messageId, humanCtx);
+    return this.withLock(() => {
+      this.load();
+      const assignment = parseAssignment(cima, from, to, this.now(), messageId);
+      if (assignment) {
+        this.assignments.push(assignment);
+        this.append('cima-ledger.jsonl', assignment);
+        this.deps.onEvent?.({ type: 'cima-record', data: assignment });
+        return assignment;
+      }
+      return this.submit(from, cima, messageId, humanCtx);
+    });
   }
 
   submit(agentId: string, cima: unknown, messageId?: string, humanCtx?: DecisionOwner | null): CimaRecord {
-    this.load();
-    const rec = evaluateSubmission(this.cimaState(), cima, agentId, this.now(), messageId, humanCtx);
-    this.records.push(rec);
-    this.append('cima-ledger.jsonl', rec);
-    this.deps.onEvent?.({ type: 'cima-record', data: rec });
-    return rec;
+    return this.withLock(() => {
+      this.load();
+      const rec = evaluateSubmission(this.cimaState(), cima, agentId, this.now(), messageId, humanCtx);
+      this.records.push(rec);
+      this.append('cima-ledger.jsonl', rec);
+      this.deps.onEvent?.({ type: 'cima-record', data: rec });
+      return rec;
+    });
   }
 
   ledger(limit = 200): LedgerEntry[] {

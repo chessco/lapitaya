@@ -1,0 +1,4 @@
+STATE-09: Corrupted approvals.json fails closed with GOVERNANCE_STATE_CORRUPT.
+STATE-10: Missing approvals.json is handled cleanly as empty approvals list without failing open.
+STATE-17: Duplicate HIGH approval decide() returns null (idempotency enforced).
+STATE-19: Approve / reject race condition yields exactly one terminal decision.

@@ -312,7 +312,7 @@ export function classifyIntentMessage(message: string, target?: IntentTarget | n
  *      ├──newer REQUEST for the same task──▶ SUPERSEDED
  *      └──re-validation failed / not delivered──▶ BLOCKED
  */
-export const REQUEST_STATUSES = ['PROPOSED', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'SUPERSEDED', 'BLOCKED'] as const;
+export const REQUEST_STATUSES = ['PROPOSED', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'SUPERSEDED', 'BLOCKED', 'EXPIRED'] as const;
 export type RequestStatus = (typeof REQUEST_STATUSES)[number];
 
 export interface RequestProposal {

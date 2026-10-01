@@ -1,0 +1,4 @@
+STATE-07: Corrupted proposals.json fails closed with GOVERNANCE_STATE_CORRUPT for all request operations.
+STATE-08: Missing proposals.json is handled cleanly as empty proposal list without failing open.
+STATE-16: Duplicate REQUEST confirmation returns NOT_CONFIRMABLE (idempotency enforced).
+STATE-18: Confirm / cancel race condition yields exactly one terminal state.

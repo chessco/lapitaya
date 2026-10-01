@@ -1,0 +1,5 @@
+ADVERSARIAL-01: Corrupting proposals.json blocks request execution after restart.
+ADVERSARIAL-02: Corrupting approvals.json blocks HIGH action execution after restart.
+ADVERSARIAL-03: Deleting DECISION evidence from cima-ledger.jsonl blocks DONE transition after restart.
+ADVERSARIAL-04: Process crash mid-write recovers safely to valid state or fails closed.
+STATE-35: Forged governance chain without verified traces remains BLOCKED.

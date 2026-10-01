@@ -1,0 +1,10 @@
+Branch: lapitaya/cima-v0.12-state-integrity-recovery
+HEAD: 00ab8202 (La Pitaya CIMA v0.11: governance coverage hardening)
+Status: PASS
+Baseline verification:
+- v0.10 test suite: 31 PASS / 0 FAIL
+- v0.11 test suite: 25 PASS / 0 FAIL
+- v0.12 test suite: 38 PASS / 0 FAIL
+- Typecheck: PASS
+- Build: PASS
+- Main branch: UNCHANGED
