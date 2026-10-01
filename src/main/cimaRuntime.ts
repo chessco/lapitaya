@@ -240,7 +240,7 @@ export class CimaRuntimeService {
     };
     const root = this.deps.hiveRoot();
     if (!root) return deny('GOVERNANCE_STATE_UNAVAILABLE', 'no hive root');
-    if (!agentId || !tool) return deny('GOVERNANCE_STATE_UNAVAILABLE', `missing ${!agentId ? 'agent identity' : 'tool name'}`);
+    if (!agentId || !tool) return deny('ACTOR_CONTEXT_MISSING', `missing ${!agentId ? 'agent identity' : 'tool name'}`);
     try { this.load(); } catch (e) {
       return deny('GOVERNANCE_STATE_UNAVAILABLE', `cannot load governance state: ${String(e).slice(0, 120)}`);
     }
@@ -709,7 +709,7 @@ export class CimaRuntimeService {
 
   /** Route one `cima` field: a phase ASSIGNMENT (no verdict) is logged as a
    *  transition hand-off; anything else is a claim and is evaluated. */
-  handle(from: string, to: string, cima: unknown, messageId?: string): CimaRecord | CimaAssignment {
+  handle(from: string, to: string, cima: unknown, messageId?: string, humanCtx?: DecisionOwner | null): CimaRecord | CimaAssignment {
     this.load();
     const assignment = parseAssignment(cima, from, to, this.now(), messageId);
     if (assignment) {
@@ -718,12 +718,12 @@ export class CimaRuntimeService {
       this.deps.onEvent?.({ type: 'cima-record', data: assignment });
       return assignment;
     }
-    return this.submit(from, cima, messageId);
+    return this.submit(from, cima, messageId, humanCtx);
   }
 
-  submit(agentId: string, cima: unknown, messageId?: string): CimaRecord {
+  submit(agentId: string, cima: unknown, messageId?: string, humanCtx?: DecisionOwner | null): CimaRecord {
     this.load();
-    const rec = evaluateSubmission(this.cimaState(), cima, agentId, this.now(), messageId);
+    const rec = evaluateSubmission(this.cimaState(), cima, agentId, this.now(), messageId, humanCtx);
     this.records.push(rec);
     this.append('cima-ledger.jsonl', rec);
     this.deps.onEvent?.({ type: 'cima-record', data: rec });

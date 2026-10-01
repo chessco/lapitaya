@@ -5,8 +5,10 @@
  *
  *   1. ExecutionTrace — what the HARNESS observed an agent actually do, taken
  *      from the CLI's PostToolUse / PostToolUseFailure hooks (a command that ran
- *      and its output, a file that was read or written). The agent cannot forge
- *      these: they come from the tool boundary, not from its messages.
+ *      and its output, a file that was read or written). The runtime authenticates
+ *      execution traces and actor identity at the tool and socket boundaries,
+ *      ensuring identity and evidence are verified by the runtime rather than
+ *      self-asserted by agents in untrusted payloads.
  *
  *   2. CimaSubmission — what an AGENT claims: "task T, phase TEST, verdict
  *      PASS, here is my evidence". Submitted as a `cima` field on a hive
@@ -30,6 +32,7 @@
  */
 
 import { CIMA_WORKFLOW, isCimaPhase, type CimaPhase } from './cima';
+import type { DecisionOwner } from './identity';
 
 export type RuntimeVerdict = 'PASS' | 'FAIL' | 'BLOCKED';
 
@@ -354,7 +357,8 @@ export function evaluateSubmission(
   raw: unknown,
   agentId: string,
   now: number,
-  messageId?: string
+  messageId?: string,
+  trustedHuman?: DecisionOwner | null
 ): CimaRecord {
   const sub = parseSubmission(raw);
   if (!sub) {
@@ -434,6 +438,10 @@ export function evaluateSubmission(
     if (sub.phase === 'DECISION' && agentId !== state.godId && agentId !== 'human') {
       violations.push('DECISION_AUTHORITY');
       reasons.push(`DECISION_AUTHORITY: only the orchestrator (${state.godId}) or the human may accept work; ${agentId} may propose via LEARN.`);
+    }
+    if (sub.phase === 'DECISION' && agentId === 'human' && !trustedHuman) {
+      violations.push('DECISION_AUTHORITY');
+      reasons.push(`DECISION_AUTHORITY: human DECISION requires trusted human identity from v0.8 IPC; self-asserted 'human' identity denied.`);
     }
   }
   if (sub.phase === 'LEARN' && sub.verdict === 'PASS' && !taskRecords(state, sub.taskId).some((r) => r.phase === 'AUDIT')) {

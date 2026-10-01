@@ -426,6 +426,41 @@ export class HiveManager {
     this.blockedCompletionRecorder = recorder ?? null;
   }
 
+  // ─── v0.10 Runtime Authenticity — Agent Token Registry ───────────────────
+  private agentTokens = new Map<string, string>();
+
+  registerAgentToken(agentId: string, token?: string): string {
+    if (!agentId) return '';
+    let t = this.agentTokens.get(agentId);
+    if (!t || token) {
+      t = token || randomBytes(16).toString('hex');
+      this.agentTokens.set(agentId, t);
+    }
+    return t;
+  }
+
+  verifyAgentToken(agentId: string | undefined, token: unknown): boolean {
+    if (!agentId || typeof token !== 'string' || !token) return false;
+    const trusted = this.agentTokens.get(agentId);
+    return !!trusted && trusted === token;
+  }
+
+  getAgentForToken(token: unknown): string | undefined {
+    if (typeof token !== 'string' || !token) return undefined;
+    for (const [id, t] of this.agentTokens.entries()) {
+      if (t === token) return id;
+    }
+    return undefined;
+  }
+
+  hasRegisteredTokens(): boolean {
+    return this.agentTokens.size > 0;
+  }
+
+  revokeAgentToken(agentId: string): void {
+    this.agentTokens.delete(agentId);
+  }
+
   // — paths —
   root(): string | null {
     const home = this.getHome();
@@ -782,11 +817,13 @@ export class HiveManager {
     }
     this.commit(`hive: register ${meta.id}`);
 
+    const agentToken = this.registerAgentToken(meta.id);
     const env: Record<string, string> = {
       AGENT_ID: meta.id,
       AGENT_NAME: meta.name,
       HIVE_ROOT: root,
-      AGENT_DIR: dir
+      AGENT_DIR: dir,
+      HIVE_AGENT_TOKEN: agentToken
     };
     // The bundled-node launcher, so an agent can run the hive's .cjs helpers (KG
     // CLI, Slack reply helper) even when `node` is not on its PATH. Invoking the
@@ -3092,6 +3129,7 @@ process.stdin.on('end', () => {
   let payload = {};
   try { payload = JSON.parse(data || '{}'); } catch (_) {}
   if (!payload.agent_id) payload.agent_id = process.env.AGENT_ID || null;
+  if (!payload.agent_token) payload.agent_token = process.env.HIVE_AGENT_TOKEN || null;
   const sock = process.env.HIVE_SOCK;
   if (isStatus) {
     // Status-line mode: Claude Code pipes the session status JSON (incl.
@@ -3160,6 +3198,7 @@ process.stdin.on('end', () => {
   const payload = {
     hook_event_name: event,
     agent_id: agentId,
+    agent_token: process.env.HIVE_AGENT_TOKEN || null,
     session_id: agy.conversationId,
     transcript_path: agy.transcriptPath,
     cwd: Array.isArray(agy.workspacePaths) ? agy.workspacePaths[0] : undefined,
@@ -3518,7 +3557,8 @@ process.stdin.on('end', () => {
   const payload = {
     ...gemini,
     hook_event_name: names[gemini.hook_event_name] || gemini.hook_event_name || 'Unknown',
-    agent_id: agentId
+    agent_id: agentId,
+    agent_token: process.env.HIVE_AGENT_TOKEN || null
   };
   let resp = '';
   const done = () => {
@@ -3584,6 +3624,7 @@ process.stdin.on('end', () => {
   const payload = {
     hook_event_name: names[grok.hookEventName] || grok.hookEventName || 'Unknown',
     agent_id: agentId,
+    agent_token: process.env.HIVE_AGENT_TOKEN || null,
     session_id: grok.sessionId,
     cwd: grok.cwd || grok.workspaceRoot,
     tool_name: grok.toolName,

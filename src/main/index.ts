@@ -3571,6 +3571,12 @@ ipcMain.handle('hive:send', (_evt, partial: Partial<HiveMessage>, from: unknown)
   if (sender.trim().toLowerCase() === ALICIA_ACTOR_ID) {
     return { ok: false, error: 'messages from alicia go through the intent boundary (alicia:submit)' };
   }
+  if (sender === 'human' || (partial && partial.from === 'human')) {
+    const humanCtx = humanIdentity.resolve(_evt);
+    if (!humanCtx) {
+      return { ok: false, error: 'HUMAN_IDENTITY_REQUIRED — human message sender requires trusted human context' };
+    }
+  }
   const msg = hive.send(partial ?? {}, sender);
   // Count only what a PERSON sent. Every renderer surface that dispatches on a
   // human's behalf passes 'human' (Command Center dispatch, thread replies, ASK
