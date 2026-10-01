@@ -18,7 +18,7 @@ Results: `flow-result.json` (es-MX), `flow2-result.json` (cancel, forged/replaye
 | Reject by UI; retry stays blocked | pass |
 | Cancel a REQUEST by UI → CANCELLED | pass |
 | Forged token → TAMPERED; unknown proposal → UNKNOWN_PROPOSAL; replay of a confirmed one → NOT_CONFIRMABLE; decide on unknown id / bad args → null | pass |
-| The renderer's request list carries no token (`hasToken:false`) | pass |
+| ~~The renderer's request list carries no token~~ **CORRECTION**: `hasToken:false` was measured on CONFIRMED/CANCELLED proposals, whose token is already consumed. A PROPOSED proposal DOES hand its single-use token to the renderer (v0.5 design: the UI sends it back with `lapitaya:confirmRequest`). The token is never rendered in the DOM (leak check passes), but it is in renderer memory. | not a pass; see docs §25 |
 | DOM: no command, `/srv/`, hive path or token (es-MX and en-US) | pass |
 | Renderer errors, es-MX and en-US | none |
 | en-US ("HUMAN DECISIONS …") after switching `cth.language` and reloading | pass |

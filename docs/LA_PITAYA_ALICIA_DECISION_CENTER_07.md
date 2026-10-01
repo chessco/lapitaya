@@ -201,6 +201,8 @@ duplicates part of the ledger mapping (a shared helper would touch v0.6 logic).
 
 ## 25. Remaining risks
 
+- A PROPOSED REQUEST hands its single-use confirmation token to the renderer (v0.5 design; the UI returns it on confirm). It is not rendered in the DOM, but a compromised renderer could read it. It is one-shot and bound to the proposal, and only the human-facing IPC can use it. (An earlier Electron note claimed the renderer receives no token; that was measured on already-closed proposals and is corrected.)
+
 - `lapitaya:decide` identity is the existing `'human'` actor set in main; there is no per-user
   identity (out of scope: no new authentication).
 - Two renderer windows rely entirely on runtime one-shot semantics (verified, but UI can briefly
