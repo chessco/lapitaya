@@ -1,0 +1,39 @@
+✔ [AUTH-01] Valid trusted agent context accepted (336.2242ms)
+✔ [AUTH-02] Missing agent context denied (343.8523ms)
+✔ [AUTH-03] Invalid agent context denied (340.9126ms)
+✔ [AUTH-04] Payload agent_id cannot override trusted identity (395.4351ms)
+✔ [AUTH-05] Agent A cannot impersonate Agent B (404.7415ms)
+✔ [AUTH-06] Folder name cannot establish identity (463.3087ms)
+✔ [AUTH-07] Message from cannot establish identity (874.354ms)
+✔ [AUTH-08] Agent cannot self-declare human (1276.424ms)
+✔ [AUTH-09] Human DECISION requires trusted human identity (1265.4204ms)
+✔ [AUTH-10] Fake human identity denied (538.0001ms)
+✔ [AUTH-11] Human identity from renderer payload ignored (674.7661ms)
+✔ [AUTH-12] Human identity from trusted v0.8 IPC accepted (570.6398ms)
+✔ [AUTH-13] Builder cannot impersonate Auditor (564.6638ms)
+✔ [AUTH-14] Auditor cannot impersonate Builder (501.0907ms)
+✔ [AUTH-15] Agent cannot manufacture BUILD PASS (610.4193ms)
+✔ [AUTH-16] Agent cannot manufacture TEST PASS (320.7258ms)
+✔ [AUTH-17] Agent cannot manufacture AUDIT PASS (612.6643ms)
+✔ [AUTH-18] Agent cannot manufacture DECISION PASS (356.5035ms)
+✔ [AUTH-19] Missing identity fails closed (516.6511ms)
+✔ [AUTH-20] Identity mismatch fails closed (431.9632ms)
+✔ [AUTH-21] Identity is preserved in evidence (612.4464ms)
+✔ [AUTH-22] Decision owner remains v0.8 trusted identity (486.6587ms)
+✔ [AUTH-23] Cross-window human identity remains correct (369.8193ms)
+✔ [AUTH-24] Replay of authenticated context rejected (594.2876ms)
+✔ [AUTH-25] Wrong task context rejected (372.355ms)
+✔ [AUTH-26] Wrong agent assignment rejected (497.9022ms)
+✔ [AUTH-27] Tampered context rejected (394.3517ms)
+✔ [AUTH-28] No secrets exposed (10.2906ms)
+✔ [AUTH-29] No raw credentials exposed (1.1207ms)
+✔ [AUTH-30] Real Electron human decision works (344.5068ms)
+✔ [ADVERSARIAL-CHAIN] Forged CIMA chain fails closed and breaks the chain (358.4734ms)
+ℹ tests 31
+ℹ suites 0
+ℹ pass 31
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 23995.7912

@@ -1,0 +1,33 @@
+✔ [COVERAGE-01] Shell > mutation detected (10.9326ms)
+✔ [COVERAGE-02] Shell >> mutation detected (3.7915ms)
+✔ [COVERAGE-03] Shell 2> mutation detected (0.7765ms)
+✔ [COVERAGE-04] Command substitution mutation detected (1.0699ms)
+✔ [COVERAGE-05] find -delete governed (1.118ms)
+✔ [COVERAGE-06] find -exec governed (1.0352ms)
+✔ [COVERAGE-07] tee/cp/mv/rm governance (0.7233ms)
+✔ [COVERAGE-08] tasks.json shell mutation cannot bypass Decision Gate (1051.0803ms)
+✔ [COVERAGE-09] CIMA task cannot become DONE without DECISION PASS (949.9286ms)
+✔ [COVERAGE-10] Shell cannot bypass completionGate (1053.8478ms)
+✔ [COVERAGE-11] MCP cannot bypass completionGate (882.9244ms)
+✔ [COVERAGE-12] Provider write cannot bypass completionGate (1004.2618ms)
+✔ [COVERAGE-13] Failed execution cannot satisfy evidence (900.6347ms)
+✔ [COVERAGE-14] Matching command text without successful execution cannot PASS (887.7774ms)
+✔ [COVERAGE-15] Wrong execution trace cannot satisfy evidence (1026.3715ms)
+✔ [COVERAGE-16] Wrong actor cannot satisfy evidence (1025.1327ms)
+✔ [COVERAGE-17] Provider governance is consulted during actual spawn (0.836ms)
+✔ [COVERAGE-18] Blocking provider cannot execute without governance (1003.5759ms)
+✔ [COVERAGE-19] Non-blocking provider cannot self-authorize (0.3966ms)
+✔ [COVERAGE-20] Explicit valid exception follows runtime policy (8.354ms)
+✔ [COVERAGE-21] CIMA task with no DECISION cannot complete (948.7049ms)
+✔ [COVERAGE-22] Non-CIMA task preserves intended behavior (921.9524ms)
+✔ [COVERAGE-23] Ambiguous shell mutation fails closed (0.3618ms)
+✔ [COVERAGE-24] Governance failure fails closed (969.5112ms)
+✔ [COVERAGE-25] Forged governance chain remains broken after v0.11 (1165.9981ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 25
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 17361.0725

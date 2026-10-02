@@ -1,0 +1,37 @@
+{
+  "label": "after-v0.16",
+  "root": "/sessions/rcw-01uojqz4uoz8kmq5xivzrnjc/mnt/LaPitaya",
+  "node": "v22.23.2",
+  "platform": "linux",
+  "hasRegistry": true,
+  "results": [
+    {
+      "name": "classifyToolCall (pure)",
+      "n": 20000,
+      "medianUs": 4.1,
+      "p95Us": 9.8,
+      "meanUs": 4.68
+    },
+    {
+      "name": "resolveCapability (registry lookup)",
+      "n": 20000,
+      "medianUs": 1.8,
+      "p95Us": 4.7,
+      "meanUs": 2.5
+    },
+    {
+      "name": "authorizeToolCall (pure decision)",
+      "n": 20000,
+      "medianUs": 4.7,
+      "p95Us": 8.3,
+      "meanUs": 4.95
+    },
+    {
+      "name": "CimaRuntimeService.authorize (lock + ledger event + fsync)",
+      "n": 400,
+      "medianUs": 4308.6,
+      "p95Us": 5351,
+      "meanUs": 4390.72
+    }
+  ]
+}

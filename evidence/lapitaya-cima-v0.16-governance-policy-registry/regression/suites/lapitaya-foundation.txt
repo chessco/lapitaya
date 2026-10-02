@@ -1,0 +1,33 @@
+✔ the brand has one source and the expected identity (4.2834ms)
+✔ visible surfaces read the brand constant instead of a literal (3.6023ms)
+✔ the updater polls the La Pitaya repository, never the upstream one (35.2263ms)
+✔ the orchestrator defaults to El Inge (0.2281ms)
+✔ an upstream hive that persisted "Michael" migrates to El Inge; real renames survive (0.2792ms)
+✔ the full roster is present with the right roles (1.2488ms)
+✔ es-MX keeps the accents; en-US uses the exact ASCII spelling (0.5263ms)
+✔ a typed name resolves in either spelling (0.3452ms)
+✔ hire presets carry a briefing and the CIMA hard rules (0.7025ms)
+✔ Alicia is a capability, not a hive agent or a replacement (0.4696ms)
+✔ agentLocale adds a language line only for non-English locales (0.3565ms)
+✔ El Inge is briefed on CIMA and the autonomy policy (7.1372ms)
+✔ CIMA phases are stable uppercase ids in workflow order (0.385ms)
+✔ Builder != Auditor (0.2871ms)
+✔ Evidence First: no PASS without raw evidence or with a failing exit (0.4169ms)
+✔ risk maps to mode: LOW→AUTO, MEDIUM→SUPERVISED, HIGH→HUMAN_APPROVAL (0.4516ms)
+✔ unknown actions are HIGH risk (0.2074ms)
+✔ no autonomy stage can switch off Human Governance (0.2602ms)
+✔ Alicia is disabled by default and her calls are no-ops (0.518ms)
+✔ a registered Alicia receives events, and a throwing one cannot break the caller (0.4268ms)
+✔ es-MX is the default and en-US the fallback; future locales are declared, not active (0.2015ms)
+✔ uiLocale, agentLocale and notificationLocale resolve independently (0.2769ms)
+✔ the La Pitaya namespace exists for es-MX and en-US with identical keys (3.2365ms)
+✔ the en-US La Pitaya strings contain no accented characters (0.8073ms)
+✔ es-MX translates every key of en.json (none left as a copied English string of note) (21.7355ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 25
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1147.5773

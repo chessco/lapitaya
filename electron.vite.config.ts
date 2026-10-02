@@ -64,7 +64,10 @@ export default defineConfig({
     define,
     build: {
       rollupOptions: {
-        input: { index: resolve(__dirname, 'src/preload/index.ts') }
+        input: {
+          index: resolve(__dirname, 'src/preload/index.ts'),
+          companionPreload: resolve(__dirname, 'src/preload/companionPreload.ts')
+        }
       }
     }
   },

@@ -1,0 +1,58 @@
+{
+  "results": [
+    {
+      "id": "A0",
+      "desc": "the real BUILT app (out/main with the v0.16 registry bundled) boots; the real renderer loads",
+      "pass": true,
+      "detail": "207"
+    },
+    {
+      "id": "A1",
+      "desc": "the real main process answers the observability channel with a HEALTHY governance verdict",
+      "pass": true,
+      "detail": "{\"status\":\"HEALTHY\",\"recovery\":\"HEALTHY\",\"codes\":[],\"headSequence\":0,\"legacyUnverified\":false}"
+    },
+    {
+      "id": "A2",
+      "desc": "the renderer bridge exposes NO policy / capability / risk / autonomy setter",
+      "pass": false,
+      "detail": "[\"lapitayaDecide\",\"lapitayaRequests\",\"lapitayaConfirmRequest\",\"lapitayaCancelRequest\",\"lapitayaCompleteRequest\",\"lapitayaLedger\",\"lapitayaIdentity\",\"lapitayaObservability\",\"onLapitayaGovernance\"]"
+    },
+    {
+      "id": "A3",
+      "desc": "the contextBridge object is not writable from the page (assignments do not create a policy channel in main)",
+      "pass": true,
+      "detail": "[\"undefined\",\"undefined\",\"undefined\"]"
+    },
+    {
+      "id": "A4",
+      "desc": "governance is unchanged after the attempts (still HEALTHY; nothing recorded)",
+      "pass": true,
+      "detail": "{\"status\":\"HEALTHY\",\"recovery\":\"HEALTHY\",\"codes\":[],\"headSequence\":0,\"legacyUnverified\":false}"
+    },
+    {
+      "id": "A5",
+      "desc": "the human can still send (v0.14 sender authenticity intact)",
+      "pass": true,
+      "detail": "true"
+    },
+    {
+      "id": "A6",
+      "desc": "no renderer errors",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "id": "A7",
+      "desc": "the main process logged no crash and no POLICY_INVALID",
+      "pass": true,
+      "detail": "e); fetching its release page\n[broker] integration broker listening on http://127.0.0.1:59053\n[telemetry] collector listening http://127.0.0.1:59054\n[updater] just-updated 0.4.6 without release notes\n"
+    },
+    {
+      "id": "A8",
+      "desc": "the built main bundle carries the registry (CIMA_POLICY_VERSION, provider.spawn, TOOL_UNKNOWN)",
+      "pass": true,
+      "detail": "\"\""
+    }
+  ]
+}

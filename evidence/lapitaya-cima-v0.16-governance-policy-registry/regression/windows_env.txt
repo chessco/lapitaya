@@ -1,0 +1,5 @@
+v24.14.0
+
+Microsoft Windows [Version 10.0.26200.9457]
+bfb4daf8749c9a1d88d631d9e45c6d4f03c6d42e
+lapitaya/cima-v0.16-governance-policy-capability-registry

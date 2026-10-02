@@ -55,6 +55,12 @@ export function ObservationExplanation({ t, obs, headingLevel = 'h4' }: { t: T; 
         <dd data-field="autonomy" style={dd}>{obs.keys.autonomy ? t(k(obs.keys.autonomy)) : na}</dd>
         <dt>{t(`${NS}.labels.rule`)}</dt>
         <dd data-field="rule" style={dd}>{obs.rule ? <code style={mono}>{obs.rule}</code> : na}</dd>
+        {(obs.capability || obs.policyVersion !== null) && (<>
+          <dt>{t(`${NS}.labels.capability`)}</dt>
+          <dd data-field="capability" style={dd}>{obs.capability ? <code style={mono}>{obs.capability}</code> : na}</dd>
+          <dt>{t(`${NS}.labels.policyVersion`)}</dt>
+          <dd data-field="policy-version" style={dd}>{obs.policyVersion !== null ? <code style={mono}>v{obs.policyVersion}</code> : na}</dd>
+        </>)}
         <dt>{t(`${NS}.labels.next`)}</dt>
         <dd data-field="next" style={{ ...dd, fontWeight: blocking ? 700 : 400 }}>{t(k(obs.keys.next), v)}</dd>
         {obs.keys.humanAction && (<>

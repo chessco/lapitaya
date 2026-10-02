@@ -1,0 +1,81 @@
+✔ [AUTHBIND-01] an approval of CALL A cannot authorize CALL B that has the same FNV-32 (adversarial, permanent) (606.4134ms)
+✔ [AUTHBIND-02] the exact call is allowed after a valid approval — once (359.3008ms)
+✔ [AUTHBIND-03] a different command is denied (366.221ms)
+✔ [AUTHBIND-04] a different argument (extra input field) is denied (428.1443ms)
+✔ [AUTHBIND-05] a different target is denied (386.0771ms)
+✔ [AUTHBIND-06] a different NORMALIZED target is denied even when the text barely differs (376.8081ms)
+✔ [AUTHBIND-07] a different tool is denied (362.1449ms)
+✔ [AUTHBIND-08] a different provider is denied (518.8958ms)
+✔ [AUTHBIND-09] a different agent is denied (700.409ms)
+✔ [AUTHBIND-10] a different task is denied (897.9816ms)
+✔ [AUTHBIND-11] a different risk classification is denied (953.6536ms)
+✔ [AUTHBIND-12] a different autonomy stage is denied (1062.7323ms)
+✔ [AUTHBIND-13] approval replay is denied (same call, other call, new request with the same command) (1361.3642ms)
+✔ [AUTHBIND-14] a consumed approval turned back into "approved" on disk is denied (1117.6942ms)
+✔ [AUTHBIND-15] a modified approval (target/context changed, fingerprint kept) is denied (855.2063ms)
+✔ [AUTHBIND-16] a copied approval (other agent / task / provider, fingerprint recomputed) is denied (434.951ms)
+✔ [AUTHBIND-17] an expired approval is denied (pending AND approved) (433.9308ms)
+✖ [AUTHBIND-18] path traversal and alternate spellings of governance files are classified as governance-tamper (867.4462ms)
+✔ [AUTHBIND-19] an approval for path A does not authorize an alternate spelling of path A (767.8215ms)
+✔ [AUTHBIND-19b] canonicalization: one meaning per object, ambiguity fails closed (11.23ms)
+✔ [AUTHBIND-19c] a symlink/junction to a governance file is judged by its real location (1035.2084ms)
+✔ [AUTHBIND-20] an agent cannot write into another agent's outbox/inbox (Write tools and shell) (2987.9411ms)
+✔ [AUTHBIND-21] a fake agent_id is denied (token mismatch / no token) (1628.2694ms)
+✔ [AUTHBIND-22] a fake from / agent_id / sender inside an outbox file is neutralized; a foreign token is quarantined (1172.4836ms)
+✔ [AUTHBIND-23] a fake human identity is denied (renderer send, CIMA DECISION, hook payload) (551.6721ms)
+✔ [AUTHBIND-24] a provider cannot impersonate another agent (368.198ms)
+✔ [AUTHBIND-25] a provider cannot impersonate the human (identity, decide, confirm) (473.3804ms)
+✔ [AUTHBIND-26] the renderer cannot provide an arbitrary identity (344.6245ms)
+✔ [AUTHBIND-27] lock acquisition failure fails closed — nothing runs, a foreign lock is never removed (1536.3528ms)
+✔ [AUTHBIND-27b] a stale lock (>5 s) is recovered; the holder removes only its own lock (225.6004ms)
+✔ [AUTHBIND-27c] REAL multi-process contention: a lock held by another process serializes (waits), then proceeds (1239.1198ms)
+✔ [AUTHBIND-27d] REAL multi-process contention: three processes appending concurrently keep the ledger whole (17847.4676ms)
+✔ [AUTHBIND-28] a secondary governance write failure fails closed (decide, confirm, claim, trace, consumption) (1018.6664ms)
+✔ [AUTHBIND-28b] a record appended after a truncated tail starts its own line (never glued) (852.1511ms)
+✔ [AUTHBIND-29] legacy fixtures use the real trusted execution context (5091.6867ms)
+✔ [AUTHBIND-30] the forged v0.10 governance chain remains blocked (1218.8039ms)
+✔ [AUTHBIND-31] a legacy (FNV-only) approval never authorizes anything — it is retired, with a ledger record (815.6041ms)
+✔ [AUTHBIND-32] a hand-written approval with a consistent binding but no seal is not an approval (737.8677ms)
+✔ [AUTHBIND-33] the subject has an unambiguous canonical encoding, a versioned SHA-256 fingerprint and holds no secrets (764.9217ms)
+✔ [AUTHBIND-34] the call fingerprint links a decision to its trace cryptographically (777.6511ms)
+✔ [AUTHBIND-35] REQUEST-gate exemption is keyed by the cryptographic call fingerprint (an FNV collision cannot slip through) (1397.7279ms)
+✔ [AUTHBIND-36] END-TO-END ATTACK 1: benign approval → colliding destructive command → preserved approval id → execute: DENIED (1226.865ms)
+✔ [AUTHBIND-37] END-TO-END ATTACK 2: approval for agent A used from agent B: DENIED (1249.0141ms)
+✔ [AUTHBIND-38] END-TO-END ATTACK 3: approval for path A, used through traversal / alternate spelling: DENIED (2414.7194ms)
+✖ [AUTHBIND-39] approval self-forgery through the tools is closed: the governance directory is HIGH, canonically (1596.8529ms)
+✔ [AUTHBIND-40] a REQUEST proposal is bound by a keyed SHA-256 (not FNV-32): re-signing a hand edit fails, legacy fingerprints are stale (1047.9923ms)
+ℹ tests 46
+ℹ suites 0
+ℹ pass 44
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 73686.6545
+
+✖ failing tests:
+
+test at test/lapitaya-cima-v0.14.test.cjs:325:1
+✖ [AUTHBIND-18] path traversal and alternate spellings of governance files are classified as governance-tamper (867.4462ms)
+  AssertionError [ERR_ASSERTION]: C:/Windows/../ssions/rcw-01uojqz4uoz8kmq5xivzrnjc/tmp/lp-v014-JlEhiG/hive/lapitaya/approvals.json
+  
+  true !== false
+  
+      at TestContext.<anonymous> (/sessions/rcw-01uojqz4uoz8kmq5xivzrnjc/mnt/LaPitaya/test/lapitaya-cima-v0.14.test.cjs:342:12)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test/lapitaya-cima-v0.14.test.cjs:814:1
+✖ [AUTHBIND-39] approval self-forgery through the tools is closed: the governance directory is HIGH, canonically (1596.8529ms)
+  TypeError: Cannot read properties of undefined (reading 'permissionDecision')
+      at TestContext.<anonymous> (/sessions/rcw-01uojqz4uoz8kmq5xivzrnjc/mnt/LaPitaya/test/lapitaya-cima-v0.14.test.cjs:820:39)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7)

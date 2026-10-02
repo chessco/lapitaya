@@ -1,0 +1,53 @@
+✔ the brand has one source and the expected identity (9.9338ms)
+✔ visible surfaces read the brand constant instead of a literal (5.2245ms)
+✖ the updater polls the La Pitaya repository, never the upstream one (85.2451ms)
+✔ the orchestrator defaults to El Inge (0.2479ms)
+✔ an upstream hive that persisted "Michael" migrates to El Inge; real renames survive (0.2641ms)
+✔ the full roster is present with the right roles (0.864ms)
+✔ es-MX keeps the accents; en-US uses the exact ASCII spelling (10.4204ms)
+✔ a typed name resolves in either spelling (0.2543ms)
+✔ hire presets carry a briefing and the CIMA hard rules (0.5991ms)
+✔ Alicia is a capability, not a hive agent or a replacement (0.421ms)
+✔ agentLocale adds a language line only for non-English locales (0.3575ms)
+✔ El Inge is briefed on CIMA and the autonomy policy (4.7045ms)
+✔ CIMA phases are stable uppercase ids in workflow order (0.2009ms)
+✔ Builder != Auditor (0.1703ms)
+✔ Evidence First: no PASS without raw evidence or with a failing exit (6.0456ms)
+✔ risk maps to mode: LOW→AUTO, MEDIUM→SUPERVISED, HIGH→HUMAN_APPROVAL (0.2985ms)
+✔ unknown actions are HIGH risk (0.2904ms)
+✔ no autonomy stage can switch off Human Governance (0.151ms)
+✔ Alicia is disabled by default and her calls are no-ops (0.368ms)
+✔ a registered Alicia receives events, and a throwing one cannot break the caller (0.2869ms)
+✔ es-MX is the default and en-US the fallback; future locales are declared, not active (0.1361ms)
+✔ uiLocale, agentLocale and notificationLocale resolve independently (0.2357ms)
+✔ the La Pitaya namespace exists for es-MX and en-US with identical keys (10.2047ms)
+✔ the en-US La Pitaya strings contain no accented characters (0.387ms)
+✔ es-MX translates every key of en.json (none left as a copied English string of note) (101.4309ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 24
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3137.1599
+
+✖ failing tests:
+
+test at test/lapitaya-foundation.test.cjs:43:1
+✖ the updater polls the La Pitaya repository, never the upstream one (85.2451ms)
+  Error: ENOENT: no such file or directory, open '/sessions/rcw-01uojqz4uoz8kmq5xivzrnjc/scratch/base/electron-builder.yml'
+      at Object.readFileSync (node:fs:440:20)
+      at read (/sessions/rcw-01uojqz4uoz8kmq5xivzrnjc/scratch/base/test/lapitaya-foundation.test.cjs:14:24)
+      at TestContext.<anonymous> (/sessions/rcw-01uojqz4uoz8kmq5xivzrnjc/scratch/base/test/lapitaya-foundation.test.cjs:47:15)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: '/sessions/rcw-01uojqz4uoz8kmq5xivzrnjc/scratch/base/electron-builder.yml'
+  }

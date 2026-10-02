@@ -1,0 +1,31 @@
+
+Error occurred in handler for 'lapitaya:policy': Error: No handler registered for 'lapitaya:policy'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:86275)
+    at WebContents.emit (node:events:518:28)
+Error occurred in handler for 'lapitaya:capabilities': Error: No handler registered for 'lapitaya:capabilities'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:86275)
+    at WebContents.emit (node:events:518:28)
+Error occurred in handler for 'lapitaya:setPolicy': Error: No handler registered for 'lapitaya:setPolicy'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:86275)
+    at WebContents.emit (node:events:518:28)
+Error occurred in handler for 'lapitaya:setRisk': Error: No handler registered for 'lapitaya:setRisk'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:86275)
+    at WebContents.emit (node:events:518:28)
+Error occurred in handler for 'governance:policy': Error: No handler registered for 'governance:policy'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:86275)
+    at WebContents.emit (node:events:518:28)
+Electron 32.3.3 (Node 20.18.1, Chromium 128.0.6613.186) on win32
+PASS  E1  the governance policy loads and validates inside the Electron main process; it is frozen  [{"valid":true,"version":1,"capabilities":18,"errors":0}]
+PASS  E2  provider governance on the real spawn path: blocking spawns; none / observe-only refused; unknown refused even with the opt-out; the opt-out is logged  [{"gemini":true,"kimi":false,"pi":false,"evil":"PROVIDER_UNKNOWN — provider \"evil-provid","override":{"provider":"kimi","enforcement":"none","policyVersion":1}}]
+PASS  E3  tool governance at the real hook: a known LOW tool runs; an unknown tool is DENIED (TOOL_UNKNOWN), not held for approval  [{"read":"ALLOW","unknown":"TOOL_UNKNOWN"}]
+PASS  E4  capability resolution: every call lands on the ledger with the capability the RUNTIME resolved (and its provider)  [Bash→shell.inspect(claude) · Bash→shell.mutation(claude) · Write→filesystem.write(claude) · mcp__github__create_issue→mcp.tool(claude) · run_shell_command→shell.inspect(gemini)]
+PASS  E5  risk resolution: `git push` is HIGH / HUMAN_APPROVAL with capability shell.high-impact although the payload claims LOW / AUTO / filesystem.read  [{"risk":"HIGH","cap":"shell.high-impact","v":1}]
+PASS  E6  human approval: the untrusted page cannot approve; the trusted page approves; extra (policy-like) arguments are ignored  [{"untrusted":null,"decided":"approved","cap":"shell.high-impact","policy":1}]
+PASS  E7  authorization binding: a different tool needs its own approval; the exact approved call runs once; then it needs a new approval  [""]
+PASS  E8  INDEPENDENT verification from disk: chain + MACs + anchor verify, and EVERY governance event names policyVersion 1  [{"events":14,"governance":12,"versions":[1]}]
+PASS  E9  Alicia (the observability projection over IPC) shows capability and policy version exactly as the runtime recorded them  [{"health":"HEALTHY","shown":["Bash · irreversible→shell.high-impact/v1","PowerShell · irreversible→shell.high-impact/v1","Bash · irreversible→shell.high-impact/v1","Bash · irreversible→shell.high-impact/v1"]}]
+PASS  E10  unknown capability / tool denial at the real hook (bare MCP prefix, unknown tool, the runtime-reserved intent tool)  [["TOOL_UNKNOWN — La Pitaya could not autho","TOOL_UNKNOWN — La Pitaya could not autho","TOOL_UNKNOWN — La Pitaya could not autho"]]
+PASS  E11  the renderer cannot alter policy: no policy channel exists (every attempt "No handler"), and governance is unchanged afterwards  [No handler · No handler · No handler · No handler · No handler]
+FAIL  E12  no renderer console errors / crashes; no agent token or seal key crossed IPC  [{"errors":[],"leaked":0,"crossings":5}]
+NOT VALIDATED  E13  REAL El Inge (agent CLI) execution  [NOT VALIDATED — no provider CLI/credentials are run by this harness]
+

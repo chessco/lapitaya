@@ -323,16 +323,20 @@ test('[DG-07] rebuilding after DECISION invalidates completion gate', async (t) 
 test('[PI-01] governanceEnforcement classifies providers', () => {
   assert.equal(governanceEnforcement('claude'),  'blocking');
   assert.equal(governanceEnforcement('codex'),   'blocking');
-  assert.equal(governanceEnforcement('agy'),     'blocking');
+  // v0.16: the provider id is 'antigravity' ('agy' is its binary/shim name). Before v0.16 an unknown id silently fell
+  // back to the claude preset and read as 'blocking'; the policy registry now refuses unknown ids (PROVIDER_UNKNOWN).
+  assert.equal(governanceEnforcement('antigravity'), 'blocking');
+  assert.notEqual(governanceEnforcement('agy'), 'blocking');
   assert.equal(governanceEnforcement('gemini'),  'blocking');
   assert.equal(governanceEnforcement('grok'),    'blocking');
   assert.notEqual(governanceEnforcement('kimi'), 'blocking');
 });
 
 test('[PI-02] blocking providers are allowed to spawn', () => {
-  for (const p of ['claude', 'codex', 'agy', 'gemini', 'grok']) {
+  for (const p of ['claude', 'codex', 'antigravity', 'gemini', 'grok']) {
     assert.equal(spawnGovernanceDecision(p).allowed, true, p);
   }
+  assert.equal(spawnGovernanceDecision('agy').allowed, false, 'v0.16: an unknown provider id is never spawned');
 });
 
 test('[PI-03] non-blocking provider rejected by default (fail closed)', () => {

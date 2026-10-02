@@ -253,7 +253,9 @@
         "next": "What's next?",
         "humanAction": "What do you need to do?",
         "agent": "Who",
-        "operation": "Operation"
+        "operation": "Operation",
+        "capability": "Capability",
+        "policyVersion": "Policy version"
       },
       "what": {
         "INTENT_RECEIVED": "The runtime received your message.",

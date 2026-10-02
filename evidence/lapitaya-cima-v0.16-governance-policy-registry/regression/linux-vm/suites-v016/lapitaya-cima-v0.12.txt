@@ -1,0 +1,46 @@
+✔ STATE-01: atomic JSON write produces complete valid JSON file (60.5483ms)
+✔ STATE-02: failed state write fails closed (2.6319ms)
+✔ STATE-03: failed ledger write fails closed (5.1497ms)
+✔ STATE-04: ledger write failure cannot produce PASS (7.0121ms)
+✔ STATE-05: malformed ledger handled deterministically (22.02ms)
+✔ STATE-06: truncated ledger handled deterministically (11.7299ms)
+✔ STATE-07: corrupt proposal state fails closed (12.4308ms)
+✔ STATE-08: missing proposal state fails closed without failing open (11.3694ms)
+✔ STATE-09: corrupt approval state fails closed (25.8113ms)
+✔ STATE-10: missing approval state fails closed without failing open (5.6787ms)
+✔ STATE-11: expired REQUEST cannot execute (60.8382ms)
+✔ STATE-12: expired HIGH approval cannot execute (53.3766ms)
+✔ STATE-13: agent cannot extend expiration (46.5779ms)
+✔ STATE-14: provider cannot extend expiration (63.0038ms)
+✔ STATE-15: human decision after expiration rejected (67.9983ms)
+✔ STATE-16: duplicate REQUEST confirmation rejected (136.5104ms)
+✔ STATE-17: duplicate HIGH approval rejected (37.422ms)
+✔ STATE-18: confirm/cancel race produces one valid result (69.9126ms)
+✔ STATE-19: approve/reject race produces one valid result (52.9688ms)
+✔ STATE-20: concurrent task write protected (63.2959ms)
+✔ STATE-21: concurrent ledger append safe (42.1975ms)
+✔ STATE-22: multi-instance same Hive protected (42.2285ms)
+✔ STATE-23: crash during state write recovered safely (5.405ms)
+✔ STATE-24: crash between state and ledger handled safely (65.7602ms)
+✔ STATE-25: missing DECISION never recovered as PASS (24.0384ms)
+✔ STATE-26: missing evidence never recovered as valid (17.8321ms)
+✔ STATE-27: invalid state transition rejected (65.5031ms)
+✔ STATE-28: expired state cannot return to executable state (43.0028ms)
+✔ STATE-29: recovery does not invent governance facts (19.6431ms)
+✔ STATE-30: v0.10 authenticity preserved (11.7186ms)
+✔ STATE-31: v0.11 shell governance preserved (35.158ms)
+✔ STATE-32: v0.11 Decision Gate preserved (47.7375ms)
+✔ STATE-33: v0.11 provider governance preserved (40.5849ms)
+✔ STATE-34: v0.11 evidence correlation preserved (55.2059ms)
+✔ STATE-35: forged governance chain remains blocked (15.541ms)
+✔ ADVERSARIAL: corrupt proposal state blocks execution after restart (6.9564ms)
+✔ ADVERSARIAL: corrupt approval state blocks HIGH action after restart (12.3241ms)
+✔ ADVERSARIAL: delete DECISION evidence blocks DONE transition after restart (23.7356ms)
+ℹ tests 38
+ℹ suites 0
+ℹ pass 38
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8424.9887

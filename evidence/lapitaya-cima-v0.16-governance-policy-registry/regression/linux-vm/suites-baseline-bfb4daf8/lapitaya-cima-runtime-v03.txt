@@ -1,0 +1,51 @@
+[lapitaya] authorize failed: Error: simulated crash
+    at f.lapitaya.authorize (/sessions/rcw-01uojqz4uoz8kmq5xivzrnjc/scratch/base/test/lapitaya-cima-runtime-v03.test.cjs:119:40)
+    at HookServer.handle (eval at loadFile (/sessions/rcw-01uojqz4uoz8kmq5xivzrnjc/scratch/base/test/load-ts.cjs:64:15), <anonymous>:376:40)
+    at hook (/sessions/rcw-01uojqz4uoz8kmq5xivzrnjc/scratch/base/test/lapitaya-cima-runtime-v03.test.cjs:65:12)
+    at Object.pre (/sessions/rcw-01uojqz4uoz8kmq5xivzrnjc/scratch/base/test/lapitaya-cima-runtime-v03.test.cjs:67:5)
+    at TestContext.<anonymous> (/sessions/rcw-01uojqz4uoz8kmq5xivzrnjc/scratch/base/test/lapitaya-cima-runtime-v03.test.cjs:120:21)
+    at async Test.run (node:internal/test_runner/test:1054:7)
+    at async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+✔ [FC-01] normal LOW authorization -> ALLOW (393.0272ms)
+✔ [FC-02] governance-tamper -> HUMAN_APPROVAL_REQUIRED (denied) (479.6621ms)
+✔ [FC-03] HIGH risk -> REQUIRE_HUMAN_APPROVAL, NOT executed, pending approval created (494.8974ms)
+✔ [FC-04] authorize() throws -> DENY (fail closed) (584.9601ms)
+✔ [FC-05] authorize() returns null (invalid) -> DENY (422.1442ms)
+✔ [FC-06] authorize() returns non-executable decision -> DENY (352.8009ms)
+✔ [FC-07] risk classifier throws -> DENY (not ALLOW) (0.4985ms)
+✔ [FC-08] risk classifier returns invalid shape -> DENY (0.2059ms)
+✔ [FC-09] governance state unavailable (null hive root) -> DENY (107.3775ms)
+✔ [FC-10] PreToolUse with no agentId -> DENY (406.8968ms)
+✔ [FC-11] PreToolUse with no tool name -> DENY (307.3398ms)
+✔ [FC-12] MEDIUM -> SUPERVISED, not denied (330.2582ms)
+✔ [FC-13] approved HIGH runs exactly once, then requires approval again (343.2081ms)
+✔ [FC-14] autoMode:true does not bypass HIGH governance (320.1071ms)
+✔ [DG-01] DECISION PASS -> task completion ALLOWED (719.2007ms)
+✔ [DG-02] no DECISION -> task completion BLOCKED (373.6305ms)
+✔ [DG-03] DECISION FAIL -> task completion BLOCKED (612.2177ms)
+✔ [DG-04] DECISION BLOCKED (wrong sender) -> task completion BLOCKED (490.2548ms)
+✔ [DG-05] ungoverned task (no CIMA history) is not gated (357.1477ms)
+✔ [DG-06] Write to tasks.json marking CIMA task done without DECISION -> denied at PreToolUse (541.1317ms)
+✔ [DG-07] rebuilding after DECISION invalidates completion gate (998.2092ms)
+✔ [PI-01] governanceEnforcement classifies providers (0.3792ms)
+✔ [PI-02] blocking providers are allowed to spawn (0.1506ms)
+✔ [PI-03] non-blocking provider rejected by default (fail closed) (0.3071ms)
+✔ [PI-04] human override lets non-blocking through, logged (2.4648ms)
+✔ [PI-05] DeterministicTestProvider: MEDIUM -> SUPERVISED, HIGH -> REQUIRE_HUMAN_APPROVAL (276.576ms)
+✔ [PI-06] evidence and CIMA evaluation are provider-agnostic (2.3223ms)
+✔ [RG-01] BUILDER != AUDITOR still blocked after v0.3 hardening (600.3218ms)
+✔ [RG-02] EVIDENCE FIRST still blocks PASS with no real trace (405.1204ms)
+✔ [RG-03] AUTONOMY POLICY: LOW->ALLOW, MEDIUM->SUPERVISED, HIGH->DENY (342.0635ms)
+✔ [RG-04] DECISION_AUTHORITY: only El Inge or human may accept work (337.3299ms)
+✔ [RG-05] HIGH approval regression: deny->approve->one execution->deny again (361.8159ms)
+✔ [RG-06] TRANSITION: TEST PASS requires BUILD PASS (445.8999ms)
+✔ [RG-07] assignment without verdict is not a claim (321.5424ms)
+✔ [RG-08] full CIMA cycle records PASS at every phase and opens completion gate (1262.4775ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 35
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 19444.5562

@@ -1,0 +1,27 @@
+✔ [REQ-01] REQUEST + LOW + no confirmation → El Inge attempts execution → BLOCKED (796.4055ms)
+✔ [REQ-02] REQUEST + MEDIUM + no confirmation → BLOCKED (713.108ms)
+✔ [REQ-03] REQUEST + HIGH + no confirmation → BLOCKED, and no approval is even raised (793.4308ms)
+✔ [REQ-04] REQUEST + valid human confirmation → CIMA → LOW → AUTO → execution allowed (606.166ms)
+✔ [REQ-05] REQUEST (change scope) + confirmation → CIMA → MEDIUM → SUPERVISED (654.377ms)
+✔ [REQ-06] REQUEST + confirmation + HIGH → existing HUMAN_APPROVAL flow; confirmation ≠ approval (681.6853ms)
+✔ [REQ-07] confirmation replay: one confirmation → one transition; it can never unlock another proposal (617.1221ms)
+✔ [REQ-08] Alicia attempts confirmation → NOT_AUTHORIZED (runtime API, words, and metadata) (669.3076ms)
+✔ [REQ-09] El Inge attempts self-confirmation → NOT_AUTHORIZED; messages and tool writes change nothing (636.0075ms)
+✔ [REQ-10] confirmed REQUEST + actual HIGH action → HIGH policy applies (never inherits the request) (508.3915ms)
+✔ [REQ-11] confirmed harmless REQUEST + incompatible actual action → runtime re-classifies → not permitted (656.131ms)
+✔ [REQ-12] CONVERSATION stays side-effect free (no proposal, no ledger, no gate) (424.6295ms)
+✔ [REQ-13] ACTION behaviour is unchanged, even while a REQUEST is pending (594.2512ms)
+✔ [REQ-14] completionGate still blocks unauthorized completion (804.9313ms)
+✔ [REQ-15] direct tool bypass without confirmation stays blocked — any agent, any provider (523.9914ms)
+✔ [REQ-NEG] only the human confirms; metadata never authorizes; malformed confirmations deny safely (678.9366ms)
+✔ [REQ-NEG-TAMPER] a proposal edited on disk is refused; re-validation blocks a stale proposal (395.5048ms)
+✔ [REQ-ARCH] structural: gate in authorize before approvals; human-only confirmation call sites; no bypass (109.2351ms)
+✔ [REQ-EVENTS] proposal transitions ride the EXISTING runtime stream; Alicia shows them, humanOnly (396.0151ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 16048.5972

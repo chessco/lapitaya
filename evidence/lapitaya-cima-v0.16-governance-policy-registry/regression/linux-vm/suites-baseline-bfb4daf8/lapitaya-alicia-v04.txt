@@ -1,0 +1,27 @@
+✔ [ALICIA-01] Alicia can read CIMA status (derived from the runtime, not stored) (641.8738ms)
+✔ [ALICIA-02] Alicia presents existing evidence verbatim and never fabricates any (573.4279ms)
+✔ [ALICIA-03] Alicia receives governance events from the existing runtime event stream (663.7727ms)
+✔ [ALICIA-04] Alicia produces a localized explanation and keeps the technical detail intact (0.6513ms)
+✔ [ALICIA-05] Alicia cannot directly execute a HIGH-risk action (407.09ms)
+✔ [ALICIA-06] Alicia cannot become DECISION authority (684.9428ms)
+✔ [ALICIA-07] Alicia does not appear as a CIMA worker (304.3778ms)
+✔ [ALICIA-08] Alicia respects uiLocale (and notificationLocale) without translating identifiers (715.5723ms)
+✔ [ALICIA-09] Alicia cannot modify CIMA state directly (847.2857ms)
+✔ [ALICIA-10] Alicia produces an intent that El Inge receives as a request (526.548ms)
+✔ [NEG-01] Alicia → direct HIGH-risk tool → BLOCKED at PreToolUse (400.4626ms)
+✔ [NEG-02] Alicia → DECISION PASS through the real router → BLOCKED, not authority (699.4113ms)
+✔ [NEG-03] Alicia → modify CIMA state (ledger / approvals) → BLOCKED (327.9685ms)
+✔ [NEG-04] Alicia → bypass completionGate → BLOCKED (707.4247ms)
+✔ event adapters: hooks and task ledger map to Alicia events; noise and junk are dropped (6.8134ms)
+✔ presence is derived by priority: approval > blocked > warning > celebrating > notifying > idle (0.2212ms)
+✔ context is minimal and bounded; read state is the only thing the human changes (252.4445ms)
+✔ conversation citations must point at runtime-recorded refs (723.0669ms)
+✔ the lapitaya barrel exposes the Alicia layer; alicia i18n keys match across es-MX and en-US (10.3142ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 15268.2771

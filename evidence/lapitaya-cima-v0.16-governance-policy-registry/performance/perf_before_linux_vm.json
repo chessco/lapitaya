@@ -1,0 +1,30 @@
+{
+  "label": "before-bfb4daf8",
+  "root": "/sessions/rcw-01uojqz4uoz8kmq5xivzrnjc/scratch/base",
+  "node": "v22.23.2",
+  "platform": "linux",
+  "hasRegistry": false,
+  "results": [
+    {
+      "name": "classifyToolCall (pure)",
+      "n": 20000,
+      "medianUs": 3,
+      "p95Us": 6.5,
+      "meanUs": 3.72
+    },
+    {
+      "name": "authorizeToolCall (pure decision)",
+      "n": 20000,
+      "medianUs": 3.1,
+      "p95Us": 8.4,
+      "meanUs": 4.31
+    },
+    {
+      "name": "CimaRuntimeService.authorize (lock + ledger event + fsync)",
+      "n": 400,
+      "medianUs": 3661.8,
+      "p95Us": 4695.8,
+      "meanUs": 3768.88
+    }
+  ]
+}

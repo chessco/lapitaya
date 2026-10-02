@@ -1,0 +1,26 @@
+✔ [UI-01] a pending REQUEST appears visually (945.4748ms)
+✔ [UI-02] the proposal shows the data the runtime returned — no second source of truth (1138.9251ms)
+✔ [UI-03] the risk shown is the runtime scope; the UI never computes it (1169.5984ms)
+✔ [UI-04] Confirm calls only the authorized IPC: preload → lapitaya:confirmRequest → runtime (by human) (733.986ms)
+✔ [UI-05] a successful confirmation updates the state from the runtime (699.4043ms)
+✔ [UI-06] a successful cancellation updates the state; the runtime processes it (623.1992ms)
+✔ [UI-07] double-click / double-submit sends ONE confirmation; buttons disabled while in flight (532.4016ms)
+✔ [UI-08] stale / changed-elsewhere / replaced proposals show the runtime state; nothing is retried (937.2879ms)
+✔ [UI-09] a tampered proposal / forged token is refused by the runtime and shown as an error (1246.1971ms)
+✔ [UI-10] HIGH: confirming the REQUEST is not an approval — CIMA still requires HUMAN_APPROVAL (578.6062ms)
+✔ [UI-11] Alicia (and her UI) get no execution API (419.432ms)
+✔ [UI-12] the renderer has no direct access to the runtime, filesystem, ledger or providers (47.3644ms)
+✔ [UI-13] no UI → El Inge / hive path; UI-14: no UI → tool path (57.8606ms)
+✔ [UI-15][UI-16] i18n: es-MX and en-US are complete, identical key trees, no fallback, no hardcoded text (217.3267ms)
+✔ [UI-17] keyboard: native controls only; Confirm needs a deliberate acknowledgement; no key shortcut confirms (519.1209ms)
+✔ [UI-18] accessible names, descriptions, live regions and visible focus (451.2327ms)
+✔ [UI-E2E] USER → ALICIA UI → REQUEST → PROPOSED → Confirm → runtime → CIMA → authorize → PreToolUse → execution (458.8289ms)
+✔ [UI-E2E-NEG] REQUEST → PROPOSED → NO confirm → agent attempts a tool → BLOCKED, with or without the UI (1080.5368ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 22590.5916

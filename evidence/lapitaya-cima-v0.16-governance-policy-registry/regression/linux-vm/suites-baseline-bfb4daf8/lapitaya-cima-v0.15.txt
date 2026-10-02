@@ -1,0 +1,73 @@
+✔ [EVENT-01] every new ledger line is an event with a runtime-generated identity and a place in the chain (54.7187ms)
+✔ [EVENT-02] an actor cannot provide eventId, sequence or hashes (36.9285ms)
+✔ [EVENT-03] sequence is strictly monotonic and gapless, also across runtime instances (94.2451ms)
+✔ [EVENT-04] a duplicate sequence is rejected (55.1475ms)
+✔ [EVENT-05] a duplicate eventId is rejected (even inside an otherwise well-formed, sealed event) (32.7287ms)
+✔ [EVENT-06] the hash chain is verifiable by an independent implementation (74.8292ms)
+✔ [EVENT-07] a mutated previousEventHash is detected (30.1498ms)
+✔ [EVENT-08] a mutated event (or a mutated eventHash) is detected (46.5154ms)
+✔ [EVENT-09] a deleted event is detected — first, middle and LAST (the anchor) (65.0716ms)
+✔ [EVENT-10] an inserted event is detected — legacy line, replayed line, and a forged tail event (55.2748ms)
+✔ [EVENT-11] reordered events are detected (44.3107ms)
+✔ [EVENT-12] a truncated ledger is detected (mid-record and at a record boundary) (49.9974ms)
+✔ [EVENT-13] malformed JSON anywhere in the ledger is detected, not skipped (37.3888ms)
+✔ [EVENT-14] an unknown required schema is detected (47.4587ms)
+✔ [EVENT-15] after corruption nothing is appended, and nothing is authorized (82.0552ms)
+✔ [EVENT-16] no evidence is invented: detection and restart change nothing governance-relevant (41.5844ms)
+✔ [EVENT-17] the recovery state is explicit: HEALTHY → RECOVERY_REQUIRED → RECOVERED (49.5659ms)
+✔ [EVENT-33] recovery keeps the damaged ledger whole, keeps the verified prefix verbatim and invents no fact (202.3493ms)
+✔ [EVENT-34] restart after corruption: still closed, still RECOVERY_REQUIRED (62.8845ms)
+✔ [EVENT-35] restart after a valid append: verified incrementally, same head, still healthy (59.729ms)
+✔ [EVENT-36] the recovery artifact is chained and sealed; tampering with it is detected (55.3036ms)
+✔ [EVENT-18] proposal state that disagrees with the events is detected (edited status, deleted proposal, invented proposal) (36.2797ms)
+✔ [EVENT-19] approval state that disagrees with the events is detected (20.5833ms)
+✔ [EVENT-20] an approval without its HUMAN_APPROVED event is never APPROVED (state-only, and event removed) (54.3109ms)
+✔ [EVENT-21] a HUMAN_APPROVED without a valid human owner is no decision — refused when made, detected when forged (57.314ms)
+✔ [EVENT-22] invalid state transitions are denied and, if forged into the stream, detected (42.0452ms)
+✔ [EVENT-23] AUTHORIZED ≠ EXECUTED: a decision is not an execution; only a committed trace is (158.8316ms)
+✔ [EVENT-24] EXECUTED ≠ SUCCEEDED: a failed run is TOOL_FAILED with ok=false (152.592ms)
+✔ [EVENT-25] a failed execution can back a FAIL but never a PASS (130.7708ms)
+✔ [EVENT-26] trace inconsistencies are detected: altered, deleted, and an uncommitted trace is not evidence (68.6104ms)
+✔ [EVENT-27] concurrent readers in separate processes all see one healthy, identical state (6316.8476ms)
+✔ [EVENT-28] reads and verification while another process writes: never stale, partial, mixed or falsely healthy (9666.215ms)
+[EVENT-37] [{"events":500,"fullVerifyMs":28.9,"coldAuthorizeMs":61.7,"steadyAuthorizeMs":8.32},{"events":5000,"fullVerifyMs":167.9,"coldAuthorizeMs":200.6,"steadyAuthorizeMs":11.92}]
+✔ [EVENT-29] snapshot consistency: ledger, approvals and requests come from ONE verified moment (9093.7344ms)
+✔ [EVENT-30] Alicia sees the governance health: HEALTHY, CORRUPTED, INCONSISTENT, UNAVAILABLE and the recovery state (193.1938ms)
+✖ [EVENT-31] Alicia and the renderer cannot repair: no recovery capability exists outside the operator tooling (6.0854ms)
+✔ [EVENT-32] a v0.14 ledger is migrated by an explicit boundary: legacy is trusted as found, committed, never replayed as new (38.447ms)
+✔ [EVENT-37] performance is measured: verification is linear once, authorization is O(new events) after (909.5125ms)
+✔ [EVENT-38] v0.14 authorization binding is intact on the chained ledger (188.1628ms)
+✔ [ADV-1] valid approval; proposal state edited with its HMAC/fingerprint preserved; ledger edited; execution: DENIED (79.6032ms)
+✔ [ADV-2] HUMAN_APPROVED removed from the ledger, approvals.json preserved: DENIED (39.359ms)
+✔ [ADV-3] a fake HUMAN_APPROVED inserted — without the key, and with the key but without a valid human: DENIED (44.5462ms)
+✔ [ADV-4] reordered events, then execute: DENIED (21.7296ms)
+✔ [ADV-5] a writer who holds the key and rewrites the chain from the middle is still caught by the keyed anchor (68.5497ms)
+ℹ tests 43
+ℹ suites 0
+ℹ pass 42
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 32628.3844
+
+✖ failing tests:
+
+test at test/lapitaya-cima-v0.15.test.cjs:639:1
+✖ [EVENT-31] Alicia and the renderer cannot repair: no recovery capability exists outside the operator tooling (6.0854ms)
+  Error: ENOENT: no such file or directory, open '/sessions/rcw-01uojqz4uoz8kmq5xivzrnjc/scratch/base/scripts/lapitaya-recover.cjs'
+      at Object.readFileSync (node:fs:440:20)
+      at read (/sessions/rcw-01uojqz4uoz8kmq5xivzrnjc/scratch/base/test/lapitaya-cima-v0.15.test.cjs:640:26)
+      at TestContext.<anonymous> (/sessions/rcw-01uojqz4uoz8kmq5xivzrnjc/scratch/base/test/lapitaya-cima-v0.15.test.cjs:651:16)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+      at Test.postRun (node:internal/test_runner/test:1173:19)
+      at Test.run (node:internal/test_runner/test:1101:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: '/sessions/rcw-01uojqz4uoz8kmq5xivzrnjc/scratch/base/scripts/lapitaya-recover.cjs'
+  }

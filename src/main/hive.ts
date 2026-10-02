@@ -761,8 +761,15 @@ export class HiveManager {
     const provider = meta.provider ?? 'claude';
     const govDecision = spawnGovernanceDecision(provider, { allowUngoverned: opts.allowUngovernedProviders });
     if (!govDecision.allowed) {
-      this.appendLog({ kind: 'spawn_denied', agentId: meta.id, name: meta.name, provider, reason: govDecision.reason });
+      this.appendLog({ kind: 'spawn_denied', agentId: meta.id, name: meta.name, provider, reason: govDecision.reason,
+        code: govDecision.code, capability: govDecision.capability, policyVersion: govDecision.policyVersion });
       throw new Error(govDecision.reason);
+    }
+    // v0.16: the human opt-out for an ungoverned provider stays explicit — and is now auditable: every spawn it lets
+    // through is logged with the provider, its enforcement and the policy version.
+    if (govDecision.overridden) {
+      this.appendLog({ kind: 'spawn_ungoverned_override', agentId: meta.id, name: meta.name, provider, enforcement: govDecision.enforcement,
+        reason: govDecision.reason, capability: govDecision.capability, policyVersion: govDecision.policyVersion });
     }
 
     const dir = this.agentDir(meta.id);

@@ -1,0 +1,19 @@
+Foundation  lapitaya-foundation          tests  25  pass  24  fail  1  skipped 0
+v0.2        lapitaya-cima-runtime        tests  25  pass  25  fail  0  skipped 0
+v0.3        lapitaya-cima-runtime-v03    tests  35  pass  35  fail  0  skipped 0
+v0.3.1      lapitaya-cima-runtime-v031   tests   9  pass   9  fail  0  skipped 0
+v0.4        lapitaya-alicia-v04          tests  19  pass  19  fail  0  skipped 0
+v0.4.1      lapitaya-alicia-v041         tests  16  pass  16  fail  0  skipped 0
+v0.4.2      lapitaya-alicia-v042         tests  19  pass  19  fail  0  skipped 0
+v0.5        lapitaya-alicia-v05          tests  18  pass  18  fail  0  skipped 0
+v0.6        lapitaya-alicia-v06          tests  19  pass  19  fail  0  skipped 0
+v0.7        lapitaya-alicia-v07          tests  15  pass  15  fail  0  skipped 0
+v0.8        lapitaya-alicia-v08          tests  13  pass  13  fail  0  skipped 0
+v0.9        lapitaya-alicia-v09          tests   8  pass   8  fail  0  skipped 0
+v0.10       lapitaya-cima-v0.10          tests  31  pass  31  fail  0  skipped 0
+v0.11       lapitaya-cima-v0.11          tests  25  pass  25  fail  0  skipped 0
+v0.12       lapitaya-cima-v0.12          tests  38  pass  38  fail  0  skipped 0
+v0.14       lapitaya-cima-v0.14          tests  46  pass  44  fail  2  skipped 0
+v0.15       lapitaya-cima-v0.15          tests  43  pass  42  fail  1  skipped 0
+v0.16       lapitaya-cima-v0.16          tests NaN  pass NaN  fail NaN  skipped NaN
+TOTAL                                    tests NaN  pass NaN  fail NaN  skipped NaN

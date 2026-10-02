@@ -1,0 +1,8 @@
+started Thu 10/01/2026 22:17:08.74 
+suites exit 0 
+typecheck exit 0 
+build exit 0 
+electron exit 1 
+smoke exit 1 
+perf exit 0 
+finished Thu 10/01/2026 22:26:41.29 

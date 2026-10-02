@@ -1,0 +1,24 @@
+✔ [INTENT-CLS] the deterministic classifier separates CONVERSATION / REQUEST / ACTION (30.875ms)
+✔ [INTENT-01] CONVERSATION → Alicia responds; no CIMA, no ledger, no El Inge, no approval (314.2573ms)
+✔ [INTENT-02] REQUEST → El Inge receives a structured, stamped request → proposal only, no execution (323.5521ms)
+✔ [INTENT-03] ACTION LOW → CIMA → AUTO; El Inge executes through PreToolUse (ALLOW) (493.194ms)
+✔ [INTENT-04] ACTION MEDIUM → CIMA → SUPERVISED (474.4779ms)
+✔ [INTENT-05] ACTION HIGH → HUMAN_APPROVAL_REQUIRED → Alicia explains → human approves → one execution (612.6147ms)
+✔ [INTENT-NEG-01] Alicia tries to execute HIGH directly → BLOCKED (469.957ms)
+✔ [INTENT-NEG-02] Alicia labels HIGH as LOW (and as CONVERSATION) → runtime reclassifies → HUMAN_APPROVAL_REQUIRED (597.8324ms)
+✔ [INTENT-NEG-03] Alicia sends an intent directly to a tool or a worker → BLOCKED (469.4377ms)
+✔ [INTENT-NEG-04] Alicia tries to produce DECISION PASS or approve → NOT_AUTHORIZED (1024.944ms)
+✔ [INTENT-NEG-05] Alicia tries task.status = done without DECISION PASS → BLOCKED by completionGate (1156.2348ms)
+✔ [INTENT-NEG-06] malformed intents (missing id / source / type, bad status, not an object) → DENY / INVALID (530.1265ms)
+✔ [INTENT-ARCH-01] the Alicia layer has no path to a tool, the hive or governance authority (12.2609ms)
+✔ [INTENT-ARCH-02] ALICIA → ACTION INTENT → (boundary) → CIMA → EL INGE; never ALICIA → TOOL (1279.8466ms)
+✔ [INTENT-ARCH-03] governance classification: governance files protected, Alicia not special, provider-neutral (5.9609ms)
+✔ [INTENT-EVENTS] intents are observable on the EXISTING runtime event stream; conversation is silent (529.0847ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12850.6626

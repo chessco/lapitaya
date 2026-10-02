@@ -253,7 +253,9 @@
         "next": "¿Qué sigue?",
         "humanAction": "¿Qué necesita de ti?",
         "agent": "Quién",
-        "operation": "Operación"
+        "operation": "Operación",
+        "capability": "Capacidad",
+        "policyVersion": "Versión de la política"
       },
       "what": {
         "INTENT_RECEIVED": "El runtime recibió tu mensaje.",

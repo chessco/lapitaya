@@ -1,0 +1,23 @@
+✔ [DC-01][DC-02][DC-03] a pending REQUEST appears, with runtime scope and resolvable evidence (655.6099ms)
+✔ [DC-04][DC-05] confirm and cancel go through lapitaya:confirmRequest / lapitaya:cancelRequest only (585.8113ms)
+✔ [DC-06][DC-07] a pending HIGH approval appears with the actual runtime risk, operation and explanation (592.4878ms)
+✔ [DC-08][DC-09] approve / reject use the existing human approval (lapitaya:decide → decide(id, approve, "human")) (720.8157ms)
+✔ [DC-10][DC-11] REQUEST confirmation ≠ HIGH approval, in both directions (845.3703ms)
+✔ [DC-12][DC-13][DC-14] stale cannot be confirmed; consumed tokens/approvals cannot be replayed; tampered cannot execute (874.3432ms)
+✔ [DC-15][DC-16] double confirm / double approve / confirm+cancel and approve+reject races are one-shot (1457.9711ms)
+✔ [DC-25] runtime state overrides a stale UI (1017.3867ms)
+✔ [DC-17][DC-18][DC-19][DC-20] the Decision Center cannot alter risk/autonomy, execute, or write the ledger (850.7965ms)
+✔ [DC-21][DC-22][DC-23][DC-24] no secrets, commands, paths or tokens in the DOM; evidence resolves; timelines are read only (1614.0358ms)
+✔ [DC-26][DC-27] es-MX and en-US: identical decisions trees, every state rendered, no fallback, ASCII agent names (2144.3106ms)
+✔ [DC-28] accessibility: named sections, labelled groups, deliberate Approve, no shortcuts, keyboard order (1211.816ms)
+✔ [DC-NEG] Alicia cannot approve or confirm; renderer cannot fabricate; identity, replay, tamper and staleness are refused (1062.5053ms)
+✔ [DC-INV] invariants: classic Governance panel stands down (no duplicate controls); removing the UI removes no guarantee (614.6866ms)
+✔ [DC-REV] after an accepted decision the stale card offers no second decision; the classic panel is the fallback without a projection (655.6081ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 24623.6834

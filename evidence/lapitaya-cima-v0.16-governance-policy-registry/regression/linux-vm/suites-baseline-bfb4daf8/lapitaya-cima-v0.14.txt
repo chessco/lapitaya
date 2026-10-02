@@ -1,0 +1,81 @@
+✔ [AUTHBIND-01] an approval of CALL A cannot authorize CALL B that has the same FNV-32 (adversarial, permanent) (741.6885ms)
+✔ [AUTHBIND-02] the exact call is allowed after a valid approval — once (318.4492ms)
+✔ [AUTHBIND-03] a different command is denied (345.4319ms)
+✔ [AUTHBIND-04] a different argument (extra input field) is denied (285.1254ms)
+✔ [AUTHBIND-05] a different target is denied (285.8665ms)
+✔ [AUTHBIND-06] a different NORMALIZED target is denied even when the text barely differs (259.1823ms)
+✔ [AUTHBIND-07] a different tool is denied (338.1468ms)
+✔ [AUTHBIND-08] a different provider is denied (293.2873ms)
+✔ [AUTHBIND-09] a different agent is denied (260.4569ms)
+✔ [AUTHBIND-10] a different task is denied (266.3141ms)
+✔ [AUTHBIND-11] a different risk classification is denied (346.6197ms)
+✔ [AUTHBIND-12] a different autonomy stage is denied (568.6157ms)
+✔ [AUTHBIND-13] approval replay is denied (same call, other call, new request with the same command) (734.0208ms)
+✔ [AUTHBIND-14] a consumed approval turned back into "approved" on disk is denied (715.174ms)
+✔ [AUTHBIND-15] a modified approval (target/context changed, fingerprint kept) is denied (881.7983ms)
+✔ [AUTHBIND-16] a copied approval (other agent / task / provider, fingerprint recomputed) is denied (972.0462ms)
+✔ [AUTHBIND-17] an expired approval is denied (pending AND approved) (903.4512ms)
+✖ [AUTHBIND-18] path traversal and alternate spellings of governance files are classified as governance-tamper (292.9126ms)
+✔ [AUTHBIND-19] an approval for path A does not authorize an alternate spelling of path A (305.4342ms)
+✔ [AUTHBIND-19b] canonicalization: one meaning per object, ambiguity fails closed (1.3414ms)
+✔ [AUTHBIND-19c] a symlink/junction to a governance file is judged by its real location (280.425ms)
+✔ [AUTHBIND-20] an agent cannot write into another agent's outbox/inbox (Write tools and shell) (1215.5015ms)
+✔ [AUTHBIND-21] a fake agent_id is denied (token mismatch / no token) (833.5159ms)
+✔ [AUTHBIND-22] a fake from / agent_id / sender inside an outbox file is neutralized; a foreign token is quarantined (771.3164ms)
+✔ [AUTHBIND-23] a fake human identity is denied (renderer send, CIMA DECISION, hook payload) (852.592ms)
+✔ [AUTHBIND-24] a provider cannot impersonate another agent (928.1973ms)
+✔ [AUTHBIND-25] a provider cannot impersonate the human (identity, decide, confirm) (669.7795ms)
+✔ [AUTHBIND-26] the renderer cannot provide an arbitrary identity (344.6916ms)
+✔ [AUTHBIND-27] lock acquisition failure fails closed — nothing runs, a foreign lock is never removed (1383.394ms)
+✔ [AUTHBIND-27b] a stale lock (>5 s) is recovered; the holder removes only its own lock (244.2643ms)
+✔ [AUTHBIND-27c] REAL multi-process contention: a lock held by another process serializes (waits), then proceeds (1262.5281ms)
+✔ [AUTHBIND-27d] REAL multi-process contention: three processes appending concurrently keep the ledger whole (6830.4201ms)
+✔ [AUTHBIND-28] a secondary governance write failure fails closed (decide, confirm, claim, trace, consumption) (457.2436ms)
+✔ [AUTHBIND-28b] a record appended after a truncated tail starts its own line (never glued) (214.6583ms)
+✔ [AUTHBIND-29] legacy fixtures use the real trusted execution context (375.1913ms)
+✔ [AUTHBIND-30] the forged v0.10 governance chain remains blocked (272.891ms)
+✔ [AUTHBIND-31] a legacy (FNV-only) approval never authorizes anything — it is retired, with a ledger record (230.43ms)
+✔ [AUTHBIND-32] a hand-written approval with a consistent binding but no seal is not an approval (239.5111ms)
+✔ [AUTHBIND-33] the subject has an unambiguous canonical encoding, a versioned SHA-256 fingerprint and holds no secrets (265.3115ms)
+✔ [AUTHBIND-34] the call fingerprint links a decision to its trace cryptographically (214.646ms)
+✔ [AUTHBIND-35] REQUEST-gate exemption is keyed by the cryptographic call fingerprint (an FNV collision cannot slip through) (514.5278ms)
+✔ [AUTHBIND-36] END-TO-END ATTACK 1: benign approval → colliding destructive command → preserved approval id → execute: DENIED (389.9606ms)
+✔ [AUTHBIND-37] END-TO-END ATTACK 2: approval for agent A used from agent B: DENIED (249.379ms)
+✔ [AUTHBIND-38] END-TO-END ATTACK 3: approval for path A, used through traversal / alternate spelling: DENIED (309.45ms)
+✖ [AUTHBIND-39] approval self-forgery through the tools is closed: the governance directory is HIGH, canonically (217.6652ms)
+✔ [AUTHBIND-40] a REQUEST proposal is bound by a keyed SHA-256 (not FNV-32): re-signing a hand edit fails, legacy fingerprints are stale (268.2725ms)
+ℹ tests 46
+ℹ suites 0
+ℹ pass 44
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 33373.2967
+
+✖ failing tests:
+
+test at test/lapitaya-cima-v0.14.test.cjs:325:1
+✖ [AUTHBIND-18] path traversal and alternate spellings of governance files are classified as governance-tamper (292.9126ms)
+  AssertionError [ERR_ASSERTION]: C:/Windows/../ssions/rcw-01uojqz4uoz8kmq5xivzrnjc/tmp/lp-v014-Crn6Up/hive/lapitaya/approvals.json
+  
+  true !== false
+  
+      at TestContext.<anonymous> (/sessions/rcw-01uojqz4uoz8kmq5xivzrnjc/scratch/base/test/lapitaya-cima-v0.14.test.cjs:342:12)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test/lapitaya-cima-v0.14.test.cjs:814:1
+✖ [AUTHBIND-39] approval self-forgery through the tools is closed: the governance directory is HIGH, canonically (217.6652ms)
+  TypeError: Cannot read properties of undefined (reading 'permissionDecision')
+      at TestContext.<anonymous> (/sessions/rcw-01uojqz4uoz8kmq5xivzrnjc/scratch/base/test/lapitaya-cima-v0.14.test.cjs:820:39)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7)

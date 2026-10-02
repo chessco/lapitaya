@@ -93,8 +93,12 @@ export function riskOf(action: string): RiskLevel {
  * something a higher autonomy stage can switch off.
  */
 export function modeFor(action: string, stage: AutonomyStage = DEFAULT_AUTONOMY_STAGE): AutonomyMode {
-  const risk = riskOf(action);
-  if (risk === 'HIGH') return 'HUMAN_APPROVAL';
+  return modeForRisk(riskOf(action), stage);
+}
+
+/** v0.16: the same table, keyed by a risk level — the runtime applies it to the FINAL risk (after policy floors). */
+export function modeForRisk(risk: RiskLevel, stage: AutonomyStage = DEFAULT_AUTONOMY_STAGE): AutonomyMode {
+  if (risk !== 'LOW' && risk !== 'MEDIUM') return 'HUMAN_APPROVAL'; // HIGH, or anything unrecognised
   if (stage === 'HUMAN_CONTROLLED') return 'HUMAN_APPROVAL';
   if (risk === 'MEDIUM' && (stage === 'SEMI_AUTONOMOUS' || stage === 'AUTONOMOUS')) return 'AUTO';
   return DEFAULT_MODE[risk];

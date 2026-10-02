@@ -40,14 +40,13 @@ import { canonicalJson } from '../shared/lapitaya/authSubject';
 import { healthView, type GovernanceHealthView, type GovernanceVerification, type IntegrityFinding, type RecoveryState } from '../shared/lapitaya/governanceIntegrity';
 import type { ToolCallContext, ToolRisk } from '../shared/lapitaya/toolRisk';
 import { DEFAULT_AUTONOMY_STAGE, type AutonomyStage } from '../shared/lapitaya/autonomy';
-import { classifyToolCall, foreignAgentDirsInCommand, isShellMutation } from '../shared/lapitaya/toolRisk';
+import { classifyToolCall, foreignAgentDirsInCommand, isShellMutation, isShellTool, isWriteTool } from '../shared/lapitaya/toolRisk';
+import { POLICY_REGISTRY, type PolicyRegistry } from '../shared/lapitaya/policyRegistry';
 import {
   evaluateSubmission, parseAssignment, completionVerdict, newlyCompleted, projectFileWrite, stateUnavailableRecord,
   type CimaRecord, type CimaAssignment, type ExecutionTrace, type CimaState, type CompletionVerdict
 } from '../shared/lapitaya/cimaRuntime';
 
-/** Tools whose write to the task ledger is judged by the decision gate. */
-const TASK_WRITE_TOOLS: ReadonlySet<string> = new Set(['Write', 'Edit', 'MultiEdit']);
 import type { CimaPhase } from '../shared/lapitaya/cima';
 import { ownerOf, parseHumanContext, type DecisionOwner } from '../shared/lapitaya/identity';
 import {
@@ -136,6 +135,10 @@ export interface GovernanceRecord {
   callFingerprint?: string;
   /** v0.8: the trusted human behind a HUMAN_APPROVED / HUMAN_REJECTED decision. */
   human?: DecisionOwner;
+  /** v0.16: the capability the runtime resolved (policy registry) — runtime-generated, never from the actor. */
+  capabilityId?: string;
+  /** v0.16: the governance policy version that produced this decision — stamped by the runtime on EVERY governance event. */
+  policyVersion?: number;
 }
 
 export type LedgerEntry = CimaRecord | CimaAssignment | GovernanceRecord | IntentRecord | RequestTransitionRecord;
@@ -163,6 +166,9 @@ export interface CimaRuntimeDeps {
   lockTimeoutMs?: number;
   /** v0.14: lifetime of an approval request/decision (default 24 h). */
   approvalTtlMs?: number;
+  /** v0.16: the governance policy registry. Main passes nothing (→ the policy in code); tests pass a registry built
+   *  with createPolicyRegistry. Read ONCE at construction: nothing can swap it on a live runtime. */
+  policy?: PolicyRegistry;
 }
 
 const APPROVAL_TTL_MS = 24 * 60 * 60 * 1000;
@@ -175,7 +181,6 @@ function sleepSync(ms: number): void {
 }
 
 /** Tools whose mutation of a path is a write for sender-authenticity purposes. */
-const SENDER_WRITE_TOOLS: ReadonlySet<string> = new Set(['Write', 'Edit', 'MultiEdit', 'NotebookEdit']);
 
 const MAX_TRACES_IN_MEMORY = 5000;
 const OUTPUT_HEAD = 2000;
@@ -209,7 +214,11 @@ export class CimaRuntimeService {
   private seq = 0;
   private corruptedFiles = new Set<string>();
 
+  /** v0.16: the read-only governance policy this runtime resolves capabilities against (fixed at construction). */
+  private readonly policy: PolicyRegistry;
+
   constructor(private readonly deps: CimaRuntimeDeps) {
+    this.policy = deps.policy ?? POLICY_REGISTRY;
     this.store = new GovernanceEventStore({
       dir: () => this.dir(),
       key: () => this.sealKey(),
@@ -547,6 +556,14 @@ export class CimaRuntimeService {
     return canonicalizePath([real, ...tail].join('/'));
   }
 
+  /** v0.16: the agent's provider as the RUNTIME knows it (hive registry), or null when unattributed. */
+  private providerFor(agentId: string): string | null {
+    try { const p = this.deps.providerOf?.(agentId); return typeof p === 'string' && p ? p : null; } catch { return null; }
+  }
+
+  /** v0.16: the policy version this runtime enforces (stamped on every governance event). */
+  policyVersion(): number { return this.policy.version; }
+
   /** The tool context every classifier call gets: hive, the caller's cwd and the realpath-aware resolver. */
   private toolCtx(agentId?: string): ToolCallContext {
     const cwd = this.cwdFor(agentId);
@@ -574,12 +591,16 @@ export class CimaRuntimeService {
   }
 
   /** The canonical subject a human approval is bound to. Throws when it cannot be built (callers deny). */
-  private subjectFor(agentId: string, tool: string, input: unknown, auth: Pick<Authorization, 'risk' | 'category' | 'mode' | 'rule'>, request: string | null): AuthorizationSubject {
+  private subjectFor(agentId: string, tool: string, input: unknown, auth: Pick<Authorization, 'risk' | 'category' | 'mode' | 'rule' | 'capability' | 'policyVersion'>, request: string | null): AuthorizationSubject {
     let task: string | null = null;
     try { task = this.deps.taskOf?.(agentId) ?? null; } catch { /* optional context */ }
+    // v0.16: the RESOLVED capability and the policy version are part of what the human approves. A different
+    // capability, or the same call under another policy version, is a different subject (and needs its own approval).
+    if (!auth.capability || typeof auth.policyVersion !== 'number') throw new Error('no resolved capability / policy version');
     return buildSubject(this.callFor(agentId, tool, input), {
       task, risk: auth.risk, category: auth.category, mode: auth.mode,
-      stage: this.deps.stage?.() ?? DEFAULT_AUTONOMY_STAGE, rule: auth.rule, request
+      stage: this.deps.stage?.() ?? DEFAULT_AUTONOMY_STAGE, rule: auth.rule, request,
+      capability: auth.capability, policy: auth.policyVersion
     });
   }
 
@@ -592,7 +613,7 @@ export class CimaRuntimeService {
    */
   private senderSpoof(agentId: string, tool: string, input: unknown, root: string): string | null {
     const self = agentId.trim().toLowerCase();
-    if (SENDER_WRITE_TOOLS.has(tool)) {
+    if (isWriteTool(tool)) {
       const rootC = this.canonicalPath(root, null);
       if (!rootC.ambiguous && rootC.absolute) {
         const rk = rootC.key.replace(/\/+$/, '');
@@ -608,7 +629,7 @@ export class CimaRuntimeService {
         }
       }
     }
-    if (tool === 'Bash' || tool === 'PowerShell' || tool === 'shell' || tool === 'run_shell_command') {
+    if (isShellTool(tool)) {
       const cmd = String((input && typeof input === 'object' ? (input as Record<string, unknown>).command : '') ?? '');
       if (isShellMutation(cmd)) {
         const foreign = foreignAgentDirsInCommand(cmd, agentId);
@@ -627,6 +648,11 @@ export class CimaRuntimeService {
     if (file === 'cima-ledger.jsonl') {
       if (this.lockDepth === 0) return false;
       if (this.corruptedFiles.size > 0 && !this.recovering) return false;
+      // v0.16: every governance decision names the policy version that produced it. The RUNTIME stamps it here,
+      // overriding anything a record carries under that name.
+      if (entry && typeof entry === 'object' && (entry as { kind?: unknown }).kind === 'governance') {
+        entry = { ...(entry as Record<string, unknown>), policyVersion: this.policy.version };
+      }
       return this.store.append(entry);
     }
     return this.appendPlain(file, entry);
@@ -713,6 +739,8 @@ export class CimaRuntimeService {
       const root = this.deps.hiveRoot();
       if (!root) return deny('GOVERNANCE_STATE_UNAVAILABLE', 'no hive root');
       if (!agentId || !tool) return deny('ACTOR_CONTEXT_MISSING', `missing ${!agentId ? 'agent identity' : 'tool name'}`);
+      // v0.16: the intent boundary's evaluation pseudo-tool is reserved to the runtime — no agent call may claim it.
+      if (this.policy.getToolPolicy(tool)?.classifier === 'intent') return deny('TOOL_UNKNOWN', `tool ${JSON.stringify(tool)} is reserved to the runtime`);
       try { this.load(); } catch (e) {
         return deny('GOVERNANCE_STATE_UNAVAILABLE', `cannot load governance state: ${String(e).slice(0, 120)}`);
       }
@@ -732,7 +760,9 @@ export class CimaRuntimeService {
         stage: this.deps.stage?.() ?? DEFAULT_AUTONOMY_STAGE,
         approvals: [],
         ctx: this.toolCtx(agentId),
-        classify: this.deps.classify
+        classify: this.deps.classify,
+        provider: this.providerFor(agentId),
+        policy: this.policy
       });
       auth.callFingerprint = this.callFingerprintFor(agentId, tool, input);
 
@@ -768,10 +798,10 @@ export class CimaRuntimeService {
 
       // Decision gate at the tool boundary: a write to the task ledger that would
       // mark a CIMA task done without a runtime DECISION PASS does not run.
-      const isShell = tool === 'Bash' || tool === 'PowerShell' || tool === 'shell' || tool === 'run_shell_command';
-      if (TASK_WRITE_TOOLS.has(tool) || isShell || tool.startsWith('mcp__')) {
+      // v0.16: WHICH calls the gate judges is policy (capability.completionSensitive); the judgement stays here.
+      if (this.policy.getCapability(auth.capability ?? '')?.completionSensitive) {
         const gate = this.taskLedgerWriteGate(root, tool, input, agentId);
-        if (gate) auth = denyAuthorization('DECISION_GATE', gate, agentId, tool, input);
+        if (gate) auth = { ...denyAuthorization('DECISION_GATE', gate, agentId, tool, input, auth.policyVersion), capability: auth.capability };
       }
 
       if (auth.decision === 'APPROVED' && auth.approvalId) {
@@ -826,12 +856,21 @@ export class CimaRuntimeService {
 
   /** An approval exists for this exact input, but its context (task, provider, risk, autonomy, request) differs. */
   private contextMismatchHint(agentId: string, tool: string, subject: AuthorizationSubject): string | null {
-    const near = this.approvals.find((x) => {
+    // v0.16: the most recent such approval explains the mismatch best.
+    const near = [...this.approvals].reverse().find((x) => {
       if (x.status !== 'approved' || x.agentId !== agentId || !this.approvalTrusted(x)) return false;
       const bs = x.binding!.subject as AuthorizationSubject;
       return bs.call.tool === tool && bs.call.input === subject.call.input;
     });
-    return near ? 'APPROVAL_CONTEXT_MISMATCH — an approval exists for this exact input under a different task/provider/risk/autonomy/request context; it cannot be used.' : null;
+    if (!near) return null;
+    const ctx = (near.binding!.subject as AuthorizationSubject).context;
+    if (ctx.policy !== subject.context.policy) {
+      return `APPROVAL_POLICY_MISMATCH — an approval exists for this exact input, granted under governance policy ${ctx.policy === undefined ? 'v0 (pre-v0.16)' : `v${String(ctx.policy)}`}; this runtime enforces v${String(subject.context.policy)}. It cannot be used: ask the human again.`;
+    }
+    if (ctx.capability !== subject.context.capability) {
+      return `APPROVAL_CAPABILITY_MISMATCH — an approval exists for this exact input under capability ${String(ctx.capability ?? 'none')}; this call resolves to ${String(subject.context.capability)}. It cannot be used.`;
+    }
+    return 'APPROVAL_CONTEXT_MISMATCH — an approval exists for this exact input under a different task/provider/risk/autonomy/request context; it cannot be used.';
   }
 
   /** The pending human-approval request for one exact authorization subject. One pending request per
@@ -897,10 +936,12 @@ export class CimaRuntimeService {
         stage: this.deps.stage?.() ?? DEFAULT_AUTONOMY_STAGE,
         approvals: [],
         ctx: this.toolCtx(executorId),
-        classify: opts.classify ?? this.deps.classify
+        classify: opts.classify ?? this.deps.classify,
+        provider: this.providerFor(executorId),
+        policy: this.policy
       });
       auth.callFingerprint = this.callFingerprintFor(executorId, tool, input);
-      if (isExecutable(auth.decision) && TASK_WRITE_TOOLS.has(tool)) {
+      if (isExecutable(auth.decision) && isWriteTool(tool) && this.policy.getCapability(auth.capability ?? '')?.completionSensitive) {
         const gate = this.taskLedgerWriteGate(root, tool, input, executorId);
         if (gate) auth = denyAuthorization('DECISION_GATE', gate, executorId, tool, input);
       }
@@ -1164,7 +1205,8 @@ export class CimaRuntimeService {
       ...(proposalId ? { proposalId } : {}),
       ...(auth.fingerprint ? { fingerprint: auth.fingerprint } : {}),
       ...(auth.authFingerprint ? { authFingerprint: auth.authFingerprint } : {}),
-      ...(auth.callFingerprint ? { callFingerprint: auth.callFingerprint } : {})
+      ...(auth.callFingerprint ? { callFingerprint: auth.callFingerprint } : {}),
+      ...(auth.capability ? { capabilityId: auth.capability } : {})
     };
     if (!this.append('cima-ledger.jsonl', rec)) return false;
     // v0.6 observability: a signal that a decision was recorded, on the existing
@@ -1228,7 +1270,7 @@ export class CimaRuntimeService {
     this.append('cima-ledger.jsonl', {
       kind: 'governance', ts: this.now(), agentId, taskId, phase: 'DECISION' as CimaPhase, tool: via,
       action: `complete task ${taskId}`, category: 'governance-tamper', risk: 'HIGH', mode: 'HUMAN_APPROVAL',
-      decision: 'DENY', rule: 'DECISION_GATE'
+      decision: 'DENY', rule: 'DECISION_GATE', capabilityId: 'tasks.complete'
     } satisfies GovernanceRecord);
     this.deps.onEvent?.({ type: 'completion-blocked', data: { taskId, reason, via } });
   }
@@ -1248,10 +1290,11 @@ export class CimaRuntimeService {
   private taskLedgerWriteGate(root: string, tool: string, input: unknown, agentId?: string): string | null {
     const i = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
     const tasksPath = join(root, 'tasks.json');
-    const isShell = tool === 'Bash' || tool === 'PowerShell' || tool === 'shell' || tool === 'run_shell_command';
-    const path = typeof i.file_path === 'string' ? i.file_path : typeof i.path === 'string' ? i.path : '';
+    const isShell = isShellTool(tool);
+    // v0.16: every path-bearing field (file_path, notebook_path, path) — a NotebookEdit naming the task ledger
+    // through notebook_path was not judged before.
     const cmd = isShell ? String(i.command ?? '') : '';
-    const touchesTasks = (path !== '' && this.pathIsTasks(path, root, tasksPath, agentId)) ||
+    const touchesTasks = pathsOfInput(input).some((p) => this.pathIsTasks(p, root, tasksPath, agentId)) ||
                          (isShell && /tasks\.json/i.test(cmd));
     if (!touchesTasks) return null;
 
@@ -1317,6 +1360,8 @@ export class CimaRuntimeService {
         tool: a.tool, action: a.summary, category: a.category, risk: a.risk, mode: 'HUMAN_APPROVAL',
         decision: approve ? 'HUMAN_APPROVED' : 'HUMAN_REJECTED', rule: 'human', approvalId: a.id,
         ...(a.binding ? { authFingerprint: a.binding.fingerprint } : {}),
+        ...(typeof (a.binding?.subject as AuthorizationSubject | undefined)?.context?.capability === 'string'
+          ? { capabilityId: (a.binding!.subject as AuthorizationSubject).context.capability as string } : {}),
         human: a.decidedOwner
       } satisfies GovernanceRecord);
       if (!recorded) return undo();
@@ -1336,10 +1381,10 @@ export class CimaRuntimeService {
       if (this.corruptedFiles.size > 0) return null;
       const i = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
       const cls = classifyToolCall(tool, input, this.toolCtx(agentId));
-      const isShell = tool === 'Bash' || tool === 'PowerShell';
+      const isShell = isShellTool(tool);
       const path = typeof i.file_path === 'string' ? i.file_path : typeof i.path === 'string' ? i.path : '';
       const kind: ExecutionTrace['kind'] = isShell ? 'command'
-        : ['Write', 'Edit', 'MultiEdit', 'NotebookEdit'].includes(tool) ? 'write'
+        : isWriteTool(tool) ? 'write'
         : path ? 'read' : 'tool';
       const interrupted = !!(response && typeof response === 'object' && (response as Record<string, unknown>).interrupted);
       const trace: ExecutionTrace = {

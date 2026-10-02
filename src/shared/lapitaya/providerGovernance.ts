@@ -15,25 +15,27 @@
  *                 synthesizes events after the fact: qwen, crush).
  *   none          no bridge at all (kimi, copilot, cursor, custom).
  *
+ * v0.16: the classification is no longer derived here — it is DECLARED in the
+ * governance policy registry (policyRegistry.ts), which cross-checks every
+ * declaration against the provider presets when it validates (a drifted bridge
+ * is a policy conflict and fails closed). This module only reads it.
+ *
  * Fail-closed rule: a hive agent whose provider is not `blocking` cannot have
  * its actions authorized, so it is not spawned — unless the human explicitly
- * opts out (config `lapitayaAllowUngovernedProviders: true`), which is logged.
+ * opts out (`allowUngovernedProviders: true`), which the caller must log.
+ * A provider id the policy does not know is NEVER spawned (PROVIDER_UNKNOWN),
+ * not even with the opt-out: the opt-out accepts a KNOWN ungoverned bridge, not
+ * an unknown one.
  */
 
-import { bridgeOf, providerPreset, type AgentProvider } from '../agentProvider';
+import type { AgentProvider } from '../agentProvider';
+import { POLICY_REGISTRY, type PolicyRegistry } from './policyRegistry';
 
 export type GovernanceEnforcement = 'blocking' | 'observe-only' | 'none';
 
-const BLOCKING_SHIMS: ReadonlySet<string> = new Set(['codex', 'agy', 'gemini', 'grok']);
-
-export function governanceEnforcement(provider: AgentProvider | string): GovernanceEnforcement {
-  const preset = providerPreset(provider as AgentProvider);
-  // hiveAware = Claude Code: per-session settings wire every PreToolUse to cth-hook.
-  if (preset.hiveAware) return 'blocking';
-  const bridge = bridgeOf(provider as AgentProvider);
-  if (!bridge) return 'none';
-  if (bridge.kind === 'proxy') return 'observe-only';
-  return BLOCKING_SHIMS.has(bridge.shim) ? 'blocking' : 'observe-only';
+/** The provider's enforcement as the policy declares it. An unknown provider has none ('none'). */
+export function governanceEnforcement(provider: AgentProvider | string, policy: PolicyRegistry = POLICY_REGISTRY): GovernanceEnforcement {
+  return policy.getProviderPolicy(String(provider))?.enforcement ?? 'none';
 }
 
 export interface SpawnGovernanceDecision {
@@ -42,21 +44,40 @@ export interface SpawnGovernanceDecision {
   /** Set when a human override let an ungoverned provider through. */
   overridden?: boolean;
   reason?: string;
+  /** v0.16: structured refusal code (LAPITAYA_GOVERNANCE_UNENFORCEABLE · PROVIDER_UNKNOWN · POLICY_INVALID). */
+  code?: string;
+  /** v0.16: the capability judged (provider.spawn) and the policy version that judged it. */
+  capability: 'provider.spawn';
+  policyVersion: number;
 }
 
 export function spawnGovernanceDecision(
   provider: AgentProvider | string,
-  opts: { allowUngoverned?: boolean } = {}
+  opts: { allowUngoverned?: boolean; policy?: PolicyRegistry } = {}
 ): SpawnGovernanceDecision {
-  const enforcement = governanceEnforcement(provider);
-  if (enforcement === 'blocking') return { allowed: true, enforcement };
+  const policy = opts.policy ?? POLICY_REGISTRY;
+  const base = { capability: 'provider.spawn' as const, policyVersion: policy.version };
+  if (!policy.valid) {
+    return { ...base, allowed: false, enforcement: 'none', code: 'POLICY_INVALID',
+      reason: `POLICY_INVALID — the governance policy v${policy.version} did not validate, so no agent is spawned (${policy.errors.slice(0, 2).join('; ')}).` };
+  }
+  const pp = policy.getProviderPolicy(String(provider));
+  if (!pp) {
+    return { ...base, allowed: false, enforcement: 'none', code: 'PROVIDER_UNKNOWN',
+      reason: `PROVIDER_UNKNOWN — provider ${JSON.stringify(String(provider)).slice(0, 60)} is not in governance policy v${policy.version}; ` +
+        'its calls cannot be governed, so the agent was not spawned. The ungoverned-provider opt-out does not apply to unknown providers.' };
+  }
+  const enforcement = pp.enforcement;
+  if (enforcement === 'blocking') return { ...base, allowed: true, enforcement };
   if (opts.allowUngoverned === true) {
-    return { allowed: true, enforcement, overridden: true,
+    return { ...base, allowed: true, enforcement, overridden: true,
       reason: `human override: ${provider} (${enforcement}) runs WITHOUT enforceable La Pitaya governance` };
   }
   return {
+    ...base,
     allowed: false,
     enforcement,
+    code: 'LAPITAYA_GOVERNANCE_UNENFORCEABLE',
     reason:
       `LAPITAYA_GOVERNANCE_UNENFORCEABLE — provider "${provider}" is ${enforcement === 'none' ? 'not bridged to' : 'only observed by'} ` +
       'the La Pitaya runtime: its tool calls cannot be authorized or denied, so the agent was not spawned. ' +

@@ -173,6 +173,10 @@ export interface AuthorizationContext {
   rule: string;
   /** The confirmed REQUEST proposal in force, if any. */
   request: string | null;
+  /** v0.16: the capability the runtime resolved (policy registry). Absent in subjects bound before v0.16. */
+  capability?: string;
+  /** v0.16: the governance policy version in force. Absent in subjects bound before v0.16. */
+  policy?: number;
 }
 
 export interface AuthorizationSubject {

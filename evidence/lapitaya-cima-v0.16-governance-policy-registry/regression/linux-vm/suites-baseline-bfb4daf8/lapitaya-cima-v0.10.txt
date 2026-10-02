@@ -1,0 +1,39 @@
+✔ [AUTH-01] Valid trusted agent context accepted (302.482ms)
+✔ [AUTH-02] Missing agent context denied (252.1613ms)
+✔ [AUTH-03] Invalid agent context denied (240.3652ms)
+✔ [AUTH-04] Payload agent_id cannot override trusted identity (274.4828ms)
+✔ [AUTH-05] Agent A cannot impersonate Agent B (232.4578ms)
+✔ [AUTH-06] Folder name cannot establish identity (299.1094ms)
+✔ [AUTH-07] Message from cannot establish identity (381.1486ms)
+✔ [AUTH-08] Agent cannot self-declare human (303.1118ms)
+✔ [AUTH-09] Human DECISION requires trusted human identity (265.9817ms)
+✔ [AUTH-10] Fake human identity denied (367.1791ms)
+✔ [AUTH-11] Human identity from renderer payload ignored (327.7595ms)
+✔ [AUTH-12] Human identity from trusted v0.8 IPC accepted (425.5442ms)
+✔ [AUTH-13] Builder cannot impersonate Auditor (392.1763ms)
+✔ [AUTH-14] Auditor cannot impersonate Builder (279.2995ms)
+✔ [AUTH-15] Agent cannot manufacture BUILD PASS (303.8661ms)
+✔ [AUTH-16] Agent cannot manufacture TEST PASS (453.2939ms)
+✔ [AUTH-17] Agent cannot manufacture AUDIT PASS (356.88ms)
+✔ [AUTH-18] Agent cannot manufacture DECISION PASS (391.4656ms)
+✔ [AUTH-19] Missing identity fails closed (245.4332ms)
+✔ [AUTH-20] Identity mismatch fails closed (387.3019ms)
+✔ [AUTH-21] Identity is preserved in evidence (461.763ms)
+✔ [AUTH-22] Decision owner remains v0.8 trusted identity (257.23ms)
+✔ [AUTH-23] Cross-window human identity remains correct (318.3603ms)
+✔ [AUTH-24] Replay of authenticated context rejected (382.3268ms)
+✔ [AUTH-25] Wrong task context rejected (365.9049ms)
+✔ [AUTH-26] Wrong agent assignment rejected (339.5293ms)
+✔ [AUTH-27] Tampered context rejected (295.3412ms)
+✔ [AUTH-28] No secrets exposed (1.3145ms)
+✔ [AUTH-29] No raw credentials exposed (3.8477ms)
+✔ [AUTH-30] Real Electron human decision works (282.9159ms)
+✔ [ADVERSARIAL-CHAIN] Forged CIMA chain fails closed and breaks the chain (416.5154ms)
+ℹ tests 31
+ℹ suites 0
+ℹ pass 31
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 15256.1502

@@ -140,6 +140,10 @@ export interface GovernanceObservation {
    *  read from the runtime's own record. Id + display name only: never a session, window, token or fingerprint. */
   decisionOwner: SafeDecisionOwner | null;
   evidence: ObservationEvidence | null;
+  /** v0.16: the capability the RUNTIME resolved for this decision, as recorded on its ledger event (never computed here). */
+  capability: string | null;
+  /** v0.16: the governance policy version the runtime recorded on the event (never computed here). */
+  policyVersion: number | null;
   /** Repeated identical facts collapsed into this one (agent retry loops). */
   count: number;
   /** The i18n keys (namespace lapitaya) that explain it — chosen here, deterministically. */
@@ -267,11 +271,13 @@ function nextFor(o: Pick<GovernanceObservation, 'category' | 'proposalId' | 'app
   }
 }
 
-function build(fields: Omit<GovernanceObservation, 'requiredHumanAction' | 'nextState' | 'count' | 'keys' | 'decisionOwner'> & { decisionOwner?: SafeDecisionOwner | null }, fromRecordRule: boolean, ctx: Ctx): GovernanceObservation {
+function build(fields: Omit<GovernanceObservation, 'requiredHumanAction' | 'nextState' | 'count' | 'keys' | 'decisionOwner' | 'capability' | 'policyVersion'> & { decisionOwner?: SafeDecisionOwner | null; capability?: string | null; policyVersion?: number | null }, fromRecordRule: boolean, ctx: Ctx): GovernanceObservation {
   const { next, action } = nextFor(fields, ctx);
   const o: GovernanceObservation = {
     ...fields,
     decisionOwner: fields.decisionOwner ?? null,
+    capability: fields.capability ?? null,
+    policyVersion: fields.policyVersion ?? null,
     requiredHumanAction: action,
     nextState: next,
     count: 1,
@@ -317,7 +323,9 @@ export function observeLedgerRecord(record: unknown, ctx: Ctx = { pendingProposa
       agent: id(r.agentId), operation: tool ? (cat ? `${tool} · ${cat}` : tool) : null, intentType: null,
       runtimeStatus: decision, risk: inSet(RISKS, r.risk), scope: null, autonomy: inSet(AUTONOMY, r.mode),
       decision, rule, evidence,
-      decisionOwner: decision === 'HUMAN_APPROVED' || decision === 'HUMAN_REJECTED' ? safeOwner(readOwner(r.human)) : null
+      decisionOwner: decision === 'HUMAN_APPROVED' || decision === 'HUMAN_REJECTED' ? safeOwner(readOwner(r.human)) : null,
+      // v0.16: read verbatim from the runtime's record — Alicia resolves no capability and holds no policy.
+      capability: id(r.capabilityId), policyVersion: Number.isInteger(r.policyVersion) && (r.policyVersion as number) > 0 ? (r.policyVersion as number) : null
     }, true, ctx)];
   }
   if (r.kind === 'request') {

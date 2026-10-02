@@ -1,0 +1,17 @@
+✔ [API-01] CIMA task with FULL CIMA chain + DECISION PASS -> updateTaskStatus(done) ALLOWED (1070.0223ms)
+✔ [API-02] CIMA task with BUILD/TEST/AUDIT PASS but NO DECISION -> updateTaskStatus(done) BLOCKED (737.9537ms)
+✔ [API-03] DECISION FAIL -> updateTaskStatus(done) BLOCKED (737.6132ms)
+✔ [API-04] DECISION BLOCKED -> updateTaskStatus(done) BLOCKED (728.3846ms)
+✔ [API-05] DECISION PASS + BUILD after DECISION -> updateTaskStatus(done) BLOCKED (1410.8873ms)
+✔ [API-06] unauthorized DECISION PASS -> updateTaskStatus(done) BLOCKED (541.7855ms)
+✔ [API-07] non-CIMA task -> updateTaskStatus(done) ALLOWED (ungated) (823.7688ms)
+✔ [API-08] tool boundary path (PreToolUse) continues to be protected (576.9879ms)
+✔ [Negative Test — Direct API Bypass] updateTaskStatus, patchTask, writeTasks without DECISION PASS are ALL BLOCKED and recorded in ledger (587.3064ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12849.6588

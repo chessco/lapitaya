@@ -1,0 +1,52 @@
+✔ [EVENT-01] every new ledger line is an event with a runtime-generated identity and a place in the chain (142.1301ms)
+✔ [EVENT-02] an actor cannot provide eventId, sequence or hashes (119.5582ms)
+✔ [EVENT-03] sequence is strictly monotonic and gapless, also across runtime instances (267.2473ms)
+✔ [EVENT-04] a duplicate sequence is rejected (112.5354ms)
+✔ [EVENT-05] a duplicate eventId is rejected (even inside an otherwise well-formed, sealed event) (92.005ms)
+✔ [EVENT-06] the hash chain is verifiable by an independent implementation (231.4242ms)
+✔ [EVENT-07] a mutated previousEventHash is detected (114.5521ms)
+✔ [EVENT-08] a mutated event (or a mutated eventHash) is detected (131.8816ms)
+✔ [EVENT-09] a deleted event is detected — first, middle and LAST (the anchor) (178.3578ms)
+✔ [EVENT-10] an inserted event is detected — legacy line, replayed line, and a forged tail event (157.2607ms)
+✔ [EVENT-11] reordered events are detected (152.8534ms)
+✔ [EVENT-12] a truncated ledger is detected (mid-record and at a record boundary) (106.5384ms)
+✔ [EVENT-13] malformed JSON anywhere in the ledger is detected, not skipped (102.4121ms)
+✔ [EVENT-14] an unknown required schema is detected (96.2698ms)
+✔ [EVENT-15] after corruption nothing is appended, and nothing is authorized (154.1531ms)
+✔ [EVENT-16] no evidence is invented: detection and restart change nothing governance-relevant (156.519ms)
+✔ [EVENT-17] the recovery state is explicit: HEALTHY → RECOVERY_REQUIRED → RECOVERED (227.7742ms)
+✔ [EVENT-33] recovery keeps the damaged ledger whole, keeps the verified prefix verbatim and invents no fact (309.4114ms)
+✔ [EVENT-34] restart after corruption: still closed, still RECOVERY_REQUIRED (128.4729ms)
+✔ [EVENT-35] restart after a valid append: verified incrementally, same head, still healthy (149.0092ms)
+✔ [EVENT-36] the recovery artifact is chained and sealed; tampering with it is detected (216.2512ms)
+✔ [EVENT-18] proposal state that disagrees with the events is detected (edited status, deleted proposal, invented proposal) (150.3719ms)
+✔ [EVENT-19] approval state that disagrees with the events is detected (46.804ms)
+✔ [EVENT-20] an approval without its HUMAN_APPROVED event is never APPROVED (state-only, and event removed) (142.6253ms)
+✔ [EVENT-21] a HUMAN_APPROVED without a valid human owner is no decision — refused when made, detected when forged (153.4682ms)
+✔ [EVENT-22] invalid state transitions are denied and, if forged into the stream, detected (115.3926ms)
+✔ [EVENT-23] AUTHORIZED ≠ EXECUTED: a decision is not an execution; only a committed trace is (2330.7898ms)
+✔ [EVENT-24] EXECUTED ≠ SUCCEEDED: a failed run is TOOL_FAILED with ok=false (2250.5909ms)
+✔ [EVENT-25] a failed execution can back a FAIL but never a PASS (2420.1779ms)
+✔ [EVENT-26] trace inconsistencies are detected: altered, deleted, and an uncommitted trace is not evidence (180.4472ms)
+✔ [EVENT-27] concurrent readers in separate processes all see one healthy, identical state (5908.8857ms)
+✔ [EVENT-28] reads and verification while another process writes: never stale, partial, mixed or falsely healthy (8991.2045ms)
+[EVENT-37] [{"events":500,"fullVerifyMs":97.4,"coldAuthorizeMs":83.4,"steadyAuthorizeMs":20.33},{"events":5000,"fullVerifyMs":636.6,"coldAuthorizeMs":470.3,"steadyAuthorizeMs":19.19}]
+✔ [EVENT-29] snapshot consistency: ledger, approvals and requests come from ONE verified moment (7574.3574ms)
+✔ [EVENT-30] Alicia sees the governance health: HEALTHY, CORRUPTED, INCONSISTENT, UNAVAILABLE and the recovery state (331.6578ms)
+✔ [EVENT-31] Alicia and the renderer cannot repair: no recovery capability exists outside the operator tooling (23.8497ms)
+✔ [EVENT-32] a v0.14 ledger is migrated by an explicit boundary: legacy is trusted as found, committed, never replayed as new (159.8952ms)
+✔ [EVENT-37] performance is measured: verification is linear once, authorization is O(new events) after (2683.6783ms)
+✔ [EVENT-38] v0.14 authorization binding is intact on the chained ledger (319.2378ms)
+✔ [ADV-1] valid approval; proposal state edited with its HMAC/fingerprint preserved; ledger edited; execution: DENIED (149.0461ms)
+✔ [ADV-2] HUMAN_APPROVED removed from the ledger, approvals.json preserved: DENIED (74.4809ms)
+✔ [ADV-3] a fake HUMAN_APPROVED inserted — without the key, and with the key but without a valid human: DENIED (100.9246ms)
+✔ [ADV-4] reordered events, then execute: DENIED (65.9858ms)
+✔ [ADV-5] a writer who holds the key and rewrites the chain from the middle is still caught by the keyed anchor (159.567ms)
+ℹ tests 43
+ℹ suites 0
+ℹ pass 43
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 41431.7791

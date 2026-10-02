@@ -17,6 +17,7 @@
 
 import { ACTION_RISK, type ActionCategory, type RiskLevel } from './autonomy';
 import { canonicalizePath, isInside, type CanonicalPath } from './authSubject';
+import { GOVERNANCE_SOURCES, POLICY_REGISTRY, type Operation, type ToolClassifier } from './policyRegistry';
 
 export interface ToolCallContext {
   /** Absolute hive root (`<harnessHome>/hive`). Writes inside it are hive
@@ -38,9 +39,23 @@ export interface ToolRisk {
   rule: string;
 }
 
-const READ_TOOLS = new Set(['Read', 'Grep', 'Glob', 'LS', 'NotebookRead', 'WebFetch', 'WebSearch', 'TodoWrite', 'TodoRead']);
-const DELEGATE_TOOLS = new Set(['Task', 'Agent', 'ExitPlanMode']);
-const WRITE_TOOLS = new Set(['Write', 'Edit', 'MultiEdit', 'NotebookEdit']);
+// v0.16: WHICH tools exist and how each one is classified is policy — it lives in the registry (policyRegistry.ts).
+// This file keeps HOW a call's input is judged (paths, shell text): the classification rules themselves.
+
+/** The classifier the policy binds a tool to, or null for a tool the policy does not know. */
+export function classifierOf(tool: string): ToolClassifier | null {
+  return POLICY_REGISTRY.getToolPolicy(tool)?.classifier ?? null;
+}
+
+/** v0.16: a shell tool, per the policy (Bash, PowerShell, shell, run_shell_command). */
+export function isShellTool(tool: string): boolean {
+  return classifierOf(tool) === 'shell';
+}
+
+/** v0.16: a file-writing tool, per the policy (Write, Edit, MultiEdit, NotebookEdit). */
+export function isWriteTool(tool: string): boolean {
+  return classifierOf(tool) === 'write';
+}
 
 const norm = (p: string): string => p.replace(/\\/g, '/').toLowerCase();
 
@@ -63,7 +78,9 @@ const INFRA_PATH = /(^|\/)(\.github\/workflows\/|terraform\/|infra\/|k8s\/|kuber
 const AUTH_PATH = /(^|\/)(auth|authentication|authorization|permissions?|rbac|acl)(\/|\.|-|_)/;
 /** Files that implement governance itself. An agent editing these could turn
  *  its own guard off, so they are HIGH no matter who asks. */
-const GOVERNANCE_PATH = /(^|\/)(\.claude\/settings[^/]*\.json|src\/shared\/lapitaya\/(autonomy|governance|toolrisk|cimaruntime|providergovernance|intent)\.ts|src\/main\/(hooks|cimaruntime|intentboundary)\.ts|src\/shared\/agentprovider\.ts)$/;
+const GOV_SHARED = GOVERNANCE_SOURCES.shared.map((n) => n.toLowerCase()).join('|');
+const GOV_MAIN = GOVERNANCE_SOURCES.main.map((n) => n.toLowerCase()).join('|');
+const GOVERNANCE_PATH = new RegExp(`(^|\\/)(\\.claude\\/settings[^/]*\\.json|src\\/shared\\/lapitaya\\/(${GOV_SHARED})\\.ts|src\\/main\\/(${GOV_MAIN})\\.ts|src\\/shared\\/agentprovider\\.ts)$`);
 /** Inside the hive: the harness-owned files an agent must not rewrite. */
 const HIVE_GOVERNANCE = /(^|\/)(bin\/|lapitaya\/|registry\.json$|agents\/[^/]+\/(settings\.json|identity\.md|cursor\.json)$)/;
 const DOC_PATH = /\.(md|mdx|txt|rst|adoc)$/;
@@ -161,7 +178,8 @@ const LOW_SHELL: Array<[RegExp, ActionCategory]> = [
 ];
 
 /** Governance state files, as a shell command would name them. */
-const GOVERNANCE_STATE_REF = /(tasks\.json|registry\.json|cima-ledger\.jsonl|traces\.jsonl|approvals\.json|hive[\\/]lapitaya[\\/]|agents[\\/][^\\/\s"']+[\\/]settings\.json|\.claude[\\/]settings[^\\/\s"']*\.json|(cth|agy|gemini|grok)-hook|lapitaya[\\/](autonomy|governance|toolRisk|cimaRuntime|providerGovernance|intent)\.ts|main[\\/](hooks|cimaRuntime|intentBoundary)\.ts)/i;
+const GOVERNANCE_STATE_REF = new RegExp(
+  `(tasks\\.json|registry\\.json|cima-ledger\\.jsonl|traces\\.jsonl|approvals\\.json|hive[\\\\/]lapitaya[\\\\/]|agents[\\\\/][^\\\\/\\s"']+[\\\\/]settings\\.json|\\.claude[\\\\/]settings[^\\\\/\\s"']*\\.json|(cth|agy|gemini|grok)-hook|lapitaya[\\\\/](${GOV_SHARED})\\.ts|main[\\\\/](${GOV_MAIN})\\.ts)`, 'i');
 
 /** Split a shell command into its sequential segments (&&, ||, ;, |, newlines). */
 export function shellSegments(command: string): string[] {
@@ -240,22 +258,49 @@ export function classifyShell(command: string): ToolRisk {
 
 // ─── entry point ────────────────────────────────────────────────────────────
 
-/** Classify one tool call. Unknown tools are HIGH (the safe default). */
+/** Classify one tool call. Unknown tools are HIGH (the safe default) — and v0.16's runtime refuses them outright
+ *  (TOOL_UNKNOWN), because the policy registry has no capability for them. */
 export function classifyToolCall(tool: string, input: unknown, ctx: ToolCallContext = {}): ToolRisk {
   const i = inputOf(input);
-  if (tool === 'Bash' || tool === 'PowerShell' || tool === 'shell' || tool === 'run_shell_command') {
-    return classifyShell(str(i.command));
+  switch (classifierOf(tool)) {
+    case 'shell':
+      return classifyShell(str(i.command));
+    case 'write': {
+      const path = str(i.file_path) || str(i.notebook_path) || str(i.path);
+      return path ? classifyWritePath(path, ctx) : result('code-change', `${tool} (no path)`, 'write-no-path');
+    }
+    case 'read': {
+      const path = str(i.file_path) || str(i.path);
+      if (path) return classifyReadPath(path, ctx);
+      return result('read-code', `${tool}`, 'read-tool');
+    }
+    case 'delegate':
+      return result('analysis', `${tool}: ${str(i.description)}`, 'delegate');
+    case 'mcp':
+      return result('shell-command', `MCP ${tool}`, 'mcp');
+    case 'intent':
+      // Only the intent boundary evaluates this, with its own reading of the message; unclassified it is HIGH.
+      return result('irreversible', 'intent (unclassified)', 'intent:unclassified-action');
+    default:
+      return result('irreversible', `unknown tool ${tool}`, 'unknown-tool');
   }
-  if (WRITE_TOOLS.has(tool)) {
-    const path = str(i.file_path) || str(i.notebook_path) || str(i.path);
-    return path ? classifyWritePath(path, ctx) : result('code-change', `${tool} (no path)`, 'write-no-path');
+}
+
+/**
+ * v0.16: the OPERATION a classified call performs — derived by the runtime from its own classification of the actual
+ * call (never from anything the actor declares). With the tool, it selects the capability in the policy registry.
+ */
+export function operationOf(classifier: ToolClassifier, cls: Pick<ToolRisk, 'category' | 'risk' | 'rule'>): Operation {
+  if (classifier === 'intent') return 'evaluate';
+  if (cls.category === 'governance-tamper') return 'governance-state';
+  switch (classifier) {
+    case 'read': return cls.risk === 'HIGH' ? 'read-secret' : 'read';
+    case 'write': return cls.risk === 'HIGH' ? 'sensitive-write' : 'write';
+    case 'delegate': return cls.risk === 'HIGH' ? 'high-impact' : 'delegate';
+    case 'mcp': return 'invoke';
+    case 'shell':
+      if (cls.risk === 'HIGH') return 'high-impact';
+      if (cls.risk === 'LOW') return 'inspect';
+      return cls.rule === 'shell:mutation' ? 'mutate' : 'execute';
   }
-  if (READ_TOOLS.has(tool)) {
-    const path = str(i.file_path) || str(i.path);
-    if (path) return classifyReadPath(path, ctx);
-    return result('read-code', `${tool}`, 'read-tool');
-  }
-  if (DELEGATE_TOOLS.has(tool)) return result('analysis', `${tool}: ${str(i.description)}`, 'delegate');
-  if (tool.startsWith('mcp__')) return result('shell-command', `MCP ${tool}`, 'mcp');
-  return result('irreversible', `unknown tool ${tool}`, 'unknown-tool');
 }

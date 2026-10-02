@@ -3,6 +3,10 @@
  *
  *   risk classification (toolRisk.ts)
  *          ↓
+ *   capability resolution (policyRegistry.ts, v0.16: provider + tool + operation → capability; unknown → DENY)
+ *          ↓
+ *   policy floors (final risk = max(call, capability baseline); HUMAN_APPROVAL / DENIED baselines are absolute)
+ *          ↓
  *   autonomy policy (autonomy.ts: modeFor)
  *          ↓
  *   authorization decision (this file)
@@ -21,8 +25,9 @@
  */
 import type { DecisionOwner } from './identity';
 
-import { modeFor, DEFAULT_AUTONOMY_STAGE, type AutonomyMode, type AutonomyStage, type RiskLevel, type ActionCategory } from './autonomy';
-import { classifyToolCall, type ToolCallContext, type ToolRisk } from './toolRisk';
+import { modeForRisk, DEFAULT_AUTONOMY_STAGE, type AutonomyMode, type AutonomyStage, type RiskLevel, type ActionCategory } from './autonomy';
+import { classifyToolCall, operationOf, type ToolCallContext, type ToolRisk } from './toolRisk';
+import { POLICY_REGISTRY, maxRisk, type PolicyRegistry } from './policyRegistry';
 import { ACTION_RISK } from './autonomy';
 
 export type AuthorizationDecision =
@@ -82,6 +87,12 @@ export interface AuthorizationInput {
   ctx?: ToolCallContext;
   /** Test seam: replaces the risk classifier. */
   classify?: (tool: string, input: unknown, ctx?: ToolCallContext) => ToolRisk;
+  /** v0.16: the agent's provider AS THE RUNTIME KNOWS IT (hive registry) — never a value from the call. An unknown
+   *  provider is refused (PROVIDER_UNKNOWN); null/undefined = unattributed (legacy). */
+  provider?: string | null;
+  /** v0.16: the governance policy to resolve capabilities against. Main passes its own (read-only) registry;
+   *  absent → the policy in code. Nothing an agent, a provider or the renderer sends reaches this field. */
+  policy?: PolicyRegistry;
   /** v0.14: the runtime-computed authorization fingerprint of THIS call (src/main/authBinding.ts).
    *  Without it no approval can match: the legacy FNV fingerprint never authorizes. */
   authFingerprint?: string;
@@ -104,6 +115,12 @@ export interface Authorization {
   callFingerprint?: string;
   /** Set when an approval was consumed by this call. */
   approvalId?: string;
+  /** v0.16: the capability the runtime resolved for this call (policy registry). Absent when none was resolved. */
+  capability?: string;
+  /** v0.16: the version of the governance policy that produced this decision. */
+  policyVersion?: number;
+  /** v0.16: the policy baseline raised the classifier's risk (the baseline was stricter than the call's own risk). */
+  elevated?: boolean;
   /** What the agent is told when the call is denied. */
   reason?: string;
 }
@@ -135,12 +152,13 @@ export function toolCallFingerprint(agentId: string, tool: string, input: unknow
 }
 
 /** A DENY authorization — the single shape every fail-closed path returns. */
-export function denyAuthorization(code: string, detail: string, agentId: string, tool: string, input: unknown): Authorization {
+export function denyAuthorization(code: string, detail: string, agentId: string, tool: string, input: unknown, policyVersion?: number): Authorization {
   let fingerprint = '00000000';
   try { fingerprint = toolCallFingerprint(agentId, tool, input); } catch { /* keep placeholder */ }
   return {
     decision: 'DENY', mode: 'HUMAN_APPROVAL', risk: 'HIGH', category: 'irreversible',
     summary: detail.slice(0, 300), rule: code, fingerprint,
+    ...(policyVersion !== undefined ? { policyVersion } : {}),
     reason: `${code} — La Pitaya could not authorize this call, so it was NOT executed (${detail}). Report it to the human; do not work around it.`
   };
 }
@@ -163,10 +181,31 @@ export function authorizeToolCall(a: AuthorizationInput): Authorization {
   } catch (e) {
     return denyAuthorization('RISK_CLASSIFICATION_UNAVAILABLE', `classifier failed for ${a.tool}: ${String(e).slice(0, 120)}`, a.agentId, a.tool, a.input);
   }
+
+  // v0.16 CAPABILITY RESOLUTION. The provider (as the runtime knows it), the tool and the OPERATION the runtime derived
+  // from its own classification select ONE capability in the policy registry. Anything the policy does not know —
+  // provider, tool, capability — and a policy that does not validate, is refused: never AUTO, never "safe".
+  const policy = a.policy ?? POLICY_REGISTRY;
+  const binding = policy.getToolPolicy(a.tool);
+  const res = policy.resolveCapability({ provider: a.provider, tool: a.tool, operation: binding ? operationOf(binding.classifier, cls) : 'invoke' });
+  if (!res.ok) return denyAuthorization(res.code, res.detail, a.agentId, a.tool, a.input, res.policyVersion);
+  const capability = res.capability;
+  if (capability.governanceMode === 'DENIED') {
+    return { ...denyAuthorization('CAPABILITY_DENIED', `capability ${capability.id} is DENIED by governance policy v${res.policyVersion}`, a.agentId, a.tool, a.input, res.policyVersion), capability: capability.id };
+  }
+
+  // FINAL CLASSIFICATION = the stricter of the policy baseline and the actual call. A baseline can raise, never lower.
   const stage = a.stage ?? DEFAULT_AUTONOMY_STAGE;
-  const mode = modeFor(cls.category, stage);
+  const risk = maxRisk(cls.risk, capability.risk);
+  let mode: AutonomyMode = modeForRisk(risk, stage);
+  // A capability whose policy demands a human (HUMAN_APPROVAL, or a HUMAN_DECISION evidence requirement) gets one at
+  // every stage. A SUPERVISED baseline is the default-stage mode: the human-chosen autonomy stage keeps its v0.15 effect.
+  if (capability.governanceMode === 'HUMAN_APPROVAL' || capability.evidence.includes('HUMAN_DECISION_REQUIRED')) mode = 'HUMAN_APPROVAL';
   const fingerprint = toolCallFingerprint(a.agentId, a.tool, a.input);
-  const base = { mode, risk: cls.risk, category: cls.category, summary: cls.summary, rule: cls.rule, fingerprint };
+  const base = {
+    mode, risk, category: cls.category, summary: cls.summary, rule: cls.rule, fingerprint,
+    capability: capability.id, policyVersion: res.policyVersion, ...(risk !== cls.risk ? { elevated: true } : {})
+  };
 
   if (mode === 'AUTO') return { ...base, decision: 'ALLOW' };
   if (mode === 'SUPERVISED') return { ...base, decision: 'SUPERVISED' };

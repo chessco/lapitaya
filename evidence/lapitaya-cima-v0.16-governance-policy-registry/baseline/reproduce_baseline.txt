@@ -1,0 +1,42 @@
+## providers (governanceEnforcement / spawnGovernanceDecision)
+"claude"         enforcement=blocking      allowed=true optIn.allowed=true optIn.overridden=false
+"codex"          enforcement=blocking      allowed=true optIn.allowed=true optIn.overridden=false
+"grok"           enforcement=blocking      allowed=true optIn.allowed=true optIn.overridden=false
+"kimi"           enforcement=none          allowed=false optIn.allowed=true optIn.overridden=true
+"gemini"         enforcement=blocking      allowed=true optIn.allowed=true optIn.overridden=false
+"antigravity"    enforcement=blocking      allowed=true optIn.allowed=true optIn.overridden=false
+"qwen"           enforcement=observe-only  allowed=false optIn.allowed=true optIn.overridden=true
+"opencode"       enforcement=observe-only  allowed=false optIn.allowed=true optIn.overridden=true
+"crush"          enforcement=observe-only  allowed=false optIn.allowed=true optIn.overridden=true
+"pi"             enforcement=observe-only  allowed=false optIn.allowed=true optIn.overridden=true
+"copilot"        enforcement=none          allowed=false optIn.allowed=true optIn.overridden=true
+"cursor"         enforcement=none          allowed=false optIn.allowed=true optIn.overridden=true
+"custom"         enforcement=none          allowed=false optIn.allowed=true optIn.overridden=true
+"evil-provider"  enforcement=blocking      allowed=true optIn.allowed=true optIn.overridden=false
+""               enforcement=blocking      allowed=true optIn.allowed=true optIn.overridden=false
+"CLAUDE"         enforcement=blocking      allowed=true optIn.allowed=true optIn.overridden=false
+
+## tools (classifyToolCall)
+"Read"                       {"file_path":"src/a.ts"}                           category=read-code          risk=LOW    rule=read
+"Write"                      {"file_path":"src/a.ts"}                           category=code-change        risk=MEDIUM rule=code-path
+"Edit"                       {"file_path":"README.md"}                          category=documentation      risk=LOW    rule=doc-path
+"Bash"                       {"command":"ls"}                                   category=read-code          risk=LOW    rule=shell:low
+"Bash"                       {"command":"echo x > out.txt"}                     category=code-change        risk=MEDIUM rule=shell:mutation
+"Bash"                       {"command":"echo x > hive/lapitaya/approvals.jso   category=governance-tamper  risk=HIGH   rule=shell:governance-state
+"Bash"                       {"command":"rm -rf /"}                             category=data-deletion      risk=HIGH   rule=shell:recursive-delete
+"Bash"                       {"command":"git push"}                             category=irreversible       risk=HIGH   rule=shell:git-push
+"mcp__github__create_issue"  {}                                                 category=shell-command      risk=MEDIUM rule=mcp
+"Task"                       {"description":"x"}                                category=analysis           risk=LOW    rule=delegate
+"WebFetch"                   {"url":"x"}                                        category=read-code          risk=LOW    rule=read-tool
+"FrobnicateTool"             {}                                                 category=irreversible       risk=HIGH   rule=unknown-tool
+"write_file"                 {"file_path":"a.ts"}                               category=irreversible       risk=HIGH   rule=unknown-tool
+""                           {}                                                 category=irreversible       risk=HIGH   rule=unknown-tool
+
+## runtime authorize() — unknown tool / unknown provider / mcp
+provider=claude         tool=FrobnicateTool   decision=HUMAN_APPROVAL_REQUIRED  risk=HIGH rule=unknown-tool
+provider=claude         tool=mcp__x__y        decision=SUPERVISED               risk=MEDIUM rule=mcp
+provider=evil-provider  tool=Read             decision=ALLOW                    risk=LOW rule=read
+provider=evil-provider  tool=Bash             decision=HUMAN_APPROVAL_REQUIRED  risk=HIGH rule=shell:git-push
+
+last governance event keys: kind,ts,agentId,provider,taskId,phase,tool,action,category,risk,mode,decision,rule,approvalId,fingerprint,authFingerprint,callFingerprint,schemaVersion,eventId,eventType,sequence,previousEventHash,eventHash,eventMac
+policyVersion present on event: false

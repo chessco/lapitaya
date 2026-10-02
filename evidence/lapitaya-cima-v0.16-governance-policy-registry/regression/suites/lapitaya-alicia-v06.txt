@@ -1,0 +1,27 @@
+✔ [OBS-01] REQUEST_PROPOSED → correct, evidence-backed explanation (3951.9744ms)
+✔ [OBS-02] REQUEST_CONFIRMATION_REQUIRED → blocked, rule, runtime risk, "no se ejecutó" (5132.6223ms)
+✔ [OBS-03] REQUEST_SCOPE_EXCEEDED → correct explanation (MEDIUM stays MEDIUM) (5132.9841ms)
+✔ [OBS-04] STALE_PROPOSAL → correct explanation (8546.3851ms)
+✔ [OBS-05] TAMPERED → correct explanation (8968.0688ms)
+✔ [OBS-06] NOT_AUTHORIZED → correct explanation (7952.4868ms)
+✔ [OBS-07] HUMAN_APPROVAL_REQUIRED → "not an approval", then approval → execution, all linked (7640.9974ms)
+✔ [OBS-08][OBS-09][OBS-10] Alicia cannot modify the event, the risk or the decision (8488.7607ms)
+✔ [OBS-11] no second ledger: Alicia persists nothing; the projection reads the runtime files only (9317.3191ms)
+✔ [OBS-12] no explanation without evidence: unlinked traces claim nothing; every fact carries its source (8004.5339ms)
+✔ [OBS-13][OBS-14] the timeline is exactly the real facts, in order, and read only (7314.0835ms)
+✔ [OBS-15] no tokens, secrets, commands, paths or outputs in the projection or the UI (6964.5935ms)
+✔ [OBS-16][OBS-17] es-MX and en-US: identical trees, every key the projection can emit exists, no fallback (7666.5579ms)
+✔ [OBS-18] governance explanation has no LLM / provider / network dependency (3.7318ms)
+✔ [OBS-19] the governance event stream still works; the new signals raise no notifications (8651.3089ms)
+✔ [OBS-20][OBS-21] REQUEST confirmation and HIGH approval behave exactly as in v0.5 (8383.4344ms)
+✔ [OBS-22][OBS-23] an unconfirmed REQUEST still blocks; removing Alicia UI or projection removes no guarantee (9972.2093ms)
+✔ [OBS-NEG-01] Alicia cannot fabricate PASS, DENY, HIGH, evidence, approval or confirmation (4237.3003ms)
+✔ [OBS-NEG-02] missing event / rule / risk / evidence / unknown code → "information unavailable", never an inference (3.4033ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 131045.2514

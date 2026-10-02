@@ -26,8 +26,19 @@ if (splashMark) {
 const root = document.getElementById('root');
 if (!root) throw new Error('No root element');
 
+import { CompanionApp } from './companions/CompanionApp';
+
+const isCompanion =
+  window.location.search.includes('companion=1') ||
+  window.location.hash.includes('companion');
+
+if (isCompanion) {
+  const splash = document.getElementById('cth-splash');
+  if (splash) splash.remove();
+}
+
 createRoot(root).render(
   <StrictMode>
-    <App />
+    {isCompanion ? <CompanionApp /> : <App />}
   </StrictMode>
 );
