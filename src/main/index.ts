@@ -47,6 +47,7 @@ import { KnowledgeManager } from './knowledge';
 import { MemoryReflector, type ReflectSettings } from './reflect';
 import { PersistStore } from './db';
 import { DesktopPresenceService } from './desktopPresence';
+import { recordSpawnAssignment } from './spawnAssignment';
 import { readAgentUsage, readContextTokens, seedSessionTranscript, resolveSessionCwd } from './transcript';
 import { listIssues, listCIRuns } from './github';
 import { SlackWebhookServer, SlackReplyServer, postSlackReply, type SlackEventFile } from './slack';
@@ -4787,6 +4788,7 @@ interface SpawnRequest {
   slack?: { channel: string; thread_ts: string };     // reply target + where failures surface
   isolate?: boolean;                                   // default true (fresh worktree)
   tokenCap?: number;                                   // optional per-worker token cap (advisory P1)
+  cima?: unknown;                                      // optional CIMA phase ASSIGNMENT {taskId, phase} (no verdict) — see spawnAssignment.ts
   // Appearance on the office floor. Both optional and both validated renderer-side
   // against the real cast and accent lists, so a bad value degrades to the default
   // rather than breaking the card.
@@ -4999,7 +5001,15 @@ async function processSpawnRequest(filePath: string): Promise<void> {
       ? buildAutonomousRequestProtocol(slack.channel, slack.thread_ts, slackReplyScriptPath())
       : '[AUTONOMOUS WORKER TASK — no interactive human is watching. Work autonomously; do not ask interactive questions.] The task starts now: ';
     const suffix = `\n\n[CAPABILITIES] Before you start, consult your capability catalog — run the \`/capabilities\` skill (or read \`$AGENT_DIR/.claude/skills/capabilities/SKILL.md\`). It lists your temporal date-range skills (\`/today\`, \`/last30Days\`, \`/lastQuarter\`, …) and the integrations available to you (reached via the loopback broker) and how to call each. For any time-scoped work, resolve the dates with those skills instead of computing them by hand.\n\n[WORKER COMPLETION] When finished, signal done by sending ONE outbox message to god with "act":"done" and a short result summary — that releases this ephemeral worker (terminal closed; your branch is handed to god). Do NOT push to any remote; god is the sole integrator.`;
-    hive.send({ to: workerId, conversation: `worker-${reqId}`, act: 'request', subject: meta.name, body: `${prefix}${objective}${suffix}` }, 'god');
+    const dispatched = hive.send({ to: workerId, conversation: `worker-${reqId}`, act: 'request', subject: meta.name, body: `${prefix}${objective}${suffix}` }, 'god');
+    // La Pitaya CIMA: a structured phase assignment on the request is recorded by the runtime
+    // (same path as an outbox `cima` field) and linked to this dispatch message.
+    const assignment = recordSpawnAssignment({
+      runtime: lapitaya, from: hive.registry().godId ?? 'god', to: workerId, cima: raw.cima, messageId: dispatched.id
+    });
+    if (!assignment.recorded && assignment.reason !== 'none') {
+      informGod('[worker spawn] cima assignment not recorded', `Spawn-request ${basename(filePath)}: the "cima" field was not recorded (${assignment.reason}${assignment.detail ? ` — ${assignment.detail}` : ''}). The worker was started; the phase hand-off is not in the ledger.`, slack);
+    }
   } catch (e) {
     console.error('[worker] dispatch send failed:', e);
   }

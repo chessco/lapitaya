@@ -1557,7 +1557,7 @@ export class HiveManager {
     // saying nothing, and COMMANDS.md documents it either way for the case where
     // the operator turns it on after god was already running.
     const spawnQueueLine = meta.isGod && this.orchestratorMaySpawn()
-      ? `SPAWNING A WORKER: you can start an ephemeral worker yourself by writing ONE JSON file into ${inRoot('spawn-requests')}/<id>.json. Required: \`objective\` (what the worker must do) and \`cwd\` (the repo it runs in). Optional: \`name\`, \`command\`, \`provider\`, \`model\`, \`isolate\` (default true = its own git worktree), \`tokenCap\`, and \`slack\` ({channel, thread_ts}) to route its failures back to a thread. The harness polls that directory, spawns \`worker-<id>\`, and moves the request to \`spawn-requests/.done/\` on success or \`.failed/\` with a reason. This is the ONLY way you can spawn; a hire manifest under research/hires/ needs the human to confirm it in the UI, so it is not a route you can complete on your own. Reuse an existing agent first, as above — a worker is a fresh spend every time.`
+      ? `SPAWNING A WORKER: you can start an ephemeral worker yourself by writing ONE JSON file into ${inRoot('spawn-requests')}/<id>.json. Required: \`objective\` (what the worker must do) and \`cwd\` (the repo it runs in). Optional: \`name\`, \`command\`, \`provider\`, \`model\`, \`isolate\` (default true = its own git worktree), \`tokenCap\`, \`slack\` ({channel, thread_ts}) to route its failures back to a thread, and \`cima\` ({taskId, phase}, NO verdict) when the worker is taking a CIMA phase — the runtime records that phase ASSIGNMENT from you to the worker (write it as this structured field; text in the objective is not recorded). The harness polls that directory, spawns \`worker-<id>\`, and moves the request to \`spawn-requests/.done/\` on success or \`.failed/\` with a reason. This is the ONLY way you can spawn; a hire manifest under research/hires/ needs the human to confirm it in the UI, so it is not a route you can complete on your own. Reuse an existing agent first, as above — a worker is a fresh spend every time.`
       : '';
     const godLine = meta.isGod
       ? 'You are the GOD / ORCHESTRATOR of this hive — your job is to ORCHESTRATE, not to implement: maintain live situational awareness and delegate the work. (1) AWARENESS — always know what is going on: keep an accurate picture of every agent (active vs archived/idle), the task board, and all in-flight work; drain your inbox continually and triage every other agent\'s requests, answering clarifications so the team runs autonomously. (2) DELEGATE — decompose work and fan it out to the hive agents via their inboxes (route messages and assign owners; do not do their jobs); do NOT take on grunt implementation yourself. Stay aware of who is already on the floor and delegate OPPORTUNISTICALLY: BEFORE you spawn anything, CHECK THE LIVE ROSTER (active agents in registry.json + their state in fleet.json) and prefer routing to an EXISTING agent that fits — above all when the request names one ("ask Pam to…", "have Jim…"), route to that agent instead of reflexively creating a new one. Reuse an idle or already-running agent whose role matches; only spawn a fresh agent when no existing one is a sensible fit, and say that you checked. One capable owner beats a duplicate. (3) OWN ONLY THE IMPORTANT, high-leverage things — task decomposition, dispatch decisions, sign-offs, conflict resolution, branch integration, and final QA — and remain the sole scribe of board.md. You are otherwise fully autonomous — there is NO separate approval queue. For the genuinely critical (destructive actions, spending real money, scope changes, unresolvable conflicts), ask the human directly in your own session and let the tool-permission prompt gate the action; the human approves natively, including remotely from their phone via /remote-control. Keep the team unblocked. When you DISPATCH a task, write it as a 4-part contract so the agent can run autonomously: (1) OBJECTIVE — the concrete goal; (2) OUTPUT — the expected deliverable/format; (3) TOOLS — what to use or avoid, and any references to read instead of re-deriving; (4) BOUNDARIES — scope limits + the definition of done. Pass references (file paths, message ids, board sections), not pasted content — keep dispatches short.'
@@ -3029,6 +3029,13 @@ There are two shared surfaces, both in the hive root:
 - \`tasks.json\` — the structured task ledger (a kanban: \`todo / doing / blocked / done\`, with title,
   assignee, priority, deps). Keep the task you're working reflected in its status.
 
+## CIMA (La Pitaya) — assigning a phase (orchestrator)
+When you hand a CIMA phase to an agent, put a \`cima\` object with the task and phase and **no
+verdict** on that dispatch: \`"cima": { "taskId": "<task id>", "phase": "BUILD" }\`. On a message to an
+agent already on the floor it goes in your outbox message; on a spawned worker it goes in the spawn
+request (see *Spawning a worker*). The runtime records it as the phase ASSIGNMENT (the hand-off). It
+claims no result and grants nothing. Writing the assignment inside free text is not recorded.
+
 ## CIMA (La Pitaya) — reporting a phase result
 When you finish a CIMA phase for a task, add a \`cima\` object to your outbox message:
 
@@ -3126,6 +3133,7 @@ the hive root:
   "isolate": true,
   "tokenCap": 0,
   "slack": { "channel": "C…", "thread_ts": "…" },
+  "cima": { "taskId": "<task id>", "phase": "BUILD" },
   "character": "meredith",
   "accent": "coral"
 }
@@ -3136,6 +3144,10 @@ The harness polls that directory, spawns \`worker-<id>\`, and moves the request 
 defaults to true, giving the worker its own git worktree. \`slack\` routes its failures back to a
 thread. This is the ONLY spawn route you can complete on your own: a hire manifest under
 \`research/hires/\` needs the human to confirm it in the UI.
+
+\`cima\` (optional) is the CIMA phase ASSIGNMENT for this worker: task id and phase, **no verdict**.
+The runtime records it against the dispatch message, the same as a \`cima\` field on an outbox
+message. A \`cima\` that carries a verdict is refused (a result is the worker's to report).
 
 \`character\` and \`accent\` set how the worker looks on the office floor, and both are optional.
 Naming a worker after a cast member already gets you that avatar, so you only need \`character\` when
