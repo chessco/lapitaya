@@ -17,9 +17,9 @@ import { LA_PITAYA_AGENTS, type LaPitayaAgentId } from '../agents';
 import type { CompanionVisualState } from './types';
 
 export const COMPANION_FACTS = [
-  'BUILD_STARTED', 'BUILD_COMPLETED', 'BUILD_FAILED',
-  'TEST_STARTED', 'TEST_COMPLETED', 'TEST_FAILED',
-  'AUDIT_STARTED', 'AUDIT_COMPLETED', 'AUDIT_FAILED',
+  'BUILD_STARTED', 'BUILD_COMPLETED', 'BUILD_FAILED', 'BUILD_BLOCKED',
+  'TEST_STARTED', 'TEST_COMPLETED', 'TEST_FAILED', 'TEST_BLOCKED',
+  'AUDIT_STARTED', 'AUDIT_COMPLETED', 'AUDIT_FAILED', 'AUDIT_BLOCKED',
   'REQUEST_PENDING', 'REQUEST_RESOLVED',
   'HUMAN_APPROVAL_REQUIRED', 'APPROVAL_PENDING', 'APPROVAL_RESOLVED'
 ] as const;
@@ -63,12 +63,18 @@ export const COMPANION_FACT_EFFECTS: Readonly<Record<CompanionFactName, Companio
   BUILD_STARTED: { target: BUILDER, state: 'WORKING', text: 'El Beni está construyendo.', phaseAgent: BUILDER },
   BUILD_COMPLETED: { target: 'alicia', state: 'CELEBRATING', text: 'El build terminó con éxito.', phaseAgent: BUILDER, release: BUILDER },
   BUILD_FAILED: { target: BUILDER, state: 'CONCERNED', text: 'El build no pasó.', phaseAgent: BUILDER },
+  // BLOCKED is not FAIL (PROTOCOL.md: "Use BLOCKED when you cannot validate — missing evidence, human
+  // approval needed"). It maps to PAUSED — the state the FASE 2 code already gave Alicia's BLOCKED
+  // presence — and its text says it was not validated, never that it failed.
+  BUILD_BLOCKED: { target: BUILDER, state: 'PAUSED', text: 'El build quedó en BLOCKED: sin validar todavía.', phaseAgent: BUILDER },
   TEST_STARTED: { target: TESTER, state: 'WORKING', text: 'Margarito está ejecutando pruebas.', phaseAgent: TESTER },
   TEST_COMPLETED: { target: TESTER, state: 'CELEBRATING', text: 'Las pruebas pasaron.', phaseAgent: TESTER },
   TEST_FAILED: { target: TESTER, state: 'CONCERNED', text: 'Las pruebas no pasaron.', phaseAgent: TESTER },
+  TEST_BLOCKED: { target: TESTER, state: 'PAUSED', text: 'Las pruebas quedaron en BLOCKED: sin validar todavía.', phaseAgent: TESTER },
   AUDIT_STARTED: { target: AUDITOR, state: 'WORKING', text: 'José Juan está auditando.', phaseAgent: AUDITOR },
   AUDIT_COMPLETED: { target: AUDITOR, state: 'CELEBRATING', text: 'La auditoría terminó con veredicto PASS.', phaseAgent: AUDITOR },
   AUDIT_FAILED: { target: AUDITOR, state: 'CONCERNED', text: 'La auditoría no pasó.', phaseAgent: AUDITOR },
+  AUDIT_BLOCKED: { target: AUDITOR, state: 'PAUSED', text: 'La auditoría quedó en BLOCKED: sin validar todavía.', phaseAgent: AUDITOR },
   REQUEST_PENDING: { target: 'alicia', state: 'ATTENTION', text: 'Hay una solicitud que necesita tu confirmación.', sticky: true },
   HUMAN_APPROVAL_REQUIRED: { target: 'alicia', state: 'ATTENTION', text: 'Hay una solicitud que necesita tu confirmación.', sticky: true },
   APPROVAL_PENDING: { target: 'alicia', state: 'ATTENTION', text: 'Hay una solicitud que necesita tu confirmación.', sticky: true },
@@ -80,13 +86,17 @@ export const COMPANION_FACT_EFFECTS: Readonly<Record<CompanionFactName, Companio
 const STARTED: Partial<Record<CimaPhase, CompanionFactName>> = { BUILD: 'BUILD_STARTED', TEST: 'TEST_STARTED', AUDIT: 'AUDIT_STARTED' };
 const PASSED: Partial<Record<CimaPhase, CompanionFactName>> = { BUILD: 'BUILD_COMPLETED', TEST: 'TEST_COMPLETED', AUDIT: 'AUDIT_COMPLETED' };
 const FAILED: Partial<Record<CimaPhase, CompanionFactName>> = { BUILD: 'BUILD_FAILED', TEST: 'TEST_FAILED', AUDIT: 'AUDIT_FAILED' };
+const BLOCKED: Partial<Record<CimaPhase, CompanionFactName>> = { BUILD: 'BUILD_BLOCKED', TEST: 'TEST_BLOCKED', AUDIT: 'AUDIT_BLOCKED' };
+/** Each runtime verdict keeps its own meaning; an unknown verdict yields no fact. */
+const BY_VERDICT: Readonly<Record<string, Partial<Record<CimaPhase, CompanionFactName>>>> = { PASS: PASSED, FAIL: FAILED, BLOCKED };
 
 /**
  * Translate one verified Alicia event into companion facts.
  *
  *   cima.phase.assigned (BUILD/TEST/AUDIT)          → *_STARTED
  *   cima.phase.changed  (BUILD/TEST/AUDIT, PASS)    → *_COMPLETED
- *   cima.phase.changed  (BUILD/TEST/AUDIT, FAIL…)   → *_FAILED
+ *   cima.phase.changed  (BUILD/TEST/AUDIT, FAIL)    → *_FAILED
+ *   cima.phase.changed  (BUILD/TEST/AUDIT, BLOCKED) → *_BLOCKED   (BLOCKED is not FAIL)
  *   approval.required                               → HUMAN_APPROVAL_REQUIRED
  *   approval.granted / approval.denied              → APPROVAL_RESOLVED
  *   request.proposed                                → REQUEST_PENDING
@@ -106,7 +116,7 @@ export function companionFactsFromAliciaEvent(ev: AliciaEvent | null | undefined
     }
     case 'cima.phase.changed': {
       if (!ev.phase || !ev.verdict) return [];
-      const f = ev.verdict === 'PASS' ? PASSED[ev.phase] : FAILED[ev.phase];
+      const f = BY_VERDICT[ev.verdict]?.[ev.phase];
       return f ? withRef(f) : [];
     }
     case 'approval.required':

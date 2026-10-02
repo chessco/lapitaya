@@ -1117,3 +1117,212 @@ test('COMP-71: Drag deltas come from the main-process cursor (one coordinate spa
   drag(ev, { phase: 'end', dx: 0, dy: 0 });
   assert.deepStrictEqual(service.getPosition('alicia'), { x: 250, y: 160 });
 });
+
+// ─── FASE 2.2 — runtime phase assignment (F1) & verdict semantics (F2) ──────
+
+if (!electronMock.Notification) electronMock.Notification = class { show() {} static isSupported() { return false; } };
+const { CimaRuntimeService } = loadTs('src/main/cimaRuntime.ts');
+const { recordSpawnAssignment } = loadTs('src/main/spawnAssignment.ts');
+const osMod = require('node:os');
+
+/**
+ * The REAL CimaRuntimeService on a temp hive, wired exactly like src/main/index.ts:
+ * onEvent → fromRuntimeEvent → DesktopPresence.observeAliciaEvents.
+ */
+function liveRig(t, presenceExtra = {}) {
+  const home = fs.mkdtempSync(path.join(osMod.tmpdir(), 'lp-fase22-'));
+  t.after(() => fs.rmSync(home, { recursive: true, force: true }));
+  const hive = path.join(home, 'hive');
+  fs.mkdirSync(path.join(hive, 'lapitaya'), { recursive: true });
+  const h = createHarness(presenceExtra);
+  const events = [];
+  let clock = 1_800_000_000_000;
+  const mkrt = () => new CimaRuntimeService({
+    hiveRoot: () => hive, godId: () => 'god', now: () => (clock += 1000), lockTimeoutMs: 800,
+    onEvent: (e) => { events.push(e); h.service.observeAliciaEvents(fromRuntimeEvent(e, clock)); }
+  });
+  const runtime = mkrt();
+  const ledgerFile = path.join(hive, 'lapitaya', 'cima-ledger.jsonl');
+  const ledger = () => (fs.existsSync(ledgerFile) ? fs.readFileSync(ledgerFile, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)) : []);
+  /** What processSpawnRequest does after dispatching the objective message. */
+  const spawn = (workerId, cima, messageId = `msg-${workerId}`) => recordSpawnAssignment({ runtime, from: 'god', to: workerId, cima, messageId });
+  return { ...h, runtime, mkrt, events, ledger, spawn, hive };
+}
+
+test('COMP-72: real spawn assignment BUILD → runtime event → El Beni WORKING', (t) => {
+  const r = liveRig(t);
+  r.service.setMode('COMPANY');
+  assert.deepStrictEqual(r.spawn('worker-build1', { taskId: 'T-22', phase: 'BUILD' }), { recorded: true });
+  assert.ok(r.events.some((e) => e.type === 'cima-record' && e.data.kind === 'cima-assignment'), 'the runtime emitted the assignment');
+  assert.strictEqual(r.service.getAgentState('el-beni'), 'WORKING');
+  const beni = entryOf(r.service.getPresentation(), 'el-beni');
+  assert.strictEqual(beni.visualState, 'WORKING');
+  assert.strictEqual(beni.bubble.sourceFact, 'BUILD_STARTED');
+});
+
+test('COMP-73: real spawn assignment TEST → Margarito WORKING', (t) => {
+  const r = liveRig(t);
+  r.spawn('worker-test1', { taskId: 'T-22', phase: 'TEST' });
+  assert.strictEqual(r.service.getAgentState('margarito'), 'WORKING');
+  assert.strictEqual(r.service.getAgentState('el-beni'), 'IDLE');
+});
+
+test('COMP-74: real spawn assignment AUDIT → José Juan WORKING', (t) => {
+  const r = liveRig(t);
+  r.spawn('worker-audit1', { taskId: 'T-22', phase: 'AUDIT' });
+  assert.strictEqual(r.service.getAgentState('jose-juan'), 'WORKING');
+  assert.strictEqual(r.service.getAgentState('margarito'), 'IDLE');
+});
+
+test('COMP-75: FOCUS follows the assignment (not the completion)', (t) => {
+  const r = liveRig(t);
+  r.service.setMode('FOCUS');
+  r.spawn('worker-build1', { taskId: 'T-22', phase: 'BUILD' });
+  assert.deepStrictEqual(r.service.getPresentation().entries.map((e) => [e.agentId, e.visualState]), [['el-beni', 'WORKING']]);
+  r.spawn('worker-test1', { taskId: 'T-22', phase: 'TEST' });
+  assert.deepStrictEqual(r.service.getPresentation().entries.map((e) => [e.agentId, e.visualState]), [['margarito', 'WORKING']]);
+  assert.strictEqual(r.windowOf('margarito').isVisible(), true);
+});
+
+test('COMP-76: COMPANY keeps independent assignment states (≤ 3)', (t) => {
+  const r = liveRig(t);
+  r.service.setMode('COMPANY');
+  r.spawn('worker-build1', { taskId: 'T-22', phase: 'BUILD' });
+  r.spawn('worker-audit1', { taskId: 'T-23', phase: 'AUDIT' });
+  const p = r.service.getPresentation();
+  assert.ok(p.entries.length <= MAX_VISIBLE_COMPANIONS_DEFAULT);
+  assert.strictEqual(entryOf(p, 'el-beni').visualState, 'WORKING');
+  assert.strictEqual(entryOf(p, 'jose-juan').visualState, 'WORKING');
+  assert.strictEqual(r.service.getAgentState('margarito'), 'IDLE', 'an assignment never moves another companion');
+  assert.strictEqual(entryOf(p, 'alicia').visualState, 'IDLE');
+});
+
+/** A verdict as the runtime records it (cima.phase.changed). */
+const phaseChanged = (phase, verdict) => ({ type: 'cima.phase.changed', ts: 1, source: 'cima-runtime', taskId: 'T', phase, verdict, ref: `m-${phase}-${verdict}` });
+
+test('COMP-77: PASS → success semantics', () => {
+  for (const [phase, fact] of [['BUILD', 'BUILD_COMPLETED'], ['TEST', 'TEST_COMPLETED'], ['AUDIT', 'AUDIT_COMPLETED']]) {
+    assert.strictEqual(companionFactsFromAliciaEvent(phaseChanged(phase, 'PASS'))[0].fact, fact);
+  }
+  const { service } = createHarness();
+  service.observeAliciaEvents([phaseChanged('TEST', 'PASS')]);
+  assert.strictEqual(service.getAgentState('margarito'), 'CELEBRATING');
+});
+
+test('COMP-78: FAIL → failure semantics', () => {
+  for (const [phase, fact] of [['BUILD', 'BUILD_FAILED'], ['TEST', 'TEST_FAILED'], ['AUDIT', 'AUDIT_FAILED']]) {
+    assert.strictEqual(companionFactsFromAliciaEvent(phaseChanged(phase, 'FAIL'))[0].fact, fact);
+  }
+  const { service } = createHarness();
+  service.setMode('COMPANY');
+  service.observeAliciaEvents([phaseChanged('TEST', 'FAIL')]);
+  assert.strictEqual(service.getAgentState('margarito'), 'CONCERNED');
+  assert.match(entryOf(service.getPresentation(), 'margarito').bubble.text, /no pasaron/);
+});
+
+test('COMP-79: BLOCKED does not map to FAIL', () => {
+  for (const [phase, fact] of [['BUILD', 'BUILD_BLOCKED'], ['TEST', 'TEST_BLOCKED'], ['AUDIT', 'AUDIT_BLOCKED']]) {
+    const facts = companionFactsFromAliciaEvent(phaseChanged(phase, 'BLOCKED'));
+    assert.strictEqual(facts.length, 1);
+    assert.strictEqual(facts[0].fact, fact);
+    assert.doesNotMatch(facts[0].fact, /FAILED/);
+  }
+  const { service } = createHarness();
+  service.observeAliciaEvents([phaseChanged('BUILD', 'BLOCKED')]);
+  assert.notStrictEqual(service.getAgentState('el-beni'), 'CONCERNED');
+  assert.strictEqual(service.getAgentState('el-beni'), 'PAUSED');
+  // PASS, FAIL and BLOCKED are three distinguishable states.
+  const states = ['PASS', 'FAIL', 'BLOCKED'].map((v) => { const h = createHarness(); h.service.observeAliciaEvents([phaseChanged('AUDIT', v)]); return h.service.getAgentState('jose-juan'); });
+  assert.deepStrictEqual(states, ['CELEBRATING', 'CONCERNED', 'PAUSED']);
+  // An unknown verdict produces nothing.
+  assert.deepStrictEqual(companionFactsFromAliciaEvent(phaseChanged('BUILD', 'MAYBE')), []);
+});
+
+test('COMP-80: BLOCKED produces no failure text', () => {
+  const { service } = createHarness();
+  service.setMode('COMPANY');
+  service.observeAliciaEvents([phaseChanged('BUILD', 'BLOCKED')]);
+  const b = entryOf(service.getPresentation(), 'el-beni').bubble;
+  assert.strictEqual(b.kind, 'runtime-fact');
+  assert.strictEqual(b.sourceFact, 'BUILD_BLOCKED');
+  assert.doesNotMatch(b.text, /no pas|fall|fail/i);
+  assert.match(b.text, /BLOCKED/);
+});
+
+test('COMP-81: an assignment cannot originate from the renderer or a claim', (t) => {
+  const r = liveRig(t);
+  r.service.show('MINI');
+  const sender = r.windowOf('alicia').webContents;
+  const forged = [{ taskId: 'T-X', phase: 'BUILD' }, { kind: 'cima-assignment', taskId: 'T-X', phase: 'TEST', to: 'el-beni' }, 'BUILD_STARTED'];
+  for (const fn of Object.values(electronMock.ipcMain._handlers)) for (const payload of forged) fn({ sender }, payload);
+  for (const id of ['el-beni', 'margarito', 'jose-juan']) assert.strictEqual(r.service.getAgentState(id), 'IDLE', id);
+  assert.ok(!r.ledger().some((e) => e.kind === 'cima-assignment'), 'nothing reached the ledger');
+  // The spawn path refuses a `cima` that carries a verdict — that would be a claim in god's name.
+  const claim = r.spawn('worker-x', { taskId: 'T-X', phase: 'BUILD', verdict: 'PASS', evidence: [] });
+  assert.strictEqual(claim.recorded, false);
+  assert.strictEqual(claim.reason, 'not-an-assignment');
+  assert.ok(!r.ledger().some((e) => e.kind === 'cima'), 'no verdict was recorded');
+  assert.deepStrictEqual(r.spawn('worker-x', { taskId: 'T-X', phase: 'NOT_A_PHASE' }).reason, 'not-an-assignment');
+  assert.deepStrictEqual(r.spawn('worker-x', undefined), { recorded: false, reason: 'none' });
+  // The companion preload still exposes no assignment / fact channel.
+  const preloadCode = fs.readFileSync(path.resolve(__dirname, '../src/preload/companionPreload.ts'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+  assert.doesNotMatch(preloadCode, /assign|cima|triggerVerified|observeAlicia/i);
+});
+
+test('COMP-82: the assignment preserves runtime identity (from orchestrator, to worker, dispatch message)', (t) => {
+  const r = liveRig(t);
+  r.spawn('worker-build1', { taskId: 'T-22', phase: 'BUILD' }, 'msg-dispatch-1');
+  const a = r.ledger().find((e) => e.kind === 'cima-assignment');
+  assert.ok(a);
+  assert.strictEqual(a.from, 'god');
+  assert.strictEqual(a.to, 'worker-build1');
+  assert.strictEqual(a.messageId, 'msg-dispatch-1');
+  const ev = r.events.find((e) => e.type === 'cima-record');
+  assert.strictEqual(ev.data.from, 'god');
+  assert.strictEqual(fromRuntimeEvent(ev, 0)[0].ref, 'msg-dispatch-1', 'the companion fact links back to the dispatch');
+});
+
+test('COMP-83: the assignment preserves task identity and phase', (t) => {
+  const r = liveRig(t);
+  r.spawn('worker-test1', { taskId: '  LP-COMP-22  ', phase: 'test' });
+  const a = r.ledger().find((e) => e.kind === 'cima-assignment');
+  assert.strictEqual(a.taskId, 'LP-COMP-22');
+  assert.strictEqual(a.phase, 'TEST');
+  const al = fromRuntimeEvent(r.events.find((e) => e.type === 'cima-record'), 0)[0];
+  assert.strictEqual(al.type, 'cima.phase.assigned');
+  assert.strictEqual(al.taskId, 'LP-COMP-22');
+  assert.strictEqual(al.phase, 'TEST');
+});
+
+test('COMP-84: the assignment participates in the governance event chain (hash, MAC, sequence)', (t) => {
+  const r = liveRig(t);
+  r.runtime.authorize('worker-build1', 'Read', { file_path: path.join(r.hive, 'x.ts') });
+  r.spawn('worker-build1', { taskId: 'T-22', phase: 'BUILD' });
+  r.spawn('worker-test1', { taskId: 'T-22', phase: 'TEST' });
+  const L = r.ledger();
+  const as = L.filter((e) => e.kind === 'cima-assignment');
+  assert.strictEqual(as.length, 2);
+  for (const a of as) {
+    for (const k of ['eventId', 'sequence', 'previousEventHash', 'eventHash', 'eventMac']) assert.ok(a[k] !== undefined, `assignment carries ${k}`);
+  }
+  for (let i = 1; i < L.length; i++) {
+    assert.strictEqual(L[i].sequence, L[i - 1].sequence + 1);
+    assert.strictEqual(L[i].previousEventHash, L[i - 1].eventHash);
+  }
+  assert.strictEqual(r.mkrt().verifyGovernanceState({ full: true }).status, 'HEALTHY');
+  // Tampering with the recorded assignment is detected.
+  const file = path.join(r.hive, 'lapitaya', 'cima-ledger.jsonl');
+  const lines = fs.readFileSync(file, 'utf8').split('\n').filter(Boolean);
+  const i = lines.findIndex((l) => l.includes('"cima-assignment"'));
+  lines[i] = lines[i].replace('"phase":"BUILD"', '"phase":"AUDIT"');
+  fs.writeFileSync(file, lines.join('\n') + '\n');
+  assert.notStrictEqual(r.mkrt().verifyGovernanceState({ full: true }).status, 'HEALTHY');
+  // Wired in the real spawn path, after the dispatch message, with the orchestrator as `from`.
+  const indexTs = fs.readFileSync(path.resolve(__dirname, '../src/main/index.ts'), 'utf8');
+  assert.match(indexTs, /const dispatched = hive\.send\([\s\S]{0,400}recordSpawnAssignment\(\{\s*runtime: lapitaya, from: hive\.registry\(\)\.godId \?\? 'god', to: workerId, cima: raw\.cima, messageId: dispatched\.id/);
+  // …and documented for El Inge (PROTOCOL.md is regenerated from hive.ts on every bootstrap).
+  const hiveTs = fs.readFileSync(path.resolve(__dirname, '../src/main/hive.ts'), 'utf8');
+  assert.match(hiveTs, /## CIMA \(La Pitaya\) — assigning a phase \(orchestrator\)/);
+  assert.match(hiveTs, /"cima": \{ "taskId": "<task id>", "phase": "BUILD" \},\n  "character"/);
+});

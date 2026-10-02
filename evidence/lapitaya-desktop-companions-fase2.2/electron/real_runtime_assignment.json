@@ -1,0 +1,478 @@
+{
+  "summary": "13/13 PASS",
+  "results": [
+    {
+      "id": "A1",
+      "desc": "spawn BUILD assignment → recorded by the runtime → El Beni WORKING",
+      "pass": true,
+      "detail": "{\"res\":{\"recorded\":true},\"beni\":\"WORKING\"}"
+    },
+    {
+      "id": "A2",
+      "desc": "BUILD PASS → Alicia CELEBRATING, El Beni released",
+      "pass": true,
+      "detail": "{\"verdict\":\"PASS\",\"violations\":[]}"
+    },
+    {
+      "id": "A3",
+      "desc": "spawn TEST assignment → Margarito WORKING",
+      "pass": true,
+      "detail": "{\"res\":{\"recorded\":true},\"margarito\":\"WORKING\"}"
+    },
+    {
+      "id": "A4",
+      "desc": "TEST PASS → Margarito CELEBRATING",
+      "pass": true,
+      "detail": "{\"verdict\":\"PASS\",\"violations\":[]}"
+    },
+    {
+      "id": "A5",
+      "desc": "spawn AUDIT assignment → José Juan WORKING; Margarito untouched",
+      "pass": true,
+      "detail": "[{\"id\":\"alicia\",\"state\":\"IDLE\",\"bubble\":null},{\"id\":\"jose-juan\",\"state\":\"WORKING\",\"bubble\":{\"kind\":\"runtime-fact\",\"sourceFact\":\"AUDIT_STARTED\",\"text\":\"José Juan está auditando.\"}},{\"id\":\"margarito\",\"state\":\"CELEBRATING\",\"bubble\":{\"kind\":\"runtime-fact\",\"sourceFact\":\"TEST_COMPLETED\",\"text\":\"Las pruebas pasaron.\"}}]"
+    },
+    {
+      "id": "A6",
+      "desc": "AUDIT PASS → José Juan CELEBRATING",
+      "pass": true,
+      "detail": "{\"verdict\":\"PASS\",\"violations\":[]}"
+    },
+    {
+      "id": "A7",
+      "desc": "FOCUS + TEST assignment → only Margarito, WORKING (before any completion)",
+      "pass": true,
+      "detail": "[{\"id\":\"margarito\",\"state\":\"WORKING\",\"bubble\":{\"kind\":\"runtime-fact\",\"sourceFact\":\"TEST_STARTED\",\"text\":\"Margarito está ejecutando pruebas.\"}}]"
+    },
+    {
+      "id": "A8",
+      "desc": "TEST FAIL → Margarito CONCERNED with failure text",
+      "pass": true,
+      "detail": "{\"verdict\":\"FAIL\",\"violations\":[],\"b\":{\"kind\":\"runtime-fact\",\"sourceFact\":\"TEST_FAILED\",\"text\":\"Las pruebas no pasaron.\"}}"
+    },
+    {
+      "id": "A9",
+      "desc": "BUILD BLOCKED → El Beni PAUSED, BLOCKED text, no failure text, not CONCERNED",
+      "pass": true,
+      "detail": "{\"verdict\":\"BLOCKED\",\"violations\":[],\"beni\":\"PAUSED\",\"bubble\":{\"kind\":\"runtime-fact\",\"sourceFact\":\"BUILD_BLOCKED\",\"text\":\"El build quedó en BLOCKED: sin validar todavía.\"}}"
+    },
+    {
+      "id": "A10",
+      "desc": "PASS, FAIL and BLOCKED render three different states",
+      "pass": true,
+      "detail": "[\"CELEBRATING\",\"CONCERNED\",\"PAUSED\"]"
+    },
+    {
+      "id": "A11",
+      "desc": "a spawn `cima` carrying a verdict is refused, nothing recorded for the task",
+      "pass": true,
+      "detail": "{\"res\":{\"recorded\":false,\"reason\":\"not-an-assignment\",\"detail\":\"a spawn \\\"cima\\\" must be {taskId, phase} with no verdict\"},\"recs\":0}"
+    },
+    {
+      "id": "A12",
+      "desc": "assignments are chained, MAC'd governance events; the ledger verifies HEALTHY",
+      "pass": true,
+      "detail": "{\"assignments\":[\"BUILD:T-22:worker-build1\",\"TEST:T-22:worker-test1\",\"AUDIT:T-22:worker-audit1\",\"TEST:T-23:worker-test2\",\"BUILD:T-24:worker-build3\"],\"health\":\"HEALTHY\"}"
+    },
+    {
+      "id": "A13",
+      "desc": "no renderer console errors",
+      "pass": true,
+      "detail": "[]"
+    }
+  ],
+  "timeline": [
+    {
+      "label": "build-assigned",
+      "mode": "COMPANY",
+      "entries": [
+        {
+          "id": "alicia",
+          "state": "IDLE",
+          "bubble": null
+        },
+        {
+          "id": "el-beni",
+          "state": "WORKING",
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "BUILD_STARTED",
+            "text": "El Beni está construyendo."
+          }
+        },
+        {
+          "id": "margarito",
+          "state": "IDLE",
+          "bubble": null
+        }
+      ],
+      "shots": [
+        "01-build-assigned-alicia.png",
+        "01-build-assigned-el-beni.png",
+        "01-build-assigned-margarito.png"
+      ]
+    },
+    {
+      "label": "build-pass",
+      "mode": "COMPANY",
+      "entries": [
+        {
+          "id": "alicia",
+          "state": "CELEBRATING",
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "BUILD_COMPLETED",
+            "text": "El build terminó con éxito."
+          }
+        },
+        {
+          "id": "el-beni",
+          "state": "IDLE",
+          "bubble": null
+        },
+        {
+          "id": "margarito",
+          "state": "IDLE",
+          "bubble": null
+        }
+      ],
+      "shots": [
+        "02-build-pass-alicia.png",
+        "02-build-pass-el-beni.png",
+        "02-build-pass-margarito.png"
+      ]
+    },
+    {
+      "label": "test-assigned",
+      "mode": "COMPANY",
+      "entries": [
+        {
+          "id": "alicia",
+          "state": "CELEBRATING",
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "BUILD_COMPLETED",
+            "text": "El build terminó con éxito."
+          }
+        },
+        {
+          "id": "margarito",
+          "state": "WORKING",
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "TEST_STARTED",
+            "text": "Margarito está ejecutando pruebas."
+          }
+        },
+        {
+          "id": "el-beni",
+          "state": "IDLE",
+          "bubble": null
+        }
+      ],
+      "shots": [
+        "03-test-assigned-alicia.png",
+        "03-test-assigned-el-beni.png",
+        "03-test-assigned-margarito.png"
+      ]
+    },
+    {
+      "label": "test-pass",
+      "mode": "COMPANY",
+      "entries": [
+        {
+          "id": "alicia",
+          "state": "CELEBRATING",
+          "bubble": null
+        },
+        {
+          "id": "margarito",
+          "state": "CELEBRATING",
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "TEST_COMPLETED",
+            "text": "Las pruebas pasaron."
+          }
+        },
+        {
+          "id": "el-beni",
+          "state": "IDLE",
+          "bubble": null
+        }
+      ],
+      "shots": [
+        "04-test-pass-alicia.png",
+        "04-test-pass-el-beni.png",
+        "04-test-pass-margarito.png"
+      ]
+    },
+    {
+      "label": "audit-assigned",
+      "mode": "COMPANY",
+      "entries": [
+        {
+          "id": "alicia",
+          "state": "IDLE",
+          "bubble": null
+        },
+        {
+          "id": "jose-juan",
+          "state": "WORKING",
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "AUDIT_STARTED",
+            "text": "José Juan está auditando."
+          }
+        },
+        {
+          "id": "margarito",
+          "state": "CELEBRATING",
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "TEST_COMPLETED",
+            "text": "Las pruebas pasaron."
+          }
+        }
+      ],
+      "shots": [
+        "05-audit-assigned-alicia.png",
+        "05-audit-assigned-margarito.png"
+      ]
+    },
+    {
+      "label": "audit-pass",
+      "mode": "COMPANY",
+      "entries": [
+        {
+          "id": "alicia",
+          "state": "IDLE",
+          "bubble": null
+        },
+        {
+          "id": "jose-juan",
+          "state": "CELEBRATING",
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "AUDIT_COMPLETED",
+            "text": "La auditoría terminó con veredicto PASS."
+          }
+        },
+        {
+          "id": "margarito",
+          "state": "CELEBRATING",
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "TEST_COMPLETED",
+            "text": "Las pruebas pasaron."
+          }
+        }
+      ],
+      "shots": [
+        "06-audit-pass-alicia.png",
+        "06-audit-pass-margarito.png",
+        "06-audit-pass-jose-juan.png"
+      ]
+    },
+    {
+      "label": "focus-test-assigned",
+      "mode": "FOCUS",
+      "entries": [
+        {
+          "id": "margarito",
+          "state": "WORKING",
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "TEST_STARTED",
+            "text": "Margarito está ejecutando pruebas."
+          }
+        }
+      ],
+      "shots": [
+        "07-focus-test-assigned-margarito.png"
+      ]
+    },
+    {
+      "label": "test-fail",
+      "mode": "COMPANY",
+      "entries": [
+        {
+          "id": "alicia",
+          "state": "IDLE",
+          "bubble": null
+        },
+        {
+          "id": "margarito",
+          "state": "CONCERNED",
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "TEST_FAILED",
+            "text": "Las pruebas no pasaron."
+          }
+        },
+        {
+          "id": "jose-juan",
+          "state": "CELEBRATING",
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "AUDIT_COMPLETED",
+            "text": "La auditoría terminó con veredicto PASS."
+          }
+        }
+      ],
+      "shots": [
+        "08-test-fail-alicia.png",
+        "08-test-fail-margarito.png",
+        "08-test-fail-jose-juan.png"
+      ]
+    },
+    {
+      "label": "build-blocked",
+      "mode": "COMPANY",
+      "entries": [
+        {
+          "id": "alicia",
+          "state": "CELEBRATING",
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "AUDIT_COMPLETED",
+            "text": "La auditoría terminó con veredicto PASS."
+          }
+        },
+        {
+          "id": "el-beni",
+          "state": "PAUSED",
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "BUILD_BLOCKED",
+            "text": "El build quedó en BLOCKED: sin validar todavía."
+          }
+        },
+        {
+          "id": "margarito",
+          "state": "CONCERNED",
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "TEST_FAILED",
+            "text": "Las pruebas no pasaron."
+          }
+        }
+      ],
+      "shots": [
+        "09-build-blocked-alicia.png",
+        "09-build-blocked-el-beni.png",
+        "09-build-blocked-margarito.png"
+      ]
+    }
+  ],
+  "runtimeEvents": [
+    {
+      "type": "cima-record",
+      "kind": "cima-assignment",
+      "alicia": [
+        "cima.phase.assigned"
+      ]
+    },
+    {
+      "type": "governance",
+      "alicia": []
+    },
+    {
+      "type": "trace",
+      "alicia": []
+    },
+    {
+      "type": "cima-record",
+      "kind": "cima",
+      "alicia": [
+        "cima.phase.changed"
+      ]
+    },
+    {
+      "type": "cima-record",
+      "kind": "cima-assignment",
+      "alicia": [
+        "cima.phase.assigned"
+      ]
+    },
+    {
+      "type": "governance",
+      "alicia": []
+    },
+    {
+      "type": "trace",
+      "alicia": []
+    },
+    {
+      "type": "cima-record",
+      "kind": "cima",
+      "alicia": [
+        "cima.phase.changed"
+      ]
+    },
+    {
+      "type": "cima-record",
+      "kind": "cima-assignment",
+      "alicia": [
+        "cima.phase.assigned"
+      ]
+    },
+    {
+      "type": "governance",
+      "alicia": []
+    },
+    {
+      "type": "trace",
+      "alicia": []
+    },
+    {
+      "type": "cima-record",
+      "kind": "cima",
+      "alicia": [
+        "cima.phase.changed",
+        "audit.completed"
+      ]
+    },
+    {
+      "type": "cima-record",
+      "kind": "cima-assignment",
+      "alicia": [
+        "cima.phase.assigned"
+      ]
+    },
+    {
+      "type": "supervised",
+      "alicia": [
+        "governance.supervised"
+      ]
+    },
+    {
+      "type": "governance",
+      "alicia": []
+    },
+    {
+      "type": "trace",
+      "alicia": []
+    },
+    {
+      "type": "cima-record",
+      "kind": "cima",
+      "alicia": [
+        "cima.phase.changed"
+      ]
+    },
+    {
+      "type": "cima-record",
+      "kind": "cima-assignment",
+      "alicia": [
+        "cima.phase.assigned"
+      ]
+    },
+    {
+      "type": "cima-record",
+      "kind": "cima",
+      "alicia": [
+        "cima.phase.changed"
+      ]
+    }
+  ],
+  "consoleErrors": []
+}

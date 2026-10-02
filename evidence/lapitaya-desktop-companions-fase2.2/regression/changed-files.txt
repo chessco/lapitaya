@@ -1,0 +1,5 @@
+src/main/hive.ts
+src/main/index.ts
+src/main/spawnAssignment.ts
+src/shared/lapitaya/desktopCompanions/runtimeFacts.ts
+test/lapitaya-desktop-companions.test.cjs

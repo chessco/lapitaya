@@ -1,0 +1,28 @@
+PASS A1 spawn BUILD assignment → recorded by the runtime → El Beni WORKING
+     {"res":{"recorded":true},"beni":"WORKING"}
+PASS A2 BUILD PASS → Alicia CELEBRATING, El Beni released
+     {"verdict":"PASS","violations":[]}
+PASS A3 spawn TEST assignment → Margarito WORKING
+     {"res":{"recorded":true},"margarito":"WORKING"}
+PASS A4 TEST PASS → Margarito CELEBRATING
+     {"verdict":"PASS","violations":[]}
+PASS A5 spawn AUDIT assignment → José Juan WORKING; Margarito untouched
+     [{"id":"alicia","state":"IDLE","bubble":null},{"id":"jose-juan","state":"WORKING","bubble":{"kind":"runtime-fact","sourceFact":"AUDIT_STARTED","text":"José Juan está auditando."}},{"id":"margarito","state":"CELEBRATING","bubble":{"kind":"runtime-fact","sourceFact":"TEST_COMPLETED","text":"Las pruebas pasaron."}}]
+PASS A6 AUDIT PASS → José Juan CELEBRATING
+     {"verdict":"PASS","violations":[]}
+PASS A7 FOCUS + TEST assignment → only Margarito, WORKING (before any completion)
+     [{"id":"margarito","state":"WORKING","bubble":{"kind":"runtime-fact","sourceFact":"TEST_STARTED","text":"Margarito está ejecutando pruebas."}}]
+PASS A8 TEST FAIL → Margarito CONCERNED with failure text
+     {"verdict":"FAIL","violations":[],"b":{"kind":"runtime-fact","sourceFact":"TEST_FAILED","text":"Las pruebas no pasaron."}}
+PASS A9 BUILD BLOCKED → El Beni PAUSED, BLOCKED text, no failure text, not CONCERNED
+     {"verdict":"BLOCKED","violations":[],"beni":"PAUSED","bubble":{"kind":"runtime-fact","sourceFact":"BUILD_BLOCKED","text":"El build quedó en BLOCKED: sin validar todavía."}}
+PASS A10 PASS, FAIL and BLOCKED render three different states
+     ["CELEBRATING","CONCERNED","PAUSED"]
+PASS A11 a spawn `cima` carrying a verdict is refused, nothing recorded for the task
+     {"res":{"recorded":false,"reason":"not-an-assignment","detail":"a spawn \"cima\" must be {taskId, phase} with no verdict"},"recs":0}
+PASS A12 assignments are chained, MAC'd governance events; the ledger verifies HEALTHY
+     {"assignments":["BUILD:T-22:worker-build1","TEST:T-22:worker-test1","AUDIT:T-22:worker-audit1","TEST:T-23:worker-test2","BUILD:T-24:worker-build3"],"health":"HEALTHY"}
+PASS A13 no renderer console errors
+     []
+
+13/13 PASS

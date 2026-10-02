@@ -1,0 +1,20 @@
+test/lapitaya-alicia-v04.test.cjs :: ℹ tests 19 ℹ pass 19 ℹ fail 0 
+test/lapitaya-alicia-v041.test.cjs :: ℹ tests 16 ℹ pass 16 ℹ fail 0 
+test/lapitaya-alicia-v042.test.cjs :: ℹ tests 19 ℹ pass 19 ℹ fail 0 
+test/lapitaya-alicia-v05.test.cjs :: ℹ tests 18 ℹ pass 18 ℹ fail 0 
+test/lapitaya-alicia-v06.test.cjs :: ℹ tests 19 ℹ pass 19 ℹ fail 0 
+test/lapitaya-alicia-v07.test.cjs :: ℹ tests 15 ℹ pass 15 ℹ fail 0 
+test/lapitaya-alicia-v08.test.cjs :: ℹ tests 13 ℹ pass 13 ℹ fail 0 
+test/lapitaya-alicia-v09.test.cjs :: ℹ tests 8 ℹ pass 8 ℹ fail 0 
+test/lapitaya-cima-runtime-v03.test.cjs :: ℹ tests 35 ℹ pass 35 ℹ fail 0 
+test/lapitaya-cima-runtime-v031.test.cjs :: ℹ tests 9 ℹ pass 9 ℹ fail 0 
+test/lapitaya-cima-runtime.test.cjs :: ℹ tests 25 ℹ pass 25 ℹ fail 0 
+test/lapitaya-cima-v0.10.test.cjs :: ℹ tests 31 ℹ pass 31 ℹ fail 0 
+test/lapitaya-cima-v0.11.test.cjs :: ℹ tests 25 ℹ pass 25 ℹ fail 0 
+test/lapitaya-cima-v0.12.test.cjs :: ℹ tests 38 ℹ pass 38 ℹ fail 0 
+test/lapitaya-cima-v0.14.test.cjs :: ℹ tests 46 ℹ pass 46 ℹ fail 0 
+test/lapitaya-cima-v0.15.test.cjs :: ℹ tests 43 ℹ pass 43 ℹ fail 0 
+test/lapitaya-cima-v0.16.test.cjs :: ℹ tests 50 ℹ pass 50 ℹ fail 0 
+test/lapitaya-desktop-companions.test.cjs :: ℹ tests 95 ℹ pass 95 ℹ fail 0 
+test/lapitaya-foundation.test.cjs :: ℹ tests 25 ℹ pass 25 ℹ fail 0 
+
