@@ -1,0 +1,3 @@
+STATE-20: Concurrent task writes protected by withLock file locking (.governance.lock) with 5s stale-lock recovery.
+STATE-22: Multi-instance access on the same Hive synchronized across independent CimaRuntimeService instances via shared file lock.
+Re-entrancy: lockDepth counter allows nested locked operations (e.g. confirmRequest -> transition -> append) without lock contention.

@@ -1,0 +1,140 @@
+[
+  {
+    "step": "REQUEST confirmed by the human",
+    "proposalId": "req-mywpixns-1"
+  },
+  {
+    "step": "agent attempts HIGH after the confirmation",
+    "result": "DENIED",
+    "decision": "HUMAN_APPROVAL_REQUIRED"
+  },
+  {
+    "step": "Decision Center shows the pending HIGH",
+    "card": {
+      "approvalId": "apr-mywpj2ag-2",
+      "uiState": "HUMAN_APPROVAL_REQUIRED",
+      "pending": true,
+      "resolution": null,
+      "risk": "HIGH",
+      "operation": "Bash · data-deletion",
+      "rule": "shell:recursive-delete",
+      "evidence": {
+        "ref": "EVT-d33e0bcf",
+        "source": "cima-ledger.jsonl"
+      },
+      "timeline": [
+        "HUMAN_APPROVAL_REQUIRED"
+      ]
+    },
+    "counts": {
+      "total": 1,
+      "requests": 0,
+      "high": 1
+    }
+  },
+  {
+    "step": "human double-clicks Approve",
+    "first": {
+      "id": "apr-mywpj2ag-2",
+      "status": "approved",
+      "decidedAt": 1800000010000,
+      "decidedBy": "human"
+    },
+    "second": "dropped by the UI"
+  },
+  {
+    "step": "replay the approval via IPC",
+    "result": null
+  },
+  {
+    "step": "agent retries the exact call",
+    "result": "ALLOWED",
+    "decision": "APPROVED"
+  },
+  {
+    "step": "agent tries again (one-shot)",
+    "result": "DENIED",
+    "decision": "HUMAN_APPROVAL_REQUIRED"
+  },
+  {
+    "step": "approved card after execution",
+    "card": {
+      "approvalId": "apr-mywpj2ag-2",
+      "uiState": "APPROVED",
+      "pending": false,
+      "resolution": "APPROVAL_GRANTED",
+      "risk": "HIGH",
+      "operation": "Bash · data-deletion",
+      "rule": "shell:recursive-delete",
+      "evidence": {
+        "ref": "trc-mywpj65c-3",
+        "source": "traces.jsonl"
+      },
+      "timeline": [
+        "HUMAN_APPROVAL_REQUIRED",
+        "APPROVAL_GRANTED",
+        "ACTION_AUTHORIZED",
+        "EXECUTION_COMPLETED"
+      ]
+    }
+  },
+  {
+    "step": "human rejects the next one",
+    "card": {
+      "approvalId": "apr-mywpj7ow-4",
+      "uiState": "REJECTED",
+      "pending": false,
+      "resolution": "APPROVAL_REJECTED",
+      "risk": "HIGH",
+      "operation": "Bash · data-deletion",
+      "rule": "human",
+      "evidence": {
+        "ref": "EVT-0dadda28",
+        "source": "cima-ledger.jsonl"
+      },
+      "timeline": [
+        "HUMAN_APPROVAL_REQUIRED",
+        "APPROVAL_REJECTED"
+      ]
+    }
+  },
+  {
+    "step": "agent retries the rejected call",
+    "result": "DENIED",
+    "decision": "HUMAN_APPROVAL_REQUIRED"
+  },
+  {
+    "step": "two renderers race approve vs reject on stale views",
+    "results": [
+      {
+        "id": "apr-mywpjas0-5",
+        "status": "approved",
+        "decidedAt": 1800000021000,
+        "decidedBy": "human"
+      },
+      null
+    ],
+    "loserCard": {
+      "approvalId": "apr-mywpjas0-5",
+      "uiState": "ALREADY_RESOLVED",
+      "pending": false,
+      "resolution": "APPROVAL_GRANTED",
+      "risk": "HIGH",
+      "operation": "Bash · data-deletion",
+      "rule": "human",
+      "evidence": {
+        "ref": "EVT-a7e45126",
+        "source": "cima-ledger.jsonl"
+      },
+      "timeline": [
+        "HUMAN_APPROVAL_REQUIRED",
+        "APPROVAL_GRANTED"
+      ]
+    },
+    "ledgerDecisionsForIt": 1
+  },
+  {
+    "step": "REQUEST status throughout (approval never confirms/changes it)",
+    "status": "CONFIRMED"
+  }
+]

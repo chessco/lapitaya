@@ -1,0 +1,64 @@
+{
+  "node": "v24.14.0",
+  "platform": "win32",
+  "v015": [
+    {
+      "events": 1000,
+      "ledgerBytes": 587786,
+      "status": "HEALTHY",
+      "fullVerifyMs": 81.1,
+      "firstAuthorizeColdMs": 82.2,
+      "steadyAuthorizeMs": 12.43,
+      "authorizeAfterForeignAppendMs": 13.31,
+      "incrementalVerifyMs": 6.93,
+      "readTailMs": 6.85
+    },
+    {
+      "events": 10000,
+      "ledgerBytes": 5897788,
+      "status": "HEALTHY",
+      "fullVerifyMs": 540.6,
+      "firstAuthorizeColdMs": 486.6,
+      "steadyAuthorizeMs": 12.66,
+      "authorizeAfterForeignAppendMs": 11.46,
+      "incrementalVerifyMs": 4.23,
+      "readTailMs": 4.34
+    },
+    {
+      "events": 50000,
+      "ledgerBytes": 29577788,
+      "status": "HEALTHY",
+      "fullVerifyMs": 3867.2,
+      "firstAuthorizeColdMs": 3458,
+      "steadyAuthorizeMs": 11.45,
+      "authorizeAfterForeignAppendMs": 12.15,
+      "incrementalVerifyMs": 4.88,
+      "readTailMs": 5.31
+    },
+    {
+      "events": 100000,
+      "ledgerBytes": 59177790,
+      "status": "HEALTHY",
+      "fullVerifyMs": 7564,
+      "firstAuthorizeColdMs": 7235.8,
+      "steadyAuthorizeMs": 11.18,
+      "authorizeAfterForeignAppendMs": 10.2,
+      "incrementalVerifyMs": 5.56,
+      "readTailMs": 4.69
+    }
+  ],
+  "v014_baseline_authorize_ms": [
+    {
+      "events": 1000,
+      "authorizeMs": 7.4
+    },
+    {
+      "events": 10000,
+      "authorizeMs": 36.8
+    },
+    {
+      "events": 50000,
+      "authorizeMs": 129.4
+    }
+  ]
+}

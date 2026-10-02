@@ -1,0 +1,42 @@
+ src/shared/lapitaya/agents.ts     | 8 ++++++++
+ test/lapitaya-foundation.test.cjs | 9 +++++++++
+ 2 files changed, 17 insertions(+)
+diff --git a/src/shared/lapitaya/agents.ts b/src/shared/lapitaya/agents.ts
+index 3d4d05d5..b743f899 100644
+--- a/src/shared/lapitaya/agents.ts
++++ b/src/shared/lapitaya/agents.ts
+@@ -191,6 +191,14 @@ export function agentByName(name: string | null | undefined): LaPitayaAgent | un
+   return LA_PITAYA_AGENTS.find((a) => toAscii(a.name).toLowerCase() === q);
+ }
+ 
++/** Find a La Pitaya agent by a hive-spawned agent id, which carries a random
++ *  suffix (e.g. `valentin-munh7sdc`). Matches the exact preset id too. */
++export function agentByHiveId(hiveId: string | null | undefined): LaPitayaAgent | undefined {
++  const q = toAscii(hiveId?.trim() ?? '').toLowerCase();
++  if (!q) return undefined;
++  return LA_PITAYA_AGENTS.find((a) => q === a.id || q.startsWith(a.id + '-'));
++}
++
+ /** The line appended to a hire preset's goal so the agent writes in agentLocale.
+  *  Evidence (command output, logs, code) is always quoted verbatim. */
+ export function agentLanguageDirective(agentLocale: string | null | undefined): string {
+diff --git a/test/lapitaya-foundation.test.cjs b/test/lapitaya-foundation.test.cjs
+index 84bea406..89ee3313 100644
+--- a/test/lapitaya-foundation.test.cjs
++++ b/test/lapitaya-foundation.test.cjs
+@@ -93,6 +93,15 @@ test('a typed name resolves in either spelling', () => {
+   assert.equal(agents.agentByName('Michael'), undefined);
+ });
+ 
++test('a hive-spawned agent id resolves to its preset', () => {
++  assert.equal(agents.agentByHiveId('valentin-munh7sdc').id, 'valentin');
++  assert.equal(agents.agentByHiveId('el-beni-3f2a1').id, 'el-beni');
++  assert.equal(agents.agentByHiveId('valentin').id, 'valentin');
++  assert.equal(agents.agentByHiveId('nope-munh7sdc'), undefined);
++  assert.equal(agents.agentByHiveId(''), undefined);
++  assert.equal(agents.agentByHiveId(null), undefined);
++});
++
+ test('hire presets carry a briefing and the CIMA hard rules', () => {
+   const presets = agents.LA_PITAYA_HIRE_PRESETS.map((a) => a.id);
+   assert.deepEqual(presets, ['valentin', 'el-beni', 'margarito', 'jose-juan', 'el-tutu']);

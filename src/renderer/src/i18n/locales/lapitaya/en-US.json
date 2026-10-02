@@ -1,0 +1,392 @@
+{
+  "brand": {
+    "tagline": "Sonoran Multi-Agent AI Harness",
+    "origin": "Sonora, Mexico"
+  },
+  "team": {
+    "label": "La Pitaya team",
+    "hint": "Fills name, character, description and goal with a CIMA role. You review and spawn."
+  },
+  "roles": {
+    "orchestrator": "Primary Orchestrator",
+    "architect": "Architect",
+    "builder": "Builder",
+    "tester": "Tester",
+    "auditor": "Auditor",
+    "learner": "Learner",
+    "companion": "AI Companion"
+  },
+  "cima": {
+    "name": "CIMA",
+    "phases": {
+      "CONTEXT": "Context",
+      "ARCHITECT": "Architect",
+      "BUILD": "Build",
+      "TEST": "Test",
+      "AUDIT": "Audit",
+      "LEARN": "Learn",
+      "DECISION": "Decision",
+      "ITERATE": "Iterate"
+    },
+    "principles": {
+      "BUILDER_NOT_AUDITOR": "Builder != Auditor",
+      "EVIDENCE_FIRST": "Evidence First",
+      "HUMAN_GOVERNANCE": "Human Governance",
+      "PROGRESSIVE_AUTONOMY": "Progressive Autonomy"
+    }
+  },
+  "autonomy": {
+    "modes": {
+      "AUTO": "Auto",
+      "SUPERVISED": "Supervised",
+      "HUMAN_APPROVAL": "Human approval"
+    },
+    "risk": {
+      "LOW": "Low risk",
+      "MEDIUM": "Medium risk",
+      "HIGH": "High risk"
+    }
+  },
+  "locales": {
+    "agentLocale": "Agent language",
+    "agentLocaleDesc": "The language La Pitaya agents write their messages and reports in. Independent of the interface language. Commands, code, logs and test output are never translated.",
+    "notificationLocale": "Notification language",
+    "notificationLocaleDesc": "The language of notices and, later, of Alicia's summaries. Independent of the interface language."
+  },
+  "governance": {
+    "title": "GOVERNANCE APPROVALS",
+    "approveHint": "Approve allows ONE execution of this exact call. The agent must retry it.",
+    "approve": "approve",
+    "reject": "reject",
+    "status": {
+      "pending": "pending",
+      "approved": "approved",
+      "rejected": "rejected",
+      "consumed": "executed"
+    }
+  },
+  "alicia": {
+    "notifications": {
+      "task_created": { "title": "New task", "message": "Task {{task}} was created." },
+      "task_started": { "title": "Task in progress", "message": "{{agent}} is working on task {{task}}." },
+      "task_blocked": { "title": "Task blocked", "message": "Task {{task}} is blocked." },
+      "task_completed": { "title": "Task done", "message": "Task {{task}} is done." },
+      "agent_started": { "title": "Agent active", "message": "{{agent}} started a session." },
+      "agent_completed": { "title": "Agent idle", "message": "{{agent}} finished and is idle." },
+      "agent_failed": { "title": "Agent failure", "message": "{{agent}} reported a failure." },
+      "cima_phase_assigned": { "title": "CIMA · {{phaseLabel}}", "message": "{{from}} assigned {{phase}} to {{agent}}." },
+      "cima_phase_changed": { "title": "CIMA · {{phaseLabel}}", "message": "{{agent}} finished {{phase}}: {{verdict}}." },
+      "governance_blocked": { "title": "Blocked by CIMA", "message": "The action was blocked by CIMA ({{rule}}). {{explanation}}" },
+      "governance_supervised": { "title": "Supervised action", "message": "{{agent}} ran a medium-risk action under supervision. {{explanation}}" },
+      "approval_required": { "title": "Your approval is needed", "message": "Human approval is required. {{explanation}}" },
+      "approval_granted": { "title": "Approval granted", "message": "You approved the action from {{agent}}. It will run once." },
+      "approval_denied": { "title": "Approval rejected", "message": "You rejected the action from {{agent}}. It will not run." },
+      "audit_completed": { "title": "Audit finished", "message": "{{agent}} finished the audit: {{verdict}}." },
+      "workflow_completed": { "title": "Work accepted", "message": "Task {{task}} has a DECISION PASS recorded by the runtime." },
+      "intent_received": { "title": "Request received", "message": "The runtime received your request." },
+      "intent_classified": { "title": "Request classified", "message": "The runtime classified your request." },
+      "intent_forwarded": { "title": "Sent to El Inge", "message": "Your request reached El Inge as a proposal; nothing runs until you confirm." },
+      "intent_governed": { "title": "Action governed by CIMA", "message": "CIMA evaluated your action: risk {{risk}}, decision {{decision}}. {{explanation}}" },
+      "intent_blocked": { "title": "Request blocked", "message": "Your request was not sent: CIMA blocked it ({{rule}}). {{explanation}}" },
+      "request_proposed": { "title": "Proposal waiting for your confirmation", "message": "El Inge received your request as a proposal. {{explanation}}" },
+      "request_confirmed": { "title": "Proposal confirmed", "message": "You confirmed the proposal. Every action still goes through CIMA; high-risk ones need your separate approval." },
+      "request_closed": { "title": "Proposal closed", "message": "The proposal was closed ({{decision}})." },
+      "error": { "title": "Error", "message": "Something went wrong. See the technical detail." }
+    },
+    "explain": {
+      "HUMAN_APPROVAL_REQUIRED": "This action needs your approval because it is classified as {{riskLabel}}.",
+      "SUPERVISED": "It was allowed under supervision and recorded in the ledger.",
+      "APPROVED": "It ran once with your approval.",
+      "HUMAN_APPROVED": "You approved it; that allows one run of that exact call.",
+      "HUMAN_REJECTED": "You rejected it; it will not run.",
+      "DENY": "La Pitaya could not authorize this action, so it did not run.",
+      "DECISION_GATE": "The task cannot be marked done without a DECISION PASS recorded by the runtime.",
+      "EVIDENCE_FIRST": "The result has no evidence the harness observed.",
+      "BUILDER_NOT_AUDITOR": "Whoever built the change cannot pass its own tests or audit.",
+      "AUDITOR_MODIFIED_CODE": "The auditor modified files after BUILD; an auditor never changes what it audits.",
+      "TRANSITION": "Earlier CIMA phases are missing, so this step cannot be accepted.",
+      "DECISION_AUTHORITY": "Only El Inge or the human can accept the work.",
+      "MALFORMED": "The CIMA report is not in the required format.",
+      "ALLOW": "It is low risk: allowed automatically, and authorized again when it runs.",
+      "NOT_AUTHORIZED": "Alicia has no authority to approve or to issue a DECISION; that belongs to you and El Inge.",
+      "INTENT_INVALID": "The request was incomplete or malformed, so it was not processed.",
+      "INTENT_TARGET": "Alicia can only address requests to El Inge, not to other agents or to tools.",
+      "INTENT_MISMATCH": "What you asked for carries more risk than the proposed action, so CIMA did not send it.",
+      "DELIVERY_FAILED": "The request could not be delivered to El Inge.",
+      "BOUNDARY_UNAVAILABLE": "The request boundary did not answer; nothing was done.",
+      "REQUEST_CONFIRMATION_REQUIRED": "Nothing runs until you confirm the proposal; meanwhile only reading, analysis and replies are allowed.",
+      "REQUEST_SCOPE_EXCEEDED": "The action goes beyond what you confirmed in the proposal, so it did not run.",
+      "NOT_CONFIRMABLE": "The proposal can no longer be confirmed (already confirmed, cancelled or closed).",
+      "TAMPERED": "The confirmation does not match the proposal, so it was rejected.",
+      "STALE_PROPOSAL": "The proposal is no longer valid; it has to be requested again.",
+      "UNKNOWN_PROPOSAL": "There is no such proposal.",
+      "WRONG_CONTEXT": "The confirmation does not belong to this proposal.",
+      "INVALID_CONFIRMATION": "The confirmation was incomplete.",
+      "UNKNOWN": "Rule {{rule}} stopped it. See the technical detail."
+    },
+    "evidence": {
+      "completed": "{{agent}} completed {{phase}}",
+      "recorded": "{{agent}} recorded {{phase}}: {{verdict}}",
+      "verified": "{{verified}}/{{total}} evidence items verified by the harness",
+      "none": "No evidence recorded"
+    },
+    "reply": {
+      "task": "I'm here. Task {{task}} is at {{phase}} ({{phaseLabel}}); you have {{unread}} unread notices.",
+      "idle": "I'm here. There is no active task; you have {{unread}} unread notices."
+    },
+    "intentTypes": {
+      "CONVERSATION": "Conversation: Alicia answers, nothing runs.",
+      "REQUEST": "Request: El Inge prepares a proposal and waits for your go-ahead.",
+      "ACTION": "Action: goes through CIMA (risk, autonomy and authorization) before it runs."
+    },
+    "presence": {
+      "IDLE": "Idle",
+      "THINKING": "Thinking",
+      "NOTIFYING": "Notifying",
+      "WAITING_APPROVAL": "Waiting for your approval",
+      "CELEBRATING": "Celebrating",
+      "WARNING": "Heads up",
+      "BLOCKED": "Blocked"
+    },
+    "confirmation": {
+      "title": "ALICIA · PROPOSAL CONFIRMATION",
+      "role": "Alicia presents the proposal and receives your decision. The CIMA runtime decides what may execute.",
+      "loading": "Loading proposals from the runtime…",
+      "loadError": "Could not read the proposals from the runtime. Nothing was changed.",
+      "empty": "No REQUEST proposals are waiting for you.",
+      "pendingBanner": "Proposals waiting for your confirmation: {{count}}. Until you decide, nothing on the floor executes.",
+      "goToProposal": "View proposal",
+      "pendingBadge": "Pending human decisions (REQUEST and HIGH): {{count}}",
+      "understood": "I understood that you want:",
+      "fields": {
+        "risk": "Scope (runtime risk)",
+        "status": "Status",
+        "executor": "Executor",
+        "task": "Task",
+        "created": "Created"
+      },
+      "scopeExplain": {
+        "LOW": "If you confirm, the floor may only inspect (LOW risk). Changes would need a new REQUEST.",
+        "MEDIUM": "If you confirm, LOW and MEDIUM risk actions may continue, each one still authorized by CIMA when it runs."
+      },
+      "meaning": "Confirming lets this REQUEST continue to CIMA governance. It does not execute anything by itself.",
+      "highNote": "Confirming the REQUEST is not approving a high-risk action: every HIGH action needs its own approval in Human decisions.",
+      "ack": "I have read the proposal and understand that confirming does not approve HIGH actions.",
+      "decisionGroup": "Decision on the proposal",
+      "confirm": "Confirm REQUEST",
+      "cancel": "Cancel REQUEST",
+      "noRetry": "Nothing is retried automatically.",
+      "confirmedNote": "REQUEST confirmed — this is not an approval. Every action is still evaluated by CIMA, and HIGH actions need your separate approval.",
+      "highPending": "CIMA requires your approval for HIGH actions (HUMAN_APPROVAL_REQUIRED): {{count}} pending. Decide them in Human decisions; confirming the REQUEST did not approve them.",
+      "state": {
+        "PENDING": "Proposal waiting for your confirmation",
+        "CONFIRMING": "Confirming with the runtime…",
+        "CONFIRMED": "REQUEST confirmed — continues through CIMA governance",
+        "CANCELING": "Cancelling with the runtime…",
+        "CANCELLED": "REQUEST cancelled",
+        "COMPLETED": "REQUEST closed",
+        "SUPERSEDED": "Replaced by a newer proposal",
+        "BLOCKED": "Blocked by the runtime",
+        "STALE": "Proposal no longer valid (stale)",
+        "ERROR": "Confirmation refused by the runtime"
+      },
+      "errors": {
+        "LEDGER_UNAVAILABLE": "The runtime could not record the decision, so nothing changed.",
+        "IPC_ERROR": "The runtime did not answer, so nothing changed."
+      },
+      "said": {
+        "confirmed": "Confirmed. The request will continue through the governance process.",
+        "cancelled": "Request cancelled.",
+        "stale": "That proposal is no longer valid. Ask again if you still need it.",
+        "changedElsewhere": "That proposal changed elsewhere; I am showing its current state.",
+        "refused": "The runtime refused the confirmation ({{code}}). Nothing was executed."
+      },
+      "conversation": {
+        "label": "Message for Alicia",
+        "placeholder": "Write to Alicia…",
+        "send": "Send",
+        "human": "You",
+        "alicia": "Alicia",
+        "forwarded": "I sent it to El Inge as proposal {{id}}. Review it above: nothing executes until you confirm.",
+        "governed": "CIMA evaluated your action: risk {{risk}}, decision {{decision}}.",
+        "blocked": "CIMA did not send it ({{rule}}).",
+        "failed": "I could not deliver your message; nothing was done."
+      }
+    },
+    "observe": {
+      "sectionTitle": "Governance (per the runtime)",
+      "activityTitle": "GOVERNANCE ACTIVITY",
+      "activityHint": "Facts recorded by the CIMA runtime. Alicia explains them; she does not decide them.",
+      "activityEmpty": "No relevant governance facts yet.",
+      "healthTitle": "GOVERNANCE STATE",
+      "healthHint": "The runtime's own verdict about whether its records can be trusted. Alicia shows it; she cannot repair or change it.",
+      "health": {
+        "HEALTHY": "The governance records verify.",
+        "CORRUPTED": "The governance records are damaged. Governance is closed: nothing is authorized until an operator recovers it.",
+        "INCONSISTENT": "The governance state disagrees with its recorded events. Governance is closed until an operator resolves it.",
+        "UNAVAILABLE": "The runtime cannot verify its governance records right now. Governance is closed."
+      },
+      "recovery": {
+        "HEALTHY": "No recovery has been needed.",
+        "CORRUPTED": "Damage detected.",
+        "RECOVERY_REQUIRED": "Recovery by an operator is required. The damaged evidence is kept untouched.",
+        "RECOVERED": "An operator recovered the records and the result was verified."
+      },
+      "healthCodes": "Codes:",
+      "legacyUnverified": "Records written before v0.15 are trusted as found; their origin is not proven.",
+      "unavailable": "The reason cannot be confirmed with the available evidence.",
+      "notAvailable": "Not available",
+      "evidence": "Evidence:",
+      "noEvidence": "No evidence recorded; nothing is claimed.",
+      "repeated": "x{{count}}",
+      "timelineToggle": "Show timeline ({{count}} events)",
+      "timelineLabel": "Timeline of REQUEST {{proposalId}} (read only)",
+      "labels": {
+        "what": "What happened?",
+        "why": "Why?",
+        "state": "State",
+        "risk": "Risk (CIMA)",
+        "scope": "Scope",
+        "autonomy": "Autonomy",
+        "rule": "Rule",
+        "decision": "Decision",
+        "next": "What's next?",
+        "humanAction": "What do you need to do?",
+        "agent": "Who",
+        "operation": "Operation"
+      },
+      "what": {
+        "INTENT_RECEIVED": "The runtime received your message.",
+        "INTENT_CLASSIFIED": "The runtime classified your message.",
+        "INTENT_FORWARDED": "The runtime handed it to El Inge.",
+        "INTENT_GOVERNED": "CIMA evaluated the action you asked for.",
+        "INTENT_BLOCKED": "The runtime did not send your request.",
+        "INTENT_COMPLETED": "The runtime closed the intent.",
+        "REQUEST_PROPOSED": "Your request became a REQUEST: a proposal ({{proposalId}}).",
+        "REQUEST_REVALIDATED": "The runtime re-validated proposal {{proposalId}} before confirming it.",
+        "REQUEST_CONFIRMED": "You confirmed proposal {{proposalId}}.",
+        "REQUEST_CONFIRMATION_DENIED": "The runtime refused a confirmation of {{proposalId}}.",
+        "REQUEST_CANCELLED": "Proposal {{proposalId}} was cancelled.",
+        "REQUEST_COMPLETED": "Proposal {{proposalId}} was closed as done.",
+        "REQUEST_SUPERSEDED": "Proposal {{proposalId}} was replaced by a newer one.",
+        "REQUEST_BLOCKED": "Proposal {{proposalId}} was blocked by the runtime.",
+        "REQUEST_CONFIRMATION_REQUIRED": "The action was blocked: {{agent}} tried {{operation}}.",
+        "REQUEST_SCOPE_EXCEEDED": "The action was blocked for going beyond the confirmed scope: {{agent}} tried {{operation}}.",
+        "ACTION_AUTHORIZED": "CIMA authorized {{operation}} by {{agent}}.",
+        "ACTION_SUPERVISED": "CIMA allowed {{operation}} by {{agent}} under supervision.",
+        "ACTION_DENIED": "CIMA blocked {{operation}} by {{agent}}.",
+        "HUMAN_APPROVAL_REQUIRED": "CIMA stopped {{operation}} by {{agent}}: it needs HIGH approval.",
+        "APPROVAL_GRANTED": "You approved action {{approvalId}} by {{agent}}.",
+        "APPROVAL_REJECTED": "You rejected action {{approvalId}} by {{agent}}.",
+        "COMPLETION_BLOCKED": "The runtime prevented a task from being marked as done.",
+        "EXECUTION_COMPLETED": "{{agent}} ran {{operation}} (recorded by the harness).",
+        "EXECUTION_FAILED": "{{operation}} by {{agent}} failed when it ran (recorded by the harness).",
+        "UNKNOWN_EVENT": "The runtime recorded a fact Alicia cannot interpret ({{decision}})."
+      },
+      "why": {
+        "INTENT_RECEIVED": "Everything you tell Alicia goes through the runtime first.",
+        "INTENT_CLASSIFIED": "The runtime decides whether it is CONVERSATION, REQUEST or ACTION; Alicia does not.",
+        "INTENT_FORWARDED": "El Inge receives requests as a proposal; nothing runs until you confirm.",
+        "INTENT_GOVERNED": "Every ACTION goes through CIMA (risk, autonomy and authorization).",
+        "INTENT_COMPLETED": "The runtime finished processing the intent.",
+        "REQUEST_PROPOSED": "A REQUEST is only a proposal: the runtime lets nothing on the floor execute until you confirm it.",
+        "REQUEST_REVALIDATED": "Before confirming, the runtime checks that the proposal is still valid.",
+        "REQUEST_CONFIRMED": "Your confirmation lets the work continue; every action still goes through CIMA. It is not a HIGH approval.",
+        "REQUEST_CANCELLED": "A cancelled proposal no longer allows work on the floor.",
+        "REQUEST_COMPLETED": "A closed proposal no longer allows work on the floor.",
+        "REQUEST_SUPERSEDED": "Only the newest proposal for the same task counts.",
+        "EXECUTION_COMPLETED": "The harness observed that exact call run after CIMA authorized it.",
+        "EXECUTION_FAILED": "The harness observed that exact call fail or get interrupted."
+      },
+      "next": {
+        "WAITING_HUMAN_CONFIRMATION": "Nothing executes until you confirm or cancel the proposal.",
+        "WAITING_HUMAN_APPROVAL": "Review the approval in Human decisions. Confirming the REQUEST did not approve this HIGH action.",
+        "CONTINUES_UNDER_CIMA": "The work continues; every action is still evaluated by CIMA.",
+        "MAY_EXECUTE": "The call may run; its execution will show once the harness records it.",
+        "APPROVAL_ON_ATTEMPT": "When El Inge attempts that action, CIMA will ask for your HIGH approval of that exact call; without it nothing runs.",
+        "MAY_RUN_ONCE": "The agent may retry that exact call once.",
+        "NOT_EXECUTED": "No tool was executed.",
+        "EXECUTED": "The tool ran.",
+        "EXECUTION_FAILED": "The tool did not finish successfully.",
+        "CLOSED": "The proposal is closed; nothing else depends on it.",
+        "TASK_NOT_COMPLETED": "The task stays open until the runtime records a DECISION PASS.",
+        "SEE_LATER_EVENTS": "Later facts exist; see the timeline.",
+        "NOT_AVAILABLE": "There is not enough information to say what comes next."
+      },
+      "autonomy": {
+        "AUTO": "AUTO: may continue automatically if CIMA authorizes it.",
+        "SUPERVISED": "SUPERVISED: continues under supervision and is recorded in the ledger.",
+        "HUMAN_APPROVAL": "HUMAN_APPROVAL: needs your explicit approval."
+      },
+      "action": {
+        "CONFIRM_REQUEST": "Confirm or cancel the proposal.",
+        "DECIDE_APPROVAL": "Approve or reject the HIGH action in Human decisions."
+      }
+    },
+    "decisions": {
+      "title": "HUMAN DECISIONS",
+      "counts": "Pending decisions: {{total}} · REQUESTs to confirm: {{requests}} · HIGH actions to approve: {{high}}",
+      "none": "No decisions are pending.",
+      "distinction": "Confirming a REQUEST and approving a HIGH action are different decisions: confirming lets the proposal continue within its scope; approving authorizes ONE run of one exact HIGH call. Neither replaces the other.",
+      "unobserved": "The runtime's explanation could not be read; without evidence nothing is claimed. Decisions still go through the runtime.",
+      "highTitle": "Pending HIGH approvals",
+      "noHigh": "No HIGH actions are waiting for your approval.",
+      "requestTitle": "REQUEST proposals",
+      "historyToggle": "Show resolved decisions ({{count}})",
+      "historyTitle": "Resolved decisions (per the runtime, read only)",
+      "historyEmpty": "No resolved decisions yet.",
+      "owner": {
+        "actingAs": "You are deciding as {{name}} ({{id}}). The app resolves this identity; this screen cannot change it.",
+        "unresolved": "Your identity could not be resolved by the app, so decisions from this window are refused.",
+        "by": "by {{name}} ({{id}})",
+        "person": "{{name}} ({{id}})",
+        "decidedBy": "Decided by",
+        "requestedBy": "Requested by",
+        "confirmedBy": "Confirmed by",
+        "cancelledBy": "Cancelled by",
+        "completedBy": "Completed by"
+      },
+      "type": {
+        "REQUEST_CONFIRMATION": "REQUEST CONFIRMATION",
+        "HIGH_APPROVAL": "HIGH-RISK HUMAN APPROVAL"
+      },
+      "typeMeaning": {
+        "REQUEST_CONFIRMATION": "You confirm that this proposal may continue within its scope. It is not a HIGH approval.",
+        "HIGH_APPROVAL": "You authorize ONE run of this exact HIGH call. It confirms no REQUEST and approves no other action."
+      },
+      "highState": {
+        "HUMAN_APPROVAL_REQUIRED": "Waiting for your HIGH approval",
+        "APPROVING": "Approving with the runtime…",
+        "REJECTING": "Rejecting with the runtime…",
+        "APPROVED": "Approved by you: allows one run of that exact call",
+        "REJECTED": "Rejected by you: that call will not run",
+        "ALREADY_RESOLVED": "It was already resolved; showing the runtime state",
+        "ERROR": "The runtime did not answer; nothing changed"
+      },
+      "fields": {
+        "agent": "Agent",
+        "operation": "Operation",
+        "task": "Task",
+        "request": "Related REQUEST",
+        "created": "Requested"
+      },
+      "relatedRequest": "It came up under REQUEST {{proposalId}}. Confirming that REQUEST did not approve this action.",
+      "exactCallNote": "The approval is bound to the exact call CIMA stopped; the command is not shown here (sensitive-data boundary).",
+      "ack": "I reviewed the operation, the rule and the HIGH risk; I approve one execution of the pending call identified above (its command is not shown here).",
+      "decisionGroup": "Decision on the HIGH action",
+      "approve": "Approve HIGH action",
+      "reject": "Reject HIGH action",
+      "timelineLabel": "Timeline of approval {{approvalId}} (read only)",
+      "errors": {
+        "ALREADY_RESOLVED": "The runtime no longer had this approval pending (resolved elsewhere or unknown).",
+        "IPC_ERROR": "The runtime did not answer, so nothing changed."
+      },
+      "said": {
+        "approved": "Approved. The agent may retry that exact call once; CIMA authorizes it again.",
+        "rejected": "Rejected. That call will not run.",
+        "alreadyResolved": "That approval was already resolved; I am showing the runtime state.",
+        "failed": "I could not deliver your decision to the runtime; nothing changed."
+      }
+    }
+  }
+}

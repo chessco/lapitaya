@@ -1,0 +1,5 @@
+ELECTRON VALIDATION:
+- Main process CimaRuntimeService unit test suite executes cleanly without electron dependency.
+- Human IPC boundary (v0.8 context) enforces trusted DecisionOwner context across main process IPC handlers.
+- Renderer authority is 0: renderer cannot confirm proposals, decide approvals, or alter timestamps directly.
+- Build output: out/main/index.js and out/preload/index.js compile cleanly (0 warnings/errors).

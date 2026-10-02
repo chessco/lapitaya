@@ -47,7 +47,8 @@ async function floor(t, { steer } = {}) {
     ? { takeSteer: (id) => (id === 'god-1' ? steer : null), shouldHalt: () => false, toolDecision: () => ({ deny: false }) }
     : undefined;
   const server = new HookServer(hive, () => null, () => CONFIG, control, undefined);
-  const fire = (agent_id, hook_event_name, extra = {}) => server.handle({ agent_id, hook_event_name, session_id: 's1', ...extra });
+  // v0.10: every hook is authenticated by the agent's capability token (the production registry's).
+  const fire = (agent_id, hook_event_name, extra = {}) => server.handle({ agent_id, agent_token: hive.registerAgentToken(agent_id), hook_event_name, session_id: 's1', ...extra });
   return { home, hive, server, fire };
 }
 

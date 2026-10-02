@@ -7,7 +7,8 @@ import {
 } from 'node:fs';
 import { randomBytes, createHash, timingSafeEqual } from 'node:crypto';
 import { join, resolve, sep, basename, dirname, isAbsolute } from 'node:path';
-import { homedir } from 'node:os';
+import { homedir, userInfo } from 'node:os';
+import { pathToFileURL } from 'node:url';
 import { request as httpsRequest } from 'node:https';
 import { PtyManager, type SpawnOptions } from './pty';
 import { resolveCommand as resolveCliCommand, isSafeCommandName } from './shellEnv';
@@ -27,6 +28,18 @@ import {
 import { linkWorktreeDeps, unlinkWorktreeDeps } from './worktreeDeps';
 import { HiveManager, type AgentMeta, type HiveMessage, type HiveTask } from './hive';
 import { HookServer } from './hooks';
+import { CimaRuntimeService } from './cimaRuntime';
+import { createHumanIdentityService, newSessionId } from './humanIdentity';
+import { createHumanGovernanceHandlers, resolveRendererSender } from './humanGovernanceIpc';
+import { loadOrCreateKey } from './authBinding';
+import { AUTONOMY_STAGES, DEFAULT_AUTONOMY_STAGE, type AutonomyStage } from '../shared/lapitaya/autonomy';
+import { phaseForAgent } from '../shared/lapitaya/agents';
+import { recordBanner } from '../shared/lapitaya/cimaRuntime';
+import { LA_PITAYA_NAME } from '../shared/lapitaya/brand';
+import {
+  alicia, registerAlicia, createAliciaCompanion, fromRuntimeEvent, deriveCimaStatus, projectObservability, ALICIA_ACTOR_ID
+} from '../shared/lapitaya/alicia';
+import { IntentBoundary } from './intentBoundary';
 import { CircuitBreaker, type BreakerInput } from './breaker';
 import { CumulativeSampleGate, type UsageProvider } from './usage';
 import { MemoryManager } from './memory';
@@ -244,6 +257,76 @@ const hive = new HiveManager(
 // #7C — operator control state (pause/gate/steer/halt), read by the HookServer
 // when deciding hook returns.
 const control = new ControlRegistry();
+// La Pitaya — runtime governance + CIMA. Authorizes every PreToolUse (via the
+// HookServer below), records what really ran as evidence, and evaluates the
+// `cima` claims agents attach to hive messages (via the router).
+const lapitayaStage = (): AutonomyStage => {
+  const s = (readConfig() as { lapitayaAutonomyStage?: unknown }).lapitayaAutonomyStage;
+  return (AUTONOMY_STAGES as readonly unknown[]).includes(s) ? (s as AutonomyStage) : DEFAULT_AUTONOMY_STAGE;
+};
+// v0.14: the approval-seal key lives in the app's own user-data directory — outside the hive, so no
+// agent workspace or governance path of the hive reaches it. Created once; null (→ fail closed) if unreadable.
+let lapitayaSealKey: Buffer | null | undefined;
+const lapitayaSealKeyFile = (): Buffer | null => {
+  if (lapitayaSealKey === undefined) lapitayaSealKey = loadOrCreateKey(join(app.getPath('userData'), 'lapitaya-governance-seal.key'));
+  return lapitayaSealKey;
+};
+const lapitaya = new CimaRuntimeService({
+  hiveRoot: () => hive.root(),
+  godId: () => hive.registry().godId ?? 'god',
+  stage: lapitayaStage,
+  sealKey: lapitayaSealKeyFile,
+  cwdOf: (agentId) => hive.registry().agents[agentId]?.cwd ?? null,
+  providerOf: (agentId) => hive.registry().agents[agentId]?.provider ?? null,
+  phaseOf: (agentId) => phaseForAgent(hive.registry(), agentId),
+  taskOf: (agentId) => {
+    const t = (hive.tasks() as { tasks?: Array<{ id?: string; assignee?: string; status?: string }> })?.tasks ?? [];
+    return t.find((x) => x?.assignee === agentId && x?.status === 'doing')?.id ?? null;
+  },
+  onEvent: (e) => {
+    // v0.8: every own window hears it — a decision made in one window must reach the others.
+    for (const w of BrowserWindow.getAllWindows()) { try { if (!w.isDestroyed()) w.webContents.send('lapitaya:governance', e); } catch { /* window gone */ } }
+    // Alicia observes the same events; alicia() contains any failure.
+    try { for (const ev of fromRuntimeEvent(e, Date.now())) alicia().notify(ev); } catch { /* never break governance */ }
+  }
+});
+// La Pitaya Alicia v0.4.1 — the intent boundary. The ONLY path from Alicia to
+// El Inge: every intent is validated and re-classified by the runtime, ACTIONs
+// get their risk/decision from CimaRuntimeService, and only then is a stamped
+// request delivered. It has no executor: execution stays with El Inge's own
+// tool calls, re-authorized at PreToolUse.
+const intentBoundary = new IntentBoundary({
+  runtime: lapitaya,
+  orchestratorId: () => hive.registry().godId ?? 'god',
+  deliver: (msg, from) => (hive.enabled() ? hive.send(msg, from).id : null)
+});
+// The companion layer. She is lent READ-ONLY views of the runtime plus ONE
+// outbound channel: the intent boundary above. No hive, governance, CIMA or
+// task-status write path is handed to her.
+const aliciaCompanion = createAliciaCompanion({
+  ports: {
+    cimaStatus: (taskId) => deriveCimaStatus({
+      taskId,
+      records: lapitaya.cimaRecords(taskId),
+      approvals: lapitaya.listApprovals(),
+      completion: lapitaya.completionGate(taskId)
+    }),
+    tasks: () => hive.tasks(),
+    project: () => {
+      const reg = hive.registry();
+      const cwd = reg.godId ? reg.agents[reg.godId]?.cwd ?? null : null;
+      return cwd ? { root: cwd, name: basename(cwd) } : null;
+    },
+    agentName: (id) => hive.registry().agents[id]?.name,
+    submitIntent: (intent) => intentBoundary.submit(intent)
+  }
+});
+registerAlicia(aliciaCompanion);
+hive.setCimaHandler((from, cima, messageId, to) => recordBanner(lapitaya.handle(from, to, cima, messageId)));
+hive.setCompletionGate(
+  (taskId) => lapitaya.completionGate(taskId),
+  (taskId, reason, via) => lapitaya.recordBlockedCompletion(taskId, reason, via)
+);
 // Stage 7A — the live observability tap. Receives Claude Code's first-party OTel
 // over loopback OTLP/JSON and exposes the locked usage-provider seam. resolveCwd
 // lets the transcript fallback find an agent's cwd from the hive registry.
@@ -309,7 +392,8 @@ const hookServer = new HookServer(
   control,
   breaker,
   standingGoalFromRoster,
-  (agentId, event, message) => workerWake.noteHook(agentId, event, message)
+  (agentId, event, message) => workerWake.noteHook(agentId, event, message),
+  lapitaya
 );
 const memory = new MemoryManager(
   () => readConfig().harnessHome,
@@ -1404,7 +1488,7 @@ function buildAutonomousRequestProtocol(channel: string, threadTs: string, helpe
 2. DELEGATE WITH THE REPLY HANDLE — tell that agent to do the work autonomously AND to post its result back to THIS Slack thread itself when done, using exactly: "${hive.nodeCommand()}" "${helperPath}" --channel ${channel} --thread ${threadTs} --text "<substantive result>" (that first path is the harness's bundled Node, already resolved for this machine — pass it verbatim; bare "node" is not on the hook/agent PATH on many machines.)
 3. AUTONOMOUS EXECUTION — no interactive questions. PAUSE/ask ONLY for high-severity actions: pushing to main or any remote; buying or spawning infrastructure or paid services; deleting an existing repo, file, or folder it did not create. Stay READ-ONLY at critical infrastructure and git-push-type changes unless explicitly approved.
 4. DIRECT, SUBSTANTIVE REPLY — the agent posts a real Slack-mrkdwn answer (short *bold* headline + the actual outcome/specifics/links), NEVER a bare "done"/":white_check_mark:".
-5. REPORT TO GOD — the agent then tells you (Michael) what it did.
+5. REPORT TO GOD — the agent then tells you (the orchestrator) what it did.
 6. ASYNC QUESTIONS — if a decision is genuinely needed, don't block: post the question + numbered OPTIONS to the thread via that reply command, and record {q, options, askedAt (ISO + day & time), thread_ts ${threadTs}} so the threaded human reply correlates back and resumes.
 The user's message starts now: `;
 }
@@ -2308,7 +2392,7 @@ function createWindow(opts: { floor?: boolean } = {}): BrowserWindow {
     ...(geom && geom.x !== undefined && geom.y !== undefined ? { x: geom.x, y: geom.y } : {}),
     minWidth: MIN_WIN.width,
     minHeight: MIN_WIN.height,
-    title: isFloor ? 'Munder Difflin — Floor' : 'Munder Difflin',
+    title: isFloor ? `${LA_PITAYA_NAME} — Floor` : LA_PITAYA_NAME,
     backgroundColor: '#FFF8E7',
     titleBarStyle: 'hiddenInset',
     show: false,
@@ -3492,7 +3576,15 @@ ipcMain.handle('hive:messages', (_evt, opts: unknown) =>
 );
 ipcMain.handle('hive:send', (_evt, partial: Partial<HiveMessage>, from: unknown) => {
   if (!hive.enabled()) return { ok: false, error: 'hive disabled (no harnessHome)' };
-  const sender = typeof from === 'string' ? from : 'system';
+  // Alicia v0.4.1: messages under Alicia's id exist only through the intent
+  // boundary (validated, re-classified, governed). Nothing may forge one here.
+  if ((typeof from === 'string' ? from : '').trim().toLowerCase() === ALICIA_ACTOR_ID) {
+    return { ok: false, error: 'messages from alicia go through the intent boundary (alicia:submit)' };
+  }
+  // v0.14: the renderer is not a trusted actor — it can speak only as the human, with a trusted context.
+  const who = resolveRendererSender(humanIdentity, _evt, from, partial);
+  if (!who.ok) return { ok: false, error: who.error };
+  const sender = who.sender;
   const msg = hive.send(partial ?? {}, sender);
   // Count only what a PERSON sent. Every renderer surface that dispatches on a
   // human's behalf passes 'human' (Command Center dispatch, thread replies, ASK
@@ -3508,6 +3600,13 @@ ipcMain.handle('hive:addTask', (_evt, task: unknown) => {
   }
   if (!hive.enabled()) return { ok: false, error: 'hive disabled (no harnessHome)' };
   return { ok: hive.addTask(task as HiveTask) };
+});
+ipcMain.handle('hive:updateTaskStatus', (_evt, id: unknown, status: unknown) => {
+  if (typeof id !== 'string' || !id || typeof status !== 'string' || !status) {
+    return { ok: false, error: 'invalid task id or status' };
+  }
+  if (!hive.enabled()) return { ok: false, error: 'hive disabled (no harnessHome)' };
+  return hive.updateTaskStatus(id, status as HiveTask['status']);
 });
 ipcMain.handle('hive:patchTask', (_evt, id: unknown, patch: unknown) => {
   if (typeof id !== 'string' || !id || !patch || typeof patch !== 'object' || Array.isArray(patch)) {
@@ -3949,6 +4048,94 @@ ipcMain.handle('control:setBreakerState', (_evt, state: unknown) => {
 
 // ─── IPC: operator control over agents (#7C.1–7C.3) ─────────────────────────
 // All return the agent's fresh control snapshot so the UI can reflect state.
+// La Pitaya governance — the human's side of HUMAN_APPROVAL_REQUIRED, and a
+// read-only view of the CIMA ledger for the UI and for evidence export.
+// v0.8: WHO decides is resolved here from the trusted sender, never taken from the renderer
+// (see humanIdentity.ts / humanGovernanceIpc.ts); extra renderer arguments are ignored.
+const humanIdentity = createHumanIdentityService({
+  readHumanId: () => readConfig().humanId ?? null,
+  writeHumanId: (id) => { writeConfig({ humanId: id }); },
+  osUserName: () => { try { return userInfo().username; } catch { return 'human'; } },
+  sessionId: newSessionId(),
+  describeSender: (evt) => {
+    const e = evt as { sender?: Electron.WebContents; senderFrame?: Electron.WebFrameMain | null } | null;
+    const wc = e?.sender;
+    if (!wc || typeof wc.id !== 'number') return null;
+    let url = '';
+    try { url = e?.senderFrame?.url ?? ''; } catch { url = ''; }
+    return {
+      webContentsId: wc.id, destroyed: wc.isDestroyed(),
+      isMainFrame: !!e?.senderFrame && e.senderFrame === wc.mainFrame,
+      url, ownWindow: !!BrowserWindow.fromWebContents(wc)
+    };
+  },
+  trustedUrlPrefixes: () => [
+    pathToFileURL(join(__dirname, '../renderer/')).href,
+    ...(isDev && process.env.ELECTRON_RENDERER_URL ? [process.env.ELECTRON_RENDERER_URL] : [])
+  ]
+});
+const humanGov = createHumanGovernanceHandlers({ runtime: lapitaya, identity: humanIdentity });
+// v0.7: the renderer gets the decision's outcome, never the call's summary
+// (the command) or fingerprint. null = not pending (unknown, already decided, untrusted sender).
+ipcMain.handle('lapitaya:decide', (evt, id: unknown, approve: unknown) => humanGov.decide(evt, id, approve));
+ipcMain.handle('lapitaya:identity', (evt) => humanGov.whoAmI(evt));
+// v0.4.2 REQUEST execution gate — the human's channel, like lapitaya:decide.
+// These are the ONLY call sites of confirm/cancel/complete: no agent, no
+// Alicia and no hive message can reach them.
+ipcMain.handle('lapitaya:requests', () => lapitaya.listRequests());
+ipcMain.handle('lapitaya:confirmRequest', (evt, id: unknown, token: unknown) => humanGov.confirmRequest(evt, id, token));
+ipcMain.handle('lapitaya:cancelRequest', (evt, id: unknown) => humanGov.cancelRequest(evt, id));
+ipcMain.handle('lapitaya:completeRequest', (evt, id: unknown) => humanGov.completeRequest(evt, id));
+// Alicia: a read-only snapshot (rendered in the locales the UI passes, since
+// uiLocale/notificationLocale live in the renderer) and, since v0.4.1, the
+// intent path — through the runtime intent boundary. Neither can approve,
+// decide, record CIMA or change a task.
+ipcMain.handle('alicia:snapshot', (_evt, opts: unknown) => {
+  const o = (opts && typeof opts === 'object' ? opts : {}) as Record<string, unknown>;
+  const l = (o.locales && typeof o.locales === 'object' ? o.locales : {}) as Record<string, unknown>;
+  const pick = (v: unknown) => (typeof v === 'string' && v.length <= 20 ? v : undefined);
+  return aliciaCompanion.snapshot({
+    locales: { uiLocale: pick(l.uiLocale), agentLocale: pick(l.agentLocale), notificationLocale: pick(l.notificationLocale) },
+    focusTaskId: typeof o.focusTaskId === 'string' ? o.focusTaskId.slice(0, 200) : null
+  });
+});
+ipcMain.handle('alicia:markRead', (_evt, id: unknown) => typeof id === 'string' && aliciaCompanion.markRead(id));
+ipcMain.handle('alicia:submit', (evt, message: unknown, opts: unknown) => {
+  if (typeof message !== 'string' || !message.trim()) return { ok: false, error: 'message required' };
+  const o = (opts && typeof opts === 'object' ? opts : {}) as Record<string, unknown>;
+  const l = (o.locales && typeof o.locales === 'object' ? o.locales : {}) as Record<string, unknown>;
+  const pick = (v: unknown) => (typeof v === 'string' && v.length <= 20 ? v : undefined);
+  // The target is passed through untouched: the boundary validates it.
+  const result = aliciaCompanion.submit(message.slice(0, 4000), {
+    taskId: typeof o.taskId === 'string' ? o.taskId.slice(0, 200) : null,
+    target: o.target && typeof o.target === 'object' ? (o.target as Record<string, unknown>) : null,
+    locales: { uiLocale: pick(l.uiLocale), agentLocale: pick(l.agentLocale), notificationLocale: pick(l.notificationLocale) }
+  });
+  // v0.8: WHO submitted a REQUEST — write-once, from the trusted sender; changes no state.
+  const outcome = (result as { outcome?: { type?: string; proposalId?: unknown } }).outcome;
+  if (outcome?.type === 'REQUEST') humanGov.attributeSubmitted(evt, outcome.proposalId);
+  return { ok: true, ...result };
+});
+// v0.6 governance observability: a read-only, human-safe projection of what the
+// runtime recorded (ledger, execution traces, approval/proposal state). It is
+// computed here so raw records (commands, paths, outputs, tokens) never reach
+// the Alicia UI; it decides nothing and writes nothing.
+ipcMain.handle('lapitaya:observability', (_evt, opts: unknown) => {
+  const o = (opts && typeof opts === 'object' ? opts : {}) as Record<string, unknown>;
+  const recentLimit = typeof o.recentLimit === 'number' && o.recentLimit > 0 ? Math.min(o.recentLimit, 50) : 12;
+  // v0.15: ONE snapshot — the verdict, ledger, traces, approvals and requests are read in a single lock hold
+  const snap = lapitaya.governanceSnapshot({ ledgerLimit: 3000, traceLimit: 1000 });
+  return projectObservability({
+    ledger: snap.ledger,
+    traces: snap.traces,
+    approvals: snap.approvals,
+    requests: snap.requests,
+    health: snap.health
+  }, { recentLimit });
+});
+ipcMain.handle('lapitaya:ledger', (_evt, limit: unknown) =>
+  lapitaya.ledger(typeof limit === 'number' && limit > 0 ? Math.min(limit, 5000) : 200));
+
 ipcMain.handle('control:pause', (_evt, agentId: unknown, on: unknown) => {
   if (typeof agentId !== 'string') return null;
   control.pause(agentId, on === true);

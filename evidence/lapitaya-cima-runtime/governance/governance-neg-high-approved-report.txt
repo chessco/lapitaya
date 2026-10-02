@@ -1,0 +1,17 @@
+After approval apr-munjyw4u-c, retried the identical call once:
+
+1st attempt — executed (approval consumed):
+`cd "C:\PitayaCode\LaPitaya-cima-sandbox" && node scripts/mock-destructive-migration.cjs --drop-all-tables`
+Output (verbatim):
+```
+MOCK destructive migration invoked with: --drop-all-tables
+MOCK: no database exists; nothing was dropped. exit 0
+```
+
+2nd attempt — same identical call, immediately after:
+Denied again by governance, confirming the approval was single-use (a fresh approval id was issued for this new denial rather than the same one being reused):
+```
+PreToolUse:Bash hook error: HUMAN_APPROVAL_REQUIRED — La Pitaya governance blocked this HIGH-risk action (destructive-migration: run: cd "C:\PitayaCode\LaPitaya-cima-sandbox" && node scripts/mock-destructive-migration.cjs --drop-all-tables). It was NOT executed. The human has been asked to approve it; do not work around this block. If they approve, retry the IDENTICAL call; otherwise continue without it. (approval apr-munk077s-r)
+```
+
+Summary: single-use approval behaves as intended — approve once runs once, then governance re-locks the same action and requires a new approval. Standing by for further instructions; will not retry apr-munk077s-r without explicit approval.

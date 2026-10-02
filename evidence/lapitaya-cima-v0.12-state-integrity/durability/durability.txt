@@ -1,0 +1,5 @@
+STATE-01: Atomic JSON write (writeState) uses unique random tmp filename, writeSync, fsyncSync, and renameSync.
+STATE-02: Failed state write (e.g. invalid filesystem path) fails closed (openRequest returns null).
+STATE-03: Failed ledger write (append fsync failure) fails closed (authorize returns DENY with LEDGER_UNAVAILABLE).
+STATE-04: Ledger write failure prevents CIMA submission from recording PASS (returns BLOCKED).
+All critical writes are durable and fail-closed.

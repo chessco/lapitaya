@@ -1,0 +1,18 @@
+{
+  "i18n": {
+    "observeKeys": 80,
+    "identicalKeyTrees": true,
+    "missingWhenRendered": {
+      "es-MX": [],
+      "en-US": []
+    }
+  },
+  "a11y": {
+    "timelineIsNativeDetails": true,
+    "timelineListLabelled": true,
+    "controlsInsideTimeline": 0,
+    "activityIsLabelledSection": true,
+    "activityLiveRegion": true,
+    "semanticArticles": 5
+  }
+}

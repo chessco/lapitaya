@@ -1,0 +1,39 @@
+✔ [AUTH-01] Valid trusted agent context accepted (2783.8967ms)
+✔ [AUTH-02] Missing agent context denied (3946.5451ms)
+✔ [AUTH-03] Invalid agent context denied (2494.2708ms)
+✔ [AUTH-04] Payload agent_id cannot override trusted identity (2604.3252ms)
+✔ [AUTH-05] Agent A cannot impersonate Agent B (2363.3842ms)
+✔ [AUTH-06] Folder name cannot establish identity (2699.6158ms)
+✔ [AUTH-07] Message from cannot establish identity (3343.4195ms)
+✔ [AUTH-08] Agent cannot self-declare human (2096.8505ms)
+✔ [AUTH-09] Human DECISION requires trusted human identity (2211.1511ms)
+✔ [AUTH-10] Fake human identity denied (1709.6901ms)
+✔ [AUTH-11] Human identity from renderer payload ignored (1802.6206ms)
+✔ [AUTH-12] Human identity from trusted v0.8 IPC accepted (1799.2634ms)
+✔ [AUTH-13] Builder cannot impersonate Auditor (1953.8015ms)
+✔ [AUTH-14] Auditor cannot impersonate Builder (1793.5959ms)
+✔ [AUTH-15] Agent cannot manufacture BUILD PASS (1800.6193ms)
+✔ [AUTH-16] Agent cannot manufacture TEST PASS (1804.0102ms)
+✔ [AUTH-17] Agent cannot manufacture AUDIT PASS (1694.4171ms)
+✔ [AUTH-18] Agent cannot manufacture DECISION PASS (1983.7236ms)
+✔ [AUTH-19] Missing identity fails closed (1941.4301ms)
+✔ [AUTH-20] Identity mismatch fails closed (1646.6284ms)
+✔ [AUTH-21] Identity is preserved in evidence (1729.9917ms)
+✔ [AUTH-22] Decision owner remains v0.8 trusted identity (1755.5819ms)
+✔ [AUTH-23] Cross-window human identity remains correct (1746.7628ms)
+✔ [AUTH-24] Replay of authenticated context rejected (1782.8716ms)
+✔ [AUTH-25] Wrong task context rejected (1552.6267ms)
+✔ [AUTH-26] Wrong agent assignment rejected (2326.2609ms)
+✔ [AUTH-27] Tampered context rejected (2188.14ms)
+✔ [AUTH-28] No secrets exposed (1.7061ms)
+✔ [AUTH-29] No raw credentials exposed (0.4049ms)
+✔ [AUTH-30] Real Electron human decision works (3355.3462ms)
+✔ [ADVERSARIAL-CHAIN] Forged CIMA chain fails closed and breaks the chain (4048.2203ms)
+ℹ tests 31
+ℹ suites 0
+ℹ pass 31
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 69639.4105

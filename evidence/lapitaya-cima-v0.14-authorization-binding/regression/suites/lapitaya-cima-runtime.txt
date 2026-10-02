@@ -1,0 +1,41 @@
+[lapitaya] authorize failed: Error: boom
+    at f.lapitaya.authorize (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:186:40)
+    at HookServer.handle (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:376:40)
+    at hook (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:53:45)
+    at Object.pre (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:54:41)
+    at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:187:21)
+    at async Test.run (node:internal/test_runner/test:1125:7)
+    at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+✔ tool calls classify into LOW / MEDIUM / HIGH (16.6535ms)
+✔ inside the hive: coordination is LOW, the governance files are HIGH (1.1084ms)
+✔ LOW runs automatically and is logged ALLOW (3914.4432ms)
+✔ MEDIUM runs under supervision: not denied, logged SUPERVISED, surfaced live (4907.1533ms)
+✔ HIGH is denied with HUMAN_APPROVAL_REQUIRED and NOT executed — even in autoMode (4674.0446ms)
+✔ explicit approval lets the IDENTICAL call run exactly once (4733.2536ms)
+✔ another agent cannot use someone else's approval; rejection keeps it blocked (5078.6962ms)
+✔ an agent cannot switch its own guard off (governance-tamper is HIGH) (4871.6529ms)
+✔ if governance itself fails, the tool call is denied (fail closed) (4397.0393ms)
+✔ HUMAN_CONTROLLED stage puts MEDIUM behind approval too (0.7912ms)
+✔ EVIDENCE FIRST: a PASS citing nothing the harness observed is BLOCKED (4888.794ms)
+✔ EVIDENCE FIRST: a PASS citing a command the agent really ran is PASS (4757.4312ms)
+✔ EVIDENCE FIRST: evidence another agent produced does not count for this one (4853.0432ms)
+✔ the delivered message carries the runtime verdict, not just the sender's claim (5109.8779ms)
+✔ BUILDER != AUDITOR: El Beni cannot PASS the audit of his own build (negative test) (8538.7971ms)
+✔ an auditor who edits code after the build cannot PASS the audit (7387.2548ms)
+✔ TRANSITIONS: BUILD → accepted (DECISION PASS) without TEST/AUDIT is BLOCKED (6271.7913ms)
+✔ only El Inge (or the human) can accept work (4609.2393ms)
+✔ FAIL backed by a real failing run is recorded FAIL; BLOCKED stays BLOCKED (never FAIL) (6133.2152ms)
+✔ a malformed claim is BLOCKED, not silently dropped (4867.2878ms)
+✔ the full CIMA cycle, one agent per role, records PASS at every phase (10252.9998ms)
+✔ the ledger persists across a restart of the service (4990.7192ms)
+✔ agent settings register PostToolUseFailure so failing runs become evidence (3.8308ms)
+✔ a `cima` tag without a verdict is a phase ASSIGNMENT, not a malformed claim (seen live in v0.2) (4017.8621ms)
+✔ evidence matching ignores annotations but still needs a real trace (live v0.2 fixtures) (1.7742ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 25
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 111567.1507

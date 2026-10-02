@@ -1,0 +1,10 @@
+HISTORICAL REGRESSION AUDIT:
+- v0.10 test suite (lapitaya-cima-v0.10.test.cjs): 31 PASS / 0 FAIL
+- v0.11 test suite (lapitaya-cima-v0.11.test.cjs): 25 PASS / 0 FAIL
+- v0.12 test suite (lapitaya-cima-v0.12.test.cjs): 38 PASS / 0 FAIL
+- Typecheck (npm run typecheck): PASS (0 errors)
+- Build (npm run build): PASS (0 errors)
+
+Result: PASS
+PRE_EXISTING_FAILURE: 0
+NEW_REGRESSION: 0

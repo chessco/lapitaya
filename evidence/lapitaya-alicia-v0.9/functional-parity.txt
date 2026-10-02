@@ -1,0 +1,24 @@
+LA PITAYA — ALICIA v0.9: FUNCTIONAL PARITY AUDIT
+===================================================
+Comparison of legacy approval summaries vs Decision Center representation:
+
+FIELD / FEATURE                LEGACY PATH (lapitaya:approvals)   DECISION CENTER (v0.6/v0.7/v0.8)       STATUS
+-----------------------------  ---------------------------------  -------------------------------------  -----------
+Approval identifier            a.id                               high[i].approvalId                     AVAILABLE
+Agent identifier               a.agentId                          high[i].fact.agent                     AVAILABLE
+Tool / Operation               a.tool                             high[i].fact.operation                 AVAILABLE
+Attempted action summary       a.summary                          high[i].fact.operation / actionSummary AVAILABLE
+Risk level                     a.risk                             high[i].fact.risk                      AVAILABLE
+Explanation                    Not in approval summary            high[i].fact.explanation               AVAILABLE (ENHANCED)
+Governance rule                Not in approval summary            high[i].fact.rule                      AVAILABLE (ENHANCED)
+Evidence link                  Not in approval summary            high[i].fact.evidenceRef               AVAILABLE (ENHANCED)
+Fact timeline                  Single approval record             high[i].timeline                       AVAILABLE (ENHANCED)
+Status / resolution            a.status ('pending'/'approved'..)  high[i].pending / high[i].resolution   AVAILABLE
+Decision owner (v0.8)          a.decidedOwner                     high[i].decidedBy                      AVAILABLE
+Action: HIGH Approve           lapitayaDecide(id, true)           lapitayaDecide(id, true)               PARITY
+Action: HIGH Reject            lapitayaDecide(id, false)          lapitayaDecide(id, false)              PARITY
+Action: REQUEST Confirm        lapitayaConfirmRequest(id, token)  lapitayaConfirmRequest(id, token)      PARITY
+Action: REQUEST Cancel         lapitayaCancelRequest(id)          lapitayaCancelRequest(id)              PARITY
+Raw call token/fingerprint     a.fingerprint (exposed)            Not exposed (Security invariant)       NO LONGER NEEDED
+
+Conclusion: Decision Center fully supersedes legacy approval path for all governance requirements.

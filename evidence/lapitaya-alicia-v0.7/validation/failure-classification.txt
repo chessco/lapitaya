@@ -1,0 +1,25 @@
+# Failure set: v0.7 vs v0.6 baseline (evidence/lapitaya-alicia-v0.6/validation/full-suite.txt)
+# v0.6 failures: 20   v0.7 failures: 20
+# New in v0.7 (NEW_REGRESSION):
+# Failing before, passing now:
+# Common (PRE_EXISTING):
+  ✖ a dangling symlink cannot be used to create a file outside the workspace
+  ✖ a final-component symlink cannot be read as bytes
+  ✖ a final-component symlink cannot be read as text
+  ✖ a final-component symlink cannot be written through
+  ✖ an in-workspace symlink to an in-workspace target is followed, not refused
+  ✖ an intermediate directory symlink cannot be read through
+  ✖ consecutive agent caps survive an interleaved config update
+  ✖ does not follow the dependency symlink when removing a worktree
+  ✖ does not remove a worktree node_modules link to another directory
+  ✖ leaves a dangling worktree dependency symlink untouched
+  ✖ lexical traversal out of the root is still rejected
+  ✖ listDir cannot list a directory outside the workspace
+  ✖ ordinary in-workspace reads and writes still succeed
+  ✖ removes only the linked dependencies before checking worktree status
+  ✖ reports a failed link without throwing
+  ✖ steer is counted at the IPC seam, not inside control.steer
+  ✖ the composer counts its own submit, not the shared enqueue action
+  ✖ the git diff path check refuses a symlink escape
+  ✖ the remote file and the baked file agree on every model
+  ✖ turning it off is a real undo, not a terminal rebuild

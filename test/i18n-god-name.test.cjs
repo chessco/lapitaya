@@ -17,7 +17,7 @@ const path = require('node:path');
 const root = path.join(__dirname, '..');
 const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
 const locale = (l) => JSON.parse(read(`src/renderer/src/i18n/locales/${l}.json`));
-const LOCALES = ['en', 'zh-CN'];
+const LOCALES = ['en', 'zh-CN', 'es-MX'];
 
 function flatten(obj, pre = '', out = {}) {
   for (const [k, v] of Object.entries(obj)) {
@@ -92,12 +92,30 @@ test('every {{placeholder}} in en has the same placeholders in zh-CN', () => {
 
 // --- the language default ---------------------------------------------------
 
-test('with nothing saved the app starts in English, never the OS locale', () => {
+// La Pitaya: the default is es-MX (English upstream). The rule that matters is
+// unchanged — the OS locale is never read.
+test('with nothing saved the app starts in es-MX, never the OS locale', () => {
   const src = read('src/renderer/src/i18n/index.ts');
   const fn = src.slice(src.indexOf('function detectLanguage'));
   const body = fn.slice(0, fn.indexOf('\n}'));
   assert.doesNotMatch(body, /navigator/, 'detectLanguage reads the OS locale again');
-  assert.match(body, /return 'en';/, 'detectLanguage does not fall back to English');
+  assert.match(body, /return DEFAULT_LOCALE_SETTINGS\.uiLocale;/, 'detectLanguage does not fall back to the La Pitaya default');
+});
+
+test('en and es-MX carry exactly the same keys', () => {
+  const en = Object.keys(flatten(locale('en'))).sort();
+  const es = Object.keys(flatten(locale('es-MX'))).sort();
+  assert.deepEqual(es, en);
+});
+
+test('every {{placeholder}} in en has the same placeholders in es-MX', () => {
+  const en = flatten(locale('en'));
+  const es = flatten(locale('es-MX'));
+  const vars = (v) => [...new Set((text(v).match(/\{\{(\w+)\}\}/g) || []))].sort();
+  const drift = Object.keys(en)
+    .filter((k) => JSON.stringify(vars(en[k])) !== JSON.stringify(vars(es[k])))
+    .map((k) => `${k}: en=${vars(en[k])} es=${vars(es[k])}`);
+  assert.deepEqual(drift, [], `placeholder drift:\n  ${drift.join('\n  ')}`);
 });
 
 test('godName reaches i18next as a default variable, so no call site must pass it', () => {

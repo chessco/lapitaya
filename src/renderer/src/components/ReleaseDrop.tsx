@@ -35,6 +35,7 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import { buildDropSrcDoc } from '../../../shared/releaseDrop';
+import { LA_PITAYA_NAME } from '../../../shared/lapitaya/brand';
 
 export interface ReleaseDropProps {
   version: string;
@@ -110,7 +111,7 @@ export function ReleaseDrop({ version, html, onDismiss }: ReleaseDropProps) {
     >
       <div
         role="dialog"
-        aria-label={`What's new in Munder Difflin ${version}`}
+        aria-label={`What's new in ${LA_PITAYA_NAME} ${version}`}
         onClick={(e) => e.stopPropagation()}
         style={{
           margin: 'auto',
@@ -148,7 +149,7 @@ export function ReleaseDrop({ version, html, onDismiss }: ReleaseDropProps) {
             textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden',
             textOverflow: 'ellipsis'
           }}>
-            Munder Difflin <span style={{ color: YELLOW }}>v{version.replace(/^v/, '')}</span>
+            {LA_PITAYA_NAME} <span style={{ color: YELLOW }}>v{version.replace(/^v/, '')}</span>
             <span style={{ color: INK_FAINT, fontWeight: 500, marginLeft: 10, letterSpacing: '.12em' }}>
               / release notes
             </span>

@@ -1,0 +1,29 @@
+Pinv check (expect 1)                  1
+P1 A first call                        ["HUMAN_APPROVAL_REQUIRED","HIGH","7e8dbd9e"]
+P1 crafted B                           null
+P1 fp(A) vs fp(B)                      ["7e8dbd9e","71bfbe04"]
+P1 authorize(B) using approval of A    ["SUPERVISED","shell-command","shell:other",null]
+P2 ...Temp/v13-GSdeHb/hive/lapitaya/approvals.json ["governance-tamper","HIGH","hive-governance-path"]
+P2 .../hive/agents/x/../../lapitaya/approvals.json ["governance-tamper","HIGH","hive-governance-path"]
+P2 ...Temp/v13-GSdeHb/hive/lapitaya/approvals.json ["config-change","MEDIUM","config-path"]
+P2 ...mp/v13-GSdeHb/hive/./lapitaya/approvals.json ["governance-tamper","HIGH","hive-governance-path"]
+P2 ...emp/v13-GSdeHb/hive//lapitaya/approvals.json ["governance-tamper","HIGH","hive-governance-path"]
+P2 ...lapitaya/approvals.json          ["config-change","MEDIUM","config-path"]
+P2 ...../hive/lapitaya/approvals.json  ["config-change","MEDIUM","config-path"]
+P3 forged approvals.json               ["APPROVED","apr-forged"]
+P4 authorize with held fresh lock      ["ALLOW","ms=3","lockStillThere=true"]
+P5 A.completionGate before/after       [false,false,"DECISION_GATE: task T has no DECISION recorded by the runtim"]
+P6 after truncated tail                ["DENY","GOVERNANCE_STATE_CORRUPT"]
+P6 new instance                        ["DENY","GOVERNANCE_STATE_CORRUPT"]
+P6 submit() under corrupt state        ["BLOCKED","no corruption check in submit/handle"]
+P6 recordTrace under corrupt           null
+P6 ledger tail now                     ["{\"kind\":\"governance\",\"ts\":1790883140091,\"agentId\":\"agent-1\",\"taskId\":n","{\"kind\":\"cima\",\"ts\":1790883140096,\"taskId\":\"Z\",\"phase\":\"BUILD\",\"agentI",""]
+P7 approved 30d ago, still valid       ["APPROVED"]
+P8 ledger+traces lines=1000            avg ms/authorize=13.2
+P8 ledger+traces lines=10000           avg ms/authorize=96.7
+P8 ledger+traces lines=50000           avg ms/authorize=438.4
+P9 node fix.js                         ["shell-command","MEDIUM","shell:other"]
+P9 node -e "require('fs').writeFileSync('ta'+'sks.jso ["shell-command","MEDIUM","shell:other"]
+P9 python -c "open('tasks.json','w').write('{}')" ["governance-tamper","HIGH","shell:governance-state"]
+P9 sed -i s/doing/done/ tasks.json     ["governance-tamper","HIGH","shell:governance-state"]
+P9 echo x >> tasks.json                ["governance-tamper","HIGH","shell:governance-state"]

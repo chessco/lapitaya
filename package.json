@@ -2,13 +2,16 @@
   "name": "munder-difflin",
   "version": "0.4.6",
   "private": true,
-  "description": "Clones for you and your team, working 24/7 — a free, local-first multi-agent harness that turns the CLI coding agent you already run into a clone of you, coordinating an office of agents on your machine.",
+  "description": "La Pitaya — Sonoran Multi-Agent AI Harness by PitayaCode (Sonora, Mexico). A local-first multi-agent harness built on Munder Difflin (MIT).",
   "main": "out/main/index.js",
-  "author": "Chaitanya Giri",
-  "homepage": "https://munderdiffl.in/",
+  "author": "PitayaCode",
+  "contributors": [
+    "Chaitanya Giri (Munder Difflin, upstream)"
+  ],
+  "homepage": "https://github.com/chessco/lapitaya",
   "repository": {
     "type": "git",
-    "url": "https://github.com/chaitanyagiri/munder-difflin.git"
+    "url": "https://github.com/chessco/lapitaya.git"
   },
   "scripts": {
     "dev": "electron-vite dev",

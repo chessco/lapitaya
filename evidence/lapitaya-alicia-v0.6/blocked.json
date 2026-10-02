@@ -1,0 +1,68 @@
+{
+  "attempts": [
+    {
+      "agent": "god",
+      "tool": "Bash",
+      "result": "DENIED"
+    },
+    {
+      "agent": "el-beni-1",
+      "tool": "Bash",
+      "result": "DENIED"
+    },
+    {
+      "agent": "god",
+      "tool": "Edit",
+      "result": "DENIED"
+    },
+    {
+      "agent": "god",
+      "tool": "Bash",
+      "result": "DENIED"
+    }
+  ],
+  "approvalsRaised": 0,
+  "observed": [
+    {
+      "agent": "god",
+      "operation": "Bash · data-deletion",
+      "risk": "HIGH",
+      "rule": "REQUEST_CONFIRMATION_REQUIRED",
+      "count": 1,
+      "next": "WAITING_HUMAN_CONFIRMATION",
+      "humanAction": "CONFIRM_REQUEST",
+      "evidence": "EVT-0c13deff"
+    },
+    {
+      "agent": "god",
+      "operation": "Edit · code-change",
+      "risk": "MEDIUM",
+      "rule": "REQUEST_CONFIRMATION_REQUIRED",
+      "count": 1,
+      "next": "WAITING_HUMAN_CONFIRMATION",
+      "humanAction": "CONFIRM_REQUEST",
+      "evidence": "EVT-00e70368"
+    },
+    {
+      "agent": "el-beni-1",
+      "operation": "Bash · run-tests",
+      "risk": "LOW",
+      "rule": "REQUEST_CONFIRMATION_REQUIRED",
+      "count": 1,
+      "next": "WAITING_HUMAN_CONFIRMATION",
+      "humanAction": "CONFIRM_REQUEST",
+      "evidence": "EVT-6858f163"
+    },
+    {
+      "agent": "god",
+      "operation": "Bash · run-tests",
+      "risk": "LOW",
+      "rule": "REQUEST_CONFIRMATION_REQUIRED",
+      "count": 1,
+      "next": "WAITING_HUMAN_CONFIRMATION",
+      "humanAction": "CONFIRM_REQUEST",
+      "evidence": "EVT-fe90fc3b"
+    }
+  ],
+  "notificationsRaisedByTheBlocks": 0
+}

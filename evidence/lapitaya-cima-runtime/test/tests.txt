@@ -1,0 +1,2231 @@
+
+> munder-difflin@0.4.6 test:focused
+> node --test test/*.test.cjs
+
+✔ a signal death is recorded even though its exit code is 0 (1453.209ms)
+✔ a non-zero exit code is recorded (1779.412ms)
+✔ a CLEAN exit records nothing — this is a diagnostic, not an audit log (1756.2023ms)
+✔ raw output goes to a gitignored crashes/ file, NOT into log.jsonl (1750.227ms)
+✔ a death is still recorded when there is no output to dump (2080.3337ms)
+﹣ a SIGILL death forwards the signal and the output that explains it (2.4667ms) # SKIP
+﹣ a clean exit reports no signal (0.4017ms) # SKIP
+﹣ a non-zero exit is reported as a code, not a signal (0.3286ms) # SKIP
+agent-provider registry tests
+  ✓ copilot is a recognized, selectable provider
+  ✓ inferAgentProvider maps the copilot binary (with path/flags) to copilot
+  ✓ copilot preset builds the documented non-interactive print-mode shape
+  ✓ copilot passes model + resume through, non-hiveAware, never auto-receives inbox
+  ✓ cursor is a recognized, selectable, god-eligible provider
+  ✓ inferAgentProvider maps cursor-agent (canonical) and agent (alias) to cursor
+  ✓ cursor preset is interactive (no -p), uses force+trust auto flags, types seed into TUI
+  ✓ codex preset still resolves (no regression)
+
+All agent-provider tests passed
+✔ test\agent-provider.test.cjs (1547.4568ms)
+✔ status captions are not durable roles (8.4686ms)
+✔ preferredAgentRole keeps a hire role over standby (0.7244ms)
+✔ roleForHiveSpawn omits a transient roster caption (0.6105ms)
+✖ consecutive agent caps survive an interleaved config update (54.1308ms)
+✔ setting and clearing caps use the latest persisted map (72.5809ms)
+✔ invalid agent-cap IPC values cannot reach persisted config (13.7557ms)
+✔ translates cursor-forward into spaces (the issue #141 capture) (5.7025ms)
+✔ a multi-column forward becomes that many spaces (never fuses words) (0.6304ms)
+✔ SGR color codes are still stripped (0.7491ms)
+✔ cursor addressing, erases, and private modes are control, not content (0.3966ms)
+✔ OSC strings (window title, hyperlinks) vanish entirely (0.4681ms)
+✔ stray two-byte escapes and charset selects go too (0.8143ms)
+✔ plain text — unicode included — passes through untouched (0.8377ms)
+✔ stream: SGR split mid-params joins cleanly (1.9572ms)
+✔ stream: cursor-forward split across chunks still becomes spaces (0.7381ms)
+✔ stream: OSC split across chunks vanishes entirely (1.1948ms)
+✔ stream: charset select and two-byte escapes split at the boundary (0.4525ms)
+✔ stream: a complete chunk carries nothing over (0.4411ms)
+✔ stream: carry is bounded, a never-completed escape is flushed (0.7228ms)
+✔ stream: the stateless stripAnsi is unchanged by the carry logic (0.3162ms)
+✔ a row with no Arabic produces no join ranges at all (5.2466ms)
+✔ glue characters alone never create a range (0.4792ms)
+✔ a lone Arabic character is left alone (0.5386ms)
+✔ an Arabic word becomes one range (0.8004ms)
+✔ a range stops at the last Arabic character, not the trailing space (0.6047ms)
+✔ a phrase flows across the punctuation between its words (1.071ms)
+✔ isArabicCp covers the script blocks and nothing else (0.6251ms)
+✔ the default follows the app language, and still never sniffs the OS locale (8.7007ms)
+✔ the override is three-valued, so a deliberate choice survives a language switch (17.3443ms)
+✔ nothing Arabic is wired into a terminal unless the setting says so (3.001ms)
+✖ turning it off is a real undo, not a terminal rebuild (7.6055ms)
+✔ the bidi CSS is scoped, so it cannot reach a terminal that never opted in (8.2752ms)
+✔ the markdown direction rules use logical properties, a no-op in LTR (16.1485ms)
+✔ direction is decided by the SELECTED language and nothing else (15.1355ms)
+✔ an unregistered language code is left-to-right, never guessed at (1.3183ms)
+✔ every RTL CSS rule is scoped to [dir="rtl"], so LTR sees no change at all (9.4648ms)
+✔ the terminal grid is pinned LTR under an RTL page (8.4318ms)
+✔ content direction in components is gated, never content-sniffed (27.4371ms)
+✔ the markdown auto-direction plugin only runs for an RTL language (1.8173ms)
+✔ no unbundled webfont rides in with the Arabic locale (16.3396ms)
+✔ es-MX is the default, en-US the fallback, and nothing is auto-detected (3.5585ms)
+✔ ar is registered everywhere a language has to be registered (1.404ms)
+✔ every locale has exactly the same key tree (30.1453ms)
+✔ no Arabic string is left as its English source (22.9086ms)
+✔ every interpolation variable survives translation (24.9892ms)
+✔ inline markup and array shapes are preserved (19.3999ms)
+✔ the terminal setting still explains its performance cost, in every locale (0.738ms)
+✔ the newest ask sorts first and the oldest last (4.5525ms)
+✔ the founder scenario: a brand-new ask outranks a three-day-old one (0.5789ms)
+✔ an unparseable or missing askedAt sorts last instead of throwing (1.0839ms)
+✔ two asks at the same instant keep a stable relative order (0.4722ms)
+✔ AskMeTab sorts the card list by each card open question (1.165ms)
+✔ the humanQA history inside a card is never reversed (0.7867ms)
+✔ codex auto mode is workspace-write with approvals off, never the full bypass (2.6088ms)
+✔ a Claude agent gets a native sandbox that still allows its agent dir and the hive root (1641.8996ms)
+  ok  repeated identical tool calls trip the loop arm
+  ok  error storm trips
+  ok  token velocity spike trips on the second sample
+  ok  no-progress does NOT trip on a single beat (debounce)
+  ok  sustained no-progress still trips (second consecutive beat)
+  ok  a progressing beat resets the no-progress debounce
+  ok  compaction exempts the no-progress trip
+  ok  compaction exempts the velocity trip
+  ok  trips resume after compaction end + trailing grace
+  ok  compaction safety cap: exemption expires even without PostCompact
+  ok  recordCompactEnd without a compaction in flight is a no-op
+  ok  per-agent cap does not trip on cached context (the #189 incident shape)
+  ok  per-agent cap still trips on work tokens, and the reason names the metric
+  ok  cache writes count toward the agent cap; cache reads do not
+  ok  the floor-wide token budget still counts all kinds (only the per-agent arm changed)
+  ok  recent distinct tool calls exempt the no-progress trip
+  ok  a recently changed working directory counts as progress
+  ok  a STALE working directory still trips the no-progress arm
+  ok  an ABSENT lastWorkAt behaves exactly as before
+  ok  REPEATED identical tool calls do not count as progress
+  ok  huge identical Write inputs still register as repeats (loop arm)
+  ok  huge inputs differing early still count as distinct calls
+  ok  inputs differing LATE (past the old 200-char horizon) count as distinct calls
+  ok  identical long-preamble calls still trip the loop arm (no strictness lost)
+  ok  strings capped at 4096 still key equal when they differ only past the cap
+  ok  a healthy beat de-escalates one level
+  ok  a recent human prompt exempts the no-progress trip (mid-conversation)
+  ok  one prompt covers a long answer for the whole progress window
+  ok  the conversation clock EXPIRES: a stale prompt does not blind the arm
+  ok  a human prompt does not exempt the loop, error-storm, or velocity arms
+  ok  recent distinct tool calls exempt the no-progress trip
+  ok  REPEATED identical tool calls do not count as progress
+  ok  huge identical Write inputs still register as repeats (loop arm)
+  ok  huge inputs differing early still count as distinct calls
+  ok  a healthy beat de-escalates one level
+✔ test\breaker.test.cjs (1661.2473ms)
+✔ a broadcast reaches every live agent except the sender (6.8622ms)
+✔ the send-only prep assistant is never a broadcast target (1.4829ms)
+✔ an archived agent (closed PTY tab) is skipped (1.0277ms)
+✔ a hookless agent is included — direct mail already reaches it (0.4235ms)
+✔ the sender is excluded even when it is the only other agent (0.591ms)
+✔ a missing registry entry is not a target (0.5518ms)
+✔ the three faces are real woff2 files inside the repo (13.4524ms)
+✔ bundling stays small: no CJK face was quietly added (0.8169ms)
+✔ the OFL license and attribution ship with the fonts (2.2342ms)
+✔ @font-face points at the bundled files, not a URL (2.2216ms)
+✔ fonts.css is imported before the tokens that use those families (3.7959ms)
+✔ the app HTML no longer reaches for Google, and its CSP forbids it (2.5357ms)
+✔ every stack falls through to a system CJK face and an Arabic face (4.2813ms)
+✔ tokens.css and tokens.ts do not drift apart (4.6166ms)
+✔ the release-drop iframe also falls through to a system CJK face (3.8212ms)
+[config] Could not safely update Claude config at C:\Users\chess\AppData\Local\Temp\md-claude-config-AccecX\.claude\settings.json: Expected double-quoted property name in JSON at position 19 (line 1 column 20)
+✔ preserves malformed Claude config files byte-for-byte (13.3764ms)
+✔ merges required fields into valid configs without losing unrelated data (55.1421ms)
+✔ creates minimal config files when they are missing (8.8869ms)
+✔ a malformed settings file does not prevent safe project trust updates (30.8548ms)
+✔ does not rewrite configs that already contain every required field (76.9528ms)
+✔ preserves existing config files with unsafe JSON root shapes (18.0519ms)
+✔ repairs a config trusted only under the raw path spelling (17.5619ms)
+✔ with npm present the ladder is unchanged — npm install, for every provider (3.3472ms)
+✔ with npm absent, a provider shipping a native installer uses it (0.799ms)
+✔ cursor prefers its native curl installer (no npm package) (2.6075ms)
+✔ with npm absent and no native installer, NOTHING is run (0.6647ms)
+✔ the no-node script explains the real problem instead of failing at it (3.2644ms)
+✔ the native rung actually runs, and says why it differs (0.5832ms)
+✔ with npm present nothing mentions a missing Node (0.5668ms)
+✔ the Windows script stays a single quote-free cmd.exe line (0.7873ms)
+✔ a hostile binary name cannot inject a command into the banner (1.2692ms)
+﹣ Codex remote uses a short stable per-agent home alias (5.8532ms) # Codex remote uses Unix sockets and is disabled on Windows
+✔ the default alias root yields a socket within sun_path (2.3056ms)
+✔ an over-long alias root is rejected instead of failing at bind time (1.0021ms)
+✔ remote endpoint precedes both fresh and resumed Codex invocations (2.7633ms)
+✔ legit engine binary names are accepted (3.5161ms)
+✔ a name carrying any character outside a plain command name is rejected (0.637ms)
+✔ a path is NOT a plain command name (the resolver early-returns paths before this) (0.503ms)
+✔ the tokenizer still yields a non-plain bin, so the allowlist is load-bearing (1.59ms)
+✔ resolveCommand returns a non-plain name unchanged — it never reaches the shell lookup (1.7617ms)
+✔ pty.ts resolver validates before which/where (1.9989ms)
+✔ index.ts validates the bin at the spawn-request intake (7.3272ms)
+✔ linear history stays in a single lane (8.7114ms)
+✔ a merge sends the SECOND parent to a fresh lane (1.045ms)
+✔ a lane is reused once its branch is exhausted (0.6342ms)
+✔ a parent outside the window does not widen the graph (0.4409ms)
+✔ every row reports the lane each of its parents landed in (0.6249ms)
+✔ an empty history is not a crash (0.4252ms)
+✔ lane colours are design tokens, so the rail follows the theme (0.8835ms)
+✔ (a) an agent blocked on a human prompt is undeliverable (8.7807ms)
+✔ (a) idle delivers; a busy loop only delivers once it has gone quiet (1.3265ms)
+✔ (b) a failed delivery reports false and never acknowledges (3.3638ms)
+✔ (b) a successful delivery reports true and acknowledges once (0.7103ms)
+✔ (a) fire() refuses an undeliverable agent BEFORE it enqueues (1.1773ms)
+✔ (b) the latch is written ONLY on a delivery that happened (0.7388ms)
+✔ a config write notifies subscribers with the persisted config (79.083ms)
+✔ a token-cap write notifies too, not just writeConfig (16.6693ms)
+✔ resetting the config notifies as well (4.0709ms)
+✔ unsubscribing stops the notifications (16.3893ms)
+✔ a listener that throws neither fails the write nor starves the next listener (31.0402ms)
+✔ subscribers receive the same shape a config read returns (31.4525ms)
+[control] dev9: steer queue full (20) — dropping oldest note
+[control] dev9: steer queue full (20) — dropping oldest note
+[control] dev9: steer queue full (20) — dropping oldest note
+[control] dev9: steer queue full (20) — dropping oldest note
+[control] dev9: steer queue full (20) — dropping oldest note
+✔ auto-delivery pause is independent from tool pause and halt (3.1257ms)
+✔ persisted delivery pauses replace stale in-memory state (1.8613ms)
+✔ steer queue is capped so a stalled agent cannot accumulate unbounded notes (8.0801ms)
+✔ whitespace-only steers are ignored and never fill the queue (0.5011ms)
+✔ no reset: lifetime is simply the last cumulative value (53.0814ms)
+✔ one reset: the pre-reset peak is added to the open segment (6.2573ms)
+✔ several resets in one session all accumulate (6.4995ms)
+✔ a sub-dollar reset still counts (a $1 threshold would miss this) (14.5904ms)
+✔ the reset keeps the SAME session_id, which is the whole bug (7.4517ms)
+✔ separate sessions for one agent sum together (5.3922ms)
+✔ agents are kept apart, and floorTotal sums the floor (12.2563ms)
+✔ an unknown agent is 0 once warm, and null before any fold (6.0929ms)
+✔ INCREMENTAL: folding in two passes equals folding in one (29.4862ms)
+✔ INCREMENTAL: a half-written trailing line is not lost or double counted (52.0504ms)
+✔ re-reading an unchanged ledger does not double count (41.2456ms)
+✔ truncation or rotation rebuilds from scratch instead of going negative (8.3093ms)
+✔ malformed and empty lines are skipped, not fatal (6.3644ms)
+✔ a missing ledger leaves the last good totals in place (14.717ms)
+✔ a non-numeric usd is treated as 0 rather than NaN-poisoning the total (19.7837ms)
+✔ crush provider points CRUSH_GLOBAL_CONFIG at the agent directory (2821.5401ms)
+✔ an installed engine is installed, whatever its installer story (5.7833ms)
+✔ a missing engine with an installer installs on first run and does not block (4.9032ms)
+✔ the repro: grok, antigravity and qwen are offered by the wizard but cannot install (6.103ms)
+✔ no probe result means unknown, and unknown never blocks (3.9988ms)
+✔ only the dead end has a message (1.3933ms)
+✔ expands the tilde-home forms (3.2498ms)
+✔ leaves absolute paths alone (beyond normalizing) (0.5725ms)
+✔ does not touch anything that is not a tilde-home path (0.4016ms)
+✔ a still-relative path is returned untouched, NOT resolved (0.3667ms)
+✔ the expanded path is what fs can actually stat — the original bug (0.8562ms)
+✔ #140: the suggested default is expanded, not persisted literally (0.9282ms)
+✔ #140: the new home leads the recent list exactly once (4.4262ms)
+✔ #140: stale `~` entries already on disk are normalized too (0.5743ms)
+✔ #140: the same home written twice does not duplicate (0.558ms)
+✔ #140: the recent list stays capped and skips blanks (0.9518ms)
+✔ #140: both entry points agree on the same directory (0.5256ms)
+✔ statAbs expands bare ~, Windows-style ~\, and whitespace paths (68.4912ms)
+✔ focus stays put when some OTHER agent is removed (28.5313ms)
+✔ focus follows the selection when the focused agent is removed (0.459ms)
+✔ focus falls back to the first agent when the selection is also gone (0.3646ms)
+✔ focus mode ends only once the last agent is gone (0.3419ms)
+✔ a window that was not in focus mode is never dragged into it (0.5487ms)
+✔ focus mode is restored against whoever is selected now (0.4374ms)
+✔ no preference means the sidebar, as before (0.4403ms)
+✔ the preference resolves to nothing when there is no agent to focus (0.3542ms)
+✔ focus mode re-enters once an agent with a terminal shows up (0.7147ms)
+✔ the restore waits for a LIVE terminal, it does not latch onto a corpse (0.7287ms)
+✔ no preference means the roster changing never opens focus mode (16.5846ms)
+✔ an explicit exit stays exited even as the roster keeps changing (0.5364ms)
+✔ already in focus mode is left alone (0.4584ms)
+✔ the restore prefers the selected agent, then falls back to any live one (0.3601ms)
+✔ nothing live yet returns null, and the preference survives for next time (0.2561ms)
+✖ a final-component symlink cannot be read as text (15.8749ms)
+✖ a final-component symlink cannot be read as bytes (40.835ms)
+✖ an intermediate directory symlink cannot be read through (13.3563ms)
+✖ a final-component symlink cannot be written through (11.4568ms)
+✖ a dangling symlink cannot be used to create a file outside the workspace (21.1012ms)
+✖ listDir cannot list a directory outside the workspace (10.8344ms)
+✖ the git diff path check refuses a symlink escape (25.833ms)
+✖ ordinary in-workspace reads and writes still succeed (18.378ms)
+✖ an in-workspace symlink to an in-workspace target is followed, not refused (12.8736ms)
+﹣ the git diff read refuses a final component swapped for a symlink mid-call (0.7908ms) # needs a POSIX shell shim and symlinks
+✖ lexical traversal out of the root is still rejected (59.4372ms)
+✔ a persisted rename wins over the default (7.1965ms)
+✔ nothing persisted yet falls back to the default (0.5409ms)
+✔ a Grok agent is costed from the CLI’s own usage.json (12.914ms)
+✔ the sample carries a real session id, so the ledger accepts it (5.5416ms)
+✔ no usage.json means no data, not a zeroed sample (20.4778ms)
+✔ an unknown cwd or session id is not guessed at (2.1565ms)
+✔ an idle Grok agent does not re-append the same ledger row (#56) (136.9613ms)
+✔ the gate keeps agents apart and forgets on request (15.2278ms)
+✔ readConfig serves a pre-fix config with every ~ expanded (the upgrade path) (23.4159ms)
+✔ ensureHarnessHome expands ~ before mkdir (issue #140) (2.2518ms)
+✔ a failing mkdir still reports ok:false with the error (3.7936ms)
+✔ ensureHarnessHome creates a tilde path on disk (issue #140) (8.7341ms)
+✔ writeConfig persists harnessHome EXPANDED, like registeredRepos (37.0629ms)
+✔ a well-formed payload comes through intact (5.722ms)
+✔ garbage of every shape degrades to the built-in defaults (0.9652ms)
+✔ one broken field does not cost the user the rest of the card (0.5883ms)
+✔ non-https URLs are refused, so a bad link never renders as a button (1.0927ms)
+✔ an upgrade needs BOTH a label and a destination (0.7603ms)
+✔ overlong strings are capped rather than allowed to wreck the dialog (1.2583ms)
+✔ empty and whitespace-only strings fall back rather than rendering blank (0.8482ms)
+✔ unknown fields are ignored, so adding one later cannot break older builds (0.5009ms)
+✔ the shipped docs/hero.json parses to a renderable payload (25.0913ms)
+✔ batch import keeps every valid manifest and reports invalid files independently (34.4369ms)
+✔ an empty file selection is a valid empty batch (0.4764ms)
+✔ batch errors identify the file without exposing its parent directory (0.8321ms)
+✔ Electron picker and IPC validate the full selection rather than file zero (5.2924ms)
+✔ renderer wiring appends every cold-start and runtime arrival (4.3185ms)
+✔ closing a hire review clears the remaining batch (2.6055ms)
+✔ review UI exposes progress and an explicit skip without auto-spawn (3.513ms)
+✔ batch token caps persist atomically before review advances (2.8505ms)
+✖ Command Center sets and clears one cap through the atomic IPC (2.7398ms)
+✔ queued hires preserve arrival order across batches instead of overwriting (4.6496ms)
+✔ spawn or skip advances exactly one hire and keeps progress stable (0.8257ms)
+✔ draining the queue resets progress for the next independent import (0.5803ms)
+✔ cancelling review discards the remaining batch and resets later progress (4.4562ms)
+✔ empty arrivals and advances do not invent queue state (0.4745ms)
+✔ a "~/…" cwd is expanded before it reaches the registry (1825.4197ms)
+✔ an absolute cwd is unchanged (1907.7287ms)
+✔ cwdValidity repairs a "~" left in an older registry (26.9548ms)
+✔ ensureHive writes an executable bundled-node launcher (1840.732ms)
+✔ the claude hook + statusLine commands run through the launcher (1892.2993ms)
+✔ every hook installer routes through the launcher — none left on bare node (2954.3054ms)
+﹣ Codex hook commands survive a hive path containing spaces (0.6869ms) # SKIP
+﹣ POSIX Gemini and Antigravity hooks survive a hive path containing spaces (0.4247ms) # SKIP
+✔ Codex rollouts remain isolated and are visible under the standard scan roots (1478.6257ms)
+✔ bootstrap exposes archived Codex agents without respawning them (1374.1069ms)
+✔ a missing exposed directory is repaired on the next spawn (1107.3998ms)
+✔ an unsafe agent id cannot escape the Munder scan namespace (1093.6384ms)
+✔ reset cleanup removes only exposed Munder rollouts (1665.0048ms)
+✔ Gemini gets isolated lifecycle settings and an interactive protocol seed (1821.2184ms)
+﹣ a hook fires with NO node on PATH, and its payload reaches HIVE_SOCK (0.2743ms) # SKIP
+✔ valid JSON with an escaped newline keeps the fast path (3278.6769ms)
+✔ literal LF inside a JSON string is repaired and routed (2910.2342ms)
+✔ literal CRLF inside a JSON string is repaired and preserved (3112.4604ms)
+✔ irreparable structural JSON is logged and quarantined (2308.1823ms)
+✔ escaped quotes and backslashes keep their JSON semantics (3318.2618ms)
+✔ an irreparable poison file does not block a valid file in the same pass (2749.6783ms)
+✔ every nudge the app builds is recognised as one, whatever ids it carries (3.8678ms)
+✔ two nudges with different ids both match, so the duplicate is dropped (0.702ms)
+✔ prose that merely mentions the inbox is NOT a nudge (0.5528ms)
+✔ the nudge names the messages that prompted it (1.0819ms)
+✔ the nudge keeps the pending inbox authoritative, not the id list (0.6599ms)
+✔ a nudge with no ids is still a well-formed nudge (0.7462ms)
+✔ installPiHooks copies models.json from ~/.pi/agent when it exists (1870.2232ms)
+✔ installPiHooks does not create models files when source is missing (lets Pi fall back to its defaults) (1829.5026ms)
+✔ installPiHooks copies models.json but skips missing models-store.json (1814.8345ms)
+✔ the roster line carries the whole floor and its state (2516.9948ms)
+✔ each agent line carries its live context-window occupancy (ctx NN%) (3040.2453ms)
+✔ renaming changes only the display name and reaches god immediately (3068.3205ms)
+✔ rename rejects empty and unknown agents without changing the registry (2443.8739ms)
+✔ god gets the roster on SessionStart and on every prompt — nobody else does (3454.1081ms)
+✔ a queued operator steer is not swallowed by the roster (2575.4828ms)
+✔ a corrupt fleet.json degrades to no injection instead of throwing into a hook (2885.8218ms)
+✔ a held agent is marked in the roster and Michael is told to route around it (2215.5816ms)
+✔ the hold reaches Michael without waiting for the next fleet snapshot (2391.4094ms)
+✔ releasing clears the mark and the whole instruction block (2239.8381ms)
+✔ holding is idempotent and a bad id is refused (2933.7049ms)
+✔ the hold survives a restart, because the registry is the record (2894.1795ms)
+✔ bootstrap materializes a PATH-visible `node` (2010.288ms)
+✔ npm and npx are deliberately NOT shimmed (1711.5735ms)
+✔ the runtime dir is APPENDED — the user's own node still wins (1618.7749ms)
+✔ no hive root, or no runtime dir, leaves PATH exactly as it was (31.4132ms)
+﹣ `node` resolves and RUNS with no node on PATH — the whole point (10.3375ms) # SKIP
+✔ patching a stale UI card preserves a concurrently appended webhook card (3051.2583ms)
+✔ atomic add is idempotent and delete removes only the named card (3039.746ms)
+✔ patch refuses an unknown card without rewriting the ledger (1804.637ms)
+✔ renderer task actions never send a whole stale ledger back to main (22.4722ms)
+✔ webhook dispatch appends via atomic addTask, not a stale whole-ledger rewrite (12.3658ms)
+✔ mail to an id with no inbox bounces to god and is logged as a drop (3065.8794ms)
+✔ the message log records delivered targets, not intent (3866.9139ms)
+✔ an unknown recipient does not stop the rest of a broadcast (2768.3791ms)
+✔ no POSIX shell variables survive into agent-facing text (1723.0447ms)
+✔ the knowledge-graph command carries absolute paths, not variables (1793.8582ms)
+✔ the KG line degrades to the env-var spelling when no path is supplied (2028.703ms)
+✔ protocol paths use native separators the agent can actually use (1621.3329ms)
+✔ the Stop-hook drain text uses native separators too (2147.0152ms)
+✔ the injected prompt survives the Windows ARRAY argv path byte for byte (1660.7774ms)
+✔ the OpenCode plugin lands in BOTH plugin/ and plugins/ (1640.1455ms)
+✔ OpenCode carries the protocol on --prompt, so the argv fix is what delivers it (1708.8768ms)
+✔ accepts valid hook event payloads (2.9499ms)
+✔ accepts optional agent ids and open provider event names (1.0062ms)
+✔ rejects payloads missing a valid event name (1.1976ms)
+✔ rejects malformed optional fields (0.9168ms)
+✔ main and preload share the hook event contract (26.4461ms)
+✔ CJK payload survives a split inside a multibyte code point (153.8794ms)
+✔ emoji payload survives a split inside a four-byte code point (151.0898ms)
+✔ ordinary fragmented frame retains existing one-request behavior (125.062ms)
+✔ oversized incomplete frame is rejected without routing a payload (10.5873ms)
+✔ payload exactly at the byte limit is accepted (104.1968ms)
+✔ payload one byte above the limit is rejected (14.6744ms)
+✔ Notification with notification_type "idle" fires a toast (2648.7583ms)
+✔ Notification with message "waiting for your input" fires a toast (string fallback) (2027.3491ms)
+✔ Notification for a permission request does NOT fire the idle toast (2401.5539ms)
+✔ Notification with neither field set does NOT fire (2105.4302ms)
+✔ Stop fires "finished — idle" (2283.0349ms)
+✔ Stop with stop_hook_active does NOT re-notify (2303.0913ms)
+✔ SubagentStop behaves the same as Stop (1861.9621ms)
+✔ notifications setting off suppresses the OS toast but the hook still resolves (3083.0322ms)
+✔ no locale hardcodes the orchestrator name (56.0732ms)
+✔ the strings that talk about the orchestrator interpolate {{godName}} (5.8775ms)
+✔ strings about ONE agent interpolate {{name}}, not the orchestrator (19.2804ms)
+✔ every per-agent string has a call site that actually passes a name (4.7651ms)
+✔ en and zh-CN carry exactly the same keys (15.7934ms)
+✔ every {{placeholder}} in en has the same placeholders in zh-CN (16.8097ms)
+✔ with nothing saved the app starts in es-MX, never the OS locale (1.6419ms)
+✔ en and es-MX carry exactly the same keys (10.4017ms)
+✔ every {{placeholder}} in en has the same placeholders in es-MX (13.0788ms)
+✔ godName reaches i18next as a default variable, so no call site must pass it (4.2978ms)
+✔ something actually calls setGodName, or the wiring is dead (40.447ms)
+✔ detects the image formats agents actually produce (3.007ms)
+✔ extension matching is case-insensitive (1.1633ms)
+✔ non-images are not images (0.8448ms)
+✔ query strings and hashes do not hide the extension (0.6704ms)
+✔ a dotted DIRECTORY name cannot masquerade as an extension (0.4756ms)
+✔ svg is flagged separately — it is the one image that is also source (0.4833ms)
+✔ formatBytes reads like a status line (0.4814ms)
+✔ local markdown images resolve against the document directory (0.9266ms)
+✔ a leading slash means the WORKSPACE root, not the filesystem root (0.552ms)
+✔ anything with a URI scheme is refused (0.8306ms)
+✔ non-image sources are refused even when local (0.4725ms)
+✔ `..` can never climb above the workspace root textually (0.4168ms)
+✔ reads an image the text reader refuses, with its mime and size (97.122ms)
+✔ path traversal out of the root is rejected (18.7912ms)
+✔ the size cap is enforced before any bytes are read (27.6658ms)
+✔ the default cap clears a retina screenshot (the 2 MB text cap did not) (24.6894ms)
+✔ non-regular files are refused rather than opened (13.4789ms)
+✔ a missing file reports an error instead of throwing (86.5383ms)
+✔ unknown binary types still read, labelled octet-stream (16.1971ms)
+✔ an Enter that confirms an IME candidate is swallowed (React synthetic) (2.7558ms)
+✔ the NEXT Enter, after composition ends, is handled normally (0.5041ms)
+✔ a raw DOM KeyboardEvent is read directly when there is no nativeEvent (0.4528ms)
+✔ keyCode 229 alone is enough, for the compositionend/keydown race (0.4387ms)
+✔ 229 cannot swallow a genuine Enter, which is always keyCode 13 (0.4069ms)
+✔ a missing or empty event degrades to "not composing" instead of throwing (0.428ms)
+✔ nativeEvent wins over a stale field on the synthetic wrapper (0.408ms)
+knowledge-graph core tests
+  ✓ tokenize lowercases, splits on non-alphanumerics, drops stop-words and 1-char tokens
+  ✓ detectModality buckets by extension
+  ✓ chunkText returns one chunk for short text and multiple for long text
+  ✓ chunkText always terminates and covers the text (deterministic)
+  ✓ scoreChunk: 0 when no term matches, higher for title + phrase matches
+  ✓ ingest a markdown doc, then search finds it with a snippet
+  ✓ ingest an image by metadata (no OCR) and find it by caption/tags
+  ✓ list, get, and remove manage the corpus and prune the index
+  ✓ search returns [] for empty query or empty store
+knowledge-graph agent CLI (kg.cjs) tests
+  ✓ agent runs `kg search` against KG_ROOT and gets ranked, attributed results
+  ✓ agent `kg search --json` is machine-parseable
+  ✓ agent CLI degrades gracefully when KG_ROOT is unset (flag off)
+
+All knowledge-graph tests passed
+✔ test\kg-core.test.cjs (2106.5492ms)
+[lapitaya] authorize failed: Error: boom
+    at f.lapitaya.authorize (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:186:40)
+    at HookServer.handle (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:61:15), <anonymous>:305:40)
+    at hook (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:53:45)
+    at Object.pre (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:54:41)
+    at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-runtime.test.cjs:187:21)
+    at async Test.run (node:internal/test_runner/test:1125:7)
+    at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+✔ tool calls classify into LOW / MEDIUM / HIGH (64.1538ms)
+✔ inside the hive: coordination is LOW, the governance files are HIGH (1.7414ms)
+✔ LOW runs automatically and is logged ALLOW (5615.5223ms)
+✔ MEDIUM runs under supervision: not denied, logged SUPERVISED, surfaced live (6906.1394ms)
+✔ HIGH is denied with HUMAN_APPROVAL_REQUIRED and NOT executed — even in autoMode (4875.34ms)
+✔ explicit approval lets the IDENTICAL call run exactly once (6049.9366ms)
+✔ another agent cannot use someone else's approval; rejection keeps it blocked (4895.8111ms)
+✔ an agent cannot switch its own guard off (governance-tamper is HIGH) (4797.18ms)
+✔ if governance itself fails, the tool call is denied (fail closed) (2755.959ms)
+✔ HUMAN_CONTROLLED stage puts MEDIUM behind approval too (0.6934ms)
+✔ EVIDENCE FIRST: a PASS citing nothing the harness observed is BLOCKED (3510.0187ms)
+✔ EVIDENCE FIRST: a PASS citing a command the agent really ran is PASS (2153.167ms)
+✔ EVIDENCE FIRST: evidence another agent produced does not count for this one (1998.8788ms)
+✔ the delivered message carries the runtime verdict, not just the sender's claim (1768.0006ms)
+✔ BUILDER != AUDITOR: El Beni cannot PASS the audit of his own build (negative test) (6085.3704ms)
+✔ an auditor who edits code after the build cannot PASS the audit (3158.3677ms)
+✔ TRANSITIONS: BUILD → accepted (DECISION PASS) without TEST/AUDIT is BLOCKED (3404.0689ms)
+✔ only El Inge (or the human) can accept work (2295.9027ms)
+✔ FAIL backed by a real failing run is recorded FAIL; BLOCKED stays BLOCKED (never FAIL) (2891.1284ms)
+✔ a malformed claim is BLOCKED, not silently dropped (2452.6323ms)
+✔ the full CIMA cycle, one agent per role, records PASS at every phase (7813.6219ms)
+✔ the ledger persists across a restart of the service (2750.4862ms)
+✔ agent settings register PostToolUseFailure so failing runs become evidence (2.7202ms)
+✔ a `cima` tag without a verdict is a phase ASSIGNMENT, not a malformed claim (seen live in v0.2) (2595.4265ms)
+✔ evidence matching ignores annotations but still needs a real trace (live v0.2 fixtures) (1.076ms)
+✔ the brand has one source and the expected identity (5.8974ms)
+✔ visible surfaces read the brand constant instead of a literal (40.4829ms)
+✔ the updater polls the La Pitaya repository, never the upstream one (203.6637ms)
+✔ the orchestrator defaults to El Inge (0.4514ms)
+✔ an upstream hive that persisted "Michael" migrates to El Inge; real renames survive (0.555ms)
+✔ the full roster is present with the right roles (2.8871ms)
+✔ es-MX keeps the accents; en-US uses the exact ASCII spelling (0.9928ms)
+✔ a typed name resolves in either spelling (0.7452ms)
+✔ hire presets carry a briefing and the CIMA hard rules (11.2121ms)
+✔ Alicia is a capability, not a hive agent or a replacement (5.6583ms)
+✔ agentLocale adds a language line only for non-English locales (6.3456ms)
+✔ El Inge is briefed on CIMA and the autonomy policy (8.1293ms)
+✔ CIMA phases are stable uppercase ids in workflow order (5.9088ms)
+✔ Builder != Auditor (0.5525ms)
+✔ Evidence First: no PASS without raw evidence or with a failing exit (20.2043ms)
+✔ risk maps to mode: LOW→AUTO, MEDIUM→SUPERVISED, HIGH→HUMAN_APPROVAL (0.7609ms)
+✔ unknown actions are HIGH risk (4.6733ms)
+✔ no autonomy stage can switch off Human Governance (0.4329ms)
+✔ Alicia is disabled by default and her calls are no-ops (0.9545ms)
+✔ a registered Alicia receives events, and a throwing one cannot break the caller (0.7628ms)
+✔ es-MX is the default and en-US the fallback; future locales are declared, not active (1.3294ms)
+✔ uiLocale, agentLocale and notificationLocale resolve independently (6.8134ms)
+✔ the La Pitaya namespace exists for es-MX and en-US with identical keys (2.3111ms)
+✔ the en-US La Pitaya strings contain no accented characters (0.7349ms)
+✔ es-MX translates every key of en.json (none left as a copied English string of note) (70.4961ms)
+✔ a poll before mempalace is installed reports "not available" and arms nothing (9.2461ms)
+✔ a poll AFTER mempalace appears arms the mine loop that boot had to skip (7.1014ms)
+✔ polling again never starts a second mine loop (8.0204ms)
+✔ memory turned off in settings stays off however often it is polled (2.5684ms)
+✔ darwin pins cpu — CoreML is the only accelerator auto can pick there, and it NaNs (2.6622ms)
+✔ other platforms keep mempalace's own default (no var emitted) (0.7832ms)
+✔ an explicit MEMPALACE_EMBEDDING_DEVICE always wins — the pin emits nothing (0.5191ms)
+✔ an empty exported value is not a choice — the darwin default still applies (0.6488ms)
+✔ MINE_IGNORE_LINES is identical in hive.ts and memory.ts (50.7798ms)
+✔ a well-formed catalog parses to exactly what it says (7.7049ms)
+✔ the shipped remote file is itself a valid catalog (11.4015ms)
+✖ the remote file and the baked file agree on every model (35.4723ms)
+✔ a version this build does not know is rejected whole (1.3791ms)
+✔ anything that is not a catalog falls back rather than throwing (1.5103ms)
+✔ a row with no readable label is dropped, not rendered blank (1.7085ms)
+✔ an id is never allowed to carry a newline onto a command line (1.1319ms)
+✔ ids and labels are length-capped (0.8775ms)
+✔ an empty id means "pass no --model flag", the same as no id at all (1.2899ms)
+✔ a duplicated id renders once (1.277ms)
+✔ a provider whose rows all fail is dropped, an empty one is honoured (2.3766ms)
+✔ a provider key that is not a slug never reaches the map (1.1408ms)
+✔ version bounds survive the parse (0.785ms)
+✔ a remote provider replaces that list; the others keep the baked one (4.6367ms)
+✔ the Claude-only surfaces read the overlay, not a snapshot (3.5152ms)
+✔ clearing the overlay restores the models the build shipped with (1.2156ms)
+✔ applying the same catalog twice reports no change (0.9349ms)
+✔ the version filter still runs over remote entries (1.5966ms)
+✔ the pickers offer exactly the models the catalog names (19.9369ms)
+✔ the Claude list still offers the 1M-context assistant model (0.8083ms)
+✔ the catalog is the schema config.ts expects (1.3499ms)
+✔ a model is offered only by the app versions its bounds cover (1.1468ms)
+✔ both bounds are inclusive of the release named in them (1.0926ms)
+✔ a version the filter cannot read hides nothing (0.6654ms)
+✔ an unknown provider falls back to the Claude list, custom to nothing (1.0639ms)
+✔ the filter reads the version the app was built with (0.473ms)
+✔ a Node at or above the floor is left alone; below it is not (3.7779ms)
+✔ detectNodeVersion returns null rather than guessing when the probe fails (0.9923ms)
+✔ latest STABLE means newest LTS, never index[0] (the current/odd release) (0.7562ms)
+✔ artifact names match what nodejs.org actually publishes (2.5725ms)
+✔ shaFor matches the exact file, not a prefix of another entry (1.29ms)
+✔ resolveNodeInstaller returns the LTS artifact with its real digest (1.9588ms)
+✔ resolveNodeInstaller refuses rather than running an unverified installer (13.9849ms)
+✔ every posix install script verifies the checksum BEFORE it elevates (2.4958ms)
+✔ posix script uses the hashing tool that platform actually ships (1.145ms)
+✔ the Windows install script survives cmd /d /s /c quoting (1.3456ms)
+✔ a usable npm is untouched — no Node install is ever spliced in (1.9343ms)
+✔ no usable npm + a resolvable installer → node-then-npm, ABOVE the native rung (0.4238ms)
+✔ node-then-npm installs Node first, then the CLI with it (0.6618ms)
+✔ no installer resolvable (offline/unsupported) falls back, never fabricates one (0.9519ms)
+✔ the Windows node-then-npm script is still one quote-free line (0.5367ms)
+✔ a lost context rebuilds the scene instead of leaving it blank (4.2276ms)
+✔ preventDefault is called — without it the context is gone for good (0.6474ms)
+✔ the rebuild is delayed so it does not race the eviction storm (0.9831ms)
+✔ retries are capped, then it gives up LOUDLY rather than staying blank (6.2289ms)
+✔ uninstalling stops recovery — a torn-down scene must not resurrect itself (0.9049ms)
+✔ Pixi's "does not support WebGL" is read as a busy GPU, not a dead browser (2.6884ms)
+✔ a broken theme or texture is NOT mistaken for a busy GPU (0.8138ms)
+✔ an init that could not get a context retries instead of printing a stack (1.0675ms)
+✔ init retries are capped, then it says something a human can act on (1.8508ms)
+✔ a real init bug is reported immediately and never retried (0.635ms)
+✔ recovery survives repeated losses across rebuilds, one budget per install (0.7604ms)
+✔ #rrggbb parses to bytes (6.8792ms)
+✔ #rgb shorthand expands the way CSS does (10.4035ms)
+✔ case and surrounding space do not matter (0.5626ms)
+✔ anything we cannot read returns null so the query goes UNANSWERED (5.4077ms)
+✔ the reply widens each byte the way xterm does (5.5127ms)
+✔ the app palettes classify correctly (0.6226ms)
+✔ an unreadable background assumes dark (1.1363ms)
+✔ the split sits where you would expect it (0.844ms)
+✔ the live collection directory is never a candidate (20.6428ms)
+✔ chroma.sqlite3 and other palace files are never candidates (0.9459ms)
+✔ both quarantine kinds are recognised, including a duplicated segment name (0.7371ms)
+✔ a near-miss suffix is left alone (0.5928ms)
+✔ the newest few are kept so there is still something to diagnose with (1.3205ms)
+✔ a fresh quarantine is never touched, even past the keep count (0.7181ms)
+✔ nothing to do on a healthy palace (0.5517ms)
+✔ drift and corrupt are ranked together, not kept separately (0.5955ms)
+✔ the real palace state reaps the backlog and keeps the newest two (57.4709ms)
+✔ ties inside the same second are ordered deterministically (1.5473ms)
+✔ a clean pass mines at the base interval (0.6481ms)
+✔ each pass that quarantines doubles the wait (0.4242ms)
+✔ the backoff is capped, so recall never goes badly stale (0.4861ms)
+✔ one clean pass snaps straight back — no slow climb down (0.4335ms)
+✔ a delay below base is never used to shrink the interval (0.3584ms)
+✔ a heading followed by a blank line still captures its section (6.7286ms)
+✔ each section stops at the next heading and does not swallow the other (1.9377ms)
+✔ evidence on the line immediately after the heading still works (1.493ms)
+✔ the multiline end-of-line anchor is gone (0.7907ms)
+✔ a body with no Before heading at all still yields an empty section (0.8284ms)
+✔ a console transcript is NOT accepted as evidence (2.3042ms)
+  ok  (win32: smoke import only — POSIX group semantics not applicable)
+✔ test\proc-kill.test.cjs (1716.556ms)
+✔ isCompactionCommand matches every provider that has a compact verb (4.2251ms)
+✔ a focus suffix still reads as a compaction command (1.1199ms)
+✔ prose that merely mentions compaction is NOT a command (0.5443ms)
+✔ a clear command is not a compaction command (0.4855ms)
+✔ each provider receives only its supported compaction syntax (4.0498ms)
+✔ the focus rides along only where the TUI parses it (1.9641ms)
+✔ clearing uses each CLI own verb, not a hardcoded /clear (1.1333ms)
+✔ a non-empty clear message overrides the table verbatim (1.1413ms)
+✔ every provider preset has a considered context-command entry (1.1422ms)
+✔ Claude alone receives a remote-control slash command (13.3949ms)
+✔ provider readiness policies allow each TUI to settle (0.5391ms)
+✔ continuous TUI repainting cannot block terminal readiness (0.4095ms)
+✔ Kimi is a first-class inferred provider with autonomous defaults (5.1155ms)
+✔ Gemini CLI has hooks, interactive seeding, resume, and current yolo mode (2.7605ms)
+✔ Grok is a first-class inferred provider with hooks, resume, and always-approve (0.5316ms)
+✔ provider commands use matching models and equivalent bypass modes (0.9095ms)
+✔ model picker options stay provider-specific (1.3887ms)
+✔ Command Center model choices round-trip provider and model (0.856ms)
+✔ onboarding lists every engine — orchestrator-capable first, workers-only after, custom never (1.3789ms)
+✔ God only sees providers that can drain hive inbox messages (1.1722ms)
+[hive] proxy bridge for crush-1 did not bind (attempt 1/3), retrying
+[hive] proxy bridge for crush-1 did not bind (attempt 1/3), retrying
+✔ a bind that fails once and then succeeds leaves the agent fully proxied (3126.8541ms)
+[hive] proxy bridge for crush-1 did not bind (attempt 2/3), retrying
+[hive] proxy bridge for crush-1 did not bind — spawning without hive events
+✔ a bind that never succeeds is retried, then surfaced: spawn result, log.jsonl and the renderer (3479.1773ms)
+✔ every live-session identity marker is stripped from the inherited env (3.2623ms)
+✔ markers the CLI has not invented yet are stripped by the prefix rule (0.6486ms)
+✔ operator configuration sharing the prefix survives: config dir, auth, backend (0.618ms)
+✔ names that merely start with CLAUDE are not the prefix and survive (0.4805ms)
+✔ per-agent env wins over the strip AND over the defaults (1.1788ms)
+✔ app defaults land: PATH, terminal identity, color (0.5018ms)
+✔ locale: UTF-8 defaults on darwin, the user's exported locale wins, win32 untouched (0.5939ms)
+✔ queue item is acknowledged only after delivery succeeds (26.583ms)
+✔ failed delivery remains unacknowledged for retry (1.1099ms)
+✔ an idle agent is deliverable without needing a quiescence reading (0.4852ms)
+✔ a breaker-pinned agent drains once its terminal has genuinely gone quiet (0.4374ms)
+✔ unmeasured silence fails closed (0.4056ms)
+✔ an agent sitting on an interactive prompt is never typed into (5.8118ms)
+✔ a mid-turn agent still holds the prompt (0.4871ms)
+✔ nudge is sent while its inbox still holds mail (0.7077ms)
+✔ nudge is DROPPED when the inbox was drained before delivery (0.7372ms)
+✔ nudge is sent when the inbox cannot be read (0.8999ms)
+✔ messages without a precondition never consult the inbox (0.5606ms)
+  ok  quit sweep reaped the whole tree inside Electron (pids: 7000,15144,10400)
+✔ test\quit-sweep.electron.test.cjs (26219.1349ms)
+realtime findCard matcher tests (hyphen/punct, truncation, reorder, ambiguity)
+  ✓ punct: "message visibility" -> message-visibility CLI
+  ✓ truncation: "build orchestr" -> message-visibility CLI
+  ✓ reorder: "visibility orchestrator message" -> message-visibility CLI
+  ✓ word-prefix: "playwright e2e" -> test-3
+  ✓ exact-id: "test-3-playwright-e2e"
+  ✓ ambiguous: "realtime michael" flags disambiguation (no silent write)
+  ✓ not-ambiguous: "playwright" resolves cleanly
+  ✓ no-match: "buy groceries" -> none
+
+all passed.
+✔ test\realtime-findcard.test.cjs (372.422ms)
+✔ (a) a fresh install sees the drop on first launch (2.7568ms)
+✔ (b) 0.4.6 -> 0.4.7 sees it (0.8591ms)
+✔ (c) the same version never fires twice (0.3908ms)
+✔ (d) 0.4.7-rc.1 -> 0.4.7-rc.2 fires, deliberately (0.4085ms)
+✔ a downgrade announces nothing (0.4491ms)
+✔ the stamp write is still unconditional on a version change (1.0144ms)
+✔ the drop fires only when the stamp actually landed (0.7158ms)
+✔ a failed stamp write cannot skip the decision by throwing (0.4714ms)
+✔ (e) rendering a body with no drop block is untouched (2.5148ms)
+✔ extracts the authored block and leaves the surrounding markdown behind (6.5682ms)
+✔ a release body with no drop block returns null (digest path stays default) (0.6268ms)
+✔ an unbalanced marker pair returns null rather than half a document (0.4617ms)
+✔ an empty drop block is treated as no drop (0.5214ms)
+✔ the CSP denies scripts by omission, not by an allowlist that could widen (2.8504ms)
+✔ defence in depth: script tags and inline handlers are stripped from the body (1.6998ms)
+✔ authored markup that merely LOOKS active is preserved (0.9706ms)
+✔ the document is self-contained and declares its charset before content (2.8074ms)
+✔ ReleaseDrop grants allow-popups and nothing else (18.559ms)
+✔ ReleaseDrop renders no action buttons, only a close (33.0283ms)
+✔ the frame reaches the network for NO font at load — no remote <link>/@import/preconnect (1.7646ms)
+✔ the CSP can no longer permit a remote stylesheet or font — it fails such a fetch FAST (1.0497ms)
+✔ the design fonts are self-hosted as data: URIs, so the frame needs no network (2.981ms)
+✔ an authored remote @import is stripped — including the founder-shaped one with url-internal ; (1.6693ms)
+✔ a data: @import and a plain https url() are left alone (only remote @import goes) (0.849ms)
+✔ the loader reveals on onLoad OR a timeout cap — never on onLoad alone (12.7384ms)
+✔ the frame is always mounted; only the loader is conditionally rendered (22.3673ms)
+✔ no body, no digest — the toast must render exactly as it did before (48.8519ms)
+✔ a body of nothing but structure yields nothing (9.5652ms)
+✔ markdown is stripped down to what a plain-text toast can render (2.7778ms)
+✔ emphasis markers go, snake_case identifiers stay (0.9343ms)
+✔ the 'What's new' section wins over the release template's preamble (32.7178ms)
+✔ a body with no "what's new" heading digests from the top (0.8504ms)
+✔ bullets are the summary when a release has them; prose is the fallback (1.0632ms)
+✔ a bullet wrapped across source lines is folded back into one (1.0325ms)
+✔ bullets are capped in count (9.8352ms)
+✔ a long body is truncated to the character budget, on a word boundary (2.0142ms)
+✔ one enormous bullet is clipped rather than dropped (0.9344ms)
+✔ code fences, comments and quoted callouts are handled (0.6933ms)
+✔ the project's own RELEASE.md digests to something a toast can hold (9.8105ms)
+✔ options are honoured so a roomier surface can ask for more (1.0379ms)
+✔ rendered HTML from the atom feed never yields CSS (1.1594ms)
+✔ rendered HTML yields the actual news, not the preamble or the downloads (1.0736ms)
+✔ a <style> block is dropped even with no what-is-new heading to anchor on (0.539ms)
+✔ the notes file we actually ship fits the toast (2.8444ms)
+✔ electron-builder points the release notes at a file that exists (2.4821ms)
+✔ every BrowserWindow explicitly enables the Chromium renderer sandbox (926.7957ms)
+✔ the restart handler waits for an outcome instead of assuming one (5.2031ms)
+✔ cancelling the quit warning is wired to the restart handler (10.6444ms)
+✔ the renderer restores its notice when the restart reports a cancel (83.8011ms)
+✔ a re-entry guard refuses a duplicate restart instead of firing quitAndInstall twice (19.9959ms)
+✔ a failed quit settles the pending restart so the button stops spinning (2.7729ms)
+  ok   CONTROL: the click reached restartWithModel (killPty → spawnPty, requireResume)
+  ok   CONTROL: scenario A hit the `!res.ok` throw — the restart error banner was set
+  ok   CONTROL: scenario B hit the refused-resume throw — its banner was set
+  ok   A failed restart must NOT replace the pooled terminal entry
+  ok   the agent's scrollback must survive a failed "Restart & Continue"
+  ok   the action label must not be left stuck at "recreating terminal…" after the failure
+  ok   a REFUSED resume (ok:true, no `resumed`) must also leave the terminal and label intact
+  ok   a SUCCESSFUL restart still recreates the terminal (only after the spawn answer)
+✔ a failed Restart & Continue keeps the pooled terminal, scrollback and label (21466.4124ms)
+✔ a populated roster file is used, whatever localStorage says (4.9973ms)
+✔ a file holding only archived or only restorable entries still counts (0.715ms)
+✔ localStorage is adopted in the hive it was written for (17.2814ms)
+✔ localStorage is NOT adopted in a different hive (0.4453ms)
+✔ an empty roster file does not license a cross-hive read (4.0864ms)
+✔ an empty roster file still yields to localStorage in its own hive (1.0202ms)
+✔ an unstamped localStorage is adopted once (0.7215ms)
+✔ an origin with no roster of its own reads nothing and loses nothing (1.1871ms)
+✔ no hive selected yet falls back rather than dropping the roster (0.7917ms)
+[roster] refused to overwrite a non-empty roster with an empty one
+[roster] refused to overwrite a non-empty roster with an empty one
+[roster] refused to overwrite a non-empty roster with an empty one
+[roster] refused to overwrite a non-empty roster with an empty one
+✔ a roster round-trips through the file (18.8963ms)
+✔ an empty first write cannot wipe a roster that is already on disk (16.9692ms)
+✔ emptying the roster is allowed once the run has written normally (13.266ms)
+✔ every previous version is kept, even within the same millisecond (28.2328ms)
+✔ a refused write still backs up whatever was on disk (52.3506ms)
+✔ a refusal does not disarm the guard: repeated empty writes stay refused (59.0285ms)
+✔ a corrupt file reads as "no opinion" rather than as an empty roster (7.7542ms)
+✔ a snapshot missing its arrays is rejected, not half-written (5.4723ms)
+✔ no harnessHome means no file operations at all (0.7084ms)
+✔ reset archives the roster instead of destroying it (11.6429ms)
+✔ worktree paths and notes survive the round trip verbatim (5.1954ms)
+✔ queues and selection round-trip, and a bad queues field degrades to empty (24.128ms)
+✔ there is exactly one writer of config in the whole modal (18.6465ms)
+✔ the one writer is saveAll, and it sends a single merged patch (0.9715ms)
+✔ toggles stage their change instead of writing it (0.5885ms)
+✔ closing with staged changes asks first, instead of dropping them (0.8949ms)
+✔ the footer offers Save, and it is the only Save left in the modal (0.7619ms)
+✔ API keys still save immediately: there is no staged value to hold (99.659ms)
+✔ Free Flow still saves immediately: it arms a global hotkey (65.9949ms)
+✔ the section heading is defined once, not written out seventeen times (0.7488ms)
+✔ the divider between Connections sections is defined once too (72.4198ms)
+✔ no integration was removed from Connections (3.749ms)
+✔ a GitHub tree URL is split into owner/repo/ref/path (25.5586ms)
+✔ a skill folder name that could escape its directory is refused (1.0312ms)
+✔ a repo whose root holds SKILL.md is the skill itself (the 81 well-formed entries) (1.0334ms)
+✔ a repo-root entry resolves to skills/<name> instead of walking the whole repo (0.8486ms)
+✔ .claude/skills/<name> and a bare <name> directory are probed as fallbacks (19.8486ms)
+✔ a candidate that 404s or lacks SKILL.md is skipped, not fatal (1.5123ms)
+✔ no SKILL.md anywhere is a refusal, before a single file downloads (1.0007ms)
+✔ a root listing failure is reported, and an unsafe entry name cannot crash the probe (0.8477ms)
+✔ uninstall refuses anything outside a managed skills root (8.9818ms)
+✔ uninstall refuses a folder inside a skills root with no SKILL.md (12.1203ms)
+✔ uninstall removes a real skill folder inside a project root (17.1563ms)
+✔ uninstall will not delete the skills root itself (7.8582ms)
+✔ table rows parse into name, description, url and category (11.9937ms)
+✔ the category emoji is stripped but the words are kept intact (0.8393ms)
+✔ publisher comes from the GitHub owner, since names here are bare (0.5044ms)
+✔ the overview counts table does not leak in as skills (0.736ms)
+✔ header rows and separator rules are skipped (0.7981ms)
+✔ a row without a resolvable link is dropped rather than guessed at (0.745ms)
+✔ SKILL.md frontmatter reads a multi-line block description whole (1.5612ms)
+✔ inline frontmatter description and absent frontmatter both behave (3.8414ms)
+  ✓ slack:stop persists slackEnabled:false, so boot does not re-arm
+  ✓ slack:stop still actually stops the running server
+  ✓ the lifecycle teardowns do not clear the flag
+✔ test\slack-stop-persist.test.cjs (419.7548ms)
+slack trigger tests (mention + activated-thread filter)
+  ✓ plain message with no mention and no active thread → NOT triggered
+  ✓ message with @mention → triggered and thread root activated
+  ✓ app_mention event type → triggered even without text mention
+  ✓ reply in activated thread without re-mention → triggered
+  ✓ bot's own threaded reply (bot_id) → NOT triggered (self-loop safety)
+  ✓ subtype message (e.g. message_changed) → NOT triggered
+  ✓ mention in a reply → activates ev.thread_ts (not ev.ts)
+  ✓ wrong channel → NOT triggered even with mention
+  ✓ matching channel → triggered
+  ✓ no channel filter (null) → any channel triggers
+  ✓ activatedThreads evicts oldest when cap is reached
+  ✓ default cap is ACTIVATED_THREADS_MAX
+  ✓ botUserId null → text mention not detected (app_mention still works)
+  ✓ null/undefined event → NOT triggered
+  ✓ file_share + @mention → triggered and files extracted
+  ✓ file_share in activated thread (no re-mention) → triggered
+  ✓ file_share with no mention and no activated thread → NOT triggered
+  ✓ other subtype (message_changed) even with files → NOT triggered
+  ✓ files without url_private are filtered out
+  ✓ files capped at MAX_FILES_PER_MESSAGE (10)
+  ✓ text-only trigger still returns empty files array
+  ✓ sanitizeSlackFilename: blocks path traversal and special chars
+  ✓ bot token is NOT included in files array sent via IPC (structural check)
+  ✓ dedupKey is identical for app_mention and message events of the SAME message
+  ✓ dedupKey returns "" when channel or ts is missing (uncacheable)
+  ✓ SeenEvents.seen: first occurrence false (new), repeat true (duplicate)
+  ✓ SeenEvents never dedupes empty/falsy keys (and does not store them)
+  ✓ SeenEvents is bounded FIFO — oldest key evicted past the cap
+  ✓ SEEN_EVENTS_MAX default is exported and sane
+  ✓ integration: dual-subscription double-fire collapses to ONE delivery
+  ✓ integration: a genuinely new message in same channel still fires
+
+all passed
+✔ test\slack.test.cjs (386.6941ms)
+✔ an unchanged standing goal is injected once, not on every prompt (9.1686ms)
+✔ a goal edit is delivered on the next prompt and only once (0.7068ms)
+✔ a new session receives the standing goal even when its text is unchanged (2.6159ms)
+✔ a prompt that arrives before SessionStart still receives the goal once (0.7659ms)
+✔ clearing a goal explicitly revokes the old briefing (0.5782ms)
+✔ goal delivery state is isolated per agent (0.688ms)
+✔ a field the writer never mentioned survives the write (31.0198ms)
+✔ deleting a card still deletes it — merging protects fields, not membership (1.004ms)
+✔ an explicit null clears a field — a missing key never does (0.5815ms)
+✔ a card the god wrote without an id passes through instead of being dropped (0.4858ms)
+✔ a brand new card is added untouched (0.7072ms)
+✔ moving a card does not normalize the rest of it (0.6649ms)
+✔ patching one card leaves its neighbours byte-identical (0.5598ms)
+✔ answering a question through hive.writeTasks preserves the whole board (1951.4818ms)
+✔ hive.writeTasks can still empty the ledger (3028.5512ms)
+✔ forgetAgent resets usage before the same agent id is respawned (268.0154ms)
+✔ forgetAgent drops the dead session so its total cannot resurrect (46.569ms)
+✔ forgetAgent keeps usage for other agents (30.6289ms)
+✔ teardown resets telemetry when it forgets breaker state (13.7717ms)
+✔ all five funnel events are on the allowlist and carry their properties (14.7224ms)
+✔ an unknown property on a new event is dropped, never sent (10.379ms)
+✔ the new events stay anonymous by construction (5.1959ms)
+✔ agent_spawn_attempted fires once per attempt, gated against the install relaunch (0.828ms)
+✔ the real spawn reports both success and failure (0.7607ms)
+✔ the missing-CLI branch distinguishes installer-running, Mode 2, and spawn error (0.8051ms)
+✔ the install-PTY exit reports whether the auto-installer completed (0.641ms)
+✔ onboarding completion is reported on the false to true transition (0.7485ms)
+✔ every surface in the enum is accepted and lands as the surface property (19.4897ms)
+✔ a surface outside the enum sends nothing at all (6.119ms)
+✔ the event carries a count and nothing else — no content in any shape (25.8851ms)
+✔ it is a meter, not an adoption flag: repeats are not deduped (7.526ms)
+✔ the event stays anonymous by construction (4.6586ms)
+✔ the Settings opt-out suppresses it at boot (6.0736ms)
+✔ flipping the Settings switch off mid-session stops it instantly (6.2069ms)
+✔ DO_NOT_TRACK suppresses it, re-checked at send so it cannot be raced (3.9184ms)
+✔ a build with no PostHog key never sends it (1.6112ms)
+✔ nothing is counted after the session has ended (7.4216ms)
+✔ the renderer may name only the two surfaces main cannot see for itself (0.5656ms)
+✔ the renderer IPC channel name is identical on both sides of the bridge (2.4059ms)
+✔ the renderer cannot name the event, only the surface (1.1488ms)
+✔ the bridge takes a surface and nothing that could carry a message (0.5346ms)
+✔ a telemetry failure can never break sending a message (0.3786ms)
+✔ the terminal counts at the submit boundary, not at pty:write (2.005ms)
+✖ the composer counts its own submit, not the shared enqueue action (6.0154ms)
+✔ the composer inherits the IME guard instead of restating it (2.2868ms)
+✔ only human hive messages are counted, never agent-to-agent traffic (3.6708ms)
+✖ steer is counted at the IPC seam, not inside control.steer (3.7585ms)
+✔ TELEMETRY.md documents message_sent and every value of its enum (0.47ms)
+✔ every event in the allowlist is described in TELEMETRY.md, and vice versa (3.1381ms)
+✔ D11: pre-fix fingerprint — an unfiltered read sums a shared cwd's whole history (27.9619ms)
+✔ D11: transcript fallback attributes only the agent's own session, not the shared cwd's history (19.7864ms)
+✔ D11: with no session id known yet, a brand-new agent reports no usage instead of the shared cwd's history (4.5364ms)
+✔ D11: a returned fallback sample keeps sessionId empty (preserves the #56 cost-ledger dedup gate) (23.1796ms)
+✔ interactive provider commands pause queue automation (3.6281ms)
+✔ a command with an argument opens no picker to wait for (0.4991ms)
+✔ terminal automation waits for user drafts and interactive states (0.7438ms)
+✔ an abandoned draft stops blocking delivery once it goes stale (0.5801ms)
+✔ an abandoned picker stops blocking delivery once it goes stale (1.2205ms)
+✔ automation block reports why delivery is held (0.8861ms)
+✔ the user owns the prompt for a long time before automation takes it (0.5983ms)
+✔ terminal output follows only when already at the bottom (0.485ms)
+✔ markdown previews, source edits — the v0.3.4 behaviour is unchanged (48.1356ms)
+✔ images reveal rather than open — a click on a path is a navigation gesture (0.715ms)
+✔ anything we cannot honestly render reveals instead of guessing (0.6879ms)
+✔ an executable never classifies as anything but reveal (2.3802ms)
+✔ version strings and decimals are not files (7.7124ms)
+✔ a bare unknown extension needs a separator to count as a path (1.4418ms)
+✔ a known extension is a path with or without a separator (0.5386ms)
+✔ several tokens on one line all resolve independently (0.506ms)
+✔ shell and prose wrapping comes off, and so does :line (0.554ms)
+✔ a :line suffix survives matching and still classifies by extension (2.0459ms)
+✔ absolute, home, and Windows paths are all recognised (0.5428ms)
+✔ a dotted directory name cannot masquerade as an extension (0.9653ms)
+✔ case does not decide the verdict (0.469ms)
+✔ terminal generation creates a new instance for the same PTY (18.933ms)
+✔ terminal output accepts current and pre-revert message shapes (0.6989ms)
+✔ initial attach requests exactly one PTY redraw (0.789ms)
+✔ WebGL recovery is deduped and repaints after two frames (0.8072ms)
+✔ the reported paste: Claude Code blockquote rail is dropped (5.4482ms)
+✔ every line of a multi-line quote loses its rail (0.6592ms)
+✔ indent survives, nested rails do not (0.5287ms)
+✔ CRLF selections keep their carriage return (0.6754ms)
+✔ block art and bar charts are left alone (bars run together) (0.4761ms)
+✔ box drawing is never touched — tree/graph output must paste intact (24.786ms)
+✔ a mixed selection strips only the rail, never the tree indent (0.61ms)
+✔ a rail in the middle of a line is content, not a gutter (0.3986ms)
+✔ ordinary prose is returned byte-for-byte (0.4258ms)
+✔ a rail-only selection sanitizes to nothing (1.3786ms)
+✔ dark reports Ps=1 (2.706ms)
+✔ light reports Ps=2 (0.597ms)
+✔ the two notifications differ only in Ps (0.8999ms)
+✔ an unseen cwd resolves to the CURRENT key, leading slash dashed (12.9219ms)
+✔ DOTS are dashed too, not just slashes (3.4319ms)
+✔ every other non-alphanumeric is dashed as well (6.2055ms)
+✔ the current directory wins even when a legacy twin exists (9.7718ms)
+✔ the dotted legacy twin loses to the dotted current spelling (19.2496ms)
+﹣ a legacy-only install still resolves, so old transcripts stay readable (3.4391ms) # the pre-2026 legacy key existed only on POSIX
+﹣ a legacy-only install with dots resolves to its undashed twin (4.3096ms) # the pre-2026 legacy key existed only on POSIX
+✔ the real failing path resolves to the dir Claude Code actually writes (12.7485ms)
+✔ a root cwd never resolves to the projects directory itself (3.1726ms)
+  ok  sums usage across records and files
+  ok  appended records are picked up (incremental tail parse)
+  ok  repeat reads with no change are stable
+  ok  a partial trailing line is not counted until completed
+  ok  a rewritten (shrunk) file is re-parsed from scratch
+  ok  a deleted file drops out of the totals
+  ok  sessionId filter sums only that session, incrementally too
+  ok  filtered totals carry every field, not just output tokens
+  ok  a record with no sessionId lands only in the unfiltered total
+  ok  malformed lines and non-assistant records are skipped
+  ok  model is the last one seen (per current semantics)
+  ok  missing project dir yields zeros
+✔ test\transcript-usage.test.cjs (2749.9191ms)
+✔ crush: light theme writes options.tui.transparent and COLORFGBG (1754.5012ms)
+✔ crush: dark theme sends the dark hint and still goes transparent (1739.9109ms)
+✔ no theme passed: no hint, no options block (old behaviour) (1754.3362ms)
+✔ opencode: theme lands in the per agent config dir as the system theme (1638.5279ms)
+[analytics] install-id persist failed (ephemeral id): Error: EEXIST: file already exists, mkdir 'C:\Users\chess\AppData\Local\Temp\md-update-applied-2cc0lK\file-not-a-dir'
+    at mkdirSync (node:fs:1349:26)
+    at Analytics.loadOrMintInstallId (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:61:15), <anonymous>:281:37)
+    at Analytics.init (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:61:15), <anonymous>:164:36)
+    at bootApp (C:\PitayaCode\LaPitaya\test\update-applied.test.cjs:168:19)
+    at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\update-applied.test.cjs:240:24)
+    at Test.runInAsyncScope (node:async_hooks:228:14)
+    at Test.run (node:internal/test_runner/test:1118:25)
+    at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+    at Test.postRun (node:internal/test_runner/test:1247:19)
+    at Test.run (node:internal/test_runner/test:1175:12) {
+  errno: -4075,
+  code: 'EEXIST',
+  syscall: 'mkdir',
+  path: 'C:\\Users\\chess\\AppData\\Local\\Temp\\md-update-applied-2cc0lK\\file-not-a-dir'
+}
+[analytics] install-id persist failed (ephemeral id): Error: EEXIST: file already exists, mkdir 'C:\Users\chess\AppData\Local\Temp\md-update-applied-2cc0lK\file-not-a-dir'
+    at mkdirSync (node:fs:1349:26)
+    at Analytics.loadOrMintInstallId (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:61:15), <anonymous>:281:37)
+    at Analytics.init (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:61:15), <anonymous>:164:36)
+    at bootApp (C:\PitayaCode\LaPitaya\test\update-applied.test.cjs:168:19)
+    at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\update-applied.test.cjs:240:24)
+    at Test.runInAsyncScope (node:async_hooks:228:14)
+    at Test.run (node:internal/test_runner/test:1118:25)
+    at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+    at Test.postRun (node:internal/test_runner/test:1247:19)
+    at Test.run (node:internal/test_runner/test:1175:12) {
+  errno: -4075,
+  code: 'EEXIST',
+  syscall: 'mkdir',
+  path: 'C:\\Users\\chess\\AppData\\Local\\Temp\\md-update-applied-2cc0lK\\file-not-a-dir'
+}
+[analytics] install-id persist failed (ephemeral id): Error: EEXIST: file already exists, mkdir 'C:\Users\chess\AppData\Local\Temp\md-update-applied-2cc0lK\file-not-a-dir'
+    at mkdirSync (node:fs:1349:26)
+    at Analytics.loadOrMintInstallId (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:61:15), <anonymous>:281:37)
+    at Analytics.init (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:61:15), <anonymous>:164:36)
+    at bootApp (C:\PitayaCode\LaPitaya\test\update-applied.test.cjs:168:19)
+    at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\update-applied.test.cjs:240:24)
+    at Test.runInAsyncScope (node:async_hooks:228:14)
+    at Test.run (node:internal/test_runner/test:1118:25)
+    at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+    at Test.postRun (node:internal/test_runner/test:1247:19)
+    at Test.run (node:internal/test_runner/test:1175:12) {
+  errno: -4075,
+  code: 'EEXIST',
+  syscall: 'mkdir',
+  path: 'C:\\Users\\chess\\AppData\\Local\\Temp\\md-update-applied-2cc0lK\\file-not-a-dir'
+}
+✔ a brand-new install is never an update (4.8735ms)
+✔ an ordinary relaunch reports nothing (0.5146ms)
+✔ a version change reports both ends (2.242ms)
+✔ an install that predates stamping reports from unknown (0.4706ms)
+✔ a downgrade is reported honestly, from > to (0.606ms)
+✔ prerelease versions are a legal shape on both ends (0.5371ms)
+✔ a hand-edited stamp cannot smuggle a free-form value out (0.8621ms)
+✔ an unnameable current version reports nothing at all (0.377ms)
+✔ a missing stamp reads as null, not as a throw (17.0514ms)
+✔ a stamp round-trips and the trailing newline is not part of it (29.8112ms)
+✔ an empty stamp file reads as null (19.9754ms)
+✔ the stamp lives beside the install id and dies with the data dir (8.4606ms)
+✔ upgrade sequence: fires once per version change, never on a relaunch (83.4346ms)
+✔ the 0.4.4 to 0.4.5 fleet: an existing install with no stamp fires exactly once (14.2301ms)
+✔ e2e: a fresh install sends first_run and app_launched, never update_applied (11.9969ms)
+✔ e2e: an existing 0.4.4 install starting 0.4.5 reports the upgrade once (13.4441ms)
+✔ e2e: a live 0.4.4 install with no stamp reports unknown, exactly once (11.6065ms)
+✔ e2e: an opted-out install sends nothing and is not back-filled on opting in (16.4312ms)
+✔ e2e: DO_NOT_TRACK sends nothing and writes no stamp at all (1.747ms)
+✔ e2e: an unwritable state dir reports no transition, on any boot (13.0795ms)
+✔ e2e: the allowlist still drops a property nobody declared (9.6607ms)
+✔ via: the ordered pair from our own updater reads as auto (1.4656ms)
+✔ via: downloaded but never restarted is manual, not auto (0.3273ms)
+✔ via: a leftover pair from the PREVIOUS upgrade cannot be mistaken for this one (0.2508ms)
+✔ via: an attempt that threw is manual — the app never quit (0.2431ms)
+✔ via: a failed attempt followed by a successful one is auto (0.3572ms)
+✔ via: a restart that returned cleanly and still did not install is manual (0.3629ms)
+✔ via: from_version is never needed for that — any version but ours is disproof (0.2641ms)
+✔ via: the target launching after the request is still auto (0.24ms)
+✔ via: a launch BEFORE the request says nothing about it (0.2559ms)
+✔ via: refusing the quit warning is manual (4.081ms)
+✔ via: a refused quit followed by one that stuck is auto (0.3724ms)
+✔ via: the request must come AFTER the download, not before (0.2992ms)
+✔ via: no log at all is unknown, never a guess in either direction (1.341ms)
+✔ via: an empty log is unknown, a non-empty log with no pair is manual (2.4143ms)
+✔ via: a version prefix does not match a longer version (0.6724ms)
+✔ via: the log read is bounded and still finds a recent pair (53.7224ms)
+✔ updater.ts still emits the exact lines via reads (7.5585ms)
+✔ the manual-download breadcrumb matches the URL the badge actually opens (107.5833ms)
+✔ e2e: a real 0.4.4 install that auto-updated reports via auto (18.5789ms)
+✔ e2e: the same install reinstalled by hand reports via manual (14.347ms)
+✔ e2e: an install with no updater.log reports via unknown (7.0423ms)
+✔ e2e: via is only ever one of the three enum values (13.9199ms)
+✔ the check branch acknowledges a no-update result (2.8887ms)
+✔ the acknowledgement renders and auto-dismisses (0.9402ms)
+✔ runCheck wraps the native check in a timeout, not a bare await (20.3115ms)
+✔ the timeout constant is finite, positive, and sane (16.8537ms)
+✔ withTimeout arms a rejecting timer and clears it on settle (15.2287ms)
+✔ picks the dmg for the running mac arch, not the zip (6.5897ms)
+✔ picks the installer on windows, never the portable (0.7494ms)
+✔ picks the AppImage on linux (0.67ms)
+✔ null when nothing matches, so the button falls back to the releases page (0.5786ms)
+✔ parseVersion accepts v-prefixed and bare semver, rejects junk (5.9729ms)
+✔ isNewer compares numerically, not lexically (0.6737ms)
+✔ clampPercent keeps progress renderable (12.5343ms)
+✔ a re-check never clobbers a staged update (3.4995ms)
+✔ the pipeline moves forward for the same version (0.664ms)
+✔ a genuinely newer release supersedes a staged one (0.5255ms)
+✔ every actionable state offers the action its label promises (1.1677ms)
+✔ labels name the version so the badge is self-explanatory (0.9086ms)
+✔ the underlying failure reaches the tooltip instead of being swallowed (7.4218ms)
+✔ every update state produces a headline and a sentence (1.778ms)
+✔ idle and up-to-date both offer a check, and say which version you are on (1.0316ms)
+✔ a staged update offers the restart, and names the version it installs (0.7939ms)
+✔ an available update offers the download, not the restart (0.6432ms)
+✔ the two mid-flight states have no button to press (0.3914ms)
+✔ failures reach Settings verbatim, same as the tooltip (0.4015ms)
+✔ manual update with a direct installer reads as a download, not a page to hunt on (1.7901ms)
+✔ just-updated is quiet on the badge and loses to a newer available release (0.9571ms)
+voice read-layer: recent-activity + message-content + redaction
+  ✓ activity: last-N selection returns the N most recent
+  ✓ activity: newest-first ordering
+  ✓ activity: log entries carry NO message body (metadata-only source)
+  ✓ retrieval: by id returns exactly that one message
+  ✓ retrieval: missing id returns empty
+  ✓ recent: dedups a message seen in two mailboxes
+  ✓ recent: sorted newest-first by created_at
+  ✓ recent: limit caps the list
+  ✓ shape: carries direction + owner + archived for briefing context
+  ✓ redact: strips OpenAI key
+  ✓ redact: strips Anthropic key
+  ✓ redact: strips Slack bot token
+  ✓ redact: strips Slack app token
+  ✓ redact: strips GitHub PAT
+  ✓ redact: strips GitHub fine-grained
+  ✓ redact: strips AWS access key
+  ✓ redact: strips Google API key
+  ✓ redact: strips JWT
+  ✓ redact: strips api_key assignment
+  ✓ redact: strips password assignment
+  ✓ redact: strips signing_secret assignment
+  ✓ redact: strips bot_token assignment
+  ✓ redact: strips aws_secret_access_key (namespaced label)
+  ✓ redact: strips private_key assignment
+  ✓ redact: PEM private key block is stripped
+  ✓ redact: bearer keeps the label, drops the credential
+  ✓ benign preserved: "integrated feat/voice-key-ux at commit d..."
+  ✓ benign preserved: "kevin-mqpbq43v parked, awaiting assignme..."
+  ✓ benign preserved: "/Users/chaitanya/Documents/Personal/cth-..."
+  ✓ benign preserved: "The token cap is 1.2 million tokens this..."
+  ✓ benign preserved: "Tasks: 3 todo, 1 doing, 0 blocked, 12 do..."
+  ✓ benign preserved: "Pam approved 8 of 8 dimensions, no must-..."
+  ✓ redact: tolerates non-string input
+
+all passed.
+✔ test\voice-messages.test.cjs (430.6951ms)
+✔ each endpoint is gated by its OWN secret (15.8395ms)
+✔ an unknown id is indistinguishable from a wrong secret (1.4613ms)
+✔ bare POST / still means the legacy endpoint (0.9424ms)
+✔ a nested path is not an endpoint (2.0768ms)
+✔ setEndpoints revokes one endpoint without touching the others (26.1322ms)
+✔ the body is validated against THAT endpoint schema (2.2717ms)
+✔ the caller declaration of kind/from is passed through (1.2733ms)
+✔ a held message answers 202 with its token and no task (1.0449ms)
+✔ GET is token-scoped, and answers 404 identically for every miss (3.3506ms)
+✔ the query-param token fallback still works (4.698ms)
+✔ one noisy endpoint cannot starve the others (16.8329ms)
+✔ a secretless endpoint is never served (0.9537ms)
+✔ normalizeWeekly sorts, de-dupes and rejects nonsense (5.2825ms)
+✔ formatWeekly names the common sets rather than listing them (1.0455ms)
+✔ nextWeeklyFireMs skips today once the slot has passed (2.5951ms)
+✔ nextWeeklyFireMs picks the nearest of several days (0.5374ms)
+✔ previousWeeklyFireMs finds the slot behind us (0.6709ms)
+✔ a slot missed while asleep fires on wake, once, and only if recent (0.7293ms)
+✔ weeklyDelayMs waits, rather than firing, when the slot is ahead (0.5982ms)
+✔ every delay fits in a setTimeout (0.8227ms)
+✔ the clocks moving does not move the appointment (0.9874ms)
+✔ modern npm shim → the interpreter and script it really runs (8.5554ms)
+✔ classic npm 5/6 shim resolves through its ELSE arm (1.4711ms)
+✔ ancient single-line shim resolves (0.7507ms)
+✔ a `..` in the shim target is normalized, not passed through (0.8444ms)
+✔ LF-only content parses the same as CRLF (0.8461ms)
+✔ bun and deno shims are accepted; other interpreters are not (0.8327ms)
+✔ unrecognised content returns null rather than a guess (0.788ms)
+✔ interpreter flags between program and script are refused, never dropped (0.4347ms)
+✔ the win32 branch is genuinely platform-gated (0.7153ms)
+✔ ARRAY args: the whole prompt reaches the child intact (2.2279ms)
+✔ cmd.exe: the same prompt is destroyed — which is the bug (0.9229ms)
+✔ single-line args still go through cmd.exe unchanged (fallback preserved) (0.4061ms)
+✔ a direct-executable shim resolves to the binary, with no interpreter (0.6928ms)
+✔ the hive prompt survives a direct-executable shim, where cmd.exe destroys it (0.5113ms)
+✔ an interpreter-less shim pointing at a NON-executable is still refused (2.4383ms)
+✔ agy adds its official LOCALAPPDATA location after existing fallbacks (5.3983ms)
+✔ Antigravity fallback lookup normalizes command case and an exe suffix (0.896ms)
+✔ fallbacks do not map agy to the unverified antigravity.cmd launcher (0.802ms)
+✔ Codex, OpenCode, and Claude retain the existing generic fallback order (0.7564ms)
+✔ missing or invalid LOCALAPPDATA does not add an Antigravity candidate (1.0853ms)
+✔ Antigravity fallback preserves spaces and Unicode in LOCALAPPDATA (2.5777ms)
+✔ resolveCommand finds agy in its Windows LOCALAPPDATA install location (429.1285ms)
+✔ a bare command spawns as itself, no argv (6.6478ms)
+✔ a flag-carrying command line splits into executable + argv (1.7381ms)
+✔ a quoted model value with spaces stays one token (0.6131ms)
+✔ the separate model field applies only when the line did not pick a model (2.7973ms)
+✔ auto-mode ON appends bypassPermissions for a claude worker with no stance (8.7275ms)
+✔ an explicit --permission-mode in the request always wins over auto-mode (0.613ms)
+✔ auto-mode OFF appends nothing (0.9441ms)
+✔ auto-mode appends the PROVIDER'S flag, not claude's (0.7516ms)
+✔ an explicit stance wins for non-claude providers too (no doubled flag) (3.8979ms)
+✔ a provider whose preset declares no auto flag gets nothing appended (1.1033ms)
+✔ a multi-token auto flag appends whole, and the stance check is by token (1.2697ms)
+✔ an explicit request provider picks that provider's flag for a custom binary (0.8992ms)
+✔ a missing command falls back to the default, then to claude (0.7666ms)
+✔ main and renderer split with the SAME tokenizer (shared module) (0.3318ms)
+✔ a main-only spawn (ephemeral worker, voice hire) gets the bypass flag when autoMode is on (5.9937ms)
+✔ autoMode off leaves a main-only spawn in the same ask-first posture as a GUI hire (0.4255ms)
+✔ a GUI hire's args (already tokenized from buildSpawnCommand) are left untouched, not duplicated (1.0772ms)
+✔ other args on a main-only spawn are preserved alongside the appended flag (0.5825ms)
+✔ the input array is never mutated in place (0.6917ms)
+✔ a provider with no auto-mode flag (custom) is left alone (0.4447ms)
+✔ codex's multi-token auto flag is applied the same way as Claude's two-token flag (0.8524ms)
+✔ nudges an idle worker with undrained inbox mail (15.3309ms)
+✔ never nudges god, archived agents, or agents without a live pty (0.676ms)
+✔ never nudges when there is no inbox mail (0.533ms)
+✔ never nudges a mid-turn worker (recent PTY output) (0.8451ms)
+✔ never nudges a worker that never produced output (still booting) (1.6181ms)
+✔ respects the boot grace window (4.0075ms)
+✔ never nudges while delivery is paused, agent paused, or halted (0.9003ms)
+✔ a recent permission/HITL notification blocks nudges (1.1946ms)
+✔ an idle-waiting notification does NOT count as a HITL hold (5.864ms)
+✔ the same inbox mail is not re-announced after the cooldown (1.0172ms)
+✔ new mail is announced after the cooldown even while older mail remains (0.6238ms)
+✔ filing one of several announced messages does not re-announce the remainder (0.5549ms)
+✔ draining the inbox resets announcement memory (0.6733ms)
+✔ forget clears cooldown + boot grace + HITL state (0.5811ms)
+✔ classifyHook: permission/approve/confirm shapes are needsHuman (0.4078ms)
+✔ classifyHook: idle-waiting shapes are idle, other events are null (0.4474ms)
+✔ the nudge text matches the renderer guardrail exactly (0.9802ms)
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+✔ links the base node_modules into an isolated worktree (810.3752ms)
+✔ skips linking when the base checkout has no node_modules (700.8873ms)
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+✔ does not replace an existing worktree node_modules entry (829.1834ms)
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+✖ does not follow the dependency symlink when removing a worktree (772.0276ms)
+✖ leaves a dangling worktree dependency symlink untouched (727.1698ms)
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+✖ reports a failed link without throwing (492.0954ms)
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+✖ removes only the linked dependencies before checking worktree status (1043.8135ms)
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+✔ does not remove a real worktree node_modules directory (922.495ms)
+✖ does not remove a worktree node_modules link to another directory (745.8098ms)
+✔ wires dependency linking into successful isolated worktree creation (7.8502ms)
+✔ removes linked dependencies before worker retention checks (8.8391ms)
+✔ uses a Windows junction for the directory link (2.0149ms)
+ℹ tests 901
+ℹ suites 0
+ℹ pass 869
+ℹ fail 21
+ℹ cancelled 0
+ℹ skipped 11
+ℹ todo 0
+ℹ duration_ms 115511.2834
+
+✖ failing tests:
+
+test at test\agent-token-cap.test.cjs:27:1
+✖ consecutive agent caps survive an interleaved config update (54.1308ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+  +   'C:\\workspace\\project'
+  -   '/workspace/project'
+    ]
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\agent-token-cap.test.cjs:40:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'C:\\workspace\\project' ],
+    expected: [ '/workspace/project' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test\arabic-terminal.test.cjs:133:1
+✖ turning it off is a real undo, not a terminal rebuild (7.6055ms)
+  AssertionError [ERR_ASSERTION]: the live switch must not dispose or recreate a terminal
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\arabic-terminal.test.cjs:144:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'export function notifyArabicTerminalChangeAll(): void {\r\n  const want = isArabicTerminalEnabled();\r\n  const open = [...pool.values()].filter((e) => e.opened && !e.exited);\r\n  const changed = open.filter((e) => !!e.arabic !== want);\r\n  for (const entry of changed) {\r\n    if (want) {\r\n      // The GPU cell painter ignores CSS and cannot do bidi, so Arabic mode\r\n      // needs the DOM renderer. Releasing the lease keeps the buffer.\r\n      releaseWebglRenderer(entry);\r\n      enableArabicRendering(entry);\r\n    } else {\r\n      disableArabicRendering(entry);\r\n      // Deliberately NOT re-leasing WebGL here: the lease is taken on attach,\r\n      // and taking one now for an off-screen terminal is the exact GPU-context\r\n      // exhaustion releaseWebglRenderer exists to avoid.\r\n      entry.needsRendererRepaint = true;\r\n    }\r\n    repaintTerminalAfterRendererLoss(entry);\r\n  }\r\n  console.log(`[terminal] arabic -> ${want ? \'on\' : \'off\'}: `\r\n    + `${changed.length}/${open.length} open terminal(s) switched`);\r\n}\r\n\r\n/** Re-parent a pty\'s terminal into `container`, opening xterm on first attach. */\r\nexport function attachTerminal(entry: TerminalEntry, container: HTMLElement): void {\r\n  container.appendChild(entry.host);\r\n  if (!entry.opened) {\r\n    // open() must come first — the WebGL addon can only load onto an opened\r\n    // terminal, and xterm needs its host in the document to measure the cell.\r\n    entry.term.open(entry.host);\r\n    entry.opened = true;\r\n    // Arabic/RTL terminal support (the full recipe is documented in\r\n    // terminal/arabicJoiner.ts): join every Arabic phrase into one render range,\r\n    // and strip xterm\'s per-span letter-spacing from Arabic spans. MUST come\r\n    // after open(): registering a joiner on an unopened terminal throws.\r\n    //\r\n    // The `cth-bidi` class is what scopes the bidi CSS in design/global.css to\r\n    // this terminal. The PR applied those rules to every .xterm on the page;\r\n    // they are `!important` and change span layout, so an English user who\r\n    // fell back to the DOM renderer (a lost WebGL lease) would have had their\r\n    // TUI box-drawing shifted by a feature they never enabled.\r\n    if (isArabicTerminalEnabled()) enableArabicRendering(entry);\r\n  }\r\n  leaseWebglRenderer(entry);\r\n  // PTY startup output can arrive before this pooled terminal subscribes.\r\n  // Request one same-size redraw after open/subscription even when fit() later\r\n  // sees unchanged dimensions and therefore emits no resize of its own.\r\n  requestInitialPtyRedraw(entry.recovery, () => window.cth.redrawPty(entry.ptyId));\r\n  if (entry.needsRendererRepaint) {\r\n    scheduleWebglRecovery(entry.recovery, requestAnimationFrame, () =>\r\n      repaintTerminalAfterRendererLoss(entry));\r\n  }\r\n}\r\n\r\n/** Take the terminal off screen: drop the WebGL lease and unparent the host.\r\n *  Everything that makes the terminal a terminal — buffer, scrollback, pty\r\n *  subscription — stays in the pool, so re-attaching shows it fully rendered. */\r\nexport function detachTerminal(entry: TerminalEntry, container: HTMLElement): void {\r\n  // Guard: another view may have already taken the host (React can mount the new\r\n  // owner before the old one\'s cleanup runs). Releasing the renderer then would\r\n  // blank the terminal that just legitimately claimed it.\r\n  if (entry.host.parentElement !== container) return;\r\n  releaseWebglRenderer(entry);\r\n  container.removeChild(entry.host);\r\n}\r\n\r\nfunction repaintTerminalAfterRendererLoss(entry: TerminalEntry): void {\r\n  if (!entry.opened || !entry.host.isConnected\r\n      || !entry.host.clientWidth || !entry.host.clientHeight) {\r\n    entry.needsRendererRepaint = true;\r\n    return;\r\n  }\r\n  reflowTerminal(entry.ptyId);\r\n  try {\r\n    entry.term.refresh(0, Math.max(0, entry.term.rows - 1));\r\n    // Only NOW is the repaint confirmed. Clearing the marker before the refresh\r\n    // meant a throw here (the renderer still settling) discarded the last record\r\n    // that this terminal needed repainting — so it stayed black until something\r\n    // unrelated happened to resize it, which is why Cmd +/- fixed it only some\r\n    // of the time.\r\n    entry.needsRendererRepaint = false;\r\n  } catch {\r\n    entry.needsRendererRepaint = true;\r\n  }\r\n}\r\n\r\n/**\r\n * Re-measure cell metrics and rebuild the viewport scroll-area for a pooled\r\n * terminal. Use after a display wake / GPU (WebGL) context loss / DPR change:\r\n * xterm caches the cell height measured at open() and only recomputes it on a\r\n * font change or resize. When that cached metric goes stale (sleep/wake), the\r\n * .xterm-viewport scroll-area height (rows × cellHeight) is wrong, so only PART\r\n * of the still-intact buffer is scrollable — the user otherwise has to zoom to\r\n * force a fit() and reveal the rest.\r\n *\r\n * Mirrors the document.fonts.ready re-measure in PtyTerminalView: re-applying the\r\n * SAME font invalidates xterm\'s cached cell metrics, clearTextureAtlas re-rasters\r\n * the WebGL glyph atlas at the right size, then fit() recomputes cols/rows and\r\n * rebuilds the viewport. Preserves scroll position (NO scrollToBottom) so a user\r\n * reading history isn\'t yanked down. No-op until the terminal is opened and its\r\n * host has a real size, so it composes safely with multiple triggers firing\r\n * together (onContextLoss + visibilitychange + focus) — a cheap reflow twice is\r\n * harmless; the guards make an early/duplicate call a no-op.\r\n */\r\nexport function reflowTerminal(ptyId: string): void {\r\n  const entry = pool.get(ptyId);\r\n  if (!entry || !entry.opened) return;\r\n  const host = entry.host;\r\n  // Skip while detached or unsized — fitting a 0×0 host makes xterm propose a\r\n  // tiny grid and resize the pty to it (clipped/oversized banner).\r\n  if (!host.isConnected || !host.clientWidth || !host.clientHeight) return;\r\n  try {\r\n    // Re-apply the SAME font options to force xterm\'s CharSizeService to\r\n    // re-measure the cell against the now-correct (woken) layout, then drop the\r\n    // glyph atlas so it re-rasters at the corrected metrics.\r\n    entry.term.options.fontFamily = entry.term.options.fontFamily;\r\n    entry.term.options.fontSize = entry.term.options.fontSize;\r\n    entry.term.clearTextureAtlas?.();\r\n    const before = { cols: entry.term.cols, rows: entry.term.rows };\r\n    entry.fit.fit();\r\n    // Only poke the pty when the grid actually changed (every resize repaints\r\n    // the TUI and pushes a frame into scrollback).\r\n    if (entry.term.cols !== before.cols || entry.term.rows !== before.rows) {\r\n      window.cth.resizePty(ptyId, entry.term.cols, entry.term.rows);\r\n    }\r\n    entry.term.refresh(0, Math.max(0, entry.term.rows - 1));\r\n  } catch { /* host may not be sized yet */ }\r\n}\r\n\r\n/**\r\n * Soft-reset a pooled terminal for an IN-PLACE pty respawn (the same ptyId is\r\n * reused — e.g. a model change or agent restart). Clears the screen + scrollback\r\n * and re-arms input while keeping the SAME Terminal, its live data subscription\r\n * and its DOM attachment, so the mounted view stays visible and typeable across\r\n * the restart.\r\n *\r\n * Why not disposeTerminal here: the view (PtyTerminalView) keys its attach effect\r\n * on the ptyId, which doesn\'t change on a restart — so it never re-attaches a\r\n * replacement terminal. Disposing therefore left a dead, detached pane that\r\n * swallowed every keystroke. Resetting in place avoids that entirely.\r\n */\r\nexport function resetTerminal(\r\n  ptyId: string,\r\n  opts: { preserveScrollback?: boolean } = {}\r\n): void {\r\n  const entry = pool.get(ptyId);\r\n  if (!entry) return;\r\n  // Re-arm input — a prior exit (or the kill that precedes the respawn) may have\r\n  // latched `exited`, which otherwise makes onData drop keystrokes silently.\r\n  entry.exited = false;\r\n  entry.inputDirty = false;\r\n  entry.inputDirtyAt = 0;\r\n  // The old process\'s prompt is gone with it — drop our model of that line and\r\n  // any picker it had open, or the replacement inherits a phantom draft and a\r\n  // block that nothing can clear.\r\n  entry.lineBuf = \'\';\r\n  entry.automationBlocked = false;\r\n  entry.automationBlockedAt = 0;\r\n  try {\r\n    if (opts.preserveScrollback) {\r\n      entry.term.writeln(\'\\r\\n\\x1b[2m─ resuming existing session ─\\x1b[0m\');\r\n    } else {\r\n      // Fresh sessions need a clean grid; resume keeps the existing scrollback.\r\n      entry.term.reset();\r\n    }\r\n  } catch { /* not yet open */ }\r\n}\r\n\r\n/** Tear down a pty\'s terminal (call when the agent/pty is gone for good). */\r\nexport function disposeTerminal(ptyId: string): void {\r\n  const entry = pool.get(ptyId);\r\n  if (!entry) return;\r\n  entry.unsub.forEach((u) => { try { u(); } catch { /* noop */ } });\r\n  // Release the GPU context the webgl addon leaves behind; dispose() alone leaks\r\n  // it (see webglContextOf). Captured before dispose in case it detaches the canvas.\r\n  const gl = webglContextOf(entry.term);\r\n  try { entry.webgl?.dispose(); } catch { /* noop */ }\r\n  try { gl?.getExtension(\'WEBGL_lose_context\')?.loseContext(); } catch { /* noop */ }\r\n  try { entry.term.dispose(); } catch { /* noop */ }\r\n  entry.host.remove();\r\n  pool.delete(ptyId);\r\n}\r\n\r\n// ─── v0.3.4: ⌘-click a path in terminal output ──────────────────────────────\r\n// A custom ILinkProvider (NOT WebLinksAddon, which only matches URLs): detects\r\n// path tokens in the visible buffer line, resolves relative ones against the\r\n// owning agent\'s cwd, and on Cmd/Ctrl+click verifies existence via the\r\n// metadata-only fs:statAbs IPC before acting.\r\n// Plain click stays with the TUI (matches VS Code\'s terminal convention).\r\n// The path string is agent output — treated as hostile: it flows only into a\r\n// read-only stat, the existing read pipeline, or a REVEAL (never an "open with\r\n// the default app", which would turn a printed path into an execution), and\r\n// only on an explicit modifier-click.\r\n//\r\n// v0.4.5 widened this from markdown-only to every path token. What each type\r\n// does lives in @shared/terminalPaths, not here — this file only knows how to\r\n// find tokens on a line and how to run the three verdicts'... 3804 more characters,
+    expected: /\bterm\.dispose\b|acquireTerminal/,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }
+
+test at test\fs-path-containment.test.cjs:81:1
+✖ a final-component symlink cannot be read as text (15.8749ms)
+  Error: EPERM: operation not permitted, symlink 'C:\Users\chess\AppData\Local\Temp\path-containment-tQiSUs\outside\secret.txt' -> 'C:\Users\chess\AppData\Local\Temp\path-containment-tQiSUs\workspace\innocent.txt'
+      at Object.symlinkSync (node:fs:1868:11)
+      at makeWorkspace (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:57:6)
+      at withWorkspace (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:75:14)
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:81:64)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    errno: -4048,
+    code: 'EPERM',
+    syscall: 'symlink',
+    path: 'C:\\Users\\chess\\AppData\\Local\\Temp\\path-containment-tQiSUs\\outside\\secret.txt',
+    dest: 'C:\\Users\\chess\\AppData\\Local\\Temp\\path-containment-tQiSUs\\workspace\\innocent.txt'
+  }
+
+test at test\fs-path-containment.test.cjs:87:1
+✖ a final-component symlink cannot be read as bytes (40.835ms)
+  Error: EPERM: operation not permitted, symlink 'C:\Users\chess\AppData\Local\Temp\path-containment-myH90C\outside\secret.txt' -> 'C:\Users\chess\AppData\Local\Temp\path-containment-myH90C\workspace\innocent.txt'
+      at Object.symlinkSync (node:fs:1868:11)
+      at makeWorkspace (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:57:6)
+      at withWorkspace (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:75:14)
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:87:65)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    errno: -4048,
+    code: 'EPERM',
+    syscall: 'symlink',
+    path: 'C:\\Users\\chess\\AppData\\Local\\Temp\\path-containment-myH90C\\outside\\secret.txt',
+    dest: 'C:\\Users\\chess\\AppData\\Local\\Temp\\path-containment-myH90C\\workspace\\innocent.txt'
+  }
+
+test at test\fs-path-containment.test.cjs:92:1
+✖ an intermediate directory symlink cannot be read through (13.3563ms)
+  Error: EPERM: operation not permitted, symlink 'C:\Users\chess\AppData\Local\Temp\path-containment-BlX6SB\outside\secret.txt' -> 'C:\Users\chess\AppData\Local\Temp\path-containment-BlX6SB\workspace\innocent.txt'
+      at Object.symlinkSync (node:fs:1868:11)
+      at makeWorkspace (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:57:6)
+      at withWorkspace (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:75:14)
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:92:72)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    errno: -4048,
+    code: 'EPERM',
+    syscall: 'symlink',
+    path: 'C:\\Users\\chess\\AppData\\Local\\Temp\\path-containment-BlX6SB\\outside\\secret.txt',
+    dest: 'C:\\Users\\chess\\AppData\\Local\\Temp\\path-containment-BlX6SB\\workspace\\innocent.txt'
+  }
+
+test at test\fs-path-containment.test.cjs:99:1
+✖ a final-component symlink cannot be written through (11.4568ms)
+  Error: EPERM: operation not permitted, symlink 'C:\Users\chess\AppData\Local\Temp\path-containment-VNN41g\outside\secret.txt' -> 'C:\Users\chess\AppData\Local\Temp\path-containment-VNN41g\workspace\innocent.txt'
+      at Object.symlinkSync (node:fs:1868:11)
+      at makeWorkspace (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:57:6)
+      at withWorkspace (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:75:14)
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:99:67)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    errno: -4048,
+    code: 'EPERM',
+    syscall: 'symlink',
+    path: 'C:\\Users\\chess\\AppData\\Local\\Temp\\path-containment-VNN41g\\outside\\secret.txt',
+    dest: 'C:\\Users\\chess\\AppData\\Local\\Temp\\path-containment-VNN41g\\workspace\\innocent.txt'
+  }
+
+test at test\fs-path-containment.test.cjs:107:1
+✖ a dangling symlink cannot be used to create a file outside the workspace (21.1012ms)
+  Error: EPERM: operation not permitted, symlink 'C:\Users\chess\AppData\Local\Temp\path-containment-U1ky1f\outside\secret.txt' -> 'C:\Users\chess\AppData\Local\Temp\path-containment-U1ky1f\workspace\innocent.txt'
+      at Object.symlinkSync (node:fs:1868:11)
+      at makeWorkspace (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:57:6)
+      at withWorkspace (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:75:14)
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:108:3)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    errno: -4048,
+    code: 'EPERM',
+    syscall: 'symlink',
+    path: 'C:\\Users\\chess\\AppData\\Local\\Temp\\path-containment-U1ky1f\\outside\\secret.txt',
+    dest: 'C:\\Users\\chess\\AppData\\Local\\Temp\\path-containment-U1ky1f\\workspace\\innocent.txt'
+  }
+
+test at test\fs-path-containment.test.cjs:122:1
+✖ listDir cannot list a directory outside the workspace (10.8344ms)
+  Error: EPERM: operation not permitted, symlink 'C:\Users\chess\AppData\Local\Temp\path-containment-pbXbKv\outside\secret.txt' -> 'C:\Users\chess\AppData\Local\Temp\path-containment-pbXbKv\workspace\innocent.txt'
+      at Object.symlinkSync (node:fs:1868:11)
+      at makeWorkspace (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:57:6)
+      at withWorkspace (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:75:14)
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:122:69)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    errno: -4048,
+    code: 'EPERM',
+    syscall: 'symlink',
+    path: 'C:\\Users\\chess\\AppData\\Local\\Temp\\path-containment-pbXbKv\\outside\\secret.txt',
+    dest: 'C:\\Users\\chess\\AppData\\Local\\Temp\\path-containment-pbXbKv\\workspace\\innocent.txt'
+  }
+
+test at test\fs-path-containment.test.cjs:127:1
+✖ the git diff path check refuses a symlink escape (25.833ms)
+  Error: EPERM: operation not permitted, symlink 'C:\Users\chess\AppData\Local\Temp\path-containment-r5zhNI\outside\secret.txt' -> 'C:\Users\chess\AppData\Local\Temp\path-containment-r5zhNI\workspace\innocent.txt'
+      at Object.symlinkSync (node:fs:1868:11)
+      at makeWorkspace (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:57:6)
+      at withWorkspace (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:75:14)
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:127:64)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    errno: -4048,
+    code: 'EPERM',
+    syscall: 'symlink',
+    path: 'C:\\Users\\chess\\AppData\\Local\\Temp\\path-containment-r5zhNI\\outside\\secret.txt',
+    dest: 'C:\\Users\\chess\\AppData\\Local\\Temp\\path-containment-r5zhNI\\workspace\\innocent.txt'
+  }
+
+test at test\fs-path-containment.test.cjs:135:1
+✖ ordinary in-workspace reads and writes still succeed (18.378ms)
+  Error: EPERM: operation not permitted, symlink 'C:\Users\chess\AppData\Local\Temp\path-containment-o4B8sV\outside\secret.txt' -> 'C:\Users\chess\AppData\Local\Temp\path-containment-o4B8sV\workspace\innocent.txt'
+      at Object.symlinkSync (node:fs:1868:11)
+      at makeWorkspace (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:57:6)
+      at withWorkspace (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:75:14)
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:135:68)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    errno: -4048,
+    code: 'EPERM',
+    syscall: 'symlink',
+    path: 'C:\\Users\\chess\\AppData\\Local\\Temp\\path-containment-o4B8sV\\outside\\secret.txt',
+    dest: 'C:\\Users\\chess\\AppData\\Local\\Temp\\path-containment-o4B8sV\\workspace\\innocent.txt'
+  }
+
+test at test\fs-path-containment.test.cjs:157:1
+✖ an in-workspace symlink to an in-workspace target is followed, not refused (12.8736ms)
+  Error: EPERM: operation not permitted, symlink 'C:\Users\chess\AppData\Local\Temp\path-containment-RZ4KiU\outside\secret.txt' -> 'C:\Users\chess\AppData\Local\Temp\path-containment-RZ4KiU\workspace\innocent.txt'
+      at Object.symlinkSync (node:fs:1868:11)
+      at makeWorkspace (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:57:6)
+      at withWorkspace (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:75:14)
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:158:3)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    errno: -4048,
+    code: 'EPERM',
+    syscall: 'symlink',
+    path: 'C:\\Users\\chess\\AppData\\Local\\Temp\\path-containment-RZ4KiU\\outside\\secret.txt',
+    dest: 'C:\\Users\\chess\\AppData\\Local\\Temp\\path-containment-RZ4KiU\\workspace\\innocent.txt'
+  }
+
+test at test\fs-path-containment.test.cjs:211:1
+✖ lexical traversal out of the root is still rejected (59.4372ms)
+  Error: EPERM: operation not permitted, symlink 'C:\Users\chess\AppData\Local\Temp\path-containment-ZCwwR9\outside\secret.txt' -> 'C:\Users\chess\AppData\Local\Temp\path-containment-ZCwwR9\workspace\innocent.txt'
+      at Object.symlinkSync (node:fs:1868:11)
+      at makeWorkspace (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:57:6)
+      at withWorkspace (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:75:14)
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\fs-path-containment.test.cjs:211:67)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    errno: -4048,
+    code: 'EPERM',
+    syscall: 'symlink',
+    path: 'C:\\Users\\chess\\AppData\\Local\\Temp\\path-containment-ZCwwR9\\outside\\secret.txt',
+    dest: 'C:\\Users\\chess\\AppData\\Local\\Temp\\path-containment-ZCwwR9\\workspace\\innocent.txt'
+  }
+
+test at test\hire-import.test.cjs:101:1
+✖ Command Center sets and clears one cap through the atomic IPC (2.7398ms)
+  AssertionError [ERR_ASSERTION]: Command Center cap handler is present
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\hire-import.test.cjs:107:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at test\model-catalog-remote.test.cjs:60:1
+✖ the remote file and the baked file agree on every model (35.4723ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  ... Skipped lines
+  
+    {
+      antigravity: [
+        {
+          label: 'CLI default',
+          maxAppVersion: null,
+  ...
+        {
+  +       id: 'Gemini 3.8 Flash (High)',
+  +       label: 'Gemini 3.8 Flash · High',
+  +       maxAppVersion: null,
+  +       minAppVersion: null
+  +     },
+  +     {
+  +       id: 'Gemini 3.8 Flash (Medium)',
+  +       label: 'Gemini 3.8 Flash · Med',
+  +       maxAppVersion: null,
+  +       minAppVersion: null
+  +     },
+  +     {
+  +       id: 'Gemini 3.8 Flash (Low)',
+  +       label: 'Gemini 3.8 Flash · Low',
+  +       maxAppVersion: null,
+  +       minAppVersion: null
+  +     },
+  +     {
+          id: 'Gemini 3.7 Flash (High)',
+          label: 'Gemini 3.7 Flash · High',
+          maxAppVersion: null,
+          minAppVersion: null
+        },
+  ...
+        {
+  +       id: 'claude-opus-5-5',
+  +       label: 'Opus 5.5',
+  +       maxAppVersion: null,
+  +       minAppVersion: null
+  +     },
+  +     {
+          id: 'claude-opus-5',
+          label: 'Opus 5 · 1M',
+          maxAppVersion: null,
+          minAppVersion: null
+        },
+  ...
+        {
+  +       id: 'claude-sonnet-5-5',
+  +       label: 'Sonnet 5.5',
+  +       maxAppVersion: null,
+  +       minAppVersion: null
+  +     },
+  +     {
+          id: 'claude-sonnet-5',
+          label: 'Sonnet 5',
+          maxAppVersion: null,
+          minAppVersion: null
+        },
+  ...
+        {
+  +       id: 'gpt-6-sol',
+  +       label: 'GPT-6 Sol',
+  +       maxAppVersion: null,
+  +       minAppVersion: null
+  +     },
+  +     {
+          id: 'gpt-5.6-sol',
+          label: 'GPT-5.6 Sol',
+          maxAppVersion: null,
+          minAppVersion: null
+        },
+        {
+  +       id: 'gpt-6-terra',
+  +       label: 'GPT-6 Terra',
+  +       maxAppVersion: null,
+  +       minAppVersion: null
+  +     },
+  +     {
+          id: 'gpt-5.6-terra',
+          label: 'GPT-5.6 Terra',
+          maxAppVersion: null,
+          minAppVersion: null
+        },
+        {
+  +       id: 'gpt-6-luna',
+  +       label: 'GPT-6 Luna',
+  +       maxAppVersion: null,
+  +       minAppVersion: null
+  +     },
+  +     {
+          id: 'gpt-5.6-luna',
+          label: 'GPT-5.6 Luna',
+          maxAppVersion: null,
+          minAppVersion: null
+        }
+  ...
+        {
+  +       label: 'Copilot default',
+  -       label: 'default (Claude Sonnet 4.5)',
+          maxAppVersion: null,
+          minAppVersion: null
+        },
+        {
+          id: 'auto',
+  ...
+        {
+  +       id: 'gemini-3.8-flash-high',
+  +       label: 'Gemini 3.8 Flash',
+  +       maxAppVersion: null,
+  +       minAppVersion: null
+  +     },
+  +     {
+          id: 'gemini-3.7-flash-high',
+          label: 'Gemini 3.7 Flash',
+          maxAppVersion: null,
+          minAppVersion: null
+        },
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\model-catalog-remote.test.cjs:65:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: {
+      claude: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      codex: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      grok: [ [Object], [Object], [Object] ],
+      kimi: [ [Object], [Object], [Object], [Object] ],
+      gemini: [ [Object], [Object], [Object], [Object], [Object] ],
+      antigravity: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      qwen: [ [Object], [Object], [Object], [Object] ],
+      opencode: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      crush: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      pi: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      copilot: [ [Object], [Object], [Object], [Object], [Object], [Object] ],
+      cursor: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      custom: []
+    },
+    expected: {
+      claude: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      codex: [ [Object], [Object], [Object], [Object], [Object] ],
+      grok: [ [Object], [Object], [Object] ],
+      kimi: [ [Object], [Object], [Object], [Object] ],
+      gemini: [ [Object], [Object], [Object], [Object], [Object] ],
+      antigravity: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      qwen: [ [Object], [Object], [Object], [Object] ],
+      opencode: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      crush: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      pi: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      copilot: [ [Object], [Object], [Object], [Object], [Object], [Object] ],
+      cursor: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      custom: []
+    },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test\telemetry-message-count.test.cjs:226:1
+✖ the composer counts its own submit, not the shared enqueue action (6.0154ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /enqueueMessage\(agent\.id, body\);\n(?:\s*\/\/.*\n)*\s*void window\.cth\.trackMessageSent\('composer'\);/. Input:
+  
+  "import { ClipboardEvent, DragEvent, KeyboardEvent, type MouseEvent as ReactMouseEvent, useEffect, useLayoutEffect, useRef, useState } from 'react';\r\n" +
+    "import { createPortal } from 'react-dom';\r\n" +
+    "import { useTranslation } from 'react-i18next';\r\n" +
+    "import { PixelButton } from './PixelButton';\r\n" +
+    "import { Icon } from './Icon';\r\n" +
+    "import { useStore, type Agent, type QueuedMessage } from '@/store/store';\r\n" +
+    "import { clearTerminalDraft, dismissTerminalPicker, terminalAutomationBlockFor } from './terminalPool';\r\n" +
+    "import type { TerminalAutomationBlock } from './terminalAutomation';\r\n" +
+    "import { freeflowRecorder, useFreeflow } from '@/freeflow/recorder';\r\n" +
+    "import { useTerminalFontSize } from './terminalFontSize';\r\n" +
+    "import { isComposingKey } from '@shared/imeGuard';\r\n" +
+    "import { useRtl } from '@/i18n/useDirection';\r\n" +
+    '\r\n' +
+    'const EMPTY_QUEUE: QueuedMessage[] = [];\r\n' +
+    '\r\n' +
+    '/** A file/image attached to the draft. Travels to the agent as a PATH it Reads. */\r\n' +
+    'interface Attachment {\r\n' +
+    '  path: string;\r\n' +
+    '  name: string;\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    '// Prepended (only to the enqueued value, never the visible draft) when the\r\n' +
+    '\r\n' +
+    'export interface MessageQueueComposerProps {\r\n' +
+    '  agent: Agent;\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    '/**\r\n' +
+    ' * Lets the user keep messaging an agent whose terminal is mid-run. Typed\r\n' +
+    " * messages park in a per-agent queue and are submitted to the agent's Claude\r\n" +
+    " * TUI one-by-one as soon as it goes idle (see useHive's flush loop).\r\n" +
+    ' */\r\n' +
+    'export function MessageQueueComposer({ agent }: MessageQueueComposerProps) {\r\n' +
+    '  const { t } = useTranslation();\r\n' +
+    '  const rtl = useRtl();\r\n' +
+    '  const queue = useStore((s) => s.messageQueues[agent.id]) ?? EMPTY_QUEUE;\r\n' +
+    '  const enqueueMessage = useStore((s) => s.enqueueMessage);\r\n' +
+    '  const removeQueuedMessage = useStore((s) => s.removeQueuedMessage);\r\n' +
+    '  const releaseQueuedMessage = useStore((s) => s.releaseQueuedMessage);\r\n' +
+    '  const clearQueue = useStore((s) => s.clearQueue);\r\n' +
+    '\r\n' +
+    '  // Draft lives in the store, keyed by agent — switching agents remounts this\r\n' +
+    '  // component, and component-local state would silently eat the typed text.\r\n' +
+    "  const text = useStore((s) => s.drafts[agent.id] ?? '');\r\n" +
+    '  const setDraft = useStore((s) => s.setDraft);\r\n' +
+    '  const setText = (t: string) => setDraft(agent.id, t);\r\n' +
+    '\r\n' +
+    '  // Free Flow voice dictation (entry point A). The mic button shows only when the\r\n' +
+    '  // feature is enabled in Settings; a transcript is appended to this draft for\r\n' +
+    '  // review before sending (never auto-sent). When enabled but no Groq key is set,\r\n' +
+    '  // the button stays VISIBLE but DISABLED with a tooltip pointing to Settings\r\n' +
+    '  // (hasGroqKey is boolean presence only — the key value never reaches the store).\r\n' +
+    '  const freeflowEnabled = useStore((s) => s.freeflowEnabled);\r\n' +
+    '  const hasGroqKey = useStore((s) => s.hasGroqKey);\r\n' +
+    '  const ff = useFreeflow();\r\n' +
+    '  const ffMine = ff.targetAgentId === agent.id;\r\n' +
+    '  const ffHint = !freeflowEnabled\r\n' +
+    '    ? null\r\n' +
+    "    : ffMine && ff.status === 'recording'\r\n" +
+    "    ? t('queueComposer.recording')\r\n" +
+    "    : ffMine && ff.status === 'transcribing'\r\n" +
+    "    ? t('queueComposer.transcribing')\r\n" +
+    '    : ff.error && (ffMine || ff.targetAgentId === null)\r\n' +
+    "    ? `${t('queueComposer.voice')}: ${ff.error}`\r\n" +
+    '    : null;\r\n' +
+    '\r\n' +
+    "  // The draft box is the terminal's twin — it should read at the same size the\r\n" +
+    "  // agent's output does, at every zoom level.\r\n" +
+    '  const composerFontSize = useTerminalFontSize();\r\n' +
+    '  const composerLineHeight = Math.round(composerFontSize * 1.4);\r\n' +
+    '\r\n' +
+    "  const idle = agent.status === 'idle';\r\n" +
+    '\r\n' +
+    '  // Only the god/Michael agent gets the delegation toggle. Default OFF.\r\n' +
+    '\r\n' +
+    '  // Files/images staged for the next message. Component-local: switching agents\r\n' +
+    '  // remounts this component, so attachments are cleared on tab switch (drafts\r\n' +
+    "  // persist in the store, attachments deliberately don't carry over).\r\n" +
+    '  const [attachments, setAttachments] = useState<Attachment[]>([]);\r\n' +
+    '  const [dragOver, setDragOver] = useState(false);\r\n' +
+    '\r\n' +
+    '  const addAttachments = (incoming: Attachment[]) =>\r\n' +
+    '    setAttachments((prev) => {\r\n' +
+    '      const seen = new Set(prev.map((a) => a.path));\r\n' +
+    '      const fresh = incoming.filter((a) => a.path && !seen.has(a.path));\r\n' +
+    '      return fresh.length ? [...prev, ...fresh] : prev;\r\n' +
+    '    });\r\n' +
+    '\r\n' +
+    '  const removeAttachment = (path: string) =>\r\n' +
+    '    setAttachments((prev) => prev.filter((a) => a.path !== path));\r\n' +
+    '\r\n' +
+    "  // '+' button → OS picker (images group + all files).\r\n" +
+    '  const pickFiles = async () => {\r\n' +
+    '    const res = await window.cth.attachFiles();\r\n' +
+    '    if (res.ok) addAttachments(res.files);\r\n' +
+    '  };\r\n' +
+    '\r\n' +
+    '  // Drop files onto the composer → resolve each to its absolute path.\r\n' +
+    '  const onDrop = (e: DragEvent<HTMLDivElement>) => {\r\n' +
+    '    e.preventDefault();\r\n' +
+    '    setDragOver(false);\r\n' +
+    '    const dropped = Array.from(e.dataTransfer?.files ?? []);\r\n' +
+    '    if (!dropped.length) return;\r\n' +
+    '    const atts = dropped\r\n' +
+    '      .map((f) => ({ path: window.cth.pathForFile(f), name: f.name }))\r\n' +
+    '      .filter((a) => a.path);\r\n' +
+    '    if (atts.length) addAttachments(atts);\r\n' +
+    '  };\r\n' +
+    '\r\n' +
+    '  // Paste a screenshot (no path → persist the native clipboard image to a temp\r\n' +
+    '  // file) or paste files copied from the OS file manager (carry a real path).\r\n' +
+    '  const onPaste = async (e: ClipboardEvent<HTMLTextAreaElement>) => {\r\n' +
+    '    const items = Array.from(e.clipboardData?.items ?? []);\r\n' +
+    "    const hasImage = items.some((it) => it.kind === 'file' && it.type.startsWith('image/'));\r\n" +
+    '    if (hasImage) {\r\n' +
+    '      e.preventDefault();\r\n' +
+    '      const res = await window.cth.saveClipboardImage();\r\n' +
+    '      if (res.ok) addAttachments([res.file]);\r\n' +
+    '      return;\r\n' +
+    '    }\r\n' +
+    '    const files = Array.from(e.clipboardData?.files ?? []);\r\n' +
+    '    if (files.length) {\r\n' +
+    '      const atts = files\r\n' +
+    '        .map((f) => ({ path: window.cth.pathForFile(f), name: f.name }))\r\n' +
+    '        .filter((a) => a.path);\r\n' +
+    '      if (atts.length) {\r\n' +
+    '        e.preventDefault();\r\n' +
+    '        addAttachments(atts);\r\n' +
+    '      }\r\n' +
+    '    }\r\n' +
+    '  };\r\n' +
+    '\r\n' +
+    '  const canSend = !!text.trim() || attachments.length > 0;\r\n' +
+    '\r\n' +
+    '  const queueIt = () => {\r\n' +
+    '    if (!canSend) return;\r\n' +
+    '    // Prepend an "Attached files:" block using the same path-based convention as\r\n' +
+    '    // the Slack inbound path (useHive.ts) so agents Read the files directly.\r\n' +
+    '    const body = attachments.length\r\n' +
+    '      ? (text.trim()\r\n' +
+    '          ? `${text}\\n\\nAttached files:\\n`\r\n' +
+    "          : 'Attached files:\\n') + attachments.map((a) => `- ${a.path} (${a.name})`).join('\\n')\r\n" +
+    '      : text;\r\n' +
+    '    enqueueMessage(agent.id, body);\r\n' +
+    "    // Counted HERE, at the composer's submit, and NOT inside enqueueMessage:\r\n" +
+    '    // that store action is also how work orders, Slack inbound, nudges and\r\n' +
+    '    // compact commands reach an agent, and none of those is a person sending a\r\n' +
+    '    // message. Past the isComposingKey guard in onKey, so an IME candidate\r\n' +
+    '    // Enter never counts. (TELEMETRY.md → message_sent)\r\n' +
+    "    void window.cth.trackMessageSent('composer');\r\n" +
+    "    setText('');\r\n" +
+    '    setAttachments([]);\r\n' +
+    '  };\r\n' +
+    '\r\n' +
+    '  const onKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {\r\n' +
+    '    if (isComposingKey(e)) return;\r\n' +
+    "    if (e.key === 'Enter' && !e.shiftKey) {\r\n" +
+    '      e.preventDefault();\r\n' +
+    '      queueIt();\r\n' +
+    '    }\r\n' +
+    '  };\r\n' +
+    '\r\n' +
+    "  // Delivery can be held back by the agent's own terminal (a half-typed draft or\r\n" +
+    '  // an open slash-command picker owns the prompt). That used to be invisible —\r\n' +
+    '  // the hint claimed it was sending while nothing moved — so poll it and say so.\r\n' +
+    '  // Poll whenever something is queued, busy or not: a busy agent is exactly when\r\n' +
+    '  // a user might have half-typed in the terminal above, and it is when the queue\r\n' +
+    '  // is in use — so the hold must be reported then, not only once the agent idles.\r\n' +
+    '  const block = useTerminalBlock(agent.ptyId, queue.length > 0);\r\n' +
+    '\r\n' +
+    '  // Floor-wide auto-delivery pause (Command Center switch) also holds the queue.\r\n' +
+    '  // Without saying so — and without the per-row "send now" override — messages\r\n' +
+    '  // look permanently stuck with no explanation and no escape hatch.\r\n' +
+    '  const deliveryPaused = useDeliveryPaused(agent.id, queue.length > 0);\r\n' +
+    '\r\n' +
+    '  const statusHint = queue.length === 0\r\n' +
+    '    ? null\r\n' +
+    "    : block === 'draft'\r\n" +
+    "    ? t('queueComposer.heldDraft', { name: agent.name })\r\n" +
+    "    : block === 'picker'\r\n" +
+    "    ? t('queueComposer.heldPicker', { name: agent.name })\r\n" +
+    "    : block === 'exited'\r\n" +
+    "    ? t('queueComposer.heldExited', { name: agent.name })\r\n" +
+    '    : !idle\r\n' +
+    "    ? t('queueComposer.busyQueued', { name: agent.name, count: queue.length })\r\n" +
+    '    : deliveryPaused && !queue[0]?.manual\r\n' +
+    "    ? t('queueComposer.heldFloor')\r\n" +
+    "    : t('queueComposer.sendingOneByOne', { name: agent.name });\r\n" +
+    '\r\n' +
+    '  return (\r\n' +
+    '    <div\r\n' +
+    '      onDragOver={(e) => { e.preventDefault(); if (!dragOver) setDragOver(true); }}\r\n' +
+    '      onDragLeave={(e) => {\r\n' +
+    '        // Only clear when the cursor actually leaves the composer, not on child enter.\r\n' +
+    '        if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;\r\n' +
+    '        setDragOver(false);\r\n' +
+    '      }}\r\n' +
+    '      onDrop={onDrop}\r\n' +
+    '      style={{\r\n' +
+    '        flexShrink: 0,\r\n' +
+    "        borderTop: '1px solid var(--cth-ink-700)',\r\n" +
+    "        background: 'var(--cth-cream-100)',\r\n" +
+    "        display: 'flex',\r\n" +
+    "        flexDirection: 'column',\r\n" +
+    '        gap: 6,\r\n' +
+    '        padding: 8,\r\n' +
+    "        boxShadow: dragOver ? 'inset 0 0 0 2px var(--cth-lilac)' : undefined\r\n" +
+    '      }}>\r\n' +
+    '      {dragOver && (\r\n' +
+    '        <span style={{\r\n' +
+    "          fontFamily: 'var(--cth-font-display)', fontSize: 9, lineHeight: '12px',\r\n" +
+    "          color: 'var(--cth-ink-700)', textAlign: 'center'\r\n" +
+    "        }}>{t('queueComposer.dropToAttach')}</span>\r\n" +
+    '      )}\r\n' +
+    '      {/* Header: label, count, status, clear-all */}\r\n' +
+    "      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>\r\n" +
+    '        <span style={{\r\n' +
+    "          fontFamily: 'var(--cth-font-display)',\r\n" +
+    "          fontSize: 9, lineHeight: '12px',\r\n" +
+    "          color: 'var(--cth-ink-700)'\r\n" +
+    "        }}>{t('queueComposer.queue')}</span>\r\n" +
+    '        {queue.length > 0 && (\r\n' +
+    '          <span style={{\r\n' +
+    "            fontSize: 11, padding: '1px 6px 0',\r\n" +
+    "            background: 'var(--cth-cream-200)',\r\n" +
+    "            boxShadow: 'inset 0 0 0 1px var(--cth-ink-100)',\r\n" +
+    "            fontFamily: 'var(--cth-font-ui)', color: 'var(--cth-ink-900)'\r\n" +
+    '          }}>{queue.length}</span>\r\n' +
+    '  '... 22203 more characters
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\telemetry-message-count.test.cjs:230:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'import { ClipboardEvent, DragEvent, KeyboardEvent, type MouseEvent as ReactMouseEvent, useEffect, useLayoutEffect, useRef, useState } from \'react\';\r\nimport { createPortal } from \'react-dom\';\r\nimport { useTranslation } from \'react-i18next\';\r\nimport { PixelButton } from \'./PixelButton\';\r\nimport { Icon } from \'./Icon\';\r\nimport { useStore, type Agent, type QueuedMessage } from \'@/store/store\';\r\nimport { clearTerminalDraft, dismissTerminalPicker, terminalAutomationBlockFor } from \'./terminalPool\';\r\nimport type { TerminalAutomationBlock } from \'./terminalAutomation\';\r\nimport { freeflowRecorder, useFreeflow } from \'@/freeflow/recorder\';\r\nimport { useTerminalFontSize } from \'./terminalFontSize\';\r\nimport { isComposingKey } from \'@shared/imeGuard\';\r\nimport { useRtl } from \'@/i18n/useDirection\';\r\n\r\nconst EMPTY_QUEUE: QueuedMessage[] = [];\r\n\r\n/** A file/image attached to the draft. Travels to the agent as a PATH it Reads. */\r\ninterface Attachment {\r\n  path: string;\r\n  name: string;\r\n}\r\n\r\n// Prepended (only to the enqueued value, never the visible draft) when the\r\n\r\nexport interface MessageQueueComposerProps {\r\n  agent: Agent;\r\n}\r\n\r\n/**\r\n * Lets the user keep messaging an agent whose terminal is mid-run. Typed\r\n * messages park in a per-agent queue and are submitted to the agent\'s Claude\r\n * TUI one-by-one as soon as it goes idle (see useHive\'s flush loop).\r\n */\r\nexport function MessageQueueComposer({ agent }: MessageQueueComposerProps) {\r\n  const { t } = useTranslation();\r\n  const rtl = useRtl();\r\n  const queue = useStore((s) => s.messageQueues[agent.id]) ?? EMPTY_QUEUE;\r\n  const enqueueMessage = useStore((s) => s.enqueueMessage);\r\n  const removeQueuedMessage = useStore((s) => s.removeQueuedMessage);\r\n  const releaseQueuedMessage = useStore((s) => s.releaseQueuedMessage);\r\n  const clearQueue = useStore((s) => s.clearQueue);\r\n\r\n  // Draft lives in the store, keyed by agent — switching agents remounts this\r\n  // component, and component-local state would silently eat the typed text.\r\n  const text = useStore((s) => s.drafts[agent.id] ?? \'\');\r\n  const setDraft = useStore((s) => s.setDraft);\r\n  const setText = (t: string) => setDraft(agent.id, t);\r\n\r\n  // Free Flow voice dictation (entry point A). The mic button shows only when the\r\n  // feature is enabled in Settings; a transcript is appended to this draft for\r\n  // review before sending (never auto-sent). When enabled but no Groq key is set,\r\n  // the button stays VISIBLE but DISABLED with a tooltip pointing to Settings\r\n  // (hasGroqKey is boolean presence only — the key value never reaches the store).\r\n  const freeflowEnabled = useStore((s) => s.freeflowEnabled);\r\n  const hasGroqKey = useStore((s) => s.hasGroqKey);\r\n  const ff = useFreeflow();\r\n  const ffMine = ff.targetAgentId === agent.id;\r\n  const ffHint = !freeflowEnabled\r\n    ? null\r\n    : ffMine && ff.status === \'recording\'\r\n    ? t(\'queueComposer.recording\')\r\n    : ffMine && ff.status === \'transcribing\'\r\n    ? t(\'queueComposer.transcribing\')\r\n    : ff.error && (ffMine || ff.targetAgentId === null)\r\n    ? `${t(\'queueComposer.voice\')}: ${ff.error}`\r\n    : null;\r\n\r\n  // The draft box is the terminal\'s twin — it should read at the same size the\r\n  // agent\'s output does, at every zoom level.\r\n  const composerFontSize = useTerminalFontSize();\r\n  const composerLineHeight = Math.round(composerFontSize * 1.4);\r\n\r\n  const idle = agent.status === \'idle\';\r\n\r\n  // Only the god/Michael agent gets the delegation toggle. Default OFF.\r\n\r\n  // Files/images staged for the next message. Component-local: switching agents\r\n  // remounts this component, so attachments are cleared on tab switch (drafts\r\n  // persist in the store, attachments deliberately don\'t carry over).\r\n  const [attachments, setAttachments] = useState<Attachment[]>([]);\r\n  const [dragOver, setDragOver] = useState(false);\r\n\r\n  const addAttachments = (incoming: Attachment[]) =>\r\n    setAttachments((prev) => {\r\n      const seen = new Set(prev.map((a) => a.path));\r\n      const fresh = incoming.filter((a) => a.path && !seen.has(a.path));\r\n      return fresh.length ? [...prev, ...fresh] : prev;\r\n    });\r\n\r\n  const removeAttachment = (path: string) =>\r\n    setAttachments((prev) => prev.filter((a) => a.path !== path));\r\n\r\n  // \'+\' button → OS picker (images group + all files).\r\n  const pickFiles = async () => {\r\n    const res = await window.cth.attachFiles();\r\n    if (res.ok) addAttachments(res.files);\r\n  };\r\n\r\n  // Drop files onto the composer → resolve each to its absolute path.\r\n  const onDrop = (e: DragEvent<HTMLDivElement>) => {\r\n    e.preventDefault();\r\n    setDragOver(false);\r\n    const dropped = Array.from(e.dataTransfer?.files ?? []);\r\n    if (!dropped.length) return;\r\n    const atts = dropped\r\n      .map((f) => ({ path: window.cth.pathForFile(f), name: f.name }))\r\n      .filter((a) => a.path);\r\n    if (atts.length) addAttachments(atts);\r\n  };\r\n\r\n  // Paste a screenshot (no path → persist the native clipboard image to a temp\r\n  // file) or paste files copied from the OS file manager (carry a real path).\r\n  const onPaste = async (e: ClipboardEvent<HTMLTextAreaElement>) => {\r\n    const items = Array.from(e.clipboardData?.items ?? []);\r\n    const hasImage = items.some((it) => it.kind === \'file\' && it.type.startsWith(\'image/\'));\r\n    if (hasImage) {\r\n      e.preventDefault();\r\n      const res = await window.cth.saveClipboardImage();\r\n      if (res.ok) addAttachments([res.file]);\r\n      return;\r\n    }\r\n    const files = Array.from(e.clipboardData?.files ?? []);\r\n    if (files.length) {\r\n      const atts = files\r\n        .map((f) => ({ path: window.cth.pathForFile(f), name: f.name }))\r\n        .filter((a) => a.path);\r\n      if (atts.length) {\r\n        e.preventDefault();\r\n        addAttachments(atts);\r\n      }\r\n    }\r\n  };\r\n\r\n  const canSend = !!text.trim() || attachments.length > 0;\r\n\r\n  const queueIt = () => {\r\n    if (!canSend) return;\r\n    // Prepend an "Attached files:" block using the same path-based convention as\r\n    // the Slack inbound path (useHive.ts) so agents Read the files directly.\r\n    const body = attachments.length\r\n      ? (text.trim()\r\n          ? `${text}\\n\\nAttached files:\\n`\r\n          : \'Attached files:\\n\') + attachments.map((a) => `- ${a.path} (${a.name})`).join(\'\\n\')\r\n      : text;\r\n    enqueueMessage(agent.id, body);\r\n    // Counted HERE, at the composer\'s submit, and NOT inside enqueueMessage:\r\n    // that store action is also how work orders, Slack inbound, nudges and\r\n    // compact commands reach an agent, and none of those is a person sending a\r\n    // message. Past the isComposingKey guard in onKey, so an IME candidate\r\n    // Enter never counts. (TELEMETRY.md → message_sent)\r\n    void window.cth.trackMessageSent(\'composer\');\r\n    setText(\'\');\r\n    setAttachments([]);\r\n  };\r\n\r\n  const onKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {\r\n    if (isComposingKey(e)) return;\r\n    if (e.key === \'Enter\' && !e.shiftKey) {\r\n      e.preventDefault();\r\n      queueIt();\r\n    }\r\n  };\r\n\r\n  // Delivery can be held back by the agent\'s own terminal (a half-typed draft or\r\n  // an open slash-command picker owns the prompt). That used to be invisible —\r\n  // the hint claimed it was sending while nothing moved — so poll it and say so.\r\n  // Poll whenever something is queued, busy or not: a busy agent is exactly when\r\n  // a user might have half-typed in the terminal above, and it is when the queue\r\n  // is in use — so the hold must be reported then, not only once the agent idles.\r\n  const block = useTerminalBlock(agent.ptyId, queue.length > 0);\r\n\r\n  // Floor-wide auto-delivery pause (Command Center switch) also holds the queue.\r\n  // Without saying so — and without the per-row "send now" override — messages\r\n  // look permanently stuck with no explanation and no escape hatch.\r\n  const deliveryPaused = useDeliveryPaused(agent.id, queue.length > 0);\r\n\r\n  const statusHint = queue.length === 0\r\n    ? null\r\n    : block === \'draft\'\r\n    ? t(\'queueComposer.heldDraft\', { name: agent.name })\r\n    : block === \'picker\'\r\n    ? t(\'queueComposer.heldPicker\', { name: agent.name })\r\n    : block === \'exited\'\r\n    ? t(\'queueComposer.heldExited\', { name: agent.name })\r\n    : !idle\r\n    ? t(\'queueComposer.busyQueued\', { name: agent.name, count: queue.length })\r\n    : deliveryPaused && !queue[0]?.manual\r\n    ? t(\'queueComposer.heldFloor\')\r\n    : t(\'queueComposer.sendingOneByOne\', { name: agent.name });\r\n\r\n  return (\r\n    <div\r\n      onDragOver={(e) => { e.preventDefault(); if (!dragOver) setDragOver(true); }}\r\n      onDragLeave={(e) => {\r\n        // Only clear when the cursor actually leaves the composer, not on child enter.\r\n        if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;\r\n        setDragOver(false);\r\n      }}\r\n      onDrop={onDrop}\r\n      style={{\r\n        flexShrink: 0,\r\n        borderTop: \'1px solid var(--cth-ink-700)\',\r\n        background: \'var(--cth-cream-100)\',\r\n        display: \'flex\',\r\n        flexDirection: \'column\',\r\n        gap: 6,\r\n        padding: 8,\r\n        boxShadow: dragOver ? \'inset 0 0 0 2px var(--cth-lilac)\' : undefined\r\n      }}>\r\n      {dragOver && (\r\n        <span style={{\r\n          fontFamily: \'var(--cth-font-display)\', fontSize: 9, lineHeight: \'12px\',\r\n          color: \'var(--cth-ink-700)\', textAlign: \'center\'\r\n        }}>{t(\'queueComposer.dropToAttach\')}</span>\r\n      )}\r\n      {/* Header: label, count, status, clear-all */}\r\n      <div style={{ display: \'flex\', alignItems: \'center\', gap: 8 }}>\r\n        <span style={{\r\n          fontFamily: \'var(--cth-font-display)\',\r\n          fontSize: 9, lineHeight: \'12px\',\r\n          color: \'var(--cth-ink-700)\'\r\n        }}>{t(\'queueComposer.queue\')}</span>\r\n        {queue.length > 0 && (\r\n          <span style={{\r\n            fontSize: 11, padding: \'1px 6px 0\',\r\n            background: \'var(--cth-cream-200)\',\r\n            boxShadow: \'inset 0 0 0 1px var(--cth-ink-100)\',\r\n            fontFamily: \'var(--cth-font-ui)\', color: \'var(--cth-ink-900)\'\r\n          }}>{queue.length}</span>\r\n  '... 22203 more characters,
+    expected: /enqueueMessage\(agent\.id, body\);\n(?:\s*\/\/.*\n)*\s*void window\.cth\.trackMessageSent\('composer'\);/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\telemetry-message-count.test.cjs:252:1
+✖ steer is counted at the IPC seam, not inside control.steer (3.7585ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /control\.steer\(agentId, text\);\n(?:\s*\/\/.*\n)*\s*analytics\.trackMessageSent\('steer'\);/. Input:
+  
+  "import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, powerMonitor, powerSaveBlocker, screen, shell, Notification } from 'electron';\r\n" +
+    "import { spawn } from 'node:child_process';\r\n" +
+    'import {\r\n' +
+    '  rmSync, existsSync, readFileSync, readdirSync, statSync, cpSync, writeFileSync,\r\n' +
+    '  unlinkSync, mkdirSync, renameSync, createWriteStream, copyFileSync, lstatSync,\r\n' +
+    '  readlinkSync, symlinkSync\r\n' +
+    "} from 'node:fs';\r\n" +
+    "import { randomBytes, createHash, timingSafeEqual } from 'node:crypto';\r\n" +
+    "import { join, resolve, sep, basename, dirname, isAbsolute } from 'node:path';\r\n" +
+    "import { homedir } from 'node:os';\r\n" +
+    "import { request as httpsRequest } from 'node:https';\r\n" +
+    "import { PtyManager, type SpawnOptions } from './pty';\r\n" +
+    "import { resolveCommand as resolveCliCommand, isSafeCommandName } from './shellEnv';\r\n" +
+    "import { initAutoUpdater, abortPendingRestart } from './updater';\r\n" +
+    "import { RealtimeFloorWatcher } from './realtimeFloorWatcher';\r\n" +
+    'import {\r\n' +
+    '  readConfig, writeConfig, setAgentTokenCap, resetConfig, onConfigWritten, ensureHarnessHome, ensureClaudePermissionsAccepted,\r\n' +
+    '  modelForRole, OPS_STANDUP_MISSION, HEARTBEAT_MISSION, COMPACT_MAINTENANCE_MISSION, type HarnessConfig, type ScheduledMission\r\n' +
+    "} from './config';\r\n" +
+    "import { listDir, readFileText, readFileBinary, writeFileText, statAbs, expandTilde } from './fs';\r\n" +
+    "import { normalizeWeekly, weeklyDelayMs } from '../shared/weeklySchedule';\r\n" +
+    'import {\r\n' +
+    '  getBranch, getStatus, getLog, getBranches, getAheadBehind, isRepo, getDiff, mainRepoRoot,\r\n' +
+    '  addWorktree, removeWorktree, worktreeHasUnintegratedWork, worktreeIsGcSafe,\r\n' +
+    '  getLogGraph, getCommitFiles, getFileAtRev, compareRefs, listWorktrees, checkoutRef\r\n' +
+    "} from './git';\r\n" +
+    "import { linkWorktreeDeps, unlinkWorktreeDeps } from './worktreeDeps';\r\n" +
+    "import { HiveManager, type AgentMeta, type HiveMessage, type HiveTask } from './hive';\r\n" +
+    "import { HookServer } from './hooks';\r\n" +
+    "import { CimaRuntimeService } from './cimaRuntime';\r\n" +
+    "import { AUTONOMY_STAGES, DEFAULT_AUTONOMY_STAGE, type AutonomyStage } from '../shared/lapitaya/autonomy';\r\n" +
+    "import { phaseForAgent } from '../shared/lapitaya/agents';\r\n" +
+    "import { recordBanner } from '../shared/lapitaya/cimaRuntime';\r\n" +
+    "import { LA_PITAYA_NAME } from '../shared/lapitaya/brand';\r\n" +
+    "import { CircuitBreaker, type BreakerInput } from './breaker';\r\n" +
+    "import { CumulativeSampleGate, type UsageProvider } from './usage';\r\n" +
+    "import { MemoryManager } from './memory';\r\n" +
+    "import { KnowledgeManager } from './knowledge';\r\n" +
+    "import { MemoryReflector, type ReflectSettings } from './reflect';\r\n" +
+    "import { PersistStore } from './db';\r\n" +
+    "import { readAgentUsage, readContextTokens, seedSessionTranscript, resolveSessionCwd } from './transcript';\r\n" +
+    "import { listIssues, listCIRuns } from './github';\r\n" +
+    "import { SlackWebhookServer, SlackReplyServer, postSlackReply, type SlackEventFile } from './slack';\r\n" +
+    'import {\r\n' +
+    '  WebhookServer,\r\n' +
+    '  type WebhookDispatch, type WebhookEndpointRef, type WebhookInbound, type WebhookTaskStatus\r\n' +
+    "} from './webhook';\r\n" +
+    'import {\r\n' +
+    '  classifyInboundKind, isAutoAllowed,\r\n' +
+    '  DEFAULT_CONTEXT_TRIGGER, DEFAULT_ORG_TRIGGER, DEFAULT_TRIGGER_MODE, DEFAULT_WEBHOOK_SCHEMA,\r\n' +
+    '  type ContextRule, type ContextTriggerConfig, type InboundKind, type OrgTriggerConfig,\r\n' +
+    '  type TriggerHistoryEntry, type TriggerMode, type WebhookTrigger\r\n' +
+    "} from '../shared/triggers';\r\n" +
+    'import {\r\n' +
+    '  appendTriggerHistory, clearTriggerHistory, listTriggerHistory, updateTriggerHistory\r\n' +
+    "} from './triggerHistory';\r\n" +
+    "import { transcribeWithGroq, DEFAULT_GROQ_MODEL } from './freeflow';\r\n" +
+    "import { registerRealtimeIpc } from './realtime';\r\n" +
+    "import { registerRealtimeActionIpc } from './realtimeActions';\r\n" +
+    "import { initCompletionWatcher } from './realtimeCompletionWatcher';\r\n" +
+    "import type { TaskCard, InboxMessage } from './realtimeCompletionWatcher';\r\n" +
+    "import { TelemetryCollector } from './telemetry';\r\n" +
+    "import { CostLedgerTotals } from './costLifetime';\r\n" +
+    "import { analytics, isRendererMessageSurface } from './analytics';\r\n" +
+    "import type { SpawnFailReason } from './analytics';\r\n" +
+    "import { IntegrationBroker } from './integrationBroker';\r\n" +
+    "import * as integrations from './integrations';\r\n" +
+    "import { validateBaseUrl, buildAuthHeaders, resolveUpstreamUrl, secretRefFor, INTEGRATION_TEMPLATES } from '../shared/integrations';\r\n" +
+    "import { RosterStore } from './roster';\r\n" +
+    "import { buildWorkerLaunch } from './workerLaunch';\r\n" +
+    "import { ControlRegistry } from './control';\r\n" +
+    "import { WorkerWakeWatchdog, type WorkerWakeFacts } from './workerWake';\r\n" +
+    "import { inboxNudgeText } from '../shared/hiveNudge';\r\n" +
+    "import { resolveGodName } from '../shared/godIdentity';\r\n" +
+    "import { fetchHireManifest, readHireManifestFiles } from './hire';\r\n" +
+    "import { parseHireDeepLink, type HireManifest } from '../shared/hire';\r\n" +
+    "import { ClosingTimeController } from './closingTime';\r\n" +
+    'import {\r\n' +
+    '  argsWithAutoModeFlag,\r\n' +
+    '  inferAgentProvider,\r\n' +
+    '  isClaudeProvider,\r\n' +
+    '  nonInteractiveEnvForProvider,\r\n' +
+    '  providerPreset,\r\n' +
+    '  installInfoForProvider,\r\n' +
+    '  type AgentProvider\r\n' +
+    "} from '../shared/agentProvider';\r\n" +
+    "import { buildMissingCliScript, chooseInstallRung } from './cliInstall';\r\n" +
+    "import { detectNodeVersion, nodeIsUsable, resolveNodeInstaller } from './nodeInstall';\r\n" +
+    "import { toolCatalog, type ToolStatus } from '../shared/toolCatalog';\r\n" +
+    "import { listLocalSkills, loadCatalog, installSkill, uninstallSkill, type LocalSkill } from './skills';\r\n" +
+    "import { loadHero } from './hero';\r\n" +
+    "import { loadModelCatalog } from './modelCatalog';\r\n" +
+    'import {\r\n' +
+    '  CODEX_REMOTE_SOCKET_RELATIVE,\r\n' +
+    '  codexRemoteAliasPath,\r\n' +
+    '  codexRemoteEndpoint,\r\n' +
+    '  codexRemoteSocketFits,\r\n' +
+    '  withCodexRemoteArgs\r\n' +
+    "} from '../shared/codexRemote';\r\n" +
+    '\r\n' +
+    'const isDev = !!process.env.ELECTRON_RENDERER_URL;\r\n' +
+    '\r\n' +
+    '// Keep the main process alive on an unexpected throw/rejection. The harness is a\r\n' +
+    "// multi-agent supervisor — a single stray throw (e.g. node-pty's ConPTY console\r\n" +
+    "// helper choking when a fast-exiting agent CLI's console is already gone) must\r\n" +
+    '// NOT take the whole app and every running agent down with it. Log and continue\r\n' +
+    '// rather than letting the default handler exit the process.\r\n' +
+    "// (Restored during the #71 merge — the PR's rebase dropped these handlers.)\r\n" +
+    "process.on('uncaughtException', (err) => {\r\n" +
+    "  console.error('[main] uncaughtException (kept alive):', err);\r\n" +
+    '});\r\n' +
+    "process.on('unhandledRejection', (reason) => {\r\n" +
+    "  console.error('[main] unhandledRejection (kept alive):', reason);\r\n" +
+    '});\r\n' +
+    '\r\n' +
+    'const ptyManager = new PtyManager();\r\n' +
+    '\r\n' +
+    'function runCodexDaemonCommand(\r\n' +
+    '  executable: string,\r\n' +
+    '  args: string[],\r\n' +
+    '  env: NodeJS.ProcessEnv,\r\n' +
+    '  timeoutMs = 20_000\r\n' +
+    '): Promise<{ ok: boolean; error?: string }> {\r\n' +
+    '  return new Promise((resolveResult) => {\r\n' +
+    '    let settled = false;\r\n' +
+    "    let stderr = '';\r\n" +
+    '    let child: ReturnType<typeof spawn>;\r\n' +
+    '    try {\r\n' +
+    '      child = spawn(executable, args, {\r\n' +
+    '        env,\r\n' +
+    "        stdio: ['ignore', 'ignore', 'pipe'],\r\n" +
+    '        windowsHide: true\r\n' +
+    '      });\r\n' +
+    '    } catch (e) {\r\n' +
+    '      resolveResult({ ok: false, error: e instanceof Error ? e.message : String(e) });\r\n' +
+    '      return;\r\n' +
+    '    }\r\n' +
+    '    let timer: NodeJS.Timeout;\r\n' +
+    '    const finish = (result: { ok: boolean; error?: string }): void => {\r\n' +
+    '      if (settled) return;\r\n' +
+    '      settled = true;\r\n' +
+    '      clearTimeout(timer);\r\n' +
+    '      resolveResult(result);\r\n' +
+    '    };\r\n' +
+    "    child.stderr?.on('data', (chunk) => {\r\n" +
+    '      if (stderr.length < 8_000) stderr += String(chunk);\r\n' +
+    '    });\r\n' +
+    "    child.once('error', (e) => finish({ ok: false, error: e.message }));\r\n" +
+    "    child.once('exit', (code) => {\r\n" +
+    '      finish(code === 0\r\n' +
+    '        ? { ok: true }\r\n' +
+    "        : { ok: false, error: stderr.trim() || `Codex exited with code ${code ?? 'unknown'}` });\r\n" +
+    '    });\r\n' +
+    '    timer = setTimeout(() => {\r\n' +
+    '      try { child.kill(); } catch { /* already exited */ }\r\n' +
+    '      finish({ ok: false, error: `Codex daemon command timed out after ${timeoutMs}ms` });\r\n' +
+    '    }, timeoutMs);\r\n' +
+    '  });\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    '/** Start/enable one managed remote-control daemon for this isolated Codex home,\r\n' +
+    ' * then point the TUI at its app-server socket. Failure is non-fatal: the worker\r\n' +
+    ' * still starts as a normal local Codex session. */\r\n' +
+    'async function enableCodexRemoteForSpawn(\r\n' +
+    '  opts: SpawnOptions & { hive?: AgentMeta },\r\n' +
+    '  agentId: string\r\n' +
+    '): Promise<boolean> {\r\n' +
+    "  if (process.platform === 'win32') return false;\r\n" +
+    '  const realHome = opts.env?.CODEX_HOME;\r\n' +
+    '  if (!realHome) return false;\r\n' +
+    '  try {\r\n' +
+    '    const alias = codexRemoteAliasPath(realHome, agentId);\r\n' +
+    '    // Bail before touching the filesystem if even the short alias would exceed\r\n' +
+    '    // sun_path — the daemon would start and then die on bind, and the warning\r\n' +
+    '    // below names the real reason instead of a generic readiness timeout.\r\n' +
+    '    if (!codexRemoteSocketFits(alias)) {\r\n' +
+    "      console.warn('[codex-remote] socket path exceeds sun_path; starting local TUI:', alias);\r\n" +
+    '      return false;\r\n' +
+    '    }\r\n' +
+    '    const aliasRoot = dirname(alias);\r\n' +
+    '    mkdirSync(aliasRoot, { recursive: true });\r\n' +
+    '    if (existsSync(alias)) {\r\n' +
+    '      const st = lstatSync(alias);\r\n' +
+    '      if (!st.isSymbolicLink() || resolve(dirname(alias), readlinkSync(alias)) !== resolve(realHome)) {\r\n' +
+    "        console.warn('[codex-remote] short home alias is occupied; starting local TUI:', alias);\r\n" +
+    '        return false;\r\n' +
+    '      }\r\n' +
+    '    } else {\r\n' +
+    "      symlinkSync(realHome, alias, 'dir');\r\n" +
+    '    }\r\n' +
+    '\r\n' +
+    '    const socket = join(alias, CODEX_REMOTE_SOCKET_RELATIVE);\r\n' +
+    '    const env: NodeJS.ProcessEnv = {\r\n' +
+    '      ...process.env,\r\n' +
+    '      ...(opts.env ?? {}),\r\n' +
+    '      CODEX_HOME: alias\r\n' +
+    '    };\r\n' +
+    "    // shellEnv's resolver mirrors PtyManager's (which is private + returns\r\n" +
+    '    // {path, found}); the daemon just needs the best executable path.\r\n' +
+    '    const executable = resolveCliCommand(opts.command);\r\n' +
+    '    const started = await runCodexDaemonCommand(\r\n' +
+    '      executable,\r\n' +
+    "      ['app-server', 'daemon', 'start'],\r\n" +
+    '      env\r\n' +
+    '    );\r\n' +
+    '    if (!started.ok) {\r\n' +
+    "      console.warn('[codex-remote] daemon start failed; starting local TUI:', started.error);\r\n" +
+    '      return false;\r\n' +
+    '    }\r\n' +
+    '    const enabled = await runCodexDaemonCommand(\r\n' +
+    '      executable,\r\n' +
+    "      ['app-server', 'daemon', 'enable-remote-control'],\r\n" +
+    '      env\r\n' +
+    '    );\r\n' +
+    '    if (!enabled.ok) {\r\n' +
+    '      console.warn'... 281126 more characters
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\telemetry-message-count.test.cjs:253:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, powerMonitor, powerSaveBlocker, screen, shell, Notification } from 'electron';\r\nimport { spawn } from 'node:child_process';\r\nimport {\r\n  rmSync, existsSync, readFileSync, readdirSync, statSync, cpSync, writeFileSync,\r\n  unlinkSync, mkdirSync, renameSync, createWriteStream, copyFileSync, lstatSync,\r\n  readlinkSync, symlinkSync\r\n} from 'node:fs';\r\nimport { randomBytes, createHash, timingSafeEqual } from 'node:crypto';\r\nimport { join, resolve, sep, basename, dirname, isAbsolute } from 'node:path';\r\nimport { homedir } from 'node:os';\r\nimport { request as httpsRequest } from 'node:https';\r\nimport { PtyManager, type SpawnOptions } from './pty';\r\nimport { resolveCommand as resolveCliCommand, isSafeCommandName } from './shellEnv';\r\nimport { initAutoUpdater, abortPendingRestart } from './updater';\r\nimport { RealtimeFloorWatcher } from './realtimeFloorWatcher';\r\nimport {\r\n  readConfig, writeConfig, setAgentTokenCap, resetConfig, onConfigWritten, ensureHarnessHome, ensureClaudePermissionsAccepted,\r\n  modelForRole, OPS_STANDUP_MISSION, HEARTBEAT_MISSION, COMPACT_MAINTENANCE_MISSION, type HarnessConfig, type ScheduledMission\r\n} from './config';\r\nimport { listDir, readFileText, readFileBinary, writeFileText, statAbs, expandTilde } from './fs';\r\nimport { normalizeWeekly, weeklyDelayMs } from '../shared/weeklySchedule';\r\nimport {\r\n  getBranch, getStatus, getLog, getBranches, getAheadBehind, isRepo, getDiff, mainRepoRoot,\r\n  addWorktree, removeWorktree, worktreeHasUnintegratedWork, worktreeIsGcSafe,\r\n  getLogGraph, getCommitFiles, getFileAtRev, compareRefs, listWorktrees, checkoutRef\r\n} from './git';\r\nimport { linkWorktreeDeps, unlinkWorktreeDeps } from './worktreeDeps';\r\nimport { HiveManager, type AgentMeta, type HiveMessage, type HiveTask } from './hive';\r\nimport { HookServer } from './hooks';\r\nimport { CimaRuntimeService } from './cimaRuntime';\r\nimport { AUTONOMY_STAGES, DEFAULT_AUTONOMY_STAGE, type AutonomyStage } from '../shared/lapitaya/autonomy';\r\nimport { phaseForAgent } from '../shared/lapitaya/agents';\r\nimport { recordBanner } from '../shared/lapitaya/cimaRuntime';\r\nimport { LA_PITAYA_NAME } from '../shared/lapitaya/brand';\r\nimport { CircuitBreaker, type BreakerInput } from './breaker';\r\nimport { CumulativeSampleGate, type UsageProvider } from './usage';\r\nimport { MemoryManager } from './memory';\r\nimport { KnowledgeManager } from './knowledge';\r\nimport { MemoryReflector, type ReflectSettings } from './reflect';\r\nimport { PersistStore } from './db';\r\nimport { readAgentUsage, readContextTokens, seedSessionTranscript, resolveSessionCwd } from './transcript';\r\nimport { listIssues, listCIRuns } from './github';\r\nimport { SlackWebhookServer, SlackReplyServer, postSlackReply, type SlackEventFile } from './slack';\r\nimport {\r\n  WebhookServer,\r\n  type WebhookDispatch, type WebhookEndpointRef, type WebhookInbound, type WebhookTaskStatus\r\n} from './webhook';\r\nimport {\r\n  classifyInboundKind, isAutoAllowed,\r\n  DEFAULT_CONTEXT_TRIGGER, DEFAULT_ORG_TRIGGER, DEFAULT_TRIGGER_MODE, DEFAULT_WEBHOOK_SCHEMA,\r\n  type ContextRule, type ContextTriggerConfig, type InboundKind, type OrgTriggerConfig,\r\n  type TriggerHistoryEntry, type TriggerMode, type WebhookTrigger\r\n} from '../shared/triggers';\r\nimport {\r\n  appendTriggerHistory, clearTriggerHistory, listTriggerHistory, updateTriggerHistory\r\n} from './triggerHistory';\r\nimport { transcribeWithGroq, DEFAULT_GROQ_MODEL } from './freeflow';\r\nimport { registerRealtimeIpc } from './realtime';\r\nimport { registerRealtimeActionIpc } from './realtimeActions';\r\nimport { initCompletionWatcher } from './realtimeCompletionWatcher';\r\nimport type { TaskCard, InboxMessage } from './realtimeCompletionWatcher';\r\nimport { TelemetryCollector } from './telemetry';\r\nimport { CostLedgerTotals } from './costLifetime';\r\nimport { analytics, isRendererMessageSurface } from './analytics';\r\nimport type { SpawnFailReason } from './analytics';\r\nimport { IntegrationBroker } from './integrationBroker';\r\nimport * as integrations from './integrations';\r\nimport { validateBaseUrl, buildAuthHeaders, resolveUpstreamUrl, secretRefFor, INTEGRATION_TEMPLATES } from '../shared/integrations';\r\nimport { RosterStore } from './roster';\r\nimport { buildWorkerLaunch } from './workerLaunch';\r\nimport { ControlRegistry } from './control';\r\nimport { WorkerWakeWatchdog, type WorkerWakeFacts } from './workerWake';\r\nimport { inboxNudgeText } from '../shared/hiveNudge';\r\nimport { resolveGodName } from '../shared/godIdentity';\r\nimport { fetchHireManifest, readHireManifestFiles } from './hire';\r\nimport { parseHireDeepLink, type HireManifest } from '../shared/hire';\r\nimport { ClosingTimeController } from './closingTime';\r\nimport {\r\n  argsWithAutoModeFlag,\r\n  inferAgentProvider,\r\n  isClaudeProvider,\r\n  nonInteractiveEnvForProvider,\r\n  providerPreset,\r\n  installInfoForProvider,\r\n  type AgentProvider\r\n} from '../shared/agentProvider';\r\nimport { buildMissingCliScript, chooseInstallRung } from './cliInstall';\r\nimport { detectNodeVersion, nodeIsUsable, resolveNodeInstaller } from './nodeInstall';\r\nimport { toolCatalog, type ToolStatus } from '../shared/toolCatalog';\r\nimport { listLocalSkills, loadCatalog, installSkill, uninstallSkill, type LocalSkill } from './skills';\r\nimport { loadHero } from './hero';\r\nimport { loadModelCatalog } from './modelCatalog';\r\nimport {\r\n  CODEX_REMOTE_SOCKET_RELATIVE,\r\n  codexRemoteAliasPath,\r\n  codexRemoteEndpoint,\r\n  codexRemoteSocketFits,\r\n  withCodexRemoteArgs\r\n} from '../shared/codexRemote';\r\n\r\nconst isDev = !!process.env.ELECTRON_RENDERER_URL;\r\n\r\n// Keep the main process alive on an unexpected throw/rejection. The harness is a\r\n// multi-agent supervisor — a single stray throw (e.g. node-pty's ConPTY console\r\n// helper choking when a fast-exiting agent CLI's console is already gone) must\r\n// NOT take the whole app and every running agent down with it. Log and continue\r\n// rather than letting the default handler exit the process.\r\n// (Restored during the #71 merge — the PR's rebase dropped these handlers.)\r\nprocess.on('uncaughtException', (err) => {\r\n  console.error('[main] uncaughtException (kept alive):', err);\r\n});\r\nprocess.on('unhandledRejection', (reason) => {\r\n  console.error('[main] unhandledRejection (kept alive):', reason);\r\n});\r\n\r\nconst ptyManager = new PtyManager();\r\n\r\nfunction runCodexDaemonCommand(\r\n  executable: string,\r\n  args: string[],\r\n  env: NodeJS.ProcessEnv,\r\n  timeoutMs = 20_000\r\n): Promise<{ ok: boolean; error?: string }> {\r\n  return new Promise((resolveResult) => {\r\n    let settled = false;\r\n    let stderr = '';\r\n    let child: ReturnType<typeof spawn>;\r\n    try {\r\n      child = spawn(executable, args, {\r\n        env,\r\n        stdio: ['ignore', 'ignore', 'pipe'],\r\n        windowsHide: true\r\n      });\r\n    } catch (e) {\r\n      resolveResult({ ok: false, error: e instanceof Error ? e.message : String(e) });\r\n      return;\r\n    }\r\n    let timer: NodeJS.Timeout;\r\n    const finish = (result: { ok: boolean; error?: string }): void => {\r\n      if (settled) return;\r\n      settled = true;\r\n      clearTimeout(timer);\r\n      resolveResult(result);\r\n    };\r\n    child.stderr?.on('data', (chunk) => {\r\n      if (stderr.length < 8_000) stderr += String(chunk);\r\n    });\r\n    child.once('error', (e) => finish({ ok: false, error: e.message }));\r\n    child.once('exit', (code) => {\r\n      finish(code === 0\r\n        ? { ok: true }\r\n        : { ok: false, error: stderr.trim() || `Codex exited with code ${code ?? 'unknown'}` });\r\n    });\r\n    timer = setTimeout(() => {\r\n      try { child.kill(); } catch { /* already exited */ }\r\n      finish({ ok: false, error: `Codex daemon command timed out after ${timeoutMs}ms` });\r\n    }, timeoutMs);\r\n  });\r\n}\r\n\r\n/** Start/enable one managed remote-control daemon for this isolated Codex home,\r\n * then point the TUI at its app-server socket. Failure is non-fatal: the worker\r\n * still starts as a normal local Codex session. */\r\nasync function enableCodexRemoteForSpawn(\r\n  opts: SpawnOptions & { hive?: AgentMeta },\r\n  agentId: string\r\n): Promise<boolean> {\r\n  if (process.platform === 'win32') return false;\r\n  const realHome = opts.env?.CODEX_HOME;\r\n  if (!realHome) return false;\r\n  try {\r\n    const alias = codexRemoteAliasPath(realHome, agentId);\r\n    // Bail before touching the filesystem if even the short alias would exceed\r\n    // sun_path — the daemon would start and then die on bind, and the warning\r\n    // below names the real reason instead of a generic readiness timeout.\r\n    if (!codexRemoteSocketFits(alias)) {\r\n      console.warn('[codex-remote] socket path exceeds sun_path; starting local TUI:', alias);\r\n      return false;\r\n    }\r\n    const aliasRoot = dirname(alias);\r\n    mkdirSync(aliasRoot, { recursive: true });\r\n    if (existsSync(alias)) {\r\n      const st = lstatSync(alias);\r\n      if (!st.isSymbolicLink() || resolve(dirname(alias), readlinkSync(alias)) !== resolve(realHome)) {\r\n        console.warn('[codex-remote] short home alias is occupied; starting local TUI:', alias);\r\n        return false;\r\n      }\r\n    } else {\r\n      symlinkSync(realHome, alias, 'dir');\r\n    }\r\n\r\n    const socket = join(alias, CODEX_REMOTE_SOCKET_RELATIVE);\r\n    const env: NodeJS.ProcessEnv = {\r\n      ...process.env,\r\n      ...(opts.env ?? {}),\r\n      CODEX_HOME: alias\r\n    };\r\n    // shellEnv's resolver mirrors PtyManager's (which is private + returns\r\n    // {path, found}); the daemon just needs the best executable path.\r\n    const executable = resolveCliCommand(opts.command);\r\n    const started = await runCodexDaemonCommand(\r\n      executable,\r\n      ['app-server', 'daemon', 'start'],\r\n      env\r\n    );\r\n    if (!started.ok) {\r\n      console.warn('[codex-remote] daemon start failed; starting local TUI:', started.error);\r\n      return false;\r\n    }\r\n    const enabled = await runCodexDaemonCommand(\r\n      executable,\r\n      ['app-server', 'daemon', 'enable-remote-control'],\r\n      env\r\n    );\r\n    if (!enabled.ok) {\r\n      console.warn"... 281126 more characters,
+    expected: /control\.steer\(agentId, text\);\n(?:\s*\/\/.*\n)*\s*analytics\.trackMessageSent\('steer'\);/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\worktree-deps.test.cjs:78:1
+✖ does not follow the dependency symlink when removing a worktree (772.0276ms)
+  Error: ENOENT: no such file or directory, open 'C:\Users\chess\AppData\Local\Temp\md-worktree-deps-caoF0M\repo\node_modules\must-survive.txt'
+      at Object.readFileSync (node:fs:440:20)
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\worktree-deps.test.cjs:92:19)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'C:\\Users\\chess\\AppData\\Local\\Temp\\md-worktree-deps-caoF0M\\repo\\node_modules\\must-survive.txt'
+  }
+
+test at test\worktree-deps.test.cjs:95:1
+✖ leaves a dangling worktree dependency symlink untouched (727.1698ms)
+  Error: EPERM: operation not permitted, symlink 'C:\does-not-exist' -> 'C:\Users\chess\AppData\Local\Temp\md-worktree-deps-xGE3FM\worktrees\agent-e\node_modules'
+      at Object.symlinkSync (node:fs:1868:11)
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\worktree-deps.test.cjs:100:6)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    errno: -4048,
+    code: 'EPERM',
+    syscall: 'symlink',
+    path: 'C:\\does-not-exist',
+    dest: 'C:\\Users\\chess\\AppData\\Local\\Temp\\md-worktree-deps-xGE3FM\\worktrees\\agent-e\\node_modules'
+  }
+
+test at test\worktree-deps.test.cjs:108:1
+✖ reports a failed link without throwing (492.0954ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /EEXIST|ENOTDIR/. Input:
+  
+  "Error: ENOENT: no such file or directory, symlink 'C:\\Users\\chess\\AppData\\Local\\Temp\\md-worktree-deps-oMIJkU\\repo\\node_modules' -> 'C:\\Users\\chess\\AppData\\Local\\Temp\\md-worktree-deps-oMIJkU\\repo\\not-a-directory\\node_modules'"
+  
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\worktree-deps.test.cjs:117:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "Error: ENOENT: no such file or directory, symlink 'C:\\Users\\chess\\AppData\\Local\\Temp\\md-worktree-deps-oMIJkU\\repo\\node_modules' -> 'C:\\Users\\chess\\AppData\\Local\\Temp\\md-worktree-deps-oMIJkU\\repo\\not-a-directory\\node_modules'",
+    expected: /EEXIST|ENOTDIR/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\worktree-deps.test.cjs:120:1
+✖ removes only the linked dependencies before checking worktree status (1043.8135ms)
+  AssertionError [ERR_ASSERTION]: the unignored link makes the worktree dirty
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\worktree-deps.test.cjs:128:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: '',
+    operator: 'notStrictEqual',
+    diff: 'simple'
+  }
+
+test at test\worktree-deps.test.cjs:151:1
+✖ does not remove a worktree node_modules link to another directory (745.8098ms)
+  Error: EPERM: operation not permitted, symlink 'C:\Users\chess\AppData\Local\Temp\md-worktree-deps-NvL1xB\repo\foreign-node-modules' -> 'C:\Users\chess\AppData\Local\Temp\md-worktree-deps-NvL1xB\worktrees\agent-h\node_modules'
+      at Object.symlinkSync (node:fs:1868:11)
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\worktree-deps.test.cjs:160:6)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    errno: -4048,
+    code: 'EPERM',
+    syscall: 'symlink',
+    path: 'C:\\Users\\chess\\AppData\\Local\\Temp\\md-worktree-deps-NvL1xB\\repo\\foreign-node-modules',
+    dest: 'C:\\Users\\chess\\AppData\\Local\\Temp\\md-worktree-deps-NvL1xB\\worktrees\\agent-h\\node_modules'
+  }
+tests exit=1

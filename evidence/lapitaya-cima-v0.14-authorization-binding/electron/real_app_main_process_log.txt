@@ -1,0 +1,7 @@
+
+
+DevTools listening on ws://127.0.0.1:9350/devtools/browser/4487515a-543a-4670-afe6-3751a019cbea
+[updater] first run of 0.4.6 (previous none); fetching its release page
+[broker] integration broker listening on http://127.0.0.1:60723
+[telemetry] collector listening http://127.0.0.1:60724
+[updater] just-updated 0.4.6 without release notes

@@ -1,0 +1,35 @@
+[
+  {
+    "step": "p1 confirmed with its token, then completed by the human",
+    "p1": "req-mywpixns-1"
+  },
+  {
+    "step": "new REQUEST p2",
+    "p2": "req-mywpj3u0-2",
+    "status": "PROPOSED"
+  },
+  {
+    "step": "execution after p1, while p2 is unconfirmed",
+    "agent": "god",
+    "call": "Bash {\"command\":\"npm test\"}",
+    "result": "DENIED",
+    "decision": "DENY",
+    "reason": "REQUEST_CONFIRMATION_REQUIRED — request req-mywpj3u0-2 is a proposal waiting for the human's confirmation. Nothing may execute until the human confirms it in La"
+  },
+  {
+    "step": "confirm p2 with p1's token",
+    "result": {
+      "ok": false,
+      "code": "TAMPERED",
+      "reason": "the confirmation token does not match this proposal"
+    }
+  },
+  {
+    "step": "confirm p1 again",
+    "result": {
+      "ok": false,
+      "code": "NOT_CONFIRMABLE",
+      "reason": "proposal req-mywpixns-1 is COMPLETED"
+    }
+  }
+]

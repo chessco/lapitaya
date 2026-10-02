@@ -1,0 +1,18 @@
+LA PITAYA — ALICIA v0.9: IPC AUDIT
+====================================
+Governance & Decision Center IPC surface exposed to renderer:
+
+CHANNEL                        PURPOSE                                  SOURCE OF TRUTH             READ/WRITE   TRUST BOUNDARY                     USED BY
+-----------------------------  ---------------------------------------  --------------------------  -----------  ---------------------------------  ------------------------------
+lapitaya:decide                Execute human Approve/Reject on HIGH     CimaRuntimeService          WRITE        Trusted sender (main resolves who) DecisionCenter / useDecisionCenter
+lapitaya:requests              Fetch pending REQUEST proposals          CimaRuntimeService          READ         Read-only proposal view            AliciaPanel / ConfirmationController
+lapitaya:confirmRequest        Human confirms REQUEST proposal          CimaRuntimeService          WRITE        Trusted sender + token check       AliciaPanel / ConfirmationController
+lapitaya:cancelRequest         Human cancels REQUEST proposal           CimaRuntimeService          WRITE        Trusted sender                     AliciaPanel / ConfirmationController
+lapitaya:completeRequest       Complete active REQUEST session          CimaRuntimeService          WRITE        Trusted sender                     ConfirmationController
+lapitaya:observability         Read-only governance observability view  projectObservability        READ         Pure projection (strips secrets)   DecisionCenter / AliciaPanel
+lapitaya:decisionCenterState   Sync Decision Center UI state            DecisionCenter              READ         Read-only UI state                 DecisionCenter
+lapitaya:identity              Get trusted human decision owner         HumanIdentityService        READ         Trusted sender                     DecisionCenter
+lapitaya:ledger                Read append-only CIMA ledger             CimaRuntimeService          READ         Read-only ledger entries           Observability / Governance Panel
+
+REMOVED CHANNEL:
+lapitaya:approvals             [REMOVED] Legacy approval summary IPC channel. Fully superseded by lapitaya:observability & lapitaya:decide.

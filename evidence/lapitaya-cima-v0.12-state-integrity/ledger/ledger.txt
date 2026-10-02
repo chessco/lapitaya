@@ -1,0 +1,3 @@
+STATE-05: Malformed ledger JSON lines cause load() to register corruptedFiles set. Runtime fails closed with GOVERNANCE_STATE_CORRUPT.
+STATE-06: Truncated ledger lines cause completionGate and authorize to fail closed (allowed: false).
+STATE-21: Concurrent ledger appends are protected via re-entrant withLock file locking (.governance.lock) and fsync.

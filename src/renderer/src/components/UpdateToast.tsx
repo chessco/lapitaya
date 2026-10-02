@@ -40,6 +40,7 @@ import { summarizeReleaseNotes } from '@shared/releaseNotes';
 import { extractDropHtml } from '@shared/releaseDrop';
 import { ReleaseDrop } from '@/components/ReleaseDrop';
 import type { UpdateStatus } from '@shared/updateState';
+import { LA_PITAYA_NAME, LA_PITAYA_REPOSITORY_URL } from '@shared/lapitaya/brand';
 
 /** The toast is the LOUD half — it only interrupts for the two states a user has
  *  to act on. Everything else (checking, available, download progress, errors)
@@ -50,7 +51,7 @@ function toastable(s: UpdateStatus): ToastStatus | null {
   return s.state === 'downloaded' || s.state === 'available-manual' || s.state === 'just-updated' ? s : null;
 }
 
-const GITHUB_REPO_URL = 'https://github.com/chaitanyagiri/munder-difflin';
+const GITHUB_REPO_URL = LA_PITAYA_REPOSITORY_URL;
 /** Only ever the `href` — the click is handled by `updateOpenRelease`, which
  *  resolves `undefined` to this same page in main. */
 const GITHUB_RELEASES_URL = `${GITHUB_REPO_URL}/releases/latest`;
@@ -237,7 +238,7 @@ export function UpdateToast() {
       </div>
       <span style={{ fontSize: 12, lineHeight: '16px', color: 'var(--cth-ink-700)' }}>
         {status.state === 'downloaded'
-          ? 'Restart Munder Difflin whenever you like to apply it — nothing restarts on its own.'
+          ? `Restart ${LA_PITAYA_NAME} whenever you like to apply it — nothing restarts on its own.`
           : 'This install can’t update itself — grab the new build from the releases page.'}
       </span>
 

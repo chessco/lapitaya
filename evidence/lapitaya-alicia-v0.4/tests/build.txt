@@ -1,0 +1,9 @@
+# npm run build (run alone)
+[32m✓ built in 1.06s[39m
+[32m✓ built in 35ms[39m
+[32m✓ built in 41.01s[39m
+build exit=0
+
+# first attempt (ran concurrently with an evidence script): ENVIRONMENT
+fatal error: out of memory allocating heap arena metadata
+build exit=1

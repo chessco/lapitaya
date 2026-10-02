@@ -36,6 +36,11 @@
   const path = require('path');
   const NM = path.join(REPO, 'node_modules');
 
+  // La Pitaya: the app now boots in es-MX. This repro finds buttons by their
+  // English labels ("monitor", "restart & continue"), so pin the UI to en-US
+  // before i18n loads — the same thing a user does in Settings → Language.
+  try { window.localStorage.setItem('cth.language', 'en-US'); } catch { /* no storage */ }
+
   // ─── 0. window.cth bridge FIRST (the store reads it at module load) ─────────
   const CWD = 'D:\\bug14\\proj';
   const calls = [];

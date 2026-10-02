@@ -1,0 +1,2 @@
+hasRegisteredTokens after ensureAgent: true
+{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"IDENTITY_UNTRUSTED — missing or invalid agent capability token for 'valentin-1'"}}

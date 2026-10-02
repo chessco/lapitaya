@@ -1,0 +1,13 @@
+R1 authorize after tail deletion                     ["ALLOW","read"]
+R2 authorize after middle deletion                   ["ALLOW","read"]
+R3 authorize after reorder                           ["ALLOW","read"]
+R4 completionGate on a text-forged DECISION PASS     [true,"DECISION PASS recorded at 2026-10-01T23:39:27.061Z"]
+R5 authorize with a fake HUMAN_APPROVED line present ["ALLOW","read"]
+R6 gate before / after the edit                      ["DENY:REQUEST_CONFIRMATION_REQUIRED","ALLOW:shell:low"]
+R7 authorize with state-only approval                ["APPROVED","shell:git-push"]
+R8 A.listApprovals / A.cimaRecords (disk has 1 / 1)  [0,0]
+R9 authorize on a truncated tail                     ["DENY","GOVERNANCE_STATE_CORRUPT"]
+R9 recovery API present?                             false
+R10 ledger events=1000                               avg ms/authorize=7.4
+R10 ledger events=10000                              avg ms/authorize=36.8
+R10 ledger events=50000                              avg ms/authorize=129.4

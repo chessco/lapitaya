@@ -1,0 +1,18 @@
+LA PITAYA — ALICIA v0.9: PRELOAD AUDIT
+========================================
+Exposed window.cth governance bridge methods:
+
+METHOD                    IPC CHANNEL                    STATUS      PURPOSE
+------------------------  -----------------------------  ----------  --------------------------------------------------------
+lapitayaApprovals         lapitaya:approvals             REMOVED     Legacy approval summary list. Obsolete and removed.
+lapitayaDecide            lapitaya:decide                ACTIVE      Human decision on HIGH approval.
+lapitayaRequests          lapitaya:requests              ACTIVE      List pending REQUEST proposals.
+lapitayaConfirmRequest    lapitaya:confirmRequest        ACTIVE      Human confirm proposal.
+lapitayaCancelRequest     lapitaya:cancelRequest         ACTIVE      Human cancel proposal.
+lapitayaCompleteRequest   lapitaya:completeRequest       ACTIVE      Human complete proposal.
+lapitayaObservability     lapitaya:observability         ACTIVE      Read-only governance observability projection.
+lapitayaDecisionCenterState lapitaya:decisionCenterState ACTIVE      Decision Center UI state.
+lapitayaIdentity          lapitaya:identity              ACTIVE      Read trusted human decision owner.
+lapitayaLedger            lapitaya:ledger                ACTIVE      Read append-only CIMA ledger.
+
+Result: Public preload surface is minimized; obsolete lapitayaApprovals bridge is removed.

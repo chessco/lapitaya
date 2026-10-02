@@ -17,7 +17,7 @@ const { HiveManager } = loadTs('src/main/hive.ts');
 function tmpHome() { return fs.mkdtempSync(path.join(os.tmpdir(), 'md-proxy-retry-')); }
 
 function spawnCrush(hive) {
-  return hive.ensureAgent({ id: 'crush-1', name: 'Crush Worker', provider: 'crush', cwd: hive.root() });
+  return hive.ensureAgent({ id: 'crush-1', name: 'Crush Worker', provider: 'crush', cwd: hive.root() }, { allowUngovernedProviders: true });
 }
 
 test('a bind that fails once and then succeeds leaves the agent fully proxied', async (t) => {

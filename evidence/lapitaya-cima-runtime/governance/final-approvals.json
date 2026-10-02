@@ -1,0 +1,28 @@
+[
+  {
+    "id": "apr-munjyw4u-c",
+    "agentId": "el-beni-munh8ii6",
+    "tool": "Bash",
+    "fingerprint": "daca19fc",
+    "category": "destructive-migration",
+    "risk": "HIGH",
+    "summary": "run: cd \"C:\\PitayaCode\\LaPitaya-cima-sandbox\" && node scripts/mock-destructive-migration.cjs --drop-all-tables",
+    "status": "consumed",
+    "createdAt": 1790739342894,
+    "decidedAt": 1790739391453,
+    "decidedBy": "human"
+  },
+  {
+    "id": "apr-munk077s-r",
+    "agentId": "el-beni-munh8ii6",
+    "tool": "Bash",
+    "fingerprint": "daca19fc",
+    "category": "destructive-migration",
+    "risk": "HIGH",
+    "summary": "run: cd \"C:\\PitayaCode\\LaPitaya-cima-sandbox\" && node scripts/mock-destructive-migration.cjs --drop-all-tables",
+    "status": "rejected",
+    "createdAt": 1790739403912,
+    "decidedAt": 1790739443316,
+    "decidedBy": "human"
+  }
+]

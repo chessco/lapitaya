@@ -1,0 +1,61 @@
+{
+  "windows": {
+    "count": 2,
+    "distinct": true,
+    "M_hasDC": true,
+    "F_hasDC": false
+  },
+  "sameHumanBothWindows": {
+    "id": true,
+    "session": true
+  },
+  "M-submit": "ok",
+  "F-sees-pending": {
+    "count": 1,
+    "hasToken": true
+  },
+  "M-ack": "ok",
+  "M-confirm": "ok",
+  "F-replay-confirm": {
+    "ok": false,
+    "code": "NOT_CONFIRMABLE"
+  },
+  "F-cancel-after": {
+    "ok": false,
+    "code": "UNKNOWN_PROPOSAL"
+  },
+  "ledgerRequestOwnership": {
+    "confirmedRecords": 1,
+    "confirmedHumanIsMe": true,
+    "deniedCodes": [
+      "NOT_CONFIRMABLE"
+    ],
+    "deniedHumanIsMe": true,
+    "deniedWindowDiffersFromConfirmed": true,
+    "sameSession": true
+  },
+  "M-card-confirmedBy": "<os-user> (hum-2484b1766dd8e353acb8)",
+  "highPre": "",
+  "pendingHigh": 0,
+  "M-sees-high": 0,
+  "F-reject": null,
+  "M-card-after-F-decision": "no card",
+  "M-approve-stale-bridge": null,
+  "F-approve-again": null,
+  "ledgerHighOwnership": [],
+  "approvalFinal": {
+    "__err": "TypeError: Cannot read properties of undefined (reading 'status')\n    at <anonymous>:1:94"
+  },
+  "windowOfF-decision-differs-from-M-confirm": true,
+  "leaks": {
+    "command": false,
+    "srv": false,
+    "hivePath": false,
+    "session": false,
+    "token": false
+  },
+  "rendererErrors": {
+    "M": [],
+    "F": []
+  }
+}

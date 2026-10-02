@@ -1,0 +1,16 @@
+✔ [AUTHBIND-02] the exact call is allowed after a valid approval — once (5960.8997ms)
+✔ [AUTHBIND-13] approval replay is denied (same call, other call, new request with the same command) (3822.8693ms)
+✔ [AUTHBIND-14] a consumed approval turned back into "approved" on disk is denied (3582.3616ms)
+✔ [AUTHBIND-15] a modified approval (target/context changed, fingerprint kept) is denied (4449.214ms)
+✔ [AUTHBIND-16] a copied approval (other agent / task / provider, fingerprint recomputed) is denied (3922.837ms)
+✔ [AUTHBIND-17] an expired approval is denied (pending AND approved) (3704.7537ms)
+✔ [AUTHBIND-31] a legacy (FNV-only) approval never authorizes anything — it is retired, with a ledger record (3622.3813ms)
+✔ [AUTHBIND-32] a hand-written approval with a consistent binding but no seal is not an approval (3685.2401ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 36062.7906

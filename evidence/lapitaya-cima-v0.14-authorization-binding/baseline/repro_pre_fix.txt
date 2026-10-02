@@ -1,0 +1,43 @@
+CALL A first call                              ["HUMAN_APPROVAL_REQUIRED","HIGH"]
+CALL A  FNV-32                                 7e8dbd9e
+CALL B                                         rm -rf /important/data # 9 LUpT
+CALL B  FNV-32                                 7e8dbd9e
+R1 RESULT authorize(B) after approving A       ["APPROVED","data-deletion","shell:recursive-delete"]
+R1 authorize(A) after B consumed approval      ["HUMAN_APPROVAL_REQUIRED"]
+R3 Write /v14-2jA4ji/hive/lapitaya/approvals.json ["HUMAN_APPROVAL_REQUIRED","governance-tamper","hive-governance-path"]
+R3 Write /v14-2jA4ji/hive/lapitaya/approvals.json ["SUPERVISED","config-change","config-path"]
+R3 Write e/agents/x/../../lapitaya/approvals.json ["HUMAN_APPROVAL_REQUIRED","governance-tamper","hive-governance-path"]
+R3 Write 14-2jA4ji/hive\lapitaya\.\approvals.json ["HUMAN_APPROVAL_REQUIRED","governance-tamper","hive-governance-path"]
+R3 Write /v14-2jA4ji/hive/LAPITAYA/approvals.json ["HUMAN_APPROVAL_REQUIRED","governance-tamper","hive-governance-path"]
+R3 Write v14-2jA4ji/hive/lapitaya./approvals.json ["ALLOW","hive-coordination","hive-path"]
+R3 Write 14-2jA4ji/hive//lapitaya//approvals.json ["HUMAN_APPROVAL_REQUIRED","governance-tamper","hive-governance-path"]
+R3 Write lapitaya/approvals.json               ["SUPERVISED","config-change","config-path"]
+R4 authorize while another holds the lock      ["ALLOW","read","ms=2","lockFileStillThere=true"]
+    at nodeFs.openSync (C:\PitayaCode\LaPitaya\evidence\lapitaya-cima-v0.14-authorization-binding\fnv-reproduction\repro_v013_findings.cjs:104:131)
+    at CimaRuntimeService.append (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:257:47)
+    at eval (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:850:18)
+    at CimaRuntimeService.withLock (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:130:20)
+    at CimaRuntimeService.decide (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:826:21)
+    at C:\PitayaCode\LaPitaya\evidence\lapitaya-cima-v0.14-authorization-binding\fnv-reproduction\repro_v013_findings.cjs:106:17
+    at step (C:\PitayaCode\LaPitaya\evidence\lapitaya-cima-v0.14-authorization-binding\fnv-reproduction\repro_v013_findings.cjs:19:32)
+    at Object.<anonymous> (C:\PitayaCode\LaPitaya\evidence\lapitaya-cima-v0.14-authorization-binding\fnv-reproduction\repro_v013_findings.cjs:99:1)
+    at Module._compile (node:internal/modules/cjs/loader:1812:14)
+    at Object..js (node:internal/modules/cjs/loader:1943:10)
+    at nodeFs.openSync (C:\PitayaCode\LaPitaya\evidence\lapitaya-cima-v0.14-authorization-binding\fnv-reproduction\repro_v013_findings.cjs:104:131)
+    at CimaRuntimeService.append (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:257:47)
+    at eval (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:929:18)
+    at CimaRuntimeService.withLock (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:130:20)
+    at CimaRuntimeService.submit (eval at loadFile (C:\PitayaCode\LaPitaya\test\load-ts.cjs:64:15), <anonymous>:925:21)
+    at C:\PitayaCode\LaPitaya\evidence\lapitaya-cima-v0.14-authorization-binding\fnv-reproduction\repro_v013_findings.cjs:107:19
+    at step (C:\PitayaCode\LaPitaya\evidence\lapitaya-cima-v0.14-authorization-binding\fnv-reproduction\repro_v013_findings.cjs:19:32)
+    at Object.<anonymous> (C:\PitayaCode\LaPitaya\evidence\lapitaya-cima-v0.14-authorization-binding\fnv-reproduction\repro_v013_findings.cjs:99:1)
+    at Module._compile (node:internal/modules/cjs/loader:1812:14)
+    at Object..js (node:internal/modules/cjs/loader:1943:10)
+R5 decide() with ledger down                   ["approved"]
+R5 submit() with ledger down                   ["BLOCKED"]
+R5 trace kept in memory w/o durability         1
+R5 approvals.json status after                 ["approved"]
+R5 ledger has HUMAN_APPROVED?                  false
+R2 routed / victim inbox senders               [2,["attacker:y","god:x"]]
+R2 authorize Write into god outbox             ["ALLOW","hive-path"]
+R2 authorize shell > god outbox                ["SUPERVISED","shell:mutation"]

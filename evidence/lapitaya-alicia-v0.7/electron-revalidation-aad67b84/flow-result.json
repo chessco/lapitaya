@@ -1,0 +1,37 @@
+{
+  "pipe": "\\\\.\\pipe\\munder-difflin-06fde12d9609",
+  "typed": "ok",
+  "send": "ok",
+  "requestCard": [
+    "REQUEST_CONFIRMATION:"
+  ],
+  "requestText": "CONFIRMACIÓN",
+  "preBeforeConfirm": "REQUEST_CONFIRMATION_REQUIRED — request ",
+  "ack": "ok",
+  "confirm1": "ok",
+  "confirm2": "missing",
+  "preAfterConfirm": "allow(no deny)",
+  "highPre": "HUMAN_APPROVAL_REQUIRED — La Pitaya governance blocked this ",
+  "highCard": [
+    {
+      "id": "apr-mup3qb7m-2",
+      "text": "APROBACIÓN HUMANA DE ALTO RIESGO (HIGH)\nEsperando tu aprobación HIGH\n\nAutorizas UNA sola ejecución de esta llamada HIGH "
+    }
+  ],
+  "requestConfirmedDidNotApprove": true,
+  "ackH": "ok",
+  "approve1": "ok",
+  "approve2": "disabled",
+  "retryAfterApprove": "allow(no deny)",
+  "nextAttemptOneShot": "HUMAN_APPROVAL_REQUIRED — La Pitaya gove",
+  "ackH2": "ok",
+  "reject": "ok",
+  "retryAfterReject": "HUMAN_APPROVAL_REQUIRED — La Pitaya gove",
+  "leaks": {
+    "command": false,
+    "srv": false,
+    "hivePath": false,
+    "token": false
+  },
+  "rendererErrors": []
+}

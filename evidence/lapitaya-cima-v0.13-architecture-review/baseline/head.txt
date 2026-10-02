@@ -1,0 +1,6 @@
+3e6ae0c8
+3e6ae0c8 La Pitaya CIMA v0.12: state integrity and recovery
+00ab8202 La Pitaya CIMA v0.11: governance coverage hardening
+456d4a75 La Pitaya CIMA v0.10: runtime authenticity hardening
+1d09221b La Pitaya Alicia v0.9: remove legacy approval renderer path
+f2f54601 La Pitaya Alicia v0.8: human identity and decision ownership

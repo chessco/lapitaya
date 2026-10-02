@@ -1,0 +1,40 @@
+[36mvite v5.4.21 [32mbuilding SSR bundle for development...[36m[39m
+transforming...
+[32m✓[39m 78 modules transformed.
+rendering chunks...
+[2mout/main/[22m[36mindex.js  [39m[1m[33m691.55 kB[39m[22m
+[32m✓ built in 982ms[39m
+[32m
+build the electron main process successfully[39m
+[90m
+-----
+[39m
+[36mvite v5.4.21 [32mbuilding SSR bundle for development...[36m[39m
+transforming...
+[32m✓[39m 1 modules transformed.
+rendering chunks...
+[2mout/preload/[22m[36mindex.js  [39m[1m[2m42.65 kB[22m[1m[22m
+[32m✓ built in 37ms[39m
+[32m
+build the electron preload files successfully[39m
+[90m
+-----
+[39m
+Port 5173 is in use, trying another one...
+[32mdev server running for the electron renderer process at:
+[39m
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5174[22m/[39m
+[2m  [32m➜[39m  [1mNetwork[22m[2m: use [22m[1m--host[22m[2m to expose[22m
+[32m
+start electron app...
+[39m
+
+
+DevTools listening on ws://127.0.0.1:9333/devtools/browser/39a35c63-13c4-4001-9896-382176f59785
+[broker] integration broker listening on http://127.0.0.1:65407
+[telemetry] collector listening http://127.0.0.1:65408
+[roster] refused to overwrite a non-empty roster with an empty one
+[power] keep-awake ON (prevent-app-suspension) — agents running
+[power] lock-screen
+[power] unlock-screen — re-arming scheduler, beats, router, keep-awake
+[power] unlock-screen (away ~134s): 1 PTY(s) healthy

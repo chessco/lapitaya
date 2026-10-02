@@ -1,0 +1,36 @@
+
+Error occurred in handler for 'lapitaya:authorize': Error: No handler registered for 'lapitaya:authorize'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:86275)
+    at WebContents.emit (node:events:518:28)
+Electron 32.3.3 (Node 20.18.1, Chromium 128.0.6613.186)
+PASS  E0  the real cth-hook shim and named pipe are in place  [C:\Users\chess\AppData\Local\Temp\lp-v014-electron-QGHZ3H\harness-home\hive\bin\cth-hook.cjs]
+PASS  E1  human identity: trusted renderer page gets a runtime-resolved identity; an untrusted page gets none  [{"trusted":"hum-06e40de2f84f86182c41","untrusted":null}]
+PASS  E2a  a PROPOSED request closes the floor at the real hook (REQUEST_CONFIRMATION_REQUIRED)  [REQUEST_CONFIRMATION_REQUIRED — request req-muq3s27m-1 is a proposal waiting for]
+PASS  E2b  an untrusted page cannot confirm  [{"ok":false,"code":"NOT_AUTHORIZED","reason":"only the human confirms a request"}]
+PASS  E2c  a wrong confirmation token is TAMPERED  [{"ok":false,"code":"TAMPERED","reason":"the confirmation token does not match this proposal"}]
+PASS  E2d  the trusted human page confirms, recorded with the human owner  [true]
+PASS  E2e  confirmation replay is NOT_CONFIRMABLE  [{"ok":false,"code":"NOT_CONFIRMABLE","reason":"proposal req-muq3s27m-1 is CONFIRMED"}]
+PASS  E2f  after confirmation LOW work runs through the real hook
+PASS  E3a  HIGH call is denied at the real hook until a human approves  [HUMAN_APPROVAL_REQUIRED — La Pitaya governance blocked this HIGH-risk action (ir]
+PASS  E3b  the pending approval carries a SHA-256 binding and exposes no seal to the renderer  [7557f1f11ea8933d751f7a619785d9d7eb0057aed17fc64e36f9ceae7b2daec6]
+PASS  E3c  an untrusted page cannot approve  [null]
+PASS  E3d  extra identity arguments from an untrusted page are ignored  [null]
+PASS  E3e  the trusted human page approves  [{"id":"apr-muq3s2sz-2","status":"approved","decidedAt":1790893549703,"decidedBy":"human"}]
+PASS  E4a  FNV-32 twin of the approved call is DENIED at the real hook  [rm -rf /important/data # 16 1<u7]
+PASS  E4b  the approval of agent A is useless to agent B
+PASS  E4c  the exact approved call runs (approval consumed before execution)
+PASS  E4d  approval replay is denied  [HUMAN_APPROVAL_REQUIRED — La Pitaya governance blocked this ]
+PASS  E5  a modified approvals.json entry is not an approval  [HUMAN_APPROVAL_REQUIRED — La Pitaya governance blocked this ]
+PASS  E6  path traversal onto the governance state is held for human approval, like the direct path  [HUMAN_APPROVAL_REQUIRED — La Pitaya governance blocked this ]
+PASS  E7a  writing into the orchestrator's outbox is refused at the real hook (SENDER_IDENTITY)  [SENDER_IDENTITY — La Pitaya could not authorize this call, so it was NOT execute]
+PASS  E7b  a renderer cannot send as an agent  [{"ok":false,"error":"SENDER_NOT_PERMITTED — the renderer may only send as the human (not \"god\")"}]
+PASS  E7c  an untrusted page cannot send as the human  [{"ok":false,"error":"HUMAN_IDENTITY_REQUIRED — human message sender requires trusted human context"}]
+PASS  E7d  the trusted human page can send as the human  [true]
+PASS  E7e  a fake "from" in an outbox file is delivered as its real owner  [attacker]
+PASS  E7f  a fake agent_id at the real hook (attacker's token claiming god) is IDENTITY_MISMATCH  [IDENTITY_MISMATCH — payload agent_id 'god' does not match tr]
+PASS  E8a  the renderer has no channel to authorize or execute (no such handler)  [{"__error":"Error invoking remote method 'lapitaya:authorize': Error: No handler registered for 'lapitaya:authorize'"}]
+PASS  E8b  no agent token, seal key or seal ever crossed IPC to a renderer  [{"crossings":15,"leaked":[]}]
+PASS  E8c  no agent token or seal key in the ledger or traces
+PASS  E8d  no renderer console errors / crashes / load failures  [[]]
+NOT VALIDATED  E9  REAL El Inge (agent CLI) execution  [NOT VALIDATED — no provider CLI/credentials are run by this harness]
+

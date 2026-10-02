@@ -1,0 +1,20 @@
+spelling                           ambiguous  canonical key (tail)                 decision / category
+absolute                           false      2u7qb/hive/lapitaya/approvals.json   HUMAN_APPROVAL_REQUIRED / governance-tamper
+backslashes                        false      2u7qb/hive/lapitaya/approvals.json   HUMAN_APPROVAL_REQUIRED / governance-tamper
+dot segment                        false      2u7qb/hive/lapitaya/approvals.json   HUMAN_APPROVAL_REQUIRED / governance-tamper
+dot-dot                            false      2u7qb/hive/lapitaya/approvals.json   HUMAN_APPROVAL_REQUIRED / governance-tamper
+dot-dot via other drive path       false      2u7qb/hive/lapitaya/approvals.json   HUMAN_APPROVAL_REQUIRED / governance-tamper
+duplicate separators               false      2u7qb/hive/lapitaya/approvals.json   HUMAN_APPROVAL_REQUIRED / governance-tamper
+case variant                       false      2u7qb/hive/lapitaya/approvals.json   HUMAN_APPROVAL_REQUIRED / governance-tamper
+trailing dot                       false      2u7qb/hive/lapitaya/approvals.json   HUMAN_APPROVAL_REQUIRED / governance-tamper
+trailing space                     false      2u7qb/hive/lapitaya/approvals.json   HUMAN_APPROVAL_REQUIRED / governance-tamper
+extended-length prefix             false      2u7qb/hive/lapitaya/approvals.json   HUMAN_APPROVAL_REQUIRED / governance-tamper
+relative (cwd = hive)              false      2u7qb/hive/lapitaya/approvals.json   HUMAN_APPROVAL_REQUIRED / governance-tamper
+relative dot-dot (cwd = hive)      false      2u7qb/hive/lapitaya/approvals.json   HUMAN_APPROVAL_REQUIRED / governance-tamper
+percent-encoded dot-dot            true       (encoded path separator)             DENY / irreversible
+NTFS stream                        true       (stream or colon in path)            DENY / irreversible
+drive-relative                     true       (drive-relative path)                DENY / irreversible
+file: URL                          true       (file: URL)                          DENY / irreversible
+8.3 short name that exists (expanded by the filesystem) true       (8.3 short name)                     SUPERVISED / config-change
+8.3 short name that cannot be expanded true       (8.3 short name)                     DENY / irreversible
+escapes the root                   true       (path escapes the root)              DENY / irreversible

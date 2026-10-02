@@ -1,0 +1,92 @@
+{
+  "identity": {
+    "id": "hum-2484b1766dd8e353acb8",
+    "displayName": "<os-user>",
+    "session": "ses-24b92f2cb6b87a9f"
+  },
+  "identityShape": "displayName,id,session",
+  "actingAs": "Decides como <os-user> (hum-2484b1766dd8e353acb8). La app resuelve esta identidad; esta pantalla no puede cambiarla.",
+  "persistedHumanIdMatches": true,
+  "submit1": "ok",
+  "requestedByShown": "<os-user> (hum-2484b1766dd8e353acb8)",
+  "p1": {
+    "id": "req-mup7n9cd-1",
+    "requestedOwnerIsMe": true
+  },
+  "spoofConfirmWrongToken": {
+    "ok": false,
+    "code": "TAMPERED"
+  },
+  "ack": "ok",
+  "confirm": "ok",
+  "confirmedByShown": "<os-user> (hum-2484b1766dd8e353acb8)",
+  "replayConsumedToken": {
+    "ok": false,
+    "code": "NOT_CONFIRMABLE"
+  },
+  "ledgerConfirmed": {
+    "by": "human",
+    "humanIdIsMe": true,
+    "sessionIsMine": true,
+    "windowInt": true,
+    "name": true
+  },
+  "noMalloryInLedger": true,
+  "ledgerDenied": [
+    {
+      "code": "TAMPERED",
+      "humanIdIsMe": true
+    },
+    {
+      "code": "NOT_CONFIRMABLE",
+      "humanIdIsMe": true
+    }
+  ],
+  "cancelCard": "ok",
+  "ledgerCancelled": {
+    "humanIdIsMe": true
+  },
+  "closedByShown": "<os-user> (hum-2484b1766dd8e353acb8)",
+  "submit2": "ok",
+  "ack2": "ok",
+  "confirm2": "ok",
+  "highPre": "HUMAN_APPROVAL_REQUIRED — La Pitaya gove",
+  "apr1": true,
+  "ackH": "ok",
+  "spoofDecideExtraArgs": "sent with the real click below",
+  "approve": "ok",
+  "decidedByShown": "<os-user> (hum-2484b1766dd8e353acb8)",
+  "ledgerApproved": {
+    "rule": "human",
+    "humanIdIsMe": true,
+    "sessionIsMine": true
+  },
+  "retryAfterApprove": "allow",
+  "nextAttemptOneShot": "HUMAN_APPROVAL_REQUIRED — La Pitaya gove",
+  "replayDecideApproved": null,
+  "flipDecideApproved": null,
+  "ackH2": "ok",
+  "reject": "ok",
+  "ledgerRejected": {
+    "humanIdIsMe": true
+  },
+  "approvalRecordOwner": [
+    {
+      "st": "rejected",
+      "mine": true
+    },
+    {
+      "st": "consumed",
+      "mine": true
+    }
+  ],
+  "leaks": {
+    "command": false,
+    "srv": false,
+    "hivePath": false,
+    "session": false,
+    "token": false,
+    "fingerprint": false
+  },
+  "rendererErrors": []
+}

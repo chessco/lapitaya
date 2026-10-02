@@ -171,10 +171,16 @@ test('no unbundled webfont rides in with the Arabic locale', () => {
 
 // --- coverage and shape: what makes a PARTIAL translation safe -------------
 
-test('English is still the default, and still not auto-detected', () => {
+// La Pitaya changed the product default from English to es-MX (with en-US as
+// the technical fallback). What this test protects is unchanged: a missing
+// Arabic key still falls back to English, and nothing reads the OS locale.
+test('es-MX is the default, en-US the fallback, and nothing is auto-detected', () => {
   const code = strip(read('src/renderer/src/i18n/index.ts'));
-  assert.match(code, /return 'en';/, 'the fallback language must stay English');
-  assert.match(code, /fallbackLng: 'en'/, 'a missing Arabic key must fall back to English');
+  assert.match(code, /return DEFAULT_LOCALE_SETTINGS\.uiLocale;/, 'the default must come from the La Pitaya locale settings');
+  assert.match(code, /fallbackLng: FALLBACK_LOCALE/, 'a missing Arabic key must fall back to English');
+  const locales = read('src/shared/lapitaya/locales.ts');
+  assert.match(locales, /DEFAULT_LOCALE: ActiveLocale = 'es-MX'/);
+  assert.match(locales, /FALLBACK_LOCALE: ActiveLocale = 'en-US'/);
   assert.ok(!code.includes('navigator'),
     'adding a locale must not turn on OS auto-detect');
 });

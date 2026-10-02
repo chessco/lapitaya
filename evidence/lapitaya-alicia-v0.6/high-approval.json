@@ -1,0 +1,72 @@
+{
+  "cardLatest": {
+    "fact": {
+      "eventId": "EVT-d33e0bcf",
+      "category": "HUMAN_APPROVAL_REQUIRED",
+      "timestamp": 1800000009000,
+      "intentId": null,
+      "proposalId": "req-mywpixns-1",
+      "approvalId": "apr-mywpj2ag-2",
+      "taskId": null,
+      "agent": "god",
+      "operation": "Bash · data-deletion",
+      "intentType": null,
+      "runtimeStatus": "HUMAN_APPROVAL_REQUIRED",
+      "risk": "HIGH",
+      "scope": null,
+      "autonomy": "HUMAN_APPROVAL",
+      "decision": "HUMAN_APPROVAL_REQUIRED",
+      "rule": "shell:recursive-delete",
+      "evidence": {
+        "ref": "EVT-d33e0bcf",
+        "source": "cima-ledger.jsonl"
+      },
+      "requiredHumanAction": "DECIDE_APPROVAL",
+      "nextState": "WAITING_HUMAN_APPROVAL",
+      "count": 1
+    },
+    "keys": {
+      "what": "alicia.observe.what.HUMAN_APPROVAL_REQUIRED",
+      "why": "alicia.explain.HUMAN_APPROVAL_REQUIRED",
+      "next": "alicia.observe.next.WAITING_HUMAN_APPROVAL",
+      "autonomy": "alicia.observe.autonomy.HUMAN_APPROVAL",
+      "humanAction": "alicia.observe.action.DECIDE_APPROVAL"
+    },
+    "es-MX": {
+      "what": "CIMA detuvo Bash · data-deletion de god: requiere aprobación HIGH.",
+      "why": "Esta acción requiere tu aprobación porque está clasificada como riesgo alto.",
+      "next": "Revisa la aprobación en Aprobaciones de gobernanza. Confirmar el REQUEST no aprobó esta acción HIGH.",
+      "risk": "HIGH",
+      "autonomy": "HUMAN_APPROVAL: requiere tu aprobación explícita.",
+      "rule": "shell:recursive-delete",
+      "humanAction": "Aprobar o rechazar la acción HIGH en Aprobaciones de gobernanza.",
+      "evidence": "Evidencia: cima-ledger.jsonl · EVT-d33e0bcf"
+    },
+    "en-US": {
+      "what": "CIMA stopped Bash · data-deletion by god: it needs HIGH approval.",
+      "why": "This action needs your approval because it is classified as high risk.",
+      "next": "Review the approval in Governance approvals. Confirming the REQUEST did not approve this HIGH action.",
+      "risk": "HIGH",
+      "autonomy": "HUMAN_APPROVAL: needs your explicit approval.",
+      "rule": "shell:recursive-delete",
+      "humanAction": "Approve or reject the HIGH action in Governance approvals.",
+      "evidence": "Evidence: cima-ledger.jsonl · EVT-d33e0bcf"
+    },
+    "evidenceResolvesTo": {
+      "kind": "governance",
+      "decision": "HUMAN_APPROVAL_REQUIRED",
+      "rule": "shell:recursive-delete",
+      "risk": "HIGH"
+    }
+  },
+  "laterRoutineWorkDoesNotHideIt": "EXECUTION_COMPLETED",
+  "approvalStatus": [
+    {
+      "id": "apr-mywpj2ag-2",
+      "risk": "HIGH",
+      "status": "pending"
+    }
+  ],
+  "uiSaysNotAnApproval": true,
+  "uiHasApproveControl": false
+}

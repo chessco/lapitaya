@@ -1,0 +1,21 @@
+✔ [ID-01] a trusted human identity is resolved: stable id, display name, session, window (13.0936ms)
+✔ [ID-02][ID-15] the renderer cannot define identity; a sender that is not our window gets none (2.3685ms)
+✔ [ID-03][ID-07] REQUEST confirmation records the trusted human, in the runtime and in the ledger (11943.0348ms)
+✔ [ID-04] REQUEST cancellation records the trusted human (12786.3801ms)
+✔ [ID-05][ID-06] HIGH approval and rejection record the trusted human; the existing approval record is unchanged (12838.0467ms)
+✔ [ID-08][ID-23][ID-24][ID-25] the projection shows the owner (id + display name) and nothing internal (13784.7266ms)
+✔ [ID-09][ID-10][ID-11][ID-12] fake identity, confirmedBy, approvedBy, rejectedBy are ignored or refused (17705.0495ms)
+✔ [ID-13][ID-14][ID-17][ID-18] replay, stale and second attempts cannot change ownership; the owner is immutable (17225.7785ms)
+✔ [ID-16] cross-window: one decision, one owner; the other window sees it resolved and cannot redo it (10356.9153ms)
+✔ [ID-19][ID-20][ID-21][ID-22] identity does not alter risk or autonomy and does not bypass CIMA, authorize() or the REQUEST gate (9251.6348ms)
+✔ [ID-02][IPC] the human channel never accepts identity from the renderer; lapitaya:approvals stays intact (192.8805ms)
+✔ [ID-26][ID-27][ID-28] es-MX / en-US show who decided (no missing keys), and the identity UI adds no controls (8686.1939ms)
+✔ [ID-18] the runtime state files are the only store: the ledger carries the owner and no second store appears (5710.5976ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 147149.0146

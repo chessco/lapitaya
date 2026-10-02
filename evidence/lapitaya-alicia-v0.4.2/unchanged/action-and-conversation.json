@@ -1,0 +1,38 @@
+{
+  "conversation": {
+    "route": "producer",
+    "proposals": 0,
+    "ledgerLines": 0
+  },
+  "action": {
+    "type": "ACTION",
+    "decision": "ALLOW",
+    "proposalId": null
+  },
+  "actionExecution": {
+    "step": "ACTION exact call",
+    "agent": "god",
+    "call": "Bash {\"command\":\"npm test\"}",
+    "result": "ALLOWED",
+    "decision": "ALLOW",
+    "reason": ""
+  },
+  "withPendingRequest": [
+    {
+      "step": "ACTION exact call while a REQUEST is pending",
+      "agent": "god",
+      "call": "Bash {\"command\":\"npm test\"}",
+      "result": "ALLOWED",
+      "decision": "ALLOW",
+      "reason": ""
+    },
+    {
+      "step": "other call while a REQUEST is pending",
+      "agent": "god",
+      "call": "Bash {\"command\":\"npm run lint\"}",
+      "result": "DENIED",
+      "decision": "DENY",
+      "reason": "REQUEST_CONFIRMATION_REQUIRED — request req-mywpiyfk-1 is a proposal waiting for the human's confirmation. Nothing may execute until the human confirms it in La"
+    }
+  ]
+}

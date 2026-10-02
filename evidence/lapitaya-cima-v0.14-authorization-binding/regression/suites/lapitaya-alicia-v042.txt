@@ -1,0 +1,27 @@
+✔ [REQ-01] REQUEST + LOW + no confirmation → El Inge attempts execution → BLOCKED (4880.4816ms)
+✔ [REQ-02] REQUEST + MEDIUM + no confirmation → BLOCKED (5045.9778ms)
+✔ [REQ-03] REQUEST + HIGH + no confirmation → BLOCKED, and no approval is even raised (4464.826ms)
+✔ [REQ-04] REQUEST + valid human confirmation → CIMA → LOW → AUTO → execution allowed (4886.0437ms)
+✔ [REQ-05] REQUEST (change scope) + confirmation → CIMA → MEDIUM → SUPERVISED (4942.5405ms)
+✔ [REQ-06] REQUEST + confirmation + HIGH → existing HUMAN_APPROVAL flow; confirmation ≠ approval (4716.7204ms)
+✔ [REQ-07] confirmation replay: one confirmation → one transition; it can never unlock another proposal (5833.7219ms)
+✔ [REQ-08] Alicia attempts confirmation → NOT_AUTHORIZED (runtime API, words, and metadata) (5486.0838ms)
+✔ [REQ-09] El Inge attempts self-confirmation → NOT_AUTHORIZED; messages and tool writes change nothing (5386.2892ms)
+✔ [REQ-10] confirmed REQUEST + actual HIGH action → HIGH policy applies (never inherits the request) (4914.4006ms)
+✔ [REQ-11] confirmed harmless REQUEST + incompatible actual action → runtime re-classifies → not permitted (4761.9106ms)
+✔ [REQ-12] CONVERSATION stays side-effect free (no proposal, no ledger, no gate) (4362.8071ms)
+✔ [REQ-13] ACTION behaviour is unchanged, even while a REQUEST is pending (5326.9408ms)
+✔ [REQ-14] completionGate still blocks unauthorized completion (7162.383ms)
+✔ [REQ-15] direct tool bypass without confirmation stays blocked — any agent, any provider (6395.7824ms)
+✔ [REQ-NEG] only the human confirms; metadata never authorizes; malformed confirmations deny safely (7031.4106ms)
+✔ [REQ-NEG-TAMPER] a proposal edited on disk is refused; re-validation blocks a stale proposal (4370.5778ms)
+✔ [REQ-ARCH] structural: gate in authorize before approvals; human-only confirmation call sites; no bypass (237.6994ms)
+✔ [REQ-EVENTS] proposal transitions ride the EXISTING runtime stream; Alicia shows them, humanOnly (4785.2824ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 100268.2689

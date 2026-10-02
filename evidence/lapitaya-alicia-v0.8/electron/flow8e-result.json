@@ -1,0 +1,102 @@
+{
+  "windows": {
+    "en": true,
+    "es": true,
+    "distinct": true,
+    "bothHaveDC": true
+  },
+  "sameHuman": true,
+  "en-acting-as": "You are deciding as <os-user> (hum-2484b1766dd8e353acb8). The app resolves this identity; this screen cannot change it.",
+  "en-heading": "HUMAN DECISIONS",
+  "es-submit": "ok",
+  "both-see-pending": {
+    "es": {
+      "status": "PROPOSED",
+      "confirmBtn": false,
+      "approveBtn": false,
+      "by": null
+    },
+    "en": {
+      "status": "PROPOSED",
+      "confirmBtn": false,
+      "approveBtn": false,
+      "by": null
+    }
+  },
+  "en-ack": "ok",
+  "en-confirm": "ok",
+  "es-follows": {
+    "status": "CONFIRMED",
+    "confirmBtn": false,
+    "approveBtn": false,
+    "by": "<os-user> (hum-2484b1766dd8e353acb8)"
+  },
+  "es-stale-confirm-bridge": {
+    "ok": false,
+    "code": "NOT_CONFIRMABLE"
+  },
+  "ledger-request": {
+    "confirmedOnce": true,
+    "owner": true,
+    "deniedWindowDiffers": true,
+    "deniedCode": "NOT_CONFIRMABLE"
+  },
+  "highPre": "HUMAN_APPROVAL_REQUIRED — La Pitaya gove",
+  "both-see-high": {
+    "es": {
+      "status": null,
+      "confirmBtn": false,
+      "approveBtn": false,
+      "by": null
+    },
+    "en": {
+      "status": null,
+      "confirmBtn": false,
+      "approveBtn": false,
+      "by": null
+    }
+  },
+  "es-ackH": "ok",
+  "es-reject": "ok",
+  "en-follows": {
+    "card": null,
+    "pendingCount": 0
+  },
+  "en-stale-approve-bridge": null,
+  "ledger-high": {
+    "count": 1,
+    "decision": "HUMAN_REJECTED",
+    "owner": true,
+    "windowIsES_not_EN": true
+  },
+  "en-history-sample": [
+    "· by <os-user> (hum-2484b1766dd8e353acb8)",
+    "· by <os-user> (hum-2484b1766dd8e353acb8)",
+    "· by <os-user> (hum-2484b1766dd8e353acb8)"
+  ],
+  "en-labels": [
+    "Requested by",
+    "Confirmed by",
+    "Cancelled by"
+  ],
+  "leaks": {
+    "en": {
+      "command": false,
+      "srv": false,
+      "hivePath": false,
+      "session": false,
+      "token": false
+    },
+    "es": {
+      "command": false,
+      "srv": false,
+      "hivePath": false,
+      "session": false,
+      "token": false
+    }
+  },
+  "rendererErrors": {
+    "en": [],
+    "es": []
+  }
+}

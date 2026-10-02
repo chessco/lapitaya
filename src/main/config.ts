@@ -182,6 +182,8 @@ export interface HarnessConfig {
   audience?: 'technical' | 'non-technical';
   /** Folder where the harness keeps its own state (agent metadata, logs). */
   harnessHome: string | null;
+  /** v0.8: the stable human identity of this installation/profile (`hum-<random>`), created by main on first use. */
+  humanId?: string | null;
   /** Recently-opened hive home folders (most-recent first), surfaced by the
    *  launch-time hive picker. Maintained by writeConfig whenever harnessHome is
    *  set (onboarding finish, changeHome). Capped to a handful. */
@@ -422,6 +424,7 @@ export interface HarnessConfig {
 const DEFAULTS: HarnessConfig = {
   onboardingComplete: false,
   harnessHome: null,
+  humanId: null,
   recentHives: [],
   registeredRepos: [],
   autoMode: true,

@@ -1,0 +1,228 @@
+{
+  "es-MX": {
+    "uiLocale": "es-MX",
+    "notificationLocale": "es-MX",
+    "presence": "WAITING_APPROVAL",
+    "currentAgent": {
+      "id": "alicia",
+      "name": "Alicia"
+    },
+    "currentCimaPhase": "AUDIT",
+    "pipeline": [
+      "BUILD → PASS",
+      "TEST → PASS",
+      "AUDIT → PASS"
+    ],
+    "explanation": {
+      "text": "Esta acción requiere tu aprobación porque está clasificada como riesgo alto.",
+      "technical": {
+        "decision": "HUMAN_APPROVAL_REQUIRED",
+        "risk": "HIGH",
+        "rule": "AUTONOMY_POLICY"
+      }
+    },
+    "notifications": [
+      {
+        "type": "SUCCESS",
+        "title": "CIMA · Construir",
+        "message": "El Beni terminó BUILD: PASS.",
+        "technical": {
+          "claimed": "PASS",
+          "decision": "PASS"
+        }
+      },
+      {
+        "type": "SUCCESS",
+        "title": "CIMA · Probar",
+        "message": "Margarito terminó TEST: PASS.",
+        "technical": {
+          "claimed": "PASS",
+          "decision": "PASS"
+        }
+      },
+      {
+        "type": "SUCCESS",
+        "title": "CIMA · Auditar",
+        "message": "José Juan terminó AUDIT: PASS.",
+        "technical": {
+          "claimed": "PASS",
+          "decision": "PASS"
+        }
+      },
+      {
+        "type": "SUCCESS",
+        "title": "Auditoría terminada",
+        "message": "José Juan terminó la auditoría: PASS.",
+        "technical": {
+          "claimed": "PASS",
+          "decision": "PASS"
+        }
+      },
+      {
+        "type": "APPROVAL_REQUIRED",
+        "title": "Se requiere tu aprobación",
+        "message": "Se requiere aprobación humana. Esta acción requiere tu aprobación porque está clasificada como riesgo alto.",
+        "technical": {
+          "risk": "HIGH",
+          "category": "infrastructure",
+          "tool": "Bash",
+          "decision": "HUMAN_APPROVAL_REQUIRED",
+          "mode": "HUMAN_APPROVAL",
+          "approvalId": "apr-mywpj6x4-4"
+        }
+      },
+      {
+        "type": "BLOCKED",
+        "title": "Bloqueado por CIMA",
+        "message": "La acción fue bloqueada por CIMA (DECISION_AUTHORITY). Solo El Inge o el humano pueden aceptar el trabajo.",
+        "technical": {
+          "claimed": "PASS",
+          "decision": "BLOCKED",
+          "rule": "DECISION_AUTHORITY",
+          "violations": [
+            "DECISION_AUTHORITY"
+          ],
+          "reason": "DECISION_AUTHORITY: only the orchestrator (god) or the human may accept work; alicia may propose via LEARN."
+        }
+      },
+      {
+        "type": "APPROVAL_REQUIRED",
+        "title": "Se requiere tu aprobación",
+        "message": "Se requiere aprobación humana. Esta acción requiere tu aprobación porque está clasificada como riesgo alto.",
+        "technical": {
+          "risk": "HIGH",
+          "category": "governance-tamper",
+          "tool": "Write",
+          "decision": "HUMAN_APPROVAL_REQUIRED",
+          "mode": "HUMAN_APPROVAL",
+          "approvalId": "apr-mywpjcbk-6"
+        }
+      },
+      {
+        "type": "BLOCKED",
+        "title": "Bloqueado por CIMA",
+        "message": "La acción fue bloqueada por CIMA (DECISION_GATE). La tarea no puede marcarse como terminada sin una DECISION PASS registrada por el runtime.",
+        "technical": {
+          "decision": "DENY",
+          "rule": "DECISION_GATE",
+          "risk": "HIGH",
+          "tool": "alicia",
+          "reason": "DECISION_GATE: task LP-ALICIA-EV has no DECISION recorded by the runtime"
+        }
+      }
+    ]
+  },
+  "en-US": {
+    "uiLocale": "en-US",
+    "notificationLocale": "en-US",
+    "presence": "WAITING_APPROVAL",
+    "currentAgent": {
+      "id": "alicia",
+      "name": "Alicia"
+    },
+    "currentCimaPhase": "AUDIT",
+    "pipeline": [
+      "BUILD → PASS",
+      "TEST → PASS",
+      "AUDIT → PASS"
+    ],
+    "explanation": {
+      "text": "This action needs your approval because it is classified as high risk.",
+      "technical": {
+        "decision": "HUMAN_APPROVAL_REQUIRED",
+        "risk": "HIGH",
+        "rule": "AUTONOMY_POLICY"
+      }
+    },
+    "notifications": [
+      {
+        "type": "SUCCESS",
+        "title": "CIMA · Build",
+        "message": "El Beni finished BUILD: PASS.",
+        "technical": {
+          "claimed": "PASS",
+          "decision": "PASS"
+        }
+      },
+      {
+        "type": "SUCCESS",
+        "title": "CIMA · Test",
+        "message": "Margarito finished TEST: PASS.",
+        "technical": {
+          "claimed": "PASS",
+          "decision": "PASS"
+        }
+      },
+      {
+        "type": "SUCCESS",
+        "title": "CIMA · Audit",
+        "message": "Jose Juan finished AUDIT: PASS.",
+        "technical": {
+          "claimed": "PASS",
+          "decision": "PASS"
+        }
+      },
+      {
+        "type": "SUCCESS",
+        "title": "Audit finished",
+        "message": "Jose Juan finished the audit: PASS.",
+        "technical": {
+          "claimed": "PASS",
+          "decision": "PASS"
+        }
+      },
+      {
+        "type": "APPROVAL_REQUIRED",
+        "title": "Your approval is needed",
+        "message": "Human approval is required. This action needs your approval because it is classified as high risk.",
+        "technical": {
+          "risk": "HIGH",
+          "category": "infrastructure",
+          "tool": "Bash",
+          "decision": "HUMAN_APPROVAL_REQUIRED",
+          "mode": "HUMAN_APPROVAL",
+          "approvalId": "apr-mywpj6x4-4"
+        }
+      },
+      {
+        "type": "BLOCKED",
+        "title": "Blocked by CIMA",
+        "message": "The action was blocked by CIMA (DECISION_AUTHORITY). Only El Inge or the human can accept the work.",
+        "technical": {
+          "claimed": "PASS",
+          "decision": "BLOCKED",
+          "rule": "DECISION_AUTHORITY",
+          "violations": [
+            "DECISION_AUTHORITY"
+          ],
+          "reason": "DECISION_AUTHORITY: only the orchestrator (god) or the human may accept work; alicia may propose via LEARN."
+        }
+      },
+      {
+        "type": "APPROVAL_REQUIRED",
+        "title": "Your approval is needed",
+        "message": "Human approval is required. This action needs your approval because it is classified as high risk.",
+        "technical": {
+          "risk": "HIGH",
+          "category": "governance-tamper",
+          "tool": "Write",
+          "decision": "HUMAN_APPROVAL_REQUIRED",
+          "mode": "HUMAN_APPROVAL",
+          "approvalId": "apr-mywpjcbk-6"
+        }
+      },
+      {
+        "type": "BLOCKED",
+        "title": "Blocked by CIMA",
+        "message": "The action was blocked by CIMA (DECISION_GATE). The task cannot be marked done without a DECISION PASS recorded by the runtime.",
+        "technical": {
+          "decision": "DENY",
+          "rule": "DECISION_GATE",
+          "risk": "HIGH",
+          "tool": "alicia",
+          "reason": "DECISION_GATE: task LP-ALICIA-EV has no DECISION recorded by the runtime"
+        }
+      }
+    ]
+  }
+}

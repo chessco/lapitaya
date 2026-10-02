@@ -1,0 +1,18 @@
+LA PITAYA — ALICIA v0.9: DEPENDENCY MAP AUDIT
+=================================================
+Target channel: lapitaya:approvals / window.cth.lapitayaApprovals()
+
+Pre-removal inventory:
+1. main/index.ts:
+   - ipcMain.handle('lapitaya:approvals', () => lapitaya.listApprovals()); [REMOVED]
+2. preload/index.ts:
+   - lapitayaApprovals: () => ipcRenderer.invoke('lapitaya:approvals') [REMOVED]
+3. renderer/components/GovernancePanel.tsx:
+   - window.cth.lapitayaApprovals() fallback [REMOVED / REPLACED BY OBSERVABILITY]
+4. renderer/components/alicia/confirmationController.ts:
+   - doc comment reference [REMOVED]
+
+Post-removal verification:
+- grep for 'lapitaya:approvals' across src/: 0 matches.
+- grep for 'lapitayaApprovals' across src/: 0 matches.
+- main runtime approval state ('lapitaya.listApprovals()'): Preserved in CimaRuntimeService for observability, decision gate & audit.

@@ -1,0 +1,16 @@
+== lapitaya-foundation
+ℹ tests 25
+ℹ pass 25
+ℹ fail 0
+== lapitaya-cima-runtime
+ℹ tests 25
+ℹ pass 25
+ℹ fail 0
+== lapitaya-cima-runtime-v03
+ℹ tests 35
+ℹ pass 35
+ℹ fail 0
+== lapitaya-cima-runtime-v031
+ℹ tests 9
+ℹ pass 9
+ℹ fail 0

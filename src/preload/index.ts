@@ -13,6 +13,12 @@ export type { HeroPayload } from '../shared/heroPayload';
 import type { ModelCatalog } from '../shared/modelCatalogPayload';
 export type { ModelCatalog, CatalogModel } from '../shared/modelCatalogPayload';
 import type { HookEvent } from '../shared/hookEvents';
+import type { Approval } from '../shared/lapitaya/governance';
+import type { LedgerEntry, RequestConfirmation } from '../main/cimaRuntime';
+import type { RequestProposal } from '../shared/lapitaya/intent';
+import type { LocaleSettings } from '../shared/lapitaya/locales';
+import type { AliciaCompanionState, AliciaSubmitResult, ObservabilityView } from '../shared/lapitaya/alicia';
+import type { IntentTarget } from '../shared/lapitaya/intent';
 export type { HookEvent } from '../shared/hookEvents';
 import type { LocalSkill, CatalogSkill } from '../main/skills';
 export type { LocalSkill, CatalogSkill } from '../main/skills';
@@ -1071,10 +1077,56 @@ const api = {
     return () => ipcRenderer.removeListener('control:approvalRequest', listener);
   },
 
+  // ─── La Pitaya governance (HUMAN_APPROVAL_REQUIRED + CIMA ledger) ─────────
+  /** The human's explicit decision on one PENDING request. */
+  lapitayaDecide: (id: string, approve: boolean): Promise<Pick<Approval, 'id' | 'status'> & { decidedAt: number | null; decidedBy: string | null } | null> =>
+    ipcRenderer.invoke('lapitaya:decide', id, approve),
+  /** v0.4.2: REQUEST proposals waiting for (or holding) the human's confirmation. */
+  lapitayaRequests: (): Promise<RequestProposal[]> => ipcRenderer.invoke('lapitaya:requests'),
+  /** The human confirms one proposal with its runtime token. Executes nothing;
+   *  every resulting call is still authorized by CIMA (HIGH still needs approval). */
+  lapitayaConfirmRequest: (id: string, token: string): Promise<RequestConfirmation> =>
+    ipcRenderer.invoke('lapitaya:confirmRequest', id, token),
+  lapitayaCancelRequest: (id: string): Promise<RequestConfirmation> => ipcRenderer.invoke('lapitaya:cancelRequest', id),
+  lapitayaCompleteRequest: (id: string): Promise<RequestConfirmation> => ipcRenderer.invoke('lapitaya:completeRequest', id),
+  /** Recent governance decisions and CIMA records (append-only ledger). */
+  lapitayaLedger: (limit?: number): Promise<LedgerEntry[]> => ipcRenderer.invoke('lapitaya:ledger', limit),
+  /** v0.6: read-only, human-safe projection of governance facts (Alicia's observability). */
+  /** v0.8 (read-only): the trusted human the Decision Center acts for. Main resolves it; this cannot set it. */
+  lapitayaIdentity: (): Promise<{ id: string; displayName: string; session: string } | null> => ipcRenderer.invoke('lapitaya:identity'),
+  lapitayaObservability: (opts?: { recentLimit?: number }): Promise<ObservabilityView> =>
+    ipcRenderer.invoke('lapitaya:observability', opts ?? {}),
+  /** Live governance/CIMA events (approval requests, supervised calls, records). */
+  onLapitayaGovernance: (cb: (e: { type: string; data: unknown }) => void): (() => void) => {
+    const listener = (_e: IpcRendererEvent, payload: { type: string; data: unknown }) => cb(payload);
+    ipcRenderer.on('lapitaya:governance', listener);
+    return () => ipcRenderer.removeListener('lapitaya:governance', listener);
+  },
+
+  // ─── Alicia (companion layer: observe, explain, hand intents to the runtime) ──
+  /** Alicia's context, notifications and presence, rendered in the given locales. */
+  aliciaSnapshot: (opts?: { locales?: Partial<LocaleSettings>; focusTaskId?: string | null }): Promise<AliciaCompanionState> =>
+    ipcRenderer.invoke('alicia:snapshot', opts ?? {}),
+  aliciaMarkRead: (id: string): Promise<boolean> => ipcRenderer.invoke('alicia:markRead', id),
+  /** What the human said → AliciaIntent → runtime intent boundary. Conversation is
+   *  answered by Alicia; requests and actions are governed by CIMA before El Inge
+   *  sees them. Never executes, approves or decides anything. */
+  aliciaSubmit: (
+    message: string,
+    opts?: { taskId?: string | null; target?: IntentTarget | null; locales?: Partial<LocaleSettings> }
+  ): Promise<({ ok: true } & AliciaSubmitResult) | { ok: false; error: string }> =>
+    ipcRenderer.invoke('alicia:submit', message, opts ?? {}),
+
   // ─── Task kanban (hive/tasks.json) ───────────────────────────────────────
   /** Atomically append one card against the latest main-process ledger. */
   hiveAddTask: (task: HiveTask): Promise<{ ok: boolean; error?: string }> =>
     ipcRenderer.invoke('hive:addTask', task),
+  /** Update task status with CIMA completionGate governance enforcement. */
+  hiveUpdateTaskStatus: (
+    id: string,
+    status: string
+  ): Promise<{ ok: boolean; error?: string }> =>
+    ipcRenderer.invoke('hive:updateTaskStatus', id, status),
   /** Atomically patch one named card without replacing unrelated cards/fields. */
   hivePatchTask: (
     id: string,

@@ -43,6 +43,8 @@ import { preferredAgentRole } from '../shared/agentRole';
 import { mergeTaskLedger } from '../shared/taskLedger';
 import { expandTilde } from './fs';
 import { resolveGodName } from '../shared/godIdentity';
+import { LA_PITAYA_NAME } from '../shared/lapitaya/brand';
+import { spawnGovernanceDecision } from '../shared/lapitaya/providerGovernance';
 
 /** The subset of HarnessConfig the hive consumes for the default-MCP merge.
  *  Kept as a local shape so hive.ts never imports the foundation-owned config
@@ -406,6 +408,60 @@ export class HiveManager {
     return this._maySpawn;
   }
 
+  /** La Pitaya CIMA runtime hook: evaluates a message's `cima` claim and returns
+   *  the banner stamped onto the delivered body (see CimaRuntimeService.submit). */
+  private cimaHandler: ((from: string, cima: unknown, messageId: string, to: string) => string | null) | null = null;
+  setCimaHandler(fn: ((from: string, cima: unknown, messageId: string, to: string) => string | null) | null): void {
+    this.cimaHandler = fn;
+  }
+
+  private completionGateHandler: ((taskId: string) => { allowed: boolean; reason: string }) | null = null;
+  private blockedCompletionRecorder: ((taskId: string, reason: string, via: string) => void) | null = null;
+
+  /** Wire CIMA completionGate enforcement into hive task status writes. */
+  setCompletionGate(
+    gate: ((taskId: string) => { allowed: boolean; reason: string }) | null,
+    recorder?: ((taskId: string, reason: string, via: string) => void) | null
+  ): void {
+    this.completionGateHandler = gate;
+    this.blockedCompletionRecorder = recorder ?? null;
+  }
+
+  // ─── v0.10 Runtime Authenticity — Agent Token Registry ───────────────────
+  private agentTokens = new Map<string, string>();
+
+  registerAgentToken(agentId: string, token?: string): string {
+    if (!agentId) return '';
+    let t = this.agentTokens.get(agentId);
+    if (!t || token) {
+      t = token || randomBytes(16).toString('hex');
+      this.agentTokens.set(agentId, t);
+    }
+    return t;
+  }
+
+  verifyAgentToken(agentId: string | undefined, token: unknown): boolean {
+    if (!agentId || typeof token !== 'string' || !token) return false;
+    const trusted = this.agentTokens.get(agentId);
+    return !!trusted && trusted === token;
+  }
+
+  getAgentForToken(token: unknown): string | undefined {
+    if (typeof token !== 'string' || !token) return undefined;
+    for (const [id, t] of this.agentTokens.entries()) {
+      if (t === token) return id;
+    }
+    return undefined;
+  }
+
+  hasRegisteredTokens(): boolean {
+    return this.agentTokens.size > 0;
+  }
+
+  revokeAgentToken(agentId: string): void {
+    this.agentTokens.delete(agentId);
+  }
+
   // — paths —
   root(): string | null {
     const home = this.getHome();
@@ -695,11 +751,19 @@ export class HiveManager {
        *  MemPalace dir, which `mempalace` mutates). Absolute paths; ignored
        *  for providers without a sandbox. */
       extraWritableDirs?: string[];
+      allowUngovernedProviders?: boolean;
     } = {}
   ): Promise<SpawnInjection> {
     const root = this.root();
     if (!root) return { args: [], env: {} };
     this.ensureHive();
+
+    const provider = meta.provider ?? 'claude';
+    const govDecision = spawnGovernanceDecision(provider, { allowUngoverned: opts.allowUngovernedProviders });
+    if (!govDecision.allowed) {
+      this.appendLog({ kind: 'spawn_denied', agentId: meta.id, name: meta.name, provider, reason: govDecision.reason });
+      throw new Error(govDecision.reason);
+    }
 
     const dir = this.agentDir(meta.id);
     mkdirSync(join(dir, 'inbox', '.done'), { recursive: true });
@@ -762,11 +826,13 @@ export class HiveManager {
     }
     this.commit(`hive: register ${meta.id}`);
 
+    const agentToken = this.registerAgentToken(meta.id);
     const env: Record<string, string> = {
       AGENT_ID: meta.id,
       AGENT_NAME: meta.name,
       HIVE_ROOT: root,
-      AGENT_DIR: dir
+      AGENT_DIR: dir,
+      HIVE_AGENT_TOKEN: agentToken
     };
     // The bundled-node launcher, so an agent can run the hive's .cjs helpers (KG
     // CLI, Slack reply helper) even when `node` is not on its PATH. Invoking the
@@ -1197,6 +1263,9 @@ export class HiveManager {
         SubagentStop: [entry()],
         PreToolUse: [entry('*')],
         PostToolUse: [entry('*')],
+        // La Pitaya: a failed command is evidence too (a TEST that FAILs must be
+        // provable). Without this only successful calls reach the trace log.
+        PostToolUseFailure: [entry('*')],
         UserPromptSubmit: [entry()],
         Notification: [entry()],
         SessionStart: [entry()],
@@ -1470,7 +1539,7 @@ export class HiveManager {
     // us) was invisible to every investigation.
     const rt = this.runtimeInfo();
     const runtimeLine = rt
-      ? `RUNNING BUILD: Munder Difflin v${rt.version}, ${rt.packaged ? 'packaged app' : 'local dev build'}${rt.appPath ? `, from ${rt.appPath}` : ''}. Say this version if asked which one is running, and do not assume behaviour from an older one. A local dev build inherits the launching shell's environment (umask included) where a packaged app does not, so file modes and inherited env can legitimately differ between the two. \`log.jsonl\` records an \`app-start\` event on every launch, which is how you spot a restart or a build switch.`
+      ? `RUNNING BUILD: ${LA_PITAYA_NAME} v${rt.version}, ${rt.packaged ? 'packaged app' : 'local dev build'}${rt.appPath ? `, from ${rt.appPath}` : ''}. Say this version if asked which one is running, and do not assume behaviour from an older one. A local dev build inherits the launching shell's environment (umask included) where a packaged app does not, so file modes and inherited env can legitimately differ between the two. \`log.jsonl\` records an \`app-start\` event on every launch, which is how you spot a restart or a build switch.`
       : '';
     // Item 11: god could not find the spawn queue. The mechanism has worked since
     // v0.4.4, but nothing told him it existed — the prompt said "spawn" without
@@ -1706,6 +1775,22 @@ export class HiveManager {
     if (this.routerTimer) { clearInterval(this.routerTimer); this.routerTimer = null; }
   }
 
+  /** What an outbox file claims about WHO sent it, when that is not its owner. Null when it claims nothing forged. */
+  private senderForgery(partial: Record<string, unknown>, ownerId: string): { kind: 'claim' | 'token'; what: string } | null {
+    const owner = ownerId.trim().toLowerCase();
+    const known = new Set<string>(['human', 'alicia', 'system']);
+    try { for (const k of Object.keys(this.registry().agents)) known.add(k.toLowerCase()); } catch { /* registry unreadable: the fixed names still apply */ }
+    for (const field of ['from', 'agent_id', 'sender', 'actor']) {
+      const v = partial[field];
+      if (typeof v !== 'string' || !v.trim()) continue;
+      const claimed = v.trim().toLowerCase();
+      if (claimed !== owner && known.has(claimed)) return { kind: 'claim', what: `${field}=${claimed}` };
+    }
+    const token = partial.agent_token;
+    if (token !== undefined && token !== null && !this.verifyAgentToken(ownerId, token)) return { kind: 'token', what: 'agent_token does not belong to the owning agent' };
+    return null;
+  }
+
   routeOnce(): number {
     const root = this.root();
     if (!root) return 0;
@@ -1744,8 +1829,34 @@ export class HiveManager {
               repair: 'literal-line-break'
             });
           }
+          // v0.14 sender authenticity: the sender is the directory's OWNER (and governance refuses any
+          // governed write into another agent's outbox). A file that CLAIMS another sender (a known agent,
+          // the human, Alicia, the system) is a forgery attempt: the claim is logged and neutralized — the
+          // message is attributed to the owner regardless. A file carrying a capability token that is not
+          // the owner's cannot be genuine and is quarantined, never delivered.
+          const forged = this.senderForgery(partial as Record<string, unknown>, id);
+          if (forged?.kind === 'token') {
+            this.appendLog({ kind: 'drop', reason: 'sender-spoof', from: id, claimed: forged.what, file: f });
+            try { renameSync(full, join(outbox, '.sent', `bad-${f}`)); } catch { /* noop */ }
+            continue;
+          }
+          if (forged) this.appendLog({ kind: 'sender-spoof', from: id, claimed: forged.what, file: f });
+          delete (partial as { agent_token?: unknown }).agent_token; // a capability token is never relayed
           const msg = this.normalize(partial, id);
           msg.from = id; // sender is authoritative — the owning directory
+          // La Pitaya CIMA: a `cima` field is a claim (task, phase, verdict,
+          // evidence). The runtime evaluates it against what the harness saw the
+          // sender actually do and stamps ITS verdict on the message, so no
+          // recipient ever relies on the sender's word alone.
+          const cima = (partial as { cima?: unknown }).cima;
+          if (cima !== undefined && this.cimaHandler) {
+            try {
+              const banner = this.cimaHandler(id, cima, msg.id, msg.to);
+              if (banner) msg.body = `${banner}\n\n${msg.body}`;
+            } catch (e) {
+              this.appendLog({ kind: 'cima-error', from: id, id: msg.id, error: String(e) });
+            }
+          }
           this.routeMessage(msg);
           renameSync(full, join(outbox, '.sent', f)); // archive, don't reprocess
           routed++;
@@ -1788,7 +1899,47 @@ export class HiveManager {
    *  Deleting a card still works: the incoming list IS the membership, so a card
    *  dropped from it (TasksKanban dismiss, the voice delete_task action) is
    *  gone. Merging protects fields, never card membership. */
-  writeTasks(tasks: HiveTask[]): void {
+  /** Update a task's status with CIMA completionGate enforcement. */
+  updateTaskStatus(id: string, status: HiveTask['status'] | string, via = 'HiveManager.updateTaskStatus'): { ok: boolean; error?: string } {
+    if (status === 'done') {
+      const ledger = this.tasks() as { tasks?: HiveTask[] };
+      const tasks = Array.isArray(ledger?.tasks) ? ledger.tasks : [];
+      const existing = tasks.find((t) => t?.id === id);
+      if (existing?.status !== 'done' && this.completionGateHandler) {
+        const verdict = this.completionGateHandler(id);
+        if (!verdict.allowed) {
+          this.blockedCompletionRecorder?.(id, verdict.reason, via);
+          return { ok: false, error: verdict.reason };
+        }
+      }
+    }
+    const ok = this.patchTaskInternal(id, { status: status as HiveTask['status'] });
+    return ok ? { ok: true } : { ok: false, error: 'task not found' };
+  }
+
+  writeTasks(tasks: HiveTask[], via = 'HiveManager.writeTasks'): boolean {
+    const root = this.root();
+    if (!root) return false;
+    if (this.completionGateHandler) {
+      const path = join(root, 'tasks.json');
+      const current = this.readJson<{ tasks?: HiveTask[] }>(path, { tasks: [] });
+      const currentTasks = Array.isArray(current?.tasks) ? current.tasks : [];
+      const currentMap = new Map(currentTasks.map((t) => [t?.id, t?.status]));
+      for (const t of tasks) {
+        if (t?.status === 'done' && currentMap.get(t.id) !== 'done') {
+          const verdict = this.completionGateHandler(t.id);
+          if (!verdict.allowed) {
+            this.blockedCompletionRecorder?.(t.id, verdict.reason, via);
+            return false;
+          }
+        }
+      }
+    }
+    this.writeTasksInternal(tasks);
+    return true;
+  }
+
+  private writeTasksInternal(tasks: HiveTask[]): void {
     const root = this.root();
     if (!root) return;
     this.ensureHive();
@@ -1807,20 +1958,35 @@ export class HiveManager {
     const ledger = this.tasks() as { tasks?: HiveTask[] };
     const tasks = Array.isArray(ledger?.tasks) ? ledger.tasks : [];
     if (tasks.some((current) => current?.id === task.id)) return false;
-    this.writeTasks([...tasks, task]);
-    return true;
+    return this.writeTasks([...tasks, task], 'HiveManager.addTask');
   }
 
   /** Patch one card against the latest on-disk ledger, preserving unrelated
    *  cards and fields (notably webhook.tokenHash and Slack thread metadata). */
-  patchTask(id: string, patch: Partial<Omit<HiveTask, 'id'>>): boolean {
+  patchTask(id: string, patch: Partial<Omit<HiveTask, 'id'>>, via = 'HiveManager.patchTask'): boolean {
+    if (patch.status === 'done') {
+      const ledger = this.tasks() as { tasks?: HiveTask[] };
+      const tasks = Array.isArray(ledger?.tasks) ? ledger.tasks : [];
+      const existing = tasks.find((t) => t?.id === id);
+      if (existing?.status !== 'done' && this.completionGateHandler) {
+        const verdict = this.completionGateHandler(id);
+        if (!verdict.allowed) {
+          this.blockedCompletionRecorder?.(id, verdict.reason, via);
+          return false;
+        }
+      }
+    }
+    return this.patchTaskInternal(id, patch);
+  }
+
+  private patchTaskInternal(id: string, patch: Partial<Omit<HiveTask, 'id'>>): boolean {
     const ledger = this.tasks() as { tasks?: HiveTask[] };
     const tasks = Array.isArray(ledger?.tasks) ? ledger.tasks : [];
     const index = tasks.findIndex((task) => task?.id === id);
     if (index < 0) return false;
     const next = tasks.slice();
     next[index] = { ...tasks[index], ...patch, id };
-    this.writeTasks(next);
+    this.writeTasksInternal(next);
     return true;
   }
 
@@ -1830,7 +1996,7 @@ export class HiveManager {
     const tasks = Array.isArray(ledger?.tasks) ? ledger.tasks : [];
     const next = tasks.filter((task) => task?.id !== id);
     if (next.length === tasks.length) return false;
-    this.writeTasks(next);
+    this.writeTasksInternal(next);
     return true;
   }
   memory(id: string): string {
@@ -2856,6 +3022,43 @@ There are two shared surfaces, both in the hive root:
 - \`tasks.json\` — the structured task ledger (a kanban: \`todo / doing / blocked / done\`, with title,
   assignee, priority, deps). Keep the task you're working reflected in its status.
 
+## CIMA (La Pitaya) — reporting a phase result
+When you finish a CIMA phase for a task, add a \`cima\` object to your outbox message:
+
+\`\`\`json
+{
+  "to": "god", "act": "inform", "subject": "TEST result for <taskId>", "body": "…",
+  "cima": {
+    "taskId": "<task id from tasks.json>",
+    "phase": "CONTEXT | ARCHITECT | BUILD | TEST | AUDIT | LEARN | DECISION | ITERATE",
+    "verdict": "PASS | FAIL | BLOCKED",
+    "summary": "one paragraph",
+    "evidence": [
+      { "type": "test-result | command-output | static-analysis | file-inspection | diff | runtime-result | audit-finding | execution-trace",
+        "source": "<the EXACT command you ran, or the file path you read>",
+        "description": "what it shows", "result": "<verbatim output excerpt>" }
+    ]
+  }
+}
+\`\`\`
+
+The harness checks every claim before delivering it and stamps its own verdict on the message:
+- **Evidence First** — each \`source\` must be a command you actually ran or a file you actually read in
+  this session (the harness records every tool call). Prose is not evidence; a PASS or FAIL with
+  unverifiable evidence is recorded as BLOCKED.
+- **Builder != Auditor** — whoever submitted BUILD for a task cannot PASS its TEST or AUDIT; an auditor
+  who edits files after the build started cannot PASS the AUDIT.
+- **Transitions** — TEST PASS needs BUILD PASS, AUDIT PASS needs TEST PASS, and only god/the human can
+  record DECISION PASS (accept the work), which needs AUDIT PASS.
+- Use BLOCKED when you cannot validate (missing evidence, human approval needed). BLOCKED is not FAIL.
+
+## Governance — tool calls are authorized at runtime
+Every tool call is classified LOW / MEDIUM / HIGH. LOW runs; MEDIUM runs and is logged as supervised;
+HIGH (production, destructive migrations, secrets, auth/permissions, infrastructure, data deletion,
+git push, editing hook/governance files) is DENIED with \`HUMAN_APPROVAL_REQUIRED\` until the human
+approves that exact call. Do not work around a denial — report it; retry the identical call only after
+approval.
+
 ## Asking the human (the ASK ME card)
 When a card can only move with the human — a question to answer, or an action only they can do
 (create an account, approve a spend, hand over credentials, test on their device) — the god sets the
@@ -2964,6 +3167,7 @@ process.stdin.on('end', () => {
   let payload = {};
   try { payload = JSON.parse(data || '{}'); } catch (_) {}
   if (!payload.agent_id) payload.agent_id = process.env.AGENT_ID || null;
+  if (!payload.agent_token) payload.agent_token = process.env.HIVE_AGENT_TOKEN || null;
   const sock = process.env.HIVE_SOCK;
   if (isStatus) {
     // Status-line mode: Claude Code pipes the session status JSON (incl.
@@ -3032,6 +3236,7 @@ process.stdin.on('end', () => {
   const payload = {
     hook_event_name: event,
     agent_id: agentId,
+    agent_token: process.env.HIVE_AGENT_TOKEN || null,
     session_id: agy.conversationId,
     transcript_path: agy.transcriptPath,
     cwd: Array.isArray(agy.workspacePaths) ? agy.workspacePaths[0] : undefined,
@@ -3390,7 +3595,8 @@ process.stdin.on('end', () => {
   const payload = {
     ...gemini,
     hook_event_name: names[gemini.hook_event_name] || gemini.hook_event_name || 'Unknown',
-    agent_id: agentId
+    agent_id: agentId,
+    agent_token: process.env.HIVE_AGENT_TOKEN || null
   };
   let resp = '';
   const done = () => {
@@ -3456,6 +3662,7 @@ process.stdin.on('end', () => {
   const payload = {
     hook_event_name: names[grok.hookEventName] || grok.hookEventName || 'Unknown',
     agent_id: agentId,
+    agent_token: process.env.HIVE_AGENT_TOKEN || null,
     session_id: grok.sessionId,
     cwd: grok.cwd || grok.workspaceRoot,
     tool_name: grok.toolName,

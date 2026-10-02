@@ -1,0 +1,160 @@
+[
+  {
+    "step": "USER → Alicia UI (alicia:submit) → runtime",
+    "outcome": {
+      "type": "REQUEST",
+      "route": "orchestrator",
+      "decision": "PROPOSAL_ONLY",
+      "proposalId": "req-mywpixns-1"
+    }
+  },
+  {
+    "step": "UI-01/02 runtime proposal vs UI view",
+    "runtime": {
+      "id": "req-mywpixns-1",
+      "intentId": "int-mywpiww0-1",
+      "message": "Quiero que revisemos los archivos del proyecto.",
+      "scope": "LOW",
+      "status": "PROPOSED",
+      "executor": "god",
+      "taskId": null,
+      "createdAt": 1800000002000
+    },
+    "ui": {
+      "id": "req-mywpixns-1",
+      "status": "PROPOSED",
+      "uiState": "PENDING",
+      "scope": "LOW",
+      "canConfirm": true,
+      "canCancel": true,
+      "outcome": null,
+      "pendingHighApprovals": 0,
+      "aliciaSays": null
+    },
+    "missingI18nKeys": []
+  },
+  {
+    "step": "NO confirm yet: El Inge LOW",
+    "agent": "god",
+    "call": "Bash {\"command\":\"npm test\"}",
+    "result": "DENIED",
+    "decision": "DENY",
+    "reason": "REQUEST_CONFIRMATION_REQUIRED — request req-mywpixns-1 is a proposal waiting for the human's confirmation. Nothing may execute until the hum"
+  },
+  {
+    "step": "NO confirm yet: delegated El Beni LOW",
+    "agent": "el-beni-1",
+    "call": "Bash {\"command\":\"npm test\"}",
+    "result": "DENIED",
+    "decision": "DENY",
+    "reason": "REQUEST_CONFIRMATION_REQUIRED — request req-mywpixns-1 is a proposal waiting for the human's confirmation. Nothing may execute until the hum"
+  },
+  {
+    "step": "NO confirm yet: MEDIUM",
+    "agent": "god",
+    "call": "Edit {\"file_path\":\"<home>\\\\src\\\\app.ts\",\"old_string\":\"a\",\"new_string\":\"b\"}",
+    "result": "DENIED",
+    "decision": "DENY",
+    "reason": "REQUEST_CONFIRMATION_REQUIRED — request req-mywpixns-1 is a proposal waiting for the human's confirmation. Nothing may execute until the hum"
+  },
+  {
+    "step": "NO confirm yet: HIGH",
+    "agent": "god",
+    "call": "Bash {\"command\":\"rm -rf /srv/data\"}",
+    "result": "DENIED",
+    "decision": "DENY",
+    "reason": "REQUEST_CONFIRMATION_REQUIRED — request req-mywpixns-1 is a proposal waiting for the human's confirmation. Nothing may execute until the hum"
+  },
+  {
+    "step": "approvals raised while unconfirmed",
+    "count": 0
+  },
+  {
+    "step": "UI-07 Confirm clicked twice",
+    "first": true,
+    "second": "dropped by the UI (not sent)",
+    "ipcCalls": [
+      {
+        "ipc": "lapitaya:confirmRequest",
+        "id": "req-mywpixns-1"
+      }
+    ]
+  },
+  {
+    "step": "UI-05 after confirmation",
+    "ui": {
+      "id": "req-mywpixns-1",
+      "status": "CONFIRMED",
+      "uiState": "CONFIRMED",
+      "scope": "LOW",
+      "canConfirm": false,
+      "canCancel": true,
+      "outcome": {
+        "op": "confirm",
+        "ok": true,
+        "code": null,
+        "reason": null
+      },
+      "pendingHighApprovals": 0,
+      "aliciaSays": "confirmed"
+    }
+  },
+  {
+    "step": "confirmed LOW scope: LOW call",
+    "agent": "god",
+    "call": "Bash {\"command\":\"npm test\"}",
+    "result": "ALLOWED",
+    "decision": "ALLOW",
+    "reason": ""
+  },
+  {
+    "step": "confirmed LOW scope: MEDIUM call",
+    "agent": "god",
+    "call": "Edit {\"file_path\":\"<home>\\\\src\\\\app.ts\",\"old_string\":\"a\",\"new_string\":\"b\"}",
+    "result": "DENIED",
+    "decision": "DENY",
+    "reason": "REQUEST_SCOPE_EXCEEDED — the confirmed request req-mywpixns-1 allows LOW-risk work; this call is MEDIUM (code-change). It was NOT executed. "
+  },
+  {
+    "step": "UI-10 confirmed: HIGH call",
+    "agent": "god",
+    "call": "Bash {\"command\":\"rm -rf /srv/data\"}",
+    "result": "DENIED",
+    "decision": "HUMAN_APPROVAL_REQUIRED",
+    "reason": "HUMAN_APPROVAL_REQUIRED — La Pitaya governance blocked this HIGH-risk action (data-deletion: run: rm -rf /srv/data). It was NOT executed. Th"
+  },
+  {
+    "step": "UI-10 the card after the HIGH attempt",
+    "ui": {
+      "id": "req-mywpixns-1",
+      "status": "CONFIRMED",
+      "uiState": "CONFIRMED",
+      "scope": "LOW",
+      "canConfirm": false,
+      "canCancel": true,
+      "outcome": {
+        "op": "confirm",
+        "ok": true,
+        "code": null,
+        "reason": null
+      },
+      "pendingHighApprovals": 1,
+      "aliciaSays": "confirmed"
+    },
+    "approvals": [
+      {
+        "id": "apr-mywpj6x4-2",
+        "risk": "HIGH",
+        "status": "pending"
+      }
+    ]
+  },
+  {
+    "step": "request transitions (ledger)",
+    "transitions": [
+      "PROPOSED(alicia)",
+      "REVALIDATED(runtime)",
+      "CONFIRMED(human)"
+    ]
+  }
+]

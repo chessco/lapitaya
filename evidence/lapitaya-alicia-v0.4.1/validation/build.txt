@@ -1,0 +1,5 @@
+# npm run build
+[32m✓ built in 3.33s[39m
+[32m✓ built in 101ms[39m
+[32m✓ built in 1m 30s[39m
+build exit=0

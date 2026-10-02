@@ -1,0 +1,44 @@
+[36mvite v5.4.21 [32mbuilding SSR bundle for development...[36m[39m
+transforming...
+[32m✓[39m 84 modules transformed.
+rendering chunks...
+[2mout/main/[22m[36mindex.js  [39m[1m[33m725.97 kB[39m[22m
+[32m✓ built in 968ms[39m
+[32m
+build the electron main process successfully[39m
+[90m
+-----
+[39m
+[36mvite v5.4.21 [32mbuilding SSR bundle for development...[36m[39m
+transforming...
+[32m✓[39m 1 modules transformed.
+rendering chunks...
+[2mout/preload/[22m[36mindex.js  [39m[1m[2m43.52 kB[22m[1m[22m
+[32m✓ built in 41ms[39m
+[32m
+build the electron preload files successfully[39m
+[90m
+-----
+[39m
+Re-optimizing dependencies because vite config has changed
+Port 5173 is in use, trying another one...
+[32mdev server running for the electron renderer process at:
+[39m
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5174[22m/[39m
+[2m  [32m➜[39m  [1mNetwork[22m[2m: use [22m[1m--host[22m[2m to expose[22m
+[32m
+start electron app...
+[39m
+
+
+DevTools listening on ws://127.0.0.1:9333/devtools/browser/95887529-0a14-411c-ae21-c0ace11f8028
+[migration] archived orphaned agent (no live PTY): valentin-munh7sdc
+[migration] archived orphaned agent (no live PTY): el-beni-munh8ii6
+[migration] archived orphaned agent (no live PTY): margarito-munh93e7
+[migration] archived orphaned agent (no live PTY): jose-juan-munh9oat
+[migration] archived orphaned agent (no live PTY): el-tutu-munha96x
+[broker] integration broker listening on http://127.0.0.1:61328
+[telemetry] collector listening http://127.0.0.1:61329
+[power] keep-awake ON (prevent-app-suspension) — agents running
+[worker-wake] nudging el-beni-munh8ii6 on pty-el-beni-munh8ii6 (1 pending)
+[worker-wake] nudging margarito-munh93e7 on pty-margarito-munh93e7 (1 pending)

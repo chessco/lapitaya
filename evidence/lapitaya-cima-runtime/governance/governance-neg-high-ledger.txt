@@ -1,0 +1,5 @@
+2026-09-30T03:35:42.906Z el-beni-munh8ii6 HUMAN_APPROVAL_REQUIRED HIGH apr-munjyw4u-c
+2026-09-30T03:36:31.453Z el-beni-munh8ii6 HUMAN_APPROVED HIGH apr-munjyw4u-c
+2026-09-30T03:36:41.334Z el-beni-munh8ii6 APPROVED HIGH apr-munjyw4u-c
+2026-09-30T03:36:43.914Z el-beni-munh8ii6 HUMAN_APPROVAL_REQUIRED HIGH apr-munk077s-r
+TRACE 2026-09-30T03:36:41.886Z true MOCK destructive migration invoked with: --drop-all-tables / MOCK: no database exists; nothing was dropped. exit 0 / 

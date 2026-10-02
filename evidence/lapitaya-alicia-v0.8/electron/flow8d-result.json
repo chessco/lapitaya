@@ -1,0 +1,52 @@
+{
+  "es-history": [
+    "· por <os-user> (hum-2484b1766dd8e353acb8)",
+    "· por <os-user> (hum-2484b1766dd8e353acb8)",
+    "· por <os-user> (hum-2484b1766dd8e353acb8)",
+    "· por <os-user> (hum-2484b1766dd8e353acb8)",
+    "· por <os-user> (hum-2484b1766dd8e353acb8)",
+    "· por <os-user> (hum-2484b1766dd8e353acb8)",
+    "· por <os-user> (hum-2484b1766dd8e353acb8)",
+    "· por <os-user> (hum-2484b1766dd8e353acb8)",
+    "· por <os-user> (hum-2484b1766dd8e353acb8)",
+    "· por <os-user> (hum-2484b1766dd8e353acb8)",
+    "· por <os-user> (hum-2484b1766dd8e353acb8)",
+    "· por <os-user> (hum-2484b1766dd8e353acb8)"
+  ],
+  "es-history-all-mine": true,
+  "en-picker": "SELECT A HARNESS CONFIG\n",
+  "en-has-DC": true,
+  "en-acting-as": "Decides como <os-user> (hum-2484b1766dd8e353acb8). La app resuelve esta identidad; esta pantalla no puede cambiarla.",
+  "en-history": [
+    "· por <os-user> (hum-2484b1766dd8e353acb8)",
+    "· por <os-user> (hum-2484b1766dd8e353acb8)",
+    "· por <os-user> (hum-2484b1766dd8e353acb8)",
+    "· por <os-user> (hum-2484b1766dd8e353acb8)",
+    "· por <os-user> (hum-2484b1766dd8e353acb8)",
+    "· por <os-user> (hum-2484b1766dd8e353acb8)",
+    "· por <os-user> (hum-2484b1766dd8e353acb8)",
+    "· por <os-user> (hum-2484b1766dd8e353acb8)",
+    "· por <os-user> (hum-2484b1766dd8e353acb8)",
+    "· por <os-user> (hum-2484b1766dd8e353acb8)",
+    "· por <os-user> (hum-2484b1766dd8e353acb8)",
+    "· por <os-user> (hum-2484b1766dd8e353acb8)"
+  ],
+  "en-labels": [
+    "Solicitó",
+    "Confirmó",
+    "Solicitó",
+    "Confirmó",
+    "Solicitó",
+    "Confirmó",
+    "Solicitó",
+    "Confirmó",
+    "Canceló"
+  ],
+  "en-leaks": {
+    "command": false,
+    "srv": false,
+    "hivePath": false,
+    "session": false
+  },
+  "rendererErrors": []
+}

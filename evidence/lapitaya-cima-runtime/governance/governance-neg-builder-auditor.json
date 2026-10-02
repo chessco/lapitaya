@@ -1,0 +1,20 @@
+{
+ "ts": "2026-09-30T03:35:14.590Z",
+ "taskId": "LP-CIMA-001",
+ "phase": "AUDIT",
+ "agent": "el-beni-munh8ii6",
+ "claimed": "PASS",
+ "recorded": "BLOCKED",
+ "violations": [
+  "BUILDER_NOT_AUDITOR"
+ ],
+ "reasons": [
+  "BUILDER_NOT_AUDITOR: el-beni-munh8ii6 built task LP-CIMA-001 and cannot pass its own AUDIT."
+ ],
+ "evidence": [
+  {
+   "source": "git diff --stat",
+   "verified": true
+  }
+ ]
+}

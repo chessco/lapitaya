@@ -8,6 +8,7 @@
 
 import { Texture } from 'pixi.js';
 import { paintPortrait, sceneFrameBufs, SCENE_W, SCENE_H } from './portraitArt';
+import { agentDisplayName, agentForCharacter } from '@shared/lapitaya/agents';
 
 export type OfficeCharacterName =
   | 'michael' | 'jim' | 'pam' | 'dwight' | 'kevin' | 'angela'
@@ -23,15 +24,21 @@ export interface CastMember {
   blurb: string;
 }
 
-/** Selectable roster, in display order. */
+/** Selectable roster, in display order.
+ *
+ *  La Pitaya: the six sprites worn by La Pitaya agents carry that agent's name
+ *  (canonical ASCII form here; castDisplayName() localizes it) and role. The
+ *  sprite ids stay the upstream ones because they are persisted per agent in
+ *  the hive registry. The remaining upstream cast is untouched for now — see
+ *  docs/LA_PITAYA_IDENTITY.md (asset replacement is a later phase). */
 export const OFFICE_CAST: CastMember[] = [
-  { name: 'michael',  displayName: 'Michael',  shirt: '#5a6b8c', blurb: "World's best boss" },
-  { name: 'jim',      displayName: 'Jim',      shirt: '#6fa8dc', blurb: 'Salesman, prankster' },
+  { name: 'michael',  displayName: 'El Inge',   shirt: '#5a6b8c', blurb: 'Primary Orchestrator' },
+  { name: 'jim',      displayName: 'El Beni',   shirt: '#6fa8dc', blurb: 'Builder' },
   { name: 'pam',      displayName: 'Pam',      shirt: '#9caf88', blurb: 'Receptionist, artist' },
-  { name: 'dwight',   displayName: 'Dwight',   shirt: '#b89b3e', blurb: 'Assistant (to the) RM' },
-  { name: 'kevin',    displayName: 'Kevin',    shirt: '#4a7ab5', blurb: 'Accounting' },
-  { name: 'angela',   displayName: 'Angela',   shirt: '#8a86a6', blurb: 'Head of accounting' },
-  { name: 'oscar',    displayName: 'Oscar',    shirt: '#7a4b6b', blurb: 'Accountant' },
+  { name: 'dwight',   displayName: 'Margarito', shirt: '#b89b3e', blurb: 'Tester' },
+  { name: 'kevin',    displayName: 'El Tutu',   shirt: '#4a7ab5', blurb: 'Learner' },
+  { name: 'angela',   displayName: 'Jose Juan', shirt: '#8a86a6', blurb: 'Auditor' },
+  { name: 'oscar',    displayName: 'Valentin',  shirt: '#7a4b6b', blurb: 'Architect' },
   { name: 'stanley',  displayName: 'Stanley',  shirt: '#8c5a4b', blurb: 'Sales, crossword' },
   { name: 'phyllis',  displayName: 'Phyllis',  shirt: '#b08bbf', blurb: 'Sales' },
   { name: 'andy',     displayName: 'Andy',     shirt: '#6fae6f', blurb: 'Cornell, a cappella' },
@@ -46,6 +53,14 @@ export const CAST_BY_NAME: Record<OfficeCharacterName, CastMember> =
   Object.fromEntries(OFFICE_CAST.map((c) => [c.name, c])) as Record<OfficeCharacterName, CastMember>;
 
 export const DEFAULT_CHARACTER: OfficeCharacterName = 'jim';
+
+/** The name to SHOW for a cast member in a locale. La Pitaya agents follow the
+ *  per-locale spelling rule (es-MX: Valentín, José Juan, El Tutú; en-US: ASCII);
+ *  everyone else shows their displayName unchanged. */
+export function castDisplayName(member: CastMember, locale: string | null | undefined): string {
+  const agent = agentForCharacter(member.name);
+  return agent ? agentDisplayName(agent.id, locale) : member.displayName;
+}
 
 export function hexToNumber(hex: string): number {
   return parseInt(hex.replace('#', ''), 16);

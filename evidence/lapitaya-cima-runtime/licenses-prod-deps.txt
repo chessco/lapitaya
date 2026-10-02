@@ -1,0 +1,4 @@
+{"MIT":460,"ISC":21,"Apache-2.0":4,"BSD-3-Clause":6,"(MIT OR WTFPL)":1,"(BSD-2-Clause OR MIT OR Apache-2.0)":1,"BlueOak-1.0.0":1,"Python-2.0":1,"BSD-2-Clause":2}
+NON-PERMISSIVE/UNUSUAL:
+  expand-template@2.0.3: (MIT OR WTFPL)
+  rc@1.2.8: (BSD-2-Clause OR MIT OR Apache-2.0)

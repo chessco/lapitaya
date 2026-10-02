@@ -1,0 +1,6 @@
+STATE-11: Expired REQUEST proposals (>24h TTL) transition to EXPIRED status and cannot be confirmed.
+STATE-12: Expired HIGH approvals (>24h TTL) transition to expired status and cannot be decided or consumed.
+STATE-13: Agent cannot extend expiration timestamp or bypass expired proposal status.
+STATE-14: Provider cannot extend expiration timestamp or bypass expired proposal status.
+STATE-15: Human decision attempted after expiration is rejected with NOT_CONFIRMABLE / null.
+STATE-28: Expired state cannot return to executable status.

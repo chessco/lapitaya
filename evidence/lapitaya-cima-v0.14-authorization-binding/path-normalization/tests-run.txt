@@ -1,0 +1,12 @@
+✔ [AUTHBIND-18] path traversal and alternate spellings of governance files are classified as governance-tamper (5768.278ms)
+✔ [AUTHBIND-19] an approval for path A does not authorize an alternate spelling of path A (7242.893ms)
+✔ [AUTHBIND-19b] canonicalization: one meaning per object, ambiguity fails closed (2.6731ms)
+✔ [AUTHBIND-19c] a symlink/junction to a governance file is judged by its real location (6570.396ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 31367.3244

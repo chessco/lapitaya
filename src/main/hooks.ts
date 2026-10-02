@@ -19,6 +19,8 @@ import type { ControlRegistry } from './control';
 import type { CircuitBreaker } from './breaker';
 import { estimateCostUsd } from './pricing';
 import { validateHookEvent } from '../shared/hookEvents';
+import type { CimaRuntimeService } from './cimaRuntime';
+import { isExecutable } from '../shared/lapitaya/governance';
 
 /** Maximum JSON payload bytes in one newline-delimited hook frame. */
 const MAX_HOOK_FRAME_BYTES = 256 * 1024;
@@ -26,6 +28,7 @@ const MAX_HOOK_FRAME_BYTES = 256 * 1024;
 interface HookPayload {
   hook_event_name?: string;
   agent_id?: string | null;
+  agent_token?: string | null;
   session_id?: string;
   transcript_path?: string;
   /** Status-line payloads only: the session's live context accounting. */
@@ -33,6 +36,10 @@ interface HookPayload {
   cwd?: string;
   tool_name?: string;
   tool_input?: unknown;
+  /** PostToolUse / PostToolUseFailure: what the tool returned (La Pitaya traces). */
+  tool_response?: unknown;
+  /** PostToolUseFailure: the failure text. */
+  error?: unknown;
   stop_hook_active?: boolean;
   prompt?: string;
   source?: string;
@@ -67,6 +74,25 @@ export class HookServer {
    *  prompt only bloats the transcript. One entry per agent is sufficient: an
    *  agent has one live session, and a new session id replaces the old entry. */
   private deliveredGoalByAgent = new Map<string, { sessionId: string | null; goal: string | null }>();
+  /**
+   * v0.3 FAIL-CLOSED slot: the governance decision for the CURRENT PreToolUse call.
+   *
+   * handle() is invoked synchronously, once per connection. We use a field
+   * rather than a return-value thread because handle() must return a single shape
+   * and multiple early-return paths set this before returning. The field is reset
+   * at the top of handle() so stale values never carry over across calls.
+   *
+   * Possible values:
+   *   undefined         — not a PreToolUse, or governance not wired
+   *   'ALLOW'           — LOW risk, runs
+   *   'SUPERVISED'      — MEDIUM risk, runs + logged
+   *   'APPROVED'        — HIGH risk with a one-shot human approval, runs
+   *   'HUMAN_APPROVAL_REQUIRED' — HIGH risk, denied
+   *   'DENY'            — governance error / state unavailable, denied
+   *   'HALT'            — operator halt at this boundary
+   *   'OPERATOR_DENY'   — operator tool gate
+   */
+  private preDecision: string | undefined;
 
   constructor(
     private hive: HiveManager,
@@ -83,7 +109,11 @@ export class HookServer {
     /** Optional observer of every hook boundary (agentId, event, message). The
      *  worker inbox-wake watchdog (workerWake.ts) feeds on this to learn when an
      *  agent is parked on a permission/HITL prompt so it never types into it. */
-    private onEvent?: (agentId: string | undefined, event: string, message: string | undefined) => void
+    private onEvent?: (agentId: string | undefined, event: string, message: string | undefined) => void,
+    /** La Pitaya governance + CIMA runtime: authorizes every PreToolUse and
+     *  records what actually ran (PostToolUse / PostToolUseFailure) as evidence.
+     *  Optional so tests can omit it. */
+    private governance?: CimaRuntimeService
   ) {}
 
   start(): void {
@@ -148,9 +178,63 @@ export class HookServer {
     return this.contextById.get(agentId);
   }
 
+  /**
+   * v0.3 FAIL-CLOSED: build a deny response and record it on this.preDecision.
+   * Every denial path — governance error, missing state, HIGH unapproved, DENY
+   * from authorize() — flows through here. Never returns ALLOW by default.
+   */
+  private denyPre(
+    agentId: string | undefined,
+    p: HookPayload,
+    code: string,
+    reason: string
+  ): unknown {
+    this.preDecision = code;
+    this.emit(agentId, p.hook_event_name ?? 'PreToolUse', p, true);
+    return {
+      hookSpecificOutput: {
+        hookEventName: 'PreToolUse',
+        permissionDecision: 'deny',
+        permissionDecisionReason: reason
+      }
+    };
+  }
+
   private handle(p: HookPayload): unknown {
-    const agentId = p.agent_id ?? undefined;
+    // Reset the per-call governance slot at the top of every invocation.
+    this.preDecision = undefined;
+    const claimedAgentId = p.agent_id ?? undefined;
+    const token = typeof p.agent_token === 'string' ? p.agent_token : undefined;
     const event = p.hook_event_name ?? 'Unknown';
+
+    let trustedAgentId: string | undefined = undefined;
+    if (this.hive) {
+      if (token) {
+        trustedAgentId = this.hive.getAgentForToken(token);
+      }
+      if (!trustedAgentId && claimedAgentId && this.hive.verifyAgentToken(claimedAgentId, token)) {
+        trustedAgentId = claimedAgentId;
+      }
+    }
+
+    if (claimedAgentId && trustedAgentId && claimedAgentId !== trustedAgentId) {
+      return this.denyPre(claimedAgentId, p, 'IDENTITY_MISMATCH',
+        `IDENTITY_MISMATCH — payload agent_id '${claimedAgentId}' does not match trusted invocation token identity '${trustedAgentId}'`);
+    }
+
+    // v0.14: with governance wired there is no "no tokens registered yet" fallback — a claimed agent_id
+    // that no capability token vouches for is never an actor (provider/agent spoof).
+    if (claimedAgentId && !trustedAgentId && (this.hive?.hasRegisteredTokens() || this.governance)) {
+      return this.denyPre(claimedAgentId, p, 'IDENTITY_UNTRUSTED',
+        `IDENTITY_UNTRUSTED — missing or invalid agent capability token for '${claimedAgentId}'`);
+    }
+
+    const agentId = trustedAgentId || ((this.hive?.hasRegisteredTokens() || this.governance) ? undefined : claimedAgentId);
+
+    if (event === 'PreToolUse' && !agentId) {
+      return this.denyPre(claimedAgentId, p, 'ACTOR_CONTEXT_MISSING',
+        'ACTOR_CONTEXT_MISSING — missing or untrusted agent execution context');
+    }
     this.onEvent?.(agentId, event, p.message);
     if (agentId && typeof p.transcript_path === 'string' && p.transcript_path) {
       this.transcriptPaths.set(agentId, p.transcript_path);
@@ -191,6 +275,7 @@ export class HookServer {
     // killing the PTY. session_id is in the payload for a later --resume.
     if (agentId && this.control?.shouldHalt(agentId)) {
       this.emit(agentId, event, p);
+      if (event === 'PreToolUse') this.preDecision = 'HALT';
       return { continue: false, stopReason: 'Halted by the operator from the floor.' };
     }
 
@@ -236,6 +321,14 @@ export class HookServer {
       this.breaker?.recordToolUse(agentId, p.tool_name, p.tool_input);
     }
 
+    // La Pitaya — what really ran is the only thing CIMA accepts as evidence.
+    if ((event === 'PostToolUse' || event === 'PostToolUseFailure') && agentId && p.tool_name && this.governance) {
+      try {
+        this.governance.recordTrace(agentId, event, p.tool_name, p.tool_input,
+          event === 'PostToolUseFailure' ? (p.error ?? p.tool_response) : p.tool_response);
+      } catch (e) { console.error('[lapitaya] trace failed:', e); }
+    }
+
     // A human just spoke to this agent (issue #376): stamp the third progress
     // clock the no-progress arm reads. A conversation is prose in, prose out —
     // no hive file changes, no tool spans — which the arm otherwise reads as
@@ -276,6 +369,7 @@ export class HookServer {
       if (d.deny) {
         this.emitControl(agentId, p.tool_name, d.reason);
         this.emit(agentId, event, p);
+        this.preDecision = 'OPERATOR_DENY';
         return {
           hookSpecificOutput: {
             hookEventName: 'PreToolUse',
@@ -284,6 +378,38 @@ export class HookServer {
           }
         };
       }
+    }
+
+    // La Pitaya runtime governance. Runs for EVERY tool call, after the
+    // operator gate: risk → autonomy policy → decision. HIGH risk is denied until
+    // a human approves the identical call. This is a hook decision, so it holds
+    // in autoMode (bypassPermissions only silences the CLI's own prompts) and no
+    // prompt can talk the agent past it.
+    //
+    // v0.3 FAIL-CLOSED: when governance is wired, a PreToolUse ALWAYS ends in an
+    // explicit decision (this.preDecision, stamped on the reply by respond()).
+    // Missing identity, a throwing authorize(), or any non-executable decision →
+    // deny. The shims deny too when no stamped decision comes back at all.
+    if (event === 'PreToolUse' && this.governance) {
+      if (!agentId || !p.tool_name) {
+        return this.denyPre(agentId, p, 'DENY',
+          'GOVERNANCE_STATE_UNAVAILABLE — the hook payload has no agent identity or tool name, so the call cannot be authorized and was NOT executed.');
+      }
+      let auth: ReturnType<CimaRuntimeService['authorize']>;
+      try { auth = this.governance.authorize(agentId, p.tool_name, p.tool_input); } catch (e) {
+        console.error('[lapitaya] authorize failed:', e);
+        return this.denyPre(agentId, p, 'DENY',
+          'GOVERNANCE_ERROR — La Pitaya could not authorize this call, so it was NOT executed. Report it to the human.');
+      }
+      if (!auth || !isExecutable(auth.decision)) {
+        if (auth?.decision === 'HUMAN_APPROVAL_REQUIRED') {
+          this.emitControl(agentId, p.tool_name, auth.reason);
+          this.notify(agentId, `needs approval: ${auth.summary}`);
+        }
+        return this.denyPre(agentId, p, auth?.decision === 'HUMAN_APPROVAL_REQUIRED' ? 'HUMAN_APPROVAL_REQUIRED' : 'DENY',
+          auth?.reason ?? 'DENY — La Pitaya governance returned no usable decision; the call was NOT executed.');
+      }
+      this.preDecision = auth.decision;
     }
 
     // 7C.2 — mid-run steering: inject queued operator guidance as context on the
@@ -397,4 +523,7 @@ export class HookServer {
     }
     this.getWebContents()?.send('hive:hookEvent', payload);
   }
+
+  /** Expose the last PreToolUse governance decision for testing. */
+  get lastPreDecision(): string | undefined { return this.preDecision; }
 }

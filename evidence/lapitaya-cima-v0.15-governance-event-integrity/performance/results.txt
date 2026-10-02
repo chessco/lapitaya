@@ -1,0 +1,8 @@
+events   bytes      status   fullVerify  firstAuthorize(cold)  steadyAuthorize  afterForeignAppend  incrementalVerify  readTail
+1000     587786     HEALTHY  81.1        82.2                  12.43            13.31               6.93               6.85
+10000    5897788    HEALTHY  540.6       486.6                 12.66            11.46               4.23               4.34
+50000    29577788   HEALTHY  3867.2      3458                  11.45            12.15               4.88               5.31
+100000   59177790   HEALTHY  7564        7235.8                11.18            10.2                5.56               4.69
+
+v0.14 baseline (per authorize, every call rereads the whole ledger): 1000→7.4 ms, 10000→36.8 ms, 50000→129.4 ms
+done
