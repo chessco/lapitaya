@@ -1,0 +1,3 @@
+test/lapitaya-cima-v0.16.test.cjs :: ℹ tests 50 ℹ pass 50 ℹ fail 0 
+test/lapitaya-cima-v0.15.test.cjs :: ℹ tests 43 ℹ pass 43 ℹ fail 0 
+test/lapitaya-cima-v0.14.test.cjs :: ℹ tests 46 ℹ pass 46 ℹ fail 0 
