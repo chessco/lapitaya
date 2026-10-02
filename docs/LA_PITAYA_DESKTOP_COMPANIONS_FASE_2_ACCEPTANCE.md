@@ -180,7 +180,7 @@ ADV-01…ADV-08: **8/8 PASS**. **OBSERVATION:** ADV-02…ADV-07 validate a strin
 | `regression/typecheck.txt` | typecheck, exit 0 |
 | `regression/build.txt` | build log, exit 0 |
 | `governance/cima-suites.txt` | CIMA v0.14/v0.15/v0.16 suites, 139/139 PASS |
-| `electron/dev-run1-main.log`, `dev-run2-main.log` | main-process logs of both real runs |
+| `electron/dev-run1-main.txt`, `dev-run2-main.txt` | main-process logs of both real runs |
 | `electron/screenshots/01-startup-companion-opaque.png` | companion at boot: opaque cream panel |
 | `electron/screenshots/02-after-click-no-menu.png` | after real click: no bubble/menu, still sleeping |
 | `electron/screenshots/03-after-repeat-click-no-menu.png` | after 2 more clicks: unchanged |
