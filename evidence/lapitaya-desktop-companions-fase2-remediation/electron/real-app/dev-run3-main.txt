@@ -1,0 +1,63 @@
+
+> munder-difflin@0.4.6 dev
+> electron-vite dev
+
+vite v5.4.21 building SSR bundle for development...
+transforming...
+✓ 119 modules transformed.
+rendering chunks...
+out/main/index.js  1,035.08 kB
+✓ built in 1.73s
+
+build the electron main process successfully
+
+-----
+
+vite v5.4.21 building SSR bundle for development...
+transforming...
+✓ 3 modules transformed.
+rendering chunks...
+out/preload/companionPreload.js   1.45 kB
+out/preload/index.js             45.24 kB
+✓ built in 78ms
+
+build the electron preload files successfully
+
+-----
+
+Port 5173 is in use, trying another one...
+Port 5174 is in use, trying another one...
+dev server running for the electron renderer process at:
+
+  ➜  Local:   http://localhost:5175/
+  ➜  Network: use --host to expose
+
+start electron app...
+
+
+[hive] hook server error: Error: listen EADDRINUSE: address already in use \\.\pipe\munder-difflin-403921870a43
+    at Server.setupListenHandle [as _listen2] (node:net:1886:21)
+    at listenInCluster (node:net:1965:12)
+    at Server.listen (node:net:2084:5)
+    at HookServer.start (C:\PitayaCode\LaPitaya\out\main\index.js:7367:17)
+    at bootstrapHiveServices (C:\PitayaCode\LaPitaya\out\main\index.js:24491:14)
+    at C:\PitayaCode\LaPitaya\out\main\index.js:24656:3 {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '\\\\.\\pipe\\munder-difflin-403921870a43',
+  port: -1
+}
+[broker] integration broker listening on http://127.0.0.1:59321
+[telemetry] collector listening http://127.0.0.1:59322
+[30716:1002/124208.383:ERROR:cache_util_win.cc(20)] Unable to move the cache: Access is denied. (0x5)
+[30716:1002/124208.389:ERROR:cache_util_win.cc(20)] Unable to move the cache: Access is denied. (0x5)
+[30716:1002/124208.391:ERROR:cache_util_win.cc(20)] Unable to move the cache: Access is denied. (0x5)
+[30716:1002/124208.424:ERROR:disk_cache.cc(208)] Unable to create cache
+[30716:1002/124208.424:ERROR:gpu_disk_cache.cc(713)] Gpu Cache Creation failed: -2
+[30716:1002/124208.424:ERROR:disk_cache.cc(208)] Unable to create cache
+[30716:1002/124208.424:ERROR:gpu_disk_cache.cc(713)] Gpu Cache Creation failed: -2
+[30716:1002/124208.424:ERROR:disk_cache.cc(208)] Unable to create cache
+[30716:1002/124208.424:ERROR:gpu_disk_cache.cc(713)] Gpu Cache Creation failed: -2
+[30716:1002/124208.721:ERROR:command_buffer_proxy_impl.cc(325)] GPU state invalid after WaitForGetOffsetInRange.
+[30716:1002/124208.721:ERROR:command_buffer_proxy_impl.cc(325)] GPU state invalid after WaitForGetOffsetInRange.

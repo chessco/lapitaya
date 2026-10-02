@@ -1,0 +1,56 @@
+Desktop Companions FASE 2 remediation — real app (`env -u ELECTRON_RUN_AS_NODE npm run dev`) measurements
+Windows 11 Pro 10.0.26200 · 3 displays: primary 1920x1080 @100% (work 1032 high), left 1920x1080 @100%,
+far-left 1920x1080 @150% (1280x720 logical, work 672 logical).
+Input: real OS input events (mouse_event MOVE|ABSOLUTE|VIRTUALDESK, LEFTDOWN/LEFTUP, RIGHTDOWN/RIGHTUP).
+Geometry: EnumWindows/GetWindowRect; foreground: GetForegroundWindow. Per-monitor-v2 DPI aware where stated.
+
+Run dev4 (after transparency + snapshot-request fixes)
+  startup: companion window 100,100,440,440; pixels at (25,25),(60,40),(190,60),(350,350) of a 380px crop
+           = RGB(31,31,31)/(58,61,65) = the IDE behind it (gate run: RGB(255,248,231) opaque cream).  PASS
+  click on avatar → bubble "Hola. ¿En qué puedo ayudarte?" + menu (Hablar / Abrir La Pitaya / Galería Dev / Ocultar).  PASS
+  menu clipped at the window top → menu changed to a 2x2 grid; re-validated: fits.                       FIXED+PASS
+  Hablar → conversation line, no "hecho verificado" mark; gone after 6 s (menu stays open).                PASS
+  Galería Dev → overlay with Alicia / IDLE.                                                                PASS
+
+Run dev5
+  Abrir La Pitaya: OPEN_MAIN received from the alicia window; foreground → main window. 4/4.               PASS
+  (one earlier attempt in run dev4, after a hot-module reload, left the foreground on the companion —
+   not reproduced after restart; recorded as an observation.)
+  Ocultar → companion window gone, main window + 5 electron processes alive.                              PASS
+  tray icon found in the notification overflow ("La Pitaya — compañeros"); left click → companion restored
+  at the same position (528,233) without restarting.                                                       PASS
+  tray right-click menu: Mostrar (disabled while visible) / Ocultar / Modo Mini (checked) / Modo Compañía /
+  Modo Enfoque / Abrir La Pitaya. "Modo Compañía" → 3 windows: 700,100 · 400,100 · 528,233 (El Beni, Margarito,
+  Alicia), each with its name label.                                                                        PASS
+  DEFECT FOUND: a click on the transparent area of a companion window was taken by that window
+  (foreground = companion 400,100,740,440) instead of the app underneath → click-through added.          FIXED (below)
+
+Run dev7
+  restart → companion restored at 528,233 (persisted). Root cause found: PersistStore opens in whenReady,
+  after the service was constructed → positions are now re-read when the first window is created.        FIXED+PASS
+  with native drag region + click-through: 0/3 drags moved (a -webkit-app-region:drag area fires DOM
+  mouseleave, which re-enabled click-through) → drag reimplemented as a pointer-captured drag.            FIXED (below)
+
+Run dev8 (final interaction model)
+  realistic click on avatar → foreground = companion 528,233; menu open.                                  PASS
+  realistic click on a transparent corner → foreground = main window 208,74 (click passed through).        PASS
+  drags via handle (from measured handle centre): (300,-60) 428,72→728,12; (-200,150)→528,162;
+  (-400,-100)→128,62; (250,50)→378,112; (-100,-120)→278,0 (y clamped from -8 to the work-area top). 5/5   PASS
+  (plus 4/4 earlier in the same run) — avatar click after 9 drags opens the menu.                          PASS
+  cross-monitor: dragged onto the 150% display; window then measured with per-monitor DPI awareness:
+  -2763,375 510x510 px (= 340 DIP x 1.5), rendered correctly (scaled, transparent).                         PASS
+  (with the first pointer-drag version the window was mis-placed across the DPI change → deltas now come
+   from main's screen.getCursorScreenPoint() and setBounds keeps the size.)                                 FIXED+PASS
+
+Run dev9
+  restart → restored on the 150% display (per-monitor rect -2763,375,-2253,885).                          PASS
+  drags across displays: -2763,375 (510px) → -1078,237 (340px, left display) → 222,287 (primary).          PASS
+  drop below the primary's bottom edge → clamped to 222,692 (1032 - 340).                                  PASS
+
+Run dev10
+  restart → restored at 222,692. Idle sample (15 s, 8 cores, MINI): 5 electron processes, total CPU 4.95 %
+  (max single process 2.41 %), working set 614 MB.                                                         OBSERVATION
+
+Logs: no companion/presence errors in any run. Run dev3 (started seconds after force-killing the previous
+instance) logged `[hive] hook server error: EADDRINUSE …\pipe\munder-difflin-…` and Chromium cache-move
+errors; not reproduced in the following 7 runs — a stale-instance artifact, not a companion defect.

@@ -1,0 +1,1017 @@
+{
+  "summary": "14/14 PASS",
+  "results": [
+    {
+      "id": "R1",
+      "desc": "COMPANY: three separate transparent companion windows render (Alicia + two companions)",
+      "pass": true,
+      "detail": "alicia:alpha=0, el-beni:alpha=0, margarito:alpha=0"
+    },
+    {
+      "id": "R2",
+      "desc": "real BUILD assignment → El Beni WORKING (Alicia untouched)",
+      "pass": true,
+      "detail": "[{\"id\":\"alicia\",\"state\":\"IDLE\",\"relayedFrom\":null,\"bubble\":null},{\"id\":\"el-beni\",\"state\":\"WORKING\",\"relayedFrom\":null,\"bubble\":{\"kind\":\"runtime-fact\",\"sourceFact\":\"BUILD_STARTED\",\"text\":\"El Beni está construyendo.\"}},{\"id\":\"margarito\",\"state\":\"IDLE\",\"relayedFrom\":null,\"bubble\":null}]"
+    },
+    {
+      "id": "R3",
+      "desc": "real BUILD PASS (verified evidence) → Alicia CELEBRATING, El Beni released",
+      "pass": true,
+      "detail": "{\"build\":{\"decision\":\"SUPERVISED\",\"rule\":\"shell:other\",\"ok\":true,\"tail\":\"\"},\"verdict\":\"PASS\",\"violations\":[],\"alicia\":\"CELEBRATING\",\"beni\":\"IDLE\"}"
+    },
+    {
+      "id": "R4",
+      "desc": "real TEST assignment → Margarito WORKING",
+      "pass": true,
+      "detail": "[{\"id\":\"alicia\",\"state\":\"CELEBRATING\",\"relayedFrom\":null,\"bubble\":{\"kind\":\"runtime-fact\",\"sourceFact\":\"BUILD_COMPLETED\",\"text\":\"El build terminó con éxito.\"}},{\"id\":\"margarito\",\"state\":\"WORKING\",\"relayedFrom\":null,\"bubble\":{\"kind\":\"runtime-fact\",\"sourceFact\":\"TEST_STARTED\",\"text\":\"Margarito está ejecutando pruebas.\"}},{\"id\":\"el-beni\",\"state\":\"IDLE\",\"relayedFrom\":null,\"bubble\":null}]"
+    },
+    {
+      "id": "R5",
+      "desc": "real TEST PASS → Margarito CELEBRATING",
+      "pass": true,
+      "detail": "{\"testRun\":{\"decision\":\"ALLOW\",\"rule\":\"shell:low\",\"ok\":true,\"tail\":\"ℹ skipped 0 | ℹ todo 0 | ℹ duration_ms 767.9731\"},\"verdict\":\"PASS\",\"violations\":[],\"margarito\":\"CELEBRATING\"}"
+    },
+    {
+      "id": "R6",
+      "desc": "real AUDIT assignment → José Juan WORKING (takes a COMPANY seat)",
+      "pass": true,
+      "detail": "[{\"id\":\"alicia\",\"state\":\"CELEBRATING\",\"relayedFrom\":null,\"bubble\":{\"kind\":\"runtime-fact\",\"sourceFact\":\"BUILD_COMPLETED\",\"text\":\"El build terminó con éxito.\"}},{\"id\":\"jose-juan\",\"state\":\"WORKING\",\"relayedFrom\":null,\"bubble\":{\"kind\":\"runtime-fact\",\"sourceFact\":\"AUDIT_STARTED\",\"text\":\"José Juan está auditando.\"}},{\"id\":\"margarito\",\"state\":\"CELEBRATING\",\"relayedFrom\":null,\"bubble\":{\"kind\":\"runtime-fact\",\"sourceFact\":\"TEST_COMPLETED\",\"text\":\"Las pruebas pasaron.\"}}]"
+    },
+    {
+      "id": "R7",
+      "desc": "real AUDIT PASS → José Juan CELEBRATING",
+      "pass": true,
+      "detail": "{\"audit\":{\"decision\":\"ALLOW\",\"rule\":\"shell:low\",\"ok\":true,\"tail\":\" src/shared/lapitaya/desktopCompanions/types.ts |  29 +- |  test/lapitaya-desktop-companions.test.cjs      | 634 +++++++++++++++++++ |  9 files changed, 1458 insertions(+), 744 deletions(-)\"},\"verdict\":\"PASS\",\"violations\":[],\"jj\":\"CELEBRATING\"}"
+    },
+    {
+      "id": "R8",
+      "desc": "FOCUS shows only the phase companion (Margarito) in its real WORKING state",
+      "pass": true,
+      "detail": "[{\"id\":\"margarito\",\"state\":\"WORKING\",\"relayedFrom\":null,\"bubble\":{\"kind\":\"runtime-fact\",\"sourceFact\":\"TEST_STARTED\",\"text\":\"Margarito está ejecutando pruebas.\"}}]"
+    },
+    {
+      "id": "R9",
+      "desc": "real REQUEST proposal (IntentBoundary → openRequest) → Alicia ATTENTION",
+      "pass": true,
+      "detail": "{\"status\":\"FORWARDED\",\"route\":\"orchestrator\",\"proposed\":true,\"alicia\":\"ATTENTION\"}"
+    },
+    {
+      "id": "R10",
+      "desc": "the runtime withdrawing that request (request.closed) clears Alicia's ATTENTION",
+      "pass": true,
+      "detail": "{\"req\":\"req-mureb3o7-4\",\"alicia\":\"IDLE\",\"lastEvents\":[{\"type\":\"intent\",\"alicia\":[\"intent.received\",\"intent.classified\",\"intent.forwarded\"]},{\"type\":\"request\",\"alicia\":[\"request.closed\"]}]}"
+    },
+    {
+      "id": "R11",
+      "desc": "real HUMAN_APPROVAL_REQUIRED → Alicia ATTENTION with a sticky runtime-fact bubble",
+      "pass": true,
+      "detail": "{\"decision\":\"HUMAN_APPROVAL_REQUIRED\",\"pending\":1,\"alicia\":{\"id\":\"alicia\",\"state\":\"ATTENTION\",\"relayedFrom\":null,\"bubble\":{\"kind\":\"runtime-fact\",\"sourceFact\":\"HUMAN_APPROVAL_REQUIRED\",\"text\":\"Hay una solicitud que necesita tu confirmación.\"}}}"
+    },
+    {
+      "id": "R12",
+      "desc": "companion renderer: presentation-only bridge, no window.api/require/process; forged calls approve nothing",
+      "pass": true,
+      "detail": "{\"probe\":{\"keys\":[\"dismissBubble\",\"drag\",\"hide\",\"onSnapshot\",\"open\",\"setInteractive\",\"setMode\"],\"api\":\"undefined\",\"require\":\"undefined\",\"process\":\"undefined\",\"ipcRenderer\":\"undefined\"},\"stillPending\":1,\"alicia\":\"ATTENTION\"}"
+    },
+    {
+      "id": "R13",
+      "desc": "hide → all companion windows hidden; restore → back in COMPANY, no restart",
+      "pass": true,
+      "detail": "{\"hidden\":true,\"restored\":true}"
+    },
+    {
+      "id": "R14",
+      "desc": "no renderer console errors in companion windows",
+      "pass": true,
+      "detail": "[]"
+    }
+  ],
+  "timeline": [
+    {
+      "label": "startup-company",
+      "mode": "COMPANY",
+      "entries": [
+        {
+          "id": "alicia",
+          "state": "IDLE",
+          "relayedFrom": null,
+          "bubble": null
+        },
+        {
+          "id": "el-beni",
+          "state": "IDLE",
+          "relayedFrom": null,
+          "bubble": null
+        },
+        {
+          "id": "margarito",
+          "state": "IDLE",
+          "relayedFrom": null,
+          "bubble": null
+        }
+      ],
+      "windows": [
+        {
+          "id": "alicia",
+          "file": "01-startup-company-alicia.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 100,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        },
+        {
+          "id": "el-beni",
+          "file": "01-startup-company-el-beni.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 400,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        },
+        {
+          "id": "margarito",
+          "file": "01-startup-company-margarito.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 700,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        }
+      ]
+    },
+    {
+      "label": "build-started",
+      "mode": "COMPANY",
+      "entries": [
+        {
+          "id": "alicia",
+          "state": "IDLE",
+          "relayedFrom": null,
+          "bubble": null
+        },
+        {
+          "id": "el-beni",
+          "state": "WORKING",
+          "relayedFrom": null,
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "BUILD_STARTED",
+            "text": "El Beni está construyendo."
+          }
+        },
+        {
+          "id": "margarito",
+          "state": "IDLE",
+          "relayedFrom": null,
+          "bubble": null
+        }
+      ],
+      "windows": [
+        {
+          "id": "alicia",
+          "file": "02-build-started-alicia.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 100,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        },
+        {
+          "id": "el-beni",
+          "file": "02-build-started-el-beni.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 400,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        },
+        {
+          "id": "margarito",
+          "file": "02-build-started-margarito.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 700,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        }
+      ]
+    },
+    {
+      "label": "build-completed",
+      "mode": "COMPANY",
+      "entries": [
+        {
+          "id": "alicia",
+          "state": "CELEBRATING",
+          "relayedFrom": null,
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "BUILD_COMPLETED",
+            "text": "El build terminó con éxito."
+          }
+        },
+        {
+          "id": "el-beni",
+          "state": "IDLE",
+          "relayedFrom": null,
+          "bubble": null
+        },
+        {
+          "id": "margarito",
+          "state": "IDLE",
+          "relayedFrom": null,
+          "bubble": null
+        }
+      ],
+      "windows": [
+        {
+          "id": "alicia",
+          "file": "03-build-completed-alicia.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 100,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        },
+        {
+          "id": "el-beni",
+          "file": "03-build-completed-el-beni.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 400,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        },
+        {
+          "id": "margarito",
+          "file": "03-build-completed-margarito.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 700,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        }
+      ]
+    },
+    {
+      "label": "test-started",
+      "mode": "COMPANY",
+      "entries": [
+        {
+          "id": "alicia",
+          "state": "CELEBRATING",
+          "relayedFrom": null,
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "BUILD_COMPLETED",
+            "text": "El build terminó con éxito."
+          }
+        },
+        {
+          "id": "margarito",
+          "state": "WORKING",
+          "relayedFrom": null,
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "TEST_STARTED",
+            "text": "Margarito está ejecutando pruebas."
+          }
+        },
+        {
+          "id": "el-beni",
+          "state": "IDLE",
+          "relayedFrom": null,
+          "bubble": null
+        }
+      ],
+      "windows": [
+        {
+          "id": "alicia",
+          "file": "04-test-started-alicia.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 100,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        },
+        {
+          "id": "el-beni",
+          "file": "04-test-started-el-beni.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 400,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        },
+        {
+          "id": "margarito",
+          "file": "04-test-started-margarito.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 700,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        }
+      ]
+    },
+    {
+      "label": "test-completed",
+      "mode": "COMPANY",
+      "entries": [
+        {
+          "id": "alicia",
+          "state": "CELEBRATING",
+          "relayedFrom": null,
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "BUILD_COMPLETED",
+            "text": "El build terminó con éxito."
+          }
+        },
+        {
+          "id": "margarito",
+          "state": "CELEBRATING",
+          "relayedFrom": null,
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "TEST_COMPLETED",
+            "text": "Las pruebas pasaron."
+          }
+        },
+        {
+          "id": "el-beni",
+          "state": "IDLE",
+          "relayedFrom": null,
+          "bubble": null
+        }
+      ],
+      "windows": [
+        {
+          "id": "alicia",
+          "file": "05-test-completed-alicia.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 100,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        },
+        {
+          "id": "el-beni",
+          "file": "05-test-completed-el-beni.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 400,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        },
+        {
+          "id": "margarito",
+          "file": "05-test-completed-margarito.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 700,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        }
+      ]
+    },
+    {
+      "label": "audit-started",
+      "mode": "COMPANY",
+      "entries": [
+        {
+          "id": "alicia",
+          "state": "CELEBRATING",
+          "relayedFrom": null,
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "BUILD_COMPLETED",
+            "text": "El build terminó con éxito."
+          }
+        },
+        {
+          "id": "jose-juan",
+          "state": "WORKING",
+          "relayedFrom": null,
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "AUDIT_STARTED",
+            "text": "José Juan está auditando."
+          }
+        },
+        {
+          "id": "margarito",
+          "state": "CELEBRATING",
+          "relayedFrom": null,
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "TEST_COMPLETED",
+            "text": "Las pruebas pasaron."
+          }
+        }
+      ],
+      "windows": [
+        {
+          "id": "alicia",
+          "file": "06-audit-started-alicia.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 100,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        },
+        {
+          "id": "margarito",
+          "file": "06-audit-started-margarito.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 700,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        },
+        {
+          "id": "jose-juan",
+          "file": "06-audit-started-jose-juan.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 1000,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        }
+      ]
+    },
+    {
+      "label": "audit-completed",
+      "mode": "COMPANY",
+      "entries": [
+        {
+          "id": "alicia",
+          "state": "CELEBRATING",
+          "relayedFrom": null,
+          "bubble": null
+        },
+        {
+          "id": "jose-juan",
+          "state": "CELEBRATING",
+          "relayedFrom": null,
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "AUDIT_COMPLETED",
+            "text": "La auditoría terminó con veredicto PASS."
+          }
+        },
+        {
+          "id": "margarito",
+          "state": "CELEBRATING",
+          "relayedFrom": null,
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "TEST_COMPLETED",
+            "text": "Las pruebas pasaron."
+          }
+        }
+      ],
+      "windows": [
+        {
+          "id": "alicia",
+          "file": "07-audit-completed-alicia.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 100,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        },
+        {
+          "id": "margarito",
+          "file": "07-audit-completed-margarito.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 700,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        },
+        {
+          "id": "jose-juan",
+          "file": "07-audit-completed-jose-juan.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 1000,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        }
+      ]
+    },
+    {
+      "label": "focus-test",
+      "mode": "FOCUS",
+      "entries": [
+        {
+          "id": "margarito",
+          "state": "WORKING",
+          "relayedFrom": null,
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "TEST_STARTED",
+            "text": "Margarito está ejecutando pruebas."
+          }
+        }
+      ],
+      "windows": [
+        {
+          "id": "margarito",
+          "file": "08-focus-test-margarito.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 700,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        }
+      ]
+    },
+    {
+      "label": "request-pending",
+      "mode": "COMPANY",
+      "entries": [
+        {
+          "id": "alicia",
+          "state": "ATTENTION",
+          "relayedFrom": null,
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "REQUEST_PENDING",
+            "text": "Hay una solicitud que necesita tu confirmación."
+          }
+        },
+        {
+          "id": "margarito",
+          "state": "WORKING",
+          "relayedFrom": null,
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "TEST_STARTED",
+            "text": "Margarito está ejecutando pruebas."
+          }
+        },
+        {
+          "id": "jose-juan",
+          "state": "CELEBRATING",
+          "relayedFrom": null,
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "AUDIT_COMPLETED",
+            "text": "La auditoría terminó con veredicto PASS."
+          }
+        }
+      ],
+      "windows": [
+        {
+          "id": "alicia",
+          "file": "09-request-pending-alicia.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 100,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        },
+        {
+          "id": "margarito",
+          "file": "09-request-pending-margarito.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 700,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        },
+        {
+          "id": "jose-juan",
+          "file": "09-request-pending-jose-juan.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 1000,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        }
+      ]
+    },
+    {
+      "label": "request-withdrawn",
+      "mode": "COMPANY",
+      "entries": [
+        {
+          "id": "alicia",
+          "state": "IDLE",
+          "relayedFrom": null,
+          "bubble": null
+        },
+        {
+          "id": "margarito",
+          "state": "WORKING",
+          "relayedFrom": null,
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "TEST_STARTED",
+            "text": "Margarito está ejecutando pruebas."
+          }
+        },
+        {
+          "id": "jose-juan",
+          "state": "CELEBRATING",
+          "relayedFrom": null,
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "AUDIT_COMPLETED",
+            "text": "La auditoría terminó con veredicto PASS."
+          }
+        }
+      ],
+      "windows": [
+        {
+          "id": "alicia",
+          "file": "10-request-withdrawn-alicia.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 100,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        },
+        {
+          "id": "margarito",
+          "file": "10-request-withdrawn-margarito.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 700,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        },
+        {
+          "id": "jose-juan",
+          "file": "10-request-withdrawn-jose-juan.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 1000,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        }
+      ]
+    },
+    {
+      "label": "approval-required",
+      "mode": "COMPANY",
+      "entries": [
+        {
+          "id": "alicia",
+          "state": "ATTENTION",
+          "relayedFrom": null,
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "HUMAN_APPROVAL_REQUIRED",
+            "text": "Hay una solicitud que necesita tu confirmación."
+          }
+        },
+        {
+          "id": "margarito",
+          "state": "WORKING",
+          "relayedFrom": null,
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "TEST_STARTED",
+            "text": "Margarito está ejecutando pruebas."
+          }
+        },
+        {
+          "id": "jose-juan",
+          "state": "CELEBRATING",
+          "relayedFrom": null,
+          "bubble": {
+            "kind": "runtime-fact",
+            "sourceFact": "AUDIT_COMPLETED",
+            "text": "La auditoría terminó con veredicto PASS."
+          }
+        }
+      ],
+      "windows": [
+        {
+          "id": "alicia",
+          "file": "11-approval-required-alicia.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 100,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        },
+        {
+          "id": "margarito",
+          "file": "11-approval-required-margarito.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 700,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        },
+        {
+          "id": "jose-juan",
+          "file": "11-approval-required-jose-juan.png",
+          "size": {
+            "width": 340,
+            "height": 340
+          },
+          "cornerAlpha": 0,
+          "bounds": {
+            "x": 1000,
+            "y": 100,
+            "width": 340,
+            "height": 340
+          }
+        }
+      ]
+    }
+  ],
+  "runtimeEvents": [
+    {
+      "type": "cima-record",
+      "alicia": [
+        "cima.phase.assigned"
+      ]
+    },
+    {
+      "type": "supervised",
+      "alicia": [
+        "governance.supervised"
+      ]
+    },
+    {
+      "type": "governance",
+      "alicia": []
+    },
+    {
+      "type": "trace",
+      "alicia": []
+    },
+    {
+      "type": "cima-record",
+      "alicia": [
+        "cima.phase.changed"
+      ]
+    },
+    {
+      "type": "cima-record",
+      "alicia": [
+        "cima.phase.assigned"
+      ]
+    },
+    {
+      "type": "governance",
+      "alicia": []
+    },
+    {
+      "type": "trace",
+      "alicia": []
+    },
+    {
+      "type": "cima-record",
+      "alicia": [
+        "cima.phase.changed"
+      ]
+    },
+    {
+      "type": "cima-record",
+      "alicia": [
+        "cima.phase.assigned"
+      ]
+    },
+    {
+      "type": "governance",
+      "alicia": []
+    },
+    {
+      "type": "trace",
+      "alicia": []
+    },
+    {
+      "type": "cima-record",
+      "alicia": [
+        "cima.phase.changed",
+        "audit.completed"
+      ]
+    },
+    {
+      "type": "cima-record",
+      "alicia": [
+        "cima.phase.assigned"
+      ]
+    },
+    {
+      "type": "request",
+      "alicia": [
+        "request.proposed"
+      ]
+    },
+    {
+      "type": "intent",
+      "alicia": [
+        "intent.received",
+        "intent.classified",
+        "intent.forwarded"
+      ]
+    },
+    {
+      "type": "request",
+      "alicia": [
+        "request.closed"
+      ]
+    },
+    {
+      "type": "approval-request",
+      "alicia": [
+        "approval.required"
+      ]
+    },
+    {
+      "type": "governance",
+      "alicia": []
+    }
+  ],
+  "consoleErrors": [],
+  "tmp": "C:\\Users\\chess\\AppData\\Local\\Temp\\lp-companions-fase2-AY13Pg"
+}

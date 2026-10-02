@@ -1,0 +1,30 @@
+PASS R1 COMPANY: three separate transparent companion windows render (Alicia + two companions)
+     alicia:alpha=0, el-beni:alpha=0, margarito:alpha=0
+PASS R2 real BUILD assignment → El Beni WORKING (Alicia untouched)
+     [{"id":"alicia","state":"IDLE","relayedFrom":null,"bubble":null},{"id":"el-beni","state":"WORKING","relayedFrom":null,"bubble":{"kind":"runtime-fact","sourceFact":"BUILD_STARTED","text":"El Beni está construyendo."}},{"id":"margarito","state":"IDLE","relayedFrom":null,"bubble":null}]
+PASS R3 real BUILD PASS (verified evidence) → Alicia CELEBRATING, El Beni released
+     {"build":{"decision":"SUPERVISED","rule":"shell:other","ok":true,"tail":""},"verdict":"PASS","violations":[],"alicia":"CELEBRATING","beni":"IDLE"}
+PASS R4 real TEST assignment → Margarito WORKING
+     [{"id":"alicia","state":"CELEBRATING","relayedFrom":null,"bubble":{"kind":"runtime-fact","sourceFact":"BUILD_COMPLETED","text":"El build terminó con éxito."}},{"id":"margarito","state":"WORKING","relayedFrom":null,"bubble":{"kind":"runtime-fact","sourceFact":"TEST_STARTED","text":"Margarito está ejecutando pruebas."}},{"id":"el-beni","state":"IDLE","relayedFrom":null,"bubble":null}]
+PASS R5 real TEST PASS → Margarito CELEBRATING
+     {"testRun":{"decision":"ALLOW","rule":"shell:low","ok":true,"tail":"ℹ skipped 0 | ℹ todo 0 | ℹ duration_ms 767.9731"},"verdict":"PASS","violations":[],"margarito":"CELEBRATING"}
+PASS R6 real AUDIT assignment → José Juan WORKING (takes a COMPANY seat)
+     [{"id":"alicia","state":"CELEBRATING","relayedFrom":null,"bubble":{"kind":"runtime-fact","sourceFact":"BUILD_COMPLETED","text":"El build terminó con éxito."}},{"id":"jose-juan","state":"WORKING","relayedFrom":null,"bubble":{"kind":"runtime-fact","sourceFact":"AUDIT_STARTED","text":"José Juan está auditando."}},{"id":"margarito","state":"CELEBRATING","relayedFrom":null,"bubble":{"kind":"runtime-fact","sourceFact":"TEST_COMPLETED","text":"Las pruebas pasaron."}}]
+PASS R7 real AUDIT PASS → José Juan CELEBRATING
+     {"audit":{"decision":"ALLOW","rule":"shell:low","ok":true,"tail":" src/shared/lapitaya/desktopCompanions/types.ts |  29 +- |  test/lapitaya-desktop-companions.test.cjs      | 634 +++++++++++++++++++ |  9 files changed, 1458 insertions(+), 744 deletions(-)"},"verdict":"PASS","violations":[],"jj":"CELEBRATING"}
+PASS R8 FOCUS shows only the phase companion (Margarito) in its real WORKING state
+     [{"id":"margarito","state":"WORKING","relayedFrom":null,"bubble":{"kind":"runtime-fact","sourceFact":"TEST_STARTED","text":"Margarito está ejecutando pruebas."}}]
+PASS R9 real REQUEST proposal (IntentBoundary → openRequest) → Alicia ATTENTION
+     {"status":"FORWARDED","route":"orchestrator","proposed":true,"alicia":"ATTENTION"}
+PASS R10 the runtime withdrawing that request (request.closed) clears Alicia's ATTENTION
+     {"req":"req-mureb3o7-4","alicia":"IDLE","lastEvents":[{"type":"intent","alicia":["intent.received","intent.classified","intent.forwarded"]},{"type":"request","alicia":["request.closed"]}]}
+PASS R11 real HUMAN_APPROVAL_REQUIRED → Alicia ATTENTION with a sticky runtime-fact bubble
+     {"decision":"HUMAN_APPROVAL_REQUIRED","pending":1,"alicia":{"id":"alicia","state":"ATTENTION","relayedFrom":null,"bubble":{"kind":"runtime-fact","sourceFact":"HUMAN_APPROVAL_REQUIRED","text":"Hay una solicitud que necesita tu confirmación."}}}
+PASS R12 companion renderer: presentation-only bridge, no window.api/require/process; forged calls approve nothing
+     {"probe":{"keys":["dismissBubble","drag","hide","onSnapshot","open","setInteractive","setMode"],"api":"undefined","require":"undefined","process":"undefined","ipcRenderer":"undefined"},"stillPending":1,"alicia":"ATTENTION"}
+PASS R13 hide → all companion windows hidden; restore → back in COMPANY, no restart
+     {"hidden":true,"restored":true}
+PASS R14 no renderer console errors in companion windows
+     []
+
+14/14 PASS

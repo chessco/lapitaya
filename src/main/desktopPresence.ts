@@ -1,66 +1,125 @@
 /**
  * DesktopPresenceService for La Pitaya Desktop Companions — FASE 2.
  *
- * Manages the desktop companion window lifecycle, visibility modes, multi-agent presence,
+ * Manages the desktop companion windows' lifecycle, visibility modes, multi-agent presence,
  * event-driven visual reactions, and safe presentation projection.
  *
  * STRICT GOVERNANCE BOUNDARY:
  * This service receives observability signals but NEVER contains or forwards
- * CIMA authority, tokens, ledger data, or approval state.
+ * CIMA authority, tokens, ledger data, or approval state. Runtime reactions come
+ * only from verified runtime events handed to it by the main process
+ * (`observeAliciaEvents`); nothing a companion renderer sends can create one.
+ *
+ * Presentation model (FASE 2 remediation):
+ *  - every companion has its OWN visual state and bubble; a fact names its target explicitly;
+ *  - every visible companion has its OWN transparent window and persisted position;
+ *  - Alicia relays the state of a companion that is not on screen (in MINI she is the only one,
+ *    so a build in progress would otherwise be invisible); `relayedFrom` says whose state it is;
+ *  - a pending human request outranks everything on Alicia until the runtime resolves it.
  */
 
-import { BrowserWindow, screen, ipcMain, type BrowserWindowConstructorOptions } from 'electron';
+import {
+  BrowserWindow,
+  Menu,
+  Tray,
+  nativeImage,
+  screen,
+  ipcMain,
+  type BrowserWindowConstructorOptions,
+  type MenuItemConstructorOptions
+} from 'electron';
 import { join } from 'node:path';
 import type { LaPitayaAgentId } from '../shared/lapitaya/agents';
 import { LA_PITAYA_AGENT_BY_ID } from '../shared/lapitaya/agents';
+import type { AliciaEvent } from '../shared/lapitaya/alicia/events';
 import { getAnimalAvatar } from '../shared/lapitaya/desktopCompanions/animalAvatar';
-import { COMPANION_IPC, isGovernanceIpcChannel } from '../shared/lapitaya/desktopCompanions/ipc';
-import type {
-  CompanionMode,
-  CompanionPosition,
-  CompanionPresentation,
-  CompanionPresentationEntry,
-  CompanionVisualState,
-  CompanionMood,
-  CompanionAnimationState,
-  CompanionSpeechBubbleData,
-  CompanionPreferences
+import { COMPANION_IPC } from '../shared/lapitaya/desktopCompanions/ipc';
+import {
+  COMPANION_FACT_EFFECTS,
+  companionFactsFromAliciaEvent,
+  isCompanionFact
+} from '../shared/lapitaya/desktopCompanions/runtimeFacts';
+import {
+  isCompanionMode,
+  type CompanionMode,
+  type CompanionPosition,
+  type CompanionPresentation,
+  type CompanionPresentationEntry,
+  type CompanionVisualState,
+  type CompanionAnimationState,
+  type CompanionSpeechBubbleData,
+  type CompanionPreferences
 } from '../shared/lapitaya/desktopCompanions/types';
+import { COMPANION_TRAY_ICON_DATA_URL } from './desktopPresenceTrayIcon';
 
 export interface PersistStoreLike {
   getKv<T>(key: string): T | null | undefined;
   setKv<T>(key: string, value: T): void;
 }
 
-export interface AliciaCompanionLike {
-  snapshot?: (opts?: any) => { presence?: string };
-  getObservability?: () => { presence?: string; cimaStatus?: string };
-  subscribeObservability?: (fn: (obs: unknown) => void) => () => void;
+export interface TimersLike {
+  setTimeout(fn: () => void, ms: number): unknown;
+  clearTimeout(handle: unknown): void;
 }
+
+interface Bounds { x: number; y: number; width: number; height: number }
 
 export interface DesktopPresenceDeps {
   persist?: PersistStoreLike;
-  aliciaCompanion?: AliciaCompanionLike;
   screenModule?: typeof screen;
   browserWindowFactory?: (opts: BrowserWindowConstructorOptions) => BrowserWindow;
   mainWindowGetter?: () => BrowserWindow | null;
   preloadPath?: string;
   devServerUrl?: string;
+  timers?: TimersLike;
+  now?: () => number;
 }
 
 const DEFAULT_POSITION: CompanionPosition = { x: 100, y: 100 };
 const WINDOW_SIZE = { width: 340, height: 340 };
 export const MAX_VISIBLE_COMPANIONS_DEFAULT = 3;
+/** How long a CELEBRATING companion celebrates before returning to rest. */
+export const CELEBRATE_MS = 8000;
+/** Auto-dismiss delay for non-sticky bubbles. */
+export const BUBBLE_AUTO_DISMISS_MS = 6000;
+
+const ALL_AGENTS: readonly LaPitayaAgentId[] = ['alicia', 'el-inge', 'el-beni', 'valentin', 'margarito', 'jose-juan', 'el-tutu'];
+/** COMPANY fills the seats after Alicia with the most recently active companions, then in CIMA work order. */
+const COMPANY_FILL_ORDER: readonly LaPitayaAgentId[] = ['el-beni', 'margarito', 'jose-juan', 'el-inge', 'valentin', 'el-tutu'];
+const VISIBLE_MODES: readonly CompanionMode[] = ['MINI', 'COMPANION', 'COMPANY', 'FOCUS'];
+
+/** How strongly a state asks for the human's eye — decides what Alicia relays. */
+const RELAY_PRIORITY: Partial<Record<CompanionVisualState, number>> = {
+  ATTENTION: 5, CONCERNED: 4, WORKING: 3, CELEBRATING: 2, THINKING: 1
+};
+/** States Alicia holds regardless of what she could relay. */
+const HARD_STATES: readonly CompanionVisualState[] = ['OFFLINE', 'PAUSED'];
+
+const defaultTimers: TimersLike = {
+  setTimeout: (fn, ms) => {
+    const h = setTimeout(fn, ms);
+    (h as { unref?: () => void }).unref?.();
+    return h;
+  },
+  clearTimeout: (h) => clearTimeout(h as ReturnType<typeof setTimeout>)
+};
 
 export class DesktopPresenceService {
   private mode: CompanionMode = 'OFF';
   private previousModeBeforePause: CompanionMode = 'OFF';
-  private companionWindow: BrowserWindow | null = null;
-  private primaryVisualState: CompanionVisualState = 'IDLE';
-  private primaryMood: CompanionMood = 'CURIOUS';
+  private lastVisibleMode: CompanionMode = 'MINI';
+  private windows: Map<LaPitayaAgentId, BrowserWindow> = new Map();
+  /** Windows whose renderer finished loading (shown only then, so no unstyled frame flashes). */
+  private loaded: Set<LaPitayaAgentId> = new Set();
+  private states: Map<LaPitayaAgentId, CompanionVisualState> = new Map();
+  private stateTimers: Map<LaPitayaAgentId, unknown> = new Map();
+  private lastActivity: Map<LaPitayaAgentId, number> = new Map();
   private activePhaseAgent: LaPitayaAgentId | null = null;
   private positions: Map<LaPitayaAgentId, CompanionPosition> = new Map();
   private speechBubbles: Map<LaPitayaAgentId, CompanionSpeechBubbleData> = new Map();
+  private bubbleTimers: Map<LaPitayaAgentId, unknown> = new Map();
+  /** Pending human requests (approval / request confirmation) by source ref. */
+  private pendingHuman: Map<string, string> = new Map();
   private verifiedRuntimeFacts: Set<string> = new Set();
   private preferences: CompanionPreferences = {
     mode: 'MINI',
@@ -71,53 +130,62 @@ export class DesktopPresenceService {
     maxVisibleCompanions: MAX_VISIBLE_COMPANIONS_DEFAULT
   };
   private isDestroyed = false;
-  private unsubscribeAlicia: (() => void) | null = null;
+  /** Window position (and cursor point) at the start of an in-progress handle drag, per companion. */
+  private dragOrigins: Map<LaPitayaAgentId, { win: CompanionPosition; cursor: CompanionPosition | null }> = new Map();
+  /** Positions re-read once the persist store is open (it opens in whenReady, after construction). */
+  private positionsReloaded = false;
+  private tray: Tray | null = null;
+  private seq = 0;
 
   private persist?: PersistStoreLike;
-  private aliciaCompanion?: AliciaCompanionLike;
   private screenModule?: typeof screen;
   private browserWindowFactory: (opts: BrowserWindowConstructorOptions) => BrowserWindow;
   private mainWindowGetter?: () => BrowserWindow | null;
   private preloadPath: string;
   private devServerUrl?: string;
+  private timers: TimersLike;
+  private now: () => number;
 
   constructor(deps: DesktopPresenceDeps = {}) {
     this.persist = deps.persist;
-    this.aliciaCompanion = deps.aliciaCompanion;
     this.screenModule = deps.screenModule ?? screen;
     this.browserWindowFactory =
       deps.browserWindowFactory ?? ((opts) => new BrowserWindow(opts));
     this.mainWindowGetter = deps.mainWindowGetter;
     this.preloadPath = deps.preloadPath ?? join(__dirname, '../preload/companionPreload.js');
     this.devServerUrl = deps.devServerUrl ?? process.env.ELECTRON_RENDERER_URL;
+    this.timers = deps.timers ?? defaultTimers;
+    this.now = deps.now ?? (() => Date.now());
 
     this.restorePositions();
     this.setupIpcHandlers();
-    this.setupAliciaSubscription();
   }
+
+  // ─── Modes ─────────────────────────────────────────────────────────────────
 
   public getMode(): CompanionMode {
     return this.mode;
   }
 
-  public setMode(mode: CompanionMode): void {
-    if (this.isDestroyed) return;
+  /** Switch mode. Anything outside COMPANION_MODES is rejected with no state mutation. */
+  public setMode(mode: CompanionMode): boolean {
+    if (this.isDestroyed || !isCompanionMode(mode)) return false;
     this.mode = mode;
     this.preferences.mode = mode;
-
-    if (mode === 'OFF') {
-      this.hideWindow();
-    } else if (mode === 'PAUSED') {
-      this.pushSnapshot();
-    } else {
-      this.ensureWindowCreated();
-      this.showWindow();
-      this.pushSnapshot();
-    }
+    if (VISIBLE_MODES.includes(mode)) this.lastVisibleMode = mode;
+    this.syncWindows();
+    this.pushSnapshot();
+    this.refreshTray();
+    return true;
   }
 
-  public show(mode: CompanionMode = 'MINI'): void {
-    this.setMode(mode);
+  public show(mode: CompanionMode = 'MINI'): boolean {
+    return this.setMode(mode);
+  }
+
+  /** Bring the companions back in the mode they were last shown in. */
+  public restore(): boolean {
+    return this.setMode(this.lastVisibleMode);
   }
 
   public hide(): void {
@@ -140,18 +208,13 @@ export class DesktopPresenceService {
     }
   }
 
-  public setState(state: CompanionVisualState): void {
-    if (this.isDestroyed) return;
-    this.primaryVisualState = state;
-    this.pushStateUpdate(state);
-    this.pushSnapshot();
-  }
-
   public setPreferences(prefs: Partial<CompanionPreferences>): void {
-    this.preferences = { ...this.preferences, ...prefs };
-    if (prefs.mode) {
-      this.setMode(prefs.mode);
+    const { mode, ...rest } = prefs;
+    this.preferences = { ...this.preferences, ...rest };
+    if (mode !== undefined) {
+      this.setMode(mode);
     } else {
+      this.syncWindows();
       this.pushSnapshot();
     }
   }
@@ -160,115 +223,166 @@ export class DesktopPresenceService {
     return { ...this.preferences };
   }
 
-  public isWindowVisible(): boolean {
-    if (!this.companionWindow || this.companionWindow.isDestroyed()) return false;
-    try {
-      return this.companionWindow.isVisible();
-    } catch {
-      return false;
+  // ─── State ─────────────────────────────────────────────────────────────────
+
+  /** Set one companion's visual state (Alicia when no agent is named). */
+  public setState(state: CompanionVisualState, agentId: LaPitayaAgentId = 'alicia'): void {
+    if (this.isDestroyed || !LA_PITAYA_AGENT_BY_ID[agentId]) return;
+    this.applyState(agentId, state);
+    this.pushSnapshot();
+  }
+
+  public getAgentState(agentId: LaPitayaAgentId): CompanionVisualState {
+    return this.states.get(agentId) ?? 'IDLE';
+  }
+
+  public isWindowVisible(agentId?: LaPitayaAgentId): boolean {
+    const wins = agentId ? [this.windows.get(agentId)] : [...this.windows.values()];
+    return wins.some((w) => {
+      if (!w || w.isDestroyed()) return false;
+      try {
+        return w.isVisible();
+      } catch {
+        return false;
+      }
+    });
+  }
+
+  // ─── Verified runtime facts ────────────────────────────────────────────────
+
+  /**
+   * Feed verified runtime events (CimaRuntimeService.onEvent → fromRuntimeEvent). Main process only.
+   * A failure here never propagates back into the governance event path.
+   */
+  public observeAliciaEvents(events: readonly AliciaEvent[]): void {
+    for (const ev of events) {
+      try {
+        for (const f of companionFactsFromAliciaEvent(ev)) this.triggerVerifiedRuntimeFact(f.fact, { ref: f.ref });
+      } catch {
+        /* presentation must never break the runtime */
+      }
     }
   }
 
-  public triggerVerifiedRuntimeFact(fact: string, agentId?: LaPitayaAgentId): boolean {
-    if (!fact || typeof fact !== 'string') return false;
+  /** Apply one verified fact. Unknown facts are rejected: no state change, no bubble. */
+  public triggerVerifiedRuntimeFact(fact: string, meta: { ref?: string } = {}): boolean {
+    if (this.isDestroyed || !isCompanionFact(fact)) return false;
     this.verifiedRuntimeFacts.add(fact);
+    const effect = COMPANION_FACT_EFFECTS[fact];
 
-    switch (fact) {
-      case 'BUILD_STARTED':
-        this.activePhaseAgent = 'el-beni';
-        this.setState('WORKING');
-        this.setSpeechBubble('el-beni', 'El Beni iniciando el build.', fact);
-        break;
-      case 'BUILD_COMPLETED':
-        this.activePhaseAgent = 'el-beni';
-        this.setState('CELEBRATING');
-        this.setSpeechBubble('alicia', 'El build terminó con éxito.', fact);
-        break;
-      case 'TEST_STARTED':
-        this.activePhaseAgent = 'margarito';
-        this.setState('WORKING');
-        this.setSpeechBubble('margarito', 'Margarito ejecutando pruebas.', fact);
-        break;
-      case 'TEST_COMPLETED':
-        this.activePhaseAgent = 'margarito';
-        this.setState('CELEBRATING');
-        this.setSpeechBubble('margarito', 'Pruebas completadas correctamente.', fact);
-        break;
-      case 'AUDIT_STARTED':
-        this.activePhaseAgent = 'jose-juan';
-        this.setState('WORKING');
-        this.setSpeechBubble('jose-juan', 'José Juan revisando auditoría.', fact);
-        break;
-      case 'AUDIT_COMPLETED':
-        this.activePhaseAgent = 'jose-juan';
-        this.setState('CELEBRATING');
-        this.setSpeechBubble('jose-juan', 'Auditoría aprobada con evidencia.', fact);
-        break;
-      case 'REQUEST_PENDING':
-      case 'APPROVAL_PENDING':
-      case 'HUMAN_APPROVAL_REQUIRED':
-        this.setState('ATTENTION');
-        this.setSpeechBubble('alicia', 'Hay una solicitud que necesita tu confirmación.', fact);
-        break;
-      default:
-        // Do not invent fake facts or arbitrary state changes
-        break;
+    if (!effect) {
+      // A resolution: clear exactly the pending request it names.
+      if (meta.ref && this.pendingHuman.delete(meta.ref) && this.pendingHuman.size === 0) {
+        if (this.getAgentState('alicia') === 'ATTENTION') this.applyState('alicia', 'IDLE');
+        const b = this.speechBubbles.get('alicia');
+        if (b && b.autoDismissMs === undefined) this.clearBubble('alicia');
+      }
+      this.syncWindows();
+      this.pushSnapshot();
+      return true;
     }
 
+    if (effect.sticky) this.pendingHuman.set(meta.ref ?? `${fact}-${this.now()}-${++this.seq}`, fact);
+    if (effect.phaseAgent) this.activePhaseAgent = effect.phaseAgent;
+    if (effect.release) {
+      this.applyState(effect.release, 'IDLE');
+      this.clearBubble(effect.release);
+    }
+
+    const humanPending = this.pendingHuman.size > 0;
+    if (effect.target === 'alicia' && humanPending && !effect.sticky) {
+      // A pending human request outranks everything on Alicia: keep ATTENTION and its bubble.
+    } else {
+      this.applyState(effect.target, effect.state);
+      this.setBubble(effect.target, {
+        id: this.bubbleId(),
+        text: effect.text,
+        kind: 'runtime-fact',
+        sourceFact: fact,
+        timestamp: this.now(),
+        ...(effect.sticky ? {} : { autoDismissMs: BUBBLE_AUTO_DISMISS_MS })
+      });
+    }
+
+    this.syncWindows();
+    this.pushSnapshot();
     return true;
   }
 
-  public setSpeechBubble(agentId: LaPitayaAgentId, text: string, sourceFact?: string): void {
-    if (!LA_PITAYA_AGENT_BY_ID[agentId]) return;
-    const bubble: CompanionSpeechBubbleData = {
-      id: `bub-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+  // ─── Bubbles ───────────────────────────────────────────────────────────────
+
+  /** A conversation bubble. Never a runtime fact: no `sourceFact`, whatever the text says. */
+  public setSpeechBubble(agentId: LaPitayaAgentId, text: string): void {
+    if (!LA_PITAYA_AGENT_BY_ID[agentId] || typeof text !== 'string') return;
+    this.setBubble(agentId, {
+      id: this.bubbleId(),
       text,
-      sourceFact,
-      timestamp: Date.now(),
-      autoDismissMs: 6000
-    };
-    this.speechBubbles.set(agentId, bubble);
+      kind: 'conversation',
+      timestamp: this.now(),
+      autoDismissMs: BUBBLE_AUTO_DISMISS_MS
+    });
     this.pushSnapshot();
   }
 
   public dismissSpeechBubble(agentId: LaPitayaAgentId = 'alicia'): void {
-    this.speechBubbles.delete(agentId);
+    this.clearBubble(agentId);
     this.pushSnapshot();
   }
 
-  public getPresentation(): CompanionPresentation {
-    let activeAgents: LaPitayaAgentId[] = [];
+  // ─── Presentation ──────────────────────────────────────────────────────────
 
-    if (this.mode === 'MINI') {
-      activeAgents = ['alicia'];
-    } else if (this.mode === 'FOCUS') {
-      activeAgents = [this.activePhaseAgent ?? 'alicia'];
-    } else if (this.mode === 'COMPANY') {
-      const max = this.preferences.maxVisibleCompanions || MAX_VISIBLE_COMPANIONS_DEFAULT;
-      activeAgents = (['alicia', 'el-inge', 'el-beni', 'valentin', 'margarito', 'jose-juan', 'el-tutu'] as LaPitayaAgentId[]).slice(0, max);
-    } else {
-      activeAgents = ['alicia'];
+  /** Which companions are on screen for the current mode. */
+  public getVisibleAgents(): LaPitayaAgentId[] {
+    if (this.mode === 'FOCUS') {
+      return [this.pendingHuman.size > 0 ? 'alicia' : this.activePhaseAgent ?? 'alicia'];
     }
+    if (this.mode === 'COMPANY') {
+      const max = Math.max(1, Math.min(this.preferences.maxVisibleCompanions || MAX_VISIBLE_COMPANIONS_DEFAULT, MAX_VISIBLE_COMPANIONS_DEFAULT));
+      const recent = [...this.lastActivity.entries()]
+        .filter(([id]) => id !== 'alicia')
+        .sort((a, b) => b[1] - a[1])
+        .map(([id]) => id);
+      const seats: LaPitayaAgentId[] = ['alicia'];
+      for (const id of [...recent, ...COMPANY_FILL_ORDER]) {
+        if (seats.length >= max) break;
+        if (!seats.includes(id)) seats.push(id);
+      }
+      return seats;
+    }
+    return ['alicia'];
+  }
 
-    const entries: CompanionPresentationEntry[] = activeAgents.map((id) => {
+  public getPresentation(): CompanionPresentation {
+    const visible = this.getVisibleAgents();
+    const entries: CompanionPresentationEntry[] = visible.map((id) => {
       const avatar = getAnimalAvatar(id);
       const isPrimary = id === 'alicia';
-      const pos = this.getPosition(id);
-      const visualState = isPrimary ? this.primaryVisualState : 'IDLE';
-      const animationState = this.mapVisualToAnimationState(visualState);
-      const mood = avatar?.defaultMood ?? 'CALM';
-      const bubble = this.speechBubbles.get(id) ?? null;
+      let visualState = this.getAgentState(id);
+      let bubble = this.speechBubbles.get(id) ?? null;
+      let relayedFrom: LaPitayaAgentId | null = null;
 
+      if (isPrimary && !HARD_STATES.includes(visualState)) {
+        const relay = this.strongestOffscreen(visible);
+        if (relay && (RELAY_PRIORITY[relay.state] ?? 0) > (RELAY_PRIORITY[visualState] ?? 0)) {
+          visualState = relay.state;
+          relayedFrom = relay.agentId;
+          bubble = bubble ?? this.speechBubbles.get(relay.agentId) ?? null;
+        }
+      }
+
+      const displayName = LA_PITAYA_AGENT_BY_ID[id].name;
       return {
         agentId: id,
+        displayName,
         species: avatar?.species ?? 'fox',
         visualState,
-        mood,
-        animationState,
-        statusText: `${avatar?.displayName ?? id} (${visualState})`,
+        mood: avatar?.defaultMood ?? 'CALM',
+        animationState: this.mapVisualToAnimationState(visualState),
+        statusText: `${displayName} (${visualState})`,
         isPrimary,
-        position: pos,
-        bubble
+        position: this.getPosition(id),
+        bubble,
+        relayedFrom
       };
     });
 
@@ -276,9 +390,11 @@ export class DesktopPresenceService {
       mode: this.mode,
       entries,
       activePhaseAgent: this.activePhaseAgent,
-      updatedAt: Date.now()
+      updatedAt: this.now()
     };
   }
+
+  // ─── Positions ─────────────────────────────────────────────────────────────
 
   public moveCompanion(agentId: LaPitayaAgentId, pos: CompanionPosition): void {
     if (!LA_PITAYA_AGENT_BY_ID[agentId]) {
@@ -289,27 +405,26 @@ export class DesktopPresenceService {
     this.positions.set(agentId, validatedPos);
     this.savePosition(agentId, validatedPos);
 
-    if (this.companionWindow && !this.companionWindow.isDestroyed()) {
-      try {
-        this.companionWindow.setPosition(Math.round(validatedPos.x), Math.round(validatedPos.y));
-      } catch {
-        /* Best-effort window positioning */
-      }
-    }
+    const win = this.windows.get(agentId);
+    if (win && !win.isDestroyed()) this.placeWindow(win, validatedPos);
 
     this.pushSnapshot();
   }
 
-  public ensureOnScreen(
-    pos: CompanionPosition,
-    displayBounds?: { x: number; y: number; width: number; height: number }
-  ): CompanionPosition {
+  /**
+   * Clamp a window position into a work area. Without explicit bounds it uses the work area of the
+   * display the window overlaps most (Electron's `getDisplayMatching`, which falls back to the nearest
+   * display when the window is off every display) — never blindly the primary display.
+   */
+  public ensureOnScreen(pos: CompanionPosition, displayBounds?: Bounds): CompanionPosition {
     let bounds = displayBounds;
 
     if (!bounds && this.screenModule) {
       try {
-        const primaryDisplay = this.screenModule.getPrimaryDisplay();
-        bounds = primaryDisplay.workArea;
+        const rect = { x: Math.round(pos.x), y: Math.round(pos.y), ...WINDOW_SIZE };
+        bounds = typeof this.screenModule.getDisplayMatching === 'function'
+          ? this.screenModule.getDisplayMatching(rect).workArea
+          : this.screenModule.getPrimaryDisplay().workArea;
       } catch {
         /* Fallback bounds if screen API is unavailable */
       }
@@ -343,11 +458,15 @@ export class DesktopPresenceService {
     }
   }
 
+  /**
+   * Load persisted positions (or staggered defaults). Not clamped here: this runs before the app is
+   * ready, when the screen API is unavailable. Each position is clamped to its own display when the
+   * companion's window is created.
+   */
   public restorePositions(): Record<LaPitayaAgentId, CompanionPosition> {
     const result: Partial<Record<LaPitayaAgentId, CompanionPosition>> = {};
-    const agents: LaPitayaAgentId[] = ['alicia', 'el-inge', 'el-beni', 'valentin', 'margarito', 'jose-juan', 'el-tutu'];
 
-    for (const id of agents) {
+    for (const id of ALL_AGENTS) {
       let saved: CompanionPosition | null | undefined = null;
       if (this.persist) {
         try {
@@ -357,9 +476,9 @@ export class DesktopPresenceService {
         }
       }
 
-      const initial = saved && typeof saved.x === 'number' && typeof saved.y === 'number'
-        ? this.ensureOnScreen(saved)
-        : { ...DEFAULT_POSITION };
+      const initial = saved && Number.isFinite(saved.x) && Number.isFinite(saved.y)
+        ? { x: saved.x, y: saved.y }
+        : this.defaultPosition(id);
 
       this.positions.set(id, initial);
       result[id] = initial;
@@ -368,21 +487,182 @@ export class DesktopPresenceService {
     return result as Record<LaPitayaAgentId, CompanionPosition>;
   }
 
-  public destroy(): void {
-    this.isDestroyed = true;
-    if (this.unsubscribeAlicia) {
-      this.unsubscribeAlicia();
-      this.unsubscribeAlicia = null;
+  /** Re-read persisted positions without touching companions that have none saved. */
+  private reloadSavedPositions(): void {
+    if (!this.persist) return;
+    for (const id of ALL_AGENTS) {
+      try {
+        const saved = this.persist.getKv<CompanionPosition>(`desktopCompanion.position.${id}`);
+        if (saved && Number.isFinite(saved.x) && Number.isFinite(saved.y)) this.positions.set(id, { x: saved.x, y: saved.y });
+      } catch {
+        /* DB best-effort */
+      }
     }
-    this.hideWindow();
   }
 
-  private ensureWindowCreated(): BrowserWindow {
-    if (this.companionWindow && !this.companionWindow.isDestroyed()) {
-      return this.companionWindow;
-    }
+  // ─── Tray (hide / show without restarting La Pitaya) ────────────────────────
 
-    const pos = this.getPosition('alicia');
+  /** Install the notification-area icon that restores hidden companions and switches modes. */
+  public installTray(): void {
+    if (this.tray || this.isDestroyed) return;
+    try {
+      const icon = nativeImage.createFromDataURL(COMPANION_TRAY_ICON_DATA_URL).resize({ width: 16, height: 16 });
+      this.tray = new Tray(icon);
+      this.tray.setToolTip('La Pitaya — compañeros');
+      this.tray.on('click', () => {
+        if (this.mode === 'OFF') this.restore();
+        else this.hide();
+      });
+      this.refreshTray();
+    } catch (e) {
+      console.error('[desktopPresence] tray unavailable:', e);
+      this.tray = null;
+    }
+  }
+
+  /** The tray menu, as data (clicks included) so it is testable without a real Tray. */
+  public trayMenuTemplate(): MenuItemConstructorOptions[] {
+    const hidden = this.mode === 'OFF';
+    const modeItem = (label: string, mode: CompanionMode): MenuItemConstructorOptions => ({
+      label,
+      type: 'radio',
+      checked: this.mode === mode,
+      click: () => { this.setMode(mode); }
+    });
+    return [
+      { label: 'Mostrar compañeros', enabled: hidden, click: () => { this.restore(); } },
+      { label: 'Ocultar compañeros', enabled: !hidden, click: () => { this.hide(); } },
+      { type: 'separator' },
+      modeItem('Modo Mini (Alicia)', 'MINI'),
+      modeItem('Modo Compañía', 'COMPANY'),
+      modeItem('Modo Enfoque', 'FOCUS'),
+      { type: 'separator' },
+      { label: 'Abrir La Pitaya', click: () => { this.focusMain(); } }
+    ];
+  }
+
+  public destroy(): void {
+    this.isDestroyed = true;
+    for (const h of [...this.bubbleTimers.values(), ...this.stateTimers.values()]) this.timers.clearTimeout(h);
+    this.bubbleTimers.clear();
+    this.stateTimers.clear();
+    for (const w of this.windows.values()) {
+      try {
+        if (!w.isDestroyed()) w.hide();
+      } catch {
+        /* window gone */
+      }
+    }
+    try {
+      this.tray?.destroy();
+    } catch {
+      /* tray gone */
+    }
+    this.tray = null;
+  }
+
+  // ─── Internals ─────────────────────────────────────────────────────────────
+
+  private defaultPosition(id: LaPitayaAgentId): CompanionPosition {
+    if (id === 'alicia') return { ...DEFAULT_POSITION };
+    const i = COMPANY_FILL_ORDER.indexOf(id);
+    return { x: DEFAULT_POSITION.x + 300 * (i + 1), y: DEFAULT_POSITION.y };
+  }
+
+  private bubbleId(): string {
+    return `bub-${this.now()}-${(++this.seq).toString(36)}`;
+  }
+
+  private applyState(agentId: LaPitayaAgentId, state: CompanionVisualState): void {
+    const pendingTimer = this.stateTimers.get(agentId);
+    if (pendingTimer !== undefined) {
+      this.timers.clearTimeout(pendingTimer);
+      this.stateTimers.delete(agentId);
+    }
+    this.states.set(agentId, state);
+    if (state !== 'IDLE') this.lastActivity.set(agentId, this.now());
+
+    if (state === 'CELEBRATING') {
+      const handle = this.timers.setTimeout(() => {
+        this.stateTimers.delete(agentId);
+        if (this.isDestroyed || this.states.get(agentId) !== 'CELEBRATING') return;
+        this.states.set(agentId, agentId === 'alicia' && this.pendingHuman.size > 0 ? 'ATTENTION' : 'IDLE');
+        this.pushSnapshot();
+      }, CELEBRATE_MS);
+      this.stateTimers.set(agentId, handle);
+    }
+  }
+
+  private setBubble(agentId: LaPitayaAgentId, bubble: CompanionSpeechBubbleData): void {
+    this.clearBubble(agentId);
+    this.speechBubbles.set(agentId, bubble);
+    if (bubble.autoDismissMs !== undefined) {
+      const handle = this.timers.setTimeout(() => {
+        this.bubbleTimers.delete(agentId);
+        if (this.speechBubbles.get(agentId)?.id !== bubble.id) return;
+        this.speechBubbles.delete(agentId);
+        this.pushSnapshot();
+      }, bubble.autoDismissMs);
+      this.bubbleTimers.set(agentId, handle);
+    }
+  }
+
+  private clearBubble(agentId: LaPitayaAgentId): void {
+    const handle = this.bubbleTimers.get(agentId);
+    if (handle !== undefined) {
+      this.timers.clearTimeout(handle);
+      this.bubbleTimers.delete(agentId);
+    }
+    this.speechBubbles.delete(agentId);
+  }
+
+  /** The off-screen companion whose state most asks for attention (most recent on a tie). */
+  private strongestOffscreen(visible: readonly LaPitayaAgentId[]): { agentId: LaPitayaAgentId; state: CompanionVisualState } | null {
+    let best: { agentId: LaPitayaAgentId; state: CompanionVisualState; p: number; t: number } | null = null;
+    for (const [agentId, state] of this.states) {
+      if (visible.includes(agentId)) continue;
+      const p = RELAY_PRIORITY[state] ?? 0;
+      if (p === 0) continue;
+      const t = this.lastActivity.get(agentId) ?? 0;
+      if (!best || p > best.p || (p === best.p && t > best.t)) best = { agentId, state, p, t };
+    }
+    return best ? { agentId: best.agentId, state: best.state } : null;
+  }
+
+  /** Create/show a window per visible companion; hide the rest. */
+  private syncWindows(): void {
+    if (this.isDestroyed || this.mode === 'PAUSED') return;
+    const visible = this.mode === 'OFF' ? [] : this.getVisibleAgents();
+    for (const id of visible) {
+      const win = this.ensureWindowCreated(id);
+      if (!this.loaded.has(id)) continue; // shown by did-finish-load
+      try {
+        if (!win.isVisible()) win.show();
+      } catch {
+        /* Best-effort window show */
+      }
+    }
+    for (const [id, win] of this.windows) {
+      if (visible.includes(id) || win.isDestroyed()) continue;
+      try {
+        win.hide();
+      } catch {
+        /* Best-effort window hide */
+      }
+    }
+  }
+
+  private ensureWindowCreated(agentId: LaPitayaAgentId): BrowserWindow {
+    const existing = this.windows.get(agentId);
+    if (existing && !existing.isDestroyed()) return existing;
+
+    if (!this.positionsReloaded) {
+      this.positionsReloaded = true;
+      this.reloadSavedPositions();
+    }
+    // Clamp now (the screen API is available once windows exist) against the display the position is on.
+    const pos = this.ensureOnScreen(this.getPosition(agentId));
+    this.positions.set(agentId, pos);
 
     const winOpts: BrowserWindowConstructorOptions = {
       width: WINDOW_SIZE.width,
@@ -407,20 +687,37 @@ export class DesktopPresenceService {
     };
 
     const win = this.browserWindowFactory(winOpts);
-    this.companionWindow = win;
+    this.windows.set(agentId, win);
+    // The window is mostly transparent: let clicks through until the pointer is over the creature.
+    this.setClickThrough(win, true);
 
     win.on('closed', () => {
-      this.companionWindow = null;
+      if (this.windows.get(agentId) === win) {
+        this.windows.delete(agentId);
+        this.loaded.delete(agentId);
+      }
     });
+    // The OS drag (via the renderer's drag handle) ends in `moved`: persist it, clamped to its display.
+    win.on('moved', () => this.handleWindowMoved(agentId, win));
+    if (typeof win.webContents?.on === 'function') {
+      win.webContents.on('did-finish-load', () => {
+        this.loaded.add(agentId);
+        this.syncWindows();
+        this.pushSnapshot();
+      });
+    } else {
+      this.loaded.add(agentId); // no load lifecycle to wait for
+    }
 
+    const query = { companion: '1', agent: agentId };
     if (this.devServerUrl) {
-      const companionUrl = `${this.devServerUrl}?companion=1#/companion`;
+      const companionUrl = `${this.devServerUrl}?companion=1&agent=${encodeURIComponent(agentId)}#/companion`;
       win.loadURL(companionUrl).catch(() => {
         /* best effort URL load */
       });
     } else {
       const indexPath = join(__dirname, '../renderer/index.html');
-      win.loadFile(indexPath, { query: { companion: '1' }, hash: 'companion' }).catch(() => {
+      win.loadFile(indexPath, { query, hash: 'companion' }).catch(() => {
         /* best effort file load */
       });
     }
@@ -428,121 +725,169 @@ export class DesktopPresenceService {
     return win;
   }
 
-  private showWindow(): void {
-    if (this.companionWindow && !this.companionWindow.isDestroyed()) {
-      try {
-        this.companionWindow.show();
-      } catch {
-        /* Best-effort window show */
-      }
+  private handleWindowMoved(agentId: LaPitayaAgentId, win: BrowserWindow): void {
+    if (win.isDestroyed()) return;
+    let x: number;
+    let y: number;
+    try {
+      [x, y] = win.getPosition();
+    } catch {
+      return;
+    }
+    const clamped = this.ensureOnScreen({ x, y });
+    this.positions.set(agentId, clamped);
+    this.savePosition(agentId, clamped);
+    if (clamped.x !== x || clamped.y !== y) this.placeWindow(win, clamped);
+  }
+
+  private cursorPoint(): CompanionPosition | null {
+    try {
+      return typeof this.screenModule?.getCursorScreenPoint === 'function' ? this.screenModule.getCursorScreenPoint() : null;
+    } catch {
+      return null;
     }
   }
 
-  private hideWindow(): void {
-    if (this.companionWindow && !this.companionWindow.isDestroyed()) {
-      try {
-        this.companionWindow.hide();
-      } catch {
-        /* Best-effort window hide */
-      }
+  /** Move a companion window keeping its size (on Windows a bare setPosition across scale factors can resize it). */
+  private placeWindow(win: BrowserWindow, pos: CompanionPosition): void {
+    const x = Math.round(pos.x);
+    const y = Math.round(pos.y);
+    try {
+      if (typeof win.setBounds === 'function') win.setBounds({ x, y, ...WINDOW_SIZE });
+      else win.setPosition(x, y);
+    } catch {
+      /* Best-effort window positioning */
+    }
+  }
+
+  private setClickThrough(win: BrowserWindow, through: boolean): void {
+    if (typeof win.setIgnoreMouseEvents !== 'function') return;
+    try {
+      win.setIgnoreMouseEvents(through, { forward: true });
+    } catch {
+      /* window gone */
+    }
+  }
+
+  private focusMain(): void {
+    const main = this.mainWindowGetter?.();
+    if (!main || main.isDestroyed()) return;
+    if (main.isMinimized()) main.restore();
+    if (!main.isVisible()) main.show();
+    main.focus();
+  }
+
+  private refreshTray(): void {
+    if (!this.tray) return;
+    try {
+      this.tray.setContextMenu(Menu.buildFromTemplate(this.trayMenuTemplate()));
+    } catch {
+      /* tray gone */
     }
   }
 
   private pushSnapshot(): void {
-    if (!this.companionWindow || this.companionWindow.isDestroyed()) return;
+    if (this.windows.size === 0) return;
     const snapshot = this.getPresentation();
-    try {
-      this.companionWindow.webContents.send(COMPANION_IPC.SNAPSHOT, snapshot);
-    } catch {
-      /* Best-effort webContents send */
+    for (const win of this.windows.values()) {
+      if (win.isDestroyed()) continue;
+      try {
+        win.webContents.send(COMPANION_IPC.SNAPSHOT, snapshot);
+      } catch {
+        /* Best-effort webContents send */
+      }
     }
   }
 
-  private pushStateUpdate(state: CompanionVisualState): void {
-    if (!this.companionWindow || this.companionWindow.isDestroyed()) return;
-    try {
-      this.companionWindow.webContents.send(COMPANION_IPC.SET_STATE, state);
-    } catch {
-      /* Best-effort webContents send */
+  /** The companion whose window sent an IPC message — or null for any other sender. */
+  private agentForSender(event: { sender?: unknown } | null | undefined): LaPitayaAgentId | null {
+    const sender = event?.sender;
+    if (!sender) return null;
+    for (const [id, win] of this.windows) {
+      if (!win.isDestroyed() && win.webContents === sender) return id;
     }
+    return null;
   }
 
   private setupIpcHandlers(): void {
     if (!ipcMain || typeof ipcMain.on !== 'function') return;
 
-    ipcMain.on(COMPANION_IPC.POSITION_CHANGED, (_event, pos: CompanionPosition) => {
-      if (!pos || typeof pos.x !== 'number' || typeof pos.y !== 'number') return;
-      this.moveCompanion('alicia', pos);
-    });
-
-    ipcMain.on(COMPANION_IPC.OPEN_MAIN, () => {
-      if (this.mainWindowGetter) {
-        const main = this.mainWindowGetter();
-        if (main && !main.isDestroyed()) {
-          if (main.isMinimized()) main.restore();
-          main.focus();
-        }
+    // Only companion windows may drive these channels; every payload is validated.
+    ipcMain.on(COMPANION_IPC.REQUEST_SNAPSHOT, (event) => {
+      const agentId = this.agentForSender(event);
+      const win = agentId ? this.windows.get(agentId) : undefined;
+      if (!win || win.isDestroyed()) return;
+      try {
+        win.webContents.send(COMPANION_IPC.SNAPSHOT, this.getPresentation());
+      } catch {
+        /* Best-effort webContents send */
       }
     });
 
-    ipcMain.on(COMPANION_IPC.TRIGGER_BUBBLE, (_event, text: string) => {
-      if (typeof text === 'string') {
-        this.setSpeechBubble('alicia', text);
-      }
+    ipcMain.on(COMPANION_IPC.OPEN_MAIN, (event) => {
+      if (!this.agentForSender(event)) return;
+      this.focusMain();
     });
 
-    ipcMain.on(COMPANION_IPC.DISMISS_BUBBLE, () => {
-      this.dismissSpeechBubble('alicia');
+    ipcMain.on(COMPANION_IPC.DISMISS_BUBBLE, (event) => {
+      const agentId = this.agentForSender(event);
+      if (!agentId) return;
+      const entry = this.getPresentation().entries.find((e) => e.agentId === agentId);
+      const owner = entry?.bubble && !this.speechBubbles.has(agentId) && entry.relayedFrom ? entry.relayedFrom : agentId;
+      const bubble = this.speechBubbles.get(owner);
+      // A sticky bubble (pending human request) stays until the runtime resolves it.
+      if (!bubble || bubble.autoDismissMs === undefined) return;
+      this.dismissSpeechBubble(owner);
     });
 
-    ipcMain.on(COMPANION_IPC.SET_MODE, (_event, mode: CompanionMode) => {
-      if (typeof mode === 'string') {
-        this.setMode(mode);
-      }
+    ipcMain.on(COMPANION_IPC.SET_MODE, (event, mode: unknown) => {
+      if (!this.agentForSender(event) || !isCompanionMode(mode)) return;
+      this.setMode(mode);
     });
 
-    ipcMain.on(COMPANION_IPC.HIDE, () => {
+    ipcMain.on(COMPANION_IPC.HIDE, (event) => {
+      if (!this.agentForSender(event)) return;
       this.hide();
     });
 
-    // Security boundary: drop any forbidden governance IPC channels
-    ipcMain.on('lapitaya:companion:*', (_event, ...args) => {
-      for (const arg of args) {
-        if (typeof arg === 'string' && isGovernanceIpcChannel(arg)) {
-          throw new Error('Forbidden governance IPC channel accessed via companion bridge');
+    ipcMain.on(COMPANION_IPC.DRAG, (event, payload: unknown) => {
+      const agentId = this.agentForSender(event);
+      const win = agentId ? this.windows.get(agentId) : undefined;
+      if (!agentId || !win || win.isDestroyed()) return;
+      const p = (payload && typeof payload === 'object' ? payload : {}) as { phase?: unknown; dx?: unknown; dy?: unknown };
+      const dx = typeof p.dx === 'number' && Number.isFinite(p.dx) && Math.abs(p.dx) <= 20000 ? p.dx : null;
+      const dy = typeof p.dy === 'number' && Number.isFinite(p.dy) && Math.abs(p.dy) <= 20000 ? p.dy : null;
+      if (p.phase === 'start') {
+        try {
+          const [x, y] = win.getPosition();
+          this.dragOrigins.set(agentId, { win: { x, y }, cursor: this.cursorPoint() });
+        } catch {
+          /* window gone */
         }
+      } else if (p.phase === 'move') {
+        const origin = this.dragOrigins.get(agentId);
+        if (!origin) return;
+        // Prefer the main process' cursor point: one coordinate space across displays with different
+        // scale factors (a renderer's screenX changes units when the window crosses to another DPI).
+        const cursor = origin.cursor ? this.cursorPoint() : null;
+        const delta = cursor && origin.cursor
+          ? { x: cursor.x - origin.cursor.x, y: cursor.y - origin.cursor.y }
+          : dx !== null && dy !== null ? { x: dx, y: dy } : null;
+        if (!delta) return;
+        // Free movement while dragging (it may cross displays); clamped when the drag ends.
+        this.placeWindow(win, { x: origin.win.x + delta.x, y: origin.win.y + delta.y });
+      } else if (p.phase === 'end') {
+        if (!this.dragOrigins.delete(agentId)) return;
+        this.handleWindowMoved(agentId, win);
       }
     });
-  }
 
-  private setupAliciaSubscription(): void {
-    if (!this.aliciaCompanion || typeof this.aliciaCompanion.subscribeObservability !== 'function') return;
-
-    this.unsubscribeAlicia = this.aliciaCompanion.subscribeObservability((obs: any) => {
-      if (obs && typeof obs.presence === 'string') {
-        const mappedState = this.mapAliciaPresenceToVisualState(obs.presence);
-        this.setState(mappedState);
-      }
+    ipcMain.on(COMPANION_IPC.SET_INTERACTIVE, (event, interactive: unknown) => {
+      const agentId = this.agentForSender(event);
+      const win = agentId ? this.windows.get(agentId) : undefined;
+      if (!win || win.isDestroyed() || typeof interactive !== 'boolean') return;
+      this.setClickThrough(win, !interactive);
     });
-  }
-
-  private mapAliciaPresenceToVisualState(presence: string): CompanionVisualState {
-    switch (presence) {
-      case 'THINKING':
-        return 'THINKING';
-      case 'WAITING_APPROVAL':
-      case 'WARNING':
-        return 'CONCERNED';
-      case 'CELEBRATING':
-        return 'CELEBRATING';
-      case 'NOTIFYING':
-        return 'NOTIFYING';
-      case 'BLOCKED':
-        return 'PAUSED';
-      case 'IDLE':
-      default:
-        return 'IDLE';
-    }
   }
 
   private mapVisualToAnimationState(state: CompanionVisualState): CompanionAnimationState {

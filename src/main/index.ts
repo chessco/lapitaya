@@ -288,7 +288,10 @@ const lapitaya = new CimaRuntimeService({
     // v0.8: every own window hears it — a decision made in one window must reach the others.
     for (const w of BrowserWindow.getAllWindows()) { try { if (!w.isDestroyed()) w.webContents.send('lapitaya:governance', e); } catch { /* window gone */ } }
     // Alicia observes the same events; alicia() contains any failure.
-    try { for (const ev of fromRuntimeEvent(e, Date.now())) alicia().notify(ev); } catch { /* never break governance */ }
+    let aliciaEvents: ReturnType<typeof fromRuntimeEvent> = [];
+    try { aliciaEvents = fromRuntimeEvent(e, Date.now()); for (const ev of aliciaEvents) alicia().notify(ev); } catch { /* never break governance */ }
+    // The desktop companions present the same verified facts (read-only; presentation only).
+    try { desktopPresence.observeAliciaEvents(aliciaEvents); } catch { /* never break governance */ }
   }
 });
 // La Pitaya Alicia v0.4.1 — the intent boundary. The ONLY path from Alicia to
@@ -429,7 +432,6 @@ const reflector = new MemoryReflector(
 const persist = new PersistStore();
 const desktopPresence = new DesktopPresenceService({
   persist,
-  aliciaCompanion,
   screenModule: screen,
   mainWindowGetter: () => mainWindow
 });
@@ -5537,6 +5539,7 @@ app.whenReady().then(() => {
   createWindow();
   try {
     desktopPresence.show('MINI');
+    desktopPresence.installTray();
   } catch (e) {
     console.error('[desktopPresence] auto-show failed:', e);
   }

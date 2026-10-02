@@ -1,0 +1,39 @@
+
+> munder-difflin@0.4.6 dev
+> electron-vite dev
+
+vite v5.4.21 building SSR bundle for development...
+transforming...
+✓ 119 modules transformed.
+rendering chunks...
+out/main/index.js  1,038.46 kB
+✓ built in 1.60s
+
+build the electron main process successfully
+
+-----
+
+vite v5.4.21 building SSR bundle for development...
+transforming...
+✓ 3 modules transformed.
+rendering chunks...
+out/preload/companionPreload.js   2.37 kB
+out/preload/index.js             45.24 kB
+✓ built in 64ms
+
+build the electron preload files successfully
+
+-----
+
+Port 5173 is in use, trying another one...
+dev server running for the electron renderer process at:
+
+  ➜  Local:   http://localhost:5174/
+  ➜  Network: use --host to expose
+
+start electron app...
+
+
+[broker] integration broker listening on http://127.0.0.1:64162
+[telemetry] collector listening http://127.0.0.1:64163
+[roster] refused to overwrite a non-empty roster with an empty one

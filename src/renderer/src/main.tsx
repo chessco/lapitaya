@@ -27,14 +27,13 @@ const root = document.getElementById('root');
 if (!root) throw new Error('No root element');
 
 import { CompanionApp } from './companions/CompanionApp';
+import { applyCompanionDocument, isCompanionLocation } from './companions/companionDocument';
 
-const isCompanion =
-  window.location.search.includes('companion=1') ||
-  window.location.hash.includes('companion');
+const isCompanion = isCompanionLocation(window.location);
 
 if (isCompanion) {
-  const splash = document.getElementById('cth-splash');
-  if (splash) splash.remove();
+  // Transparent root for the companion windows only; the main app keeps its background.
+  applyCompanionDocument(document);
 }
 
 createRoot(root).render(
