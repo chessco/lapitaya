@@ -1,14 +1,23 @@
 /**
- * Desktop Companion Renderer Root Component — FASE 1.
+ * Desktop Companion Renderer Root Component — FASE 2: Living Desktop Experience.
  *
- * Renders the interactive safe presentation shell for Alicia & Desktop Companions.
- * Allows switching between all virtual pets (Alicia, El Inge, El Beni, Valentin, Margarito, Jose Juan, El Tutu)
- * and testing visual states.
- * Zero access to CIMA or main process authority.
+ * Renders Alicia and Desktop Companions as floating, living creatures on the user's desktop.
+ * Features:
+ *  - Pure transparent background (no permanent dashboard/card box)
+ *  - Micro-animation controller (idle bobbing, walking, sleeping zZz, celebration bounce, attention pulse)
+ *  - Interactive speech bubble (CompanionSpeechBubble) with action menu
+ *  - Non-deterministic visual idle & sleep behaviors
+ *  - Development Gallery Preview toggleable from menu
+ *  - Zero access to CIMA or main process governance authority.
  */
 
-import React, { useEffect, useState } from 'react';
-import type { CompanionPresentation, CompanionVisualState } from '@shared/lapitaya/desktopCompanions/types';
+import React, { useEffect, useState, useRef } from 'react';
+import type {
+  CompanionPresentation,
+  CompanionVisualState,
+  CompanionAnimationState,
+  CompanionSpeechBubbleData
+} from '@shared/lapitaya/desktopCompanions/types';
 
 const SPECIES_EMOJI_MAP: Record<string, string> = {
   fox: '🦊',
@@ -20,31 +29,37 @@ const SPECIES_EMOJI_MAP: Record<string, string> = {
   rabbit: '🐰'
 };
 
-const TEST_STATES: CompanionVisualState[] = [
-  'IDLE',
-  'THINKING',
-  'WORKING',
-  'CELEBRATING',
-  'CONCERNED',
-  'NOTIFYING',
-  'PAUSED'
-];
-
 export const CompanionApp: React.FC = () => {
   const [snapshot, setSnapshot] = useState<CompanionPresentation | null>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [overrideState, setOverrideState] = useState<CompanionVisualState | null>(null);
+  const [visualState, setVisualState] = useState<CompanionVisualState>('IDLE');
+  const [activeBubble, setActiveBubble] = useState<CompanionSpeechBubbleData | null>(null);
+  const [showMenu, setShowMenu] = useState(false);
+  const [showDevGallery, setShowDevGallery] = useState(false);
+  const [isSleeping, setIsSleeping] = useState(false);
+  const [walkOffset, setWalkOffset] = useState(0);
+  const [walkDirection, setWalkDirection] = useState<1 | -1>(1);
 
+  const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const sleepTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Initialize bridge listeners
   useEffect(() => {
     const bridge = (window as any).companionBridge;
     if (!bridge) return;
 
     const unsubSnapshot = bridge.onSnapshot((newSnapshot: CompanionPresentation) => {
       setSnapshot(newSnapshot);
+      if (newSnapshot.entries.length > 0) {
+        const primary = newSnapshot.entries[0];
+        setVisualState(primary.visualState);
+        if (primary.bubble) {
+          setActiveBubble(primary.bubble);
+        }
+      }
     });
 
     const unsubState = bridge.onSetState((newState: CompanionVisualState) => {
-      setOverrideState(newState);
+      setVisualState(newState);
     });
 
     return () => {
@@ -53,219 +68,434 @@ export const CompanionApp: React.FC = () => {
     };
   }, []);
 
-  const handleClick = (): void => {
+  // Idle & Sleep timer logic
+  const resetInactivityTimers = () => {
+    if (isSleeping) setIsSleeping(false);
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    if (sleepTimerRef.current) clearTimeout(sleepTimerRef.current);
+
+    sleepTimerRef.current = setTimeout(() => {
+      setIsSleeping(true);
+    }, 45000); // Sleep after 45s of zero user activity
+  };
+
+  useEffect(() => {
+    resetInactivityTimers();
+    return () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      if (sleepTimerRef.current) clearTimeout(sleepTimerRef.current);
+    };
+  }, [visualState]);
+
+  // Non-deterministic gentle walking motion when IDLE or WALKING
+  useEffect(() => {
+    if (visualState === 'WALKING' || (visualState === 'IDLE' && !isSleeping)) {
+      const interval = setInterval(() => {
+        setWalkOffset((prev) => {
+          let next = prev + walkDirection * 2;
+          if (next > 40) {
+            setWalkDirection(-1);
+            next = 40;
+          } else if (next < -40) {
+            setWalkDirection(1);
+            next = -40;
+          }
+          return next;
+        });
+      }, 120);
+      return () => clearInterval(interval);
+    } else {
+      setWalkOffset(0);
+    }
+  }, [visualState, walkDirection, isSleeping]);
+
+  const handleCreatureClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    resetInactivityTimers();
+    setShowMenu((prev) => !prev);
+    if (!activeBubble) {
+      setActiveBubble({
+        id: `bub-click-${Date.now()}`,
+        text: 'Hola. ¿En qué puedo ayudarte?',
+        timestamp: Date.now()
+      });
+    }
+  };
+
+  const handleOpenApp = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowMenu(false);
     const bridge = (window as any).companionBridge;
     if (bridge && typeof bridge.open === 'function') {
       bridge.open();
     }
   };
 
-  const entries = snapshot?.entries ?? [];
-  const activeEntry = entries[currentIndex] ?? entries[0] ?? {
+  const handleSpeak = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const quotes = [
+      'Todo tranquilo en La Pitaya.',
+      'El Inge y los agentes están atentos.',
+      'Recuerda que tú tienes el control final.',
+      '¿Trabajamos en algo nuevo hoy?'
+    ];
+    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+    setActiveBubble({
+      id: `bub-speak-${Date.now()}`,
+      text: randomQuote,
+      timestamp: Date.now()
+    });
+  };
+
+  const handleHideCompanion = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowMenu(false);
+    const bridge = (window as any).companionBridge;
+    if (bridge && typeof bridge.hide === 'function') {
+      bridge.hide();
+    }
+  };
+
+  const primaryEntry = snapshot?.entries[0] ?? {
     agentId: 'alicia',
     species: 'fox',
-    visualState: 'IDLE',
+    visualState: visualState,
+    mood: 'CURIOUS',
+    animationState: 'idle',
     statusText: 'Alicia (Fox)',
     isPrimary: true,
     position: { x: 100, y: 100 }
   };
 
-  const currentVisualState = overrideState ?? activeEntry.visualState ?? 'IDLE';
-
-  const handlePrev = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (entries.length === 0) return;
-    setCurrentIndex((prev) => (prev - 1 + entries.length) % entries.length);
-  };
-
-  const handleNext = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (entries.length === 0) return;
-    setCurrentIndex((prev) => (prev + 1) % entries.length);
-  };
-
-  const handleSelectState = (state: CompanionVisualState, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setOverrideState(state);
-  };
-
   const mode = snapshot?.mode ?? 'MINI';
-  if (mode === 'OFF') {
-    return null;
-  }
+  if (mode === 'OFF') return null;
 
-  const getStateColor = (state: CompanionVisualState): string => {
-    switch (state) {
-      case 'THINKING':
-        return '#3F51B5'; // Blue
-      case 'CELEBRATING':
-        return '#4CAF50'; // Green
-      case 'CONCERNED':
-        return '#FF9800'; // Orange
-      case 'NOTIFYING':
-        return '#E91E63'; // Pink
-      case 'PAUSED':
-        return '#9E9E9E'; // Grey
-      case 'WORKING':
-        return '#9C27B0'; // Purple
-      case 'IDLE':
+  const currentAnimation: CompanionAnimationState = isSleeping
+    ? 'sleep'
+    : primaryEntry.animationState ?? 'idle';
+
+  const emoji = SPECIES_EMOJI_MAP[primaryEntry.species] ?? '🦊';
+
+  // CSS Keyframe styles dynamically injected
+  const keyframesStyle = `
+    @keyframes companionBob {
+      0%, 100% { transform: translateY(0px) scale(1); }
+      50% { transform: translateY(-8px) scale(1.03); }
+    }
+    @keyframes companionCelebrate {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      25% { transform: translateY(-16px) rotate(-6deg); }
+      75% { transform: translateY(-16px) rotate(6deg); }
+    }
+    @keyframes companionPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 12px rgba(230,81,0,0.4); }
+      50% { transform: scale(1.08); box-shadow: 0 0 24px rgba(230,81,0,0.8); }
+    }
+    @keyframes companionShake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-4px); }
+      40%, 80% { transform: translateX(4px); }
+    }
+    @keyframes companionSleep {
+      0%, 100% { transform: translateY(0) scale(0.95); opacity: 0.85; }
+      50% { transform: translateY(4px) scale(0.97); opacity: 1; }
+    }
+    @keyframes floatZzz {
+      0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
+      50% { opacity: 1; }
+      100% { transform: translate(14px, -24px) scale(1.2); opacity: 0; }
+    }
+  `;
+
+  const getAnimationCss = (anim: CompanionAnimationState): React.CSSProperties => {
+    switch (anim) {
+      case 'celebrate':
+        return { animation: 'companionCelebrate 0.8s ease-in-out infinite' };
+      case 'attention':
+      case 'work':
+        return { animation: 'companionPulse 1.2s ease-in-out infinite' };
+      case 'concern':
+        return { animation: 'companionShake 0.5s ease-in-out infinite' };
+      case 'sleep':
+        return { animation: 'companionSleep 2.5s ease-in-out infinite' };
+      case 'idle':
       default:
-        return '#E65100'; // Fox Orange
+        return { animation: 'companionBob 3s ease-in-out infinite' };
     }
   };
 
-  const currentColor = getStateColor(currentVisualState);
-  const emoji = SPECIES_EMOJI_MAP[activeEntry.species] ?? '🦊';
-
-  const containerStyle: React.CSSProperties = {
-    width: '100vw',
-    height: '100vh',
-    margin: 0,
-    padding: 0,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'transparent',
-    userSelect: 'none',
-    WebkitUserSelect: 'none',
-    overflow: 'hidden'
+  const getThemeColor = (state: CompanionVisualState): string => {
+    switch (state) {
+      case 'THINKING':
+        return '#3F51B5';
+      case 'CELEBRATING':
+        return '#4CAF50';
+      case 'CONCERNED':
+        return '#FF9800';
+      case 'NOTIFYING':
+      case 'ATTENTION':
+        return '#E91E63';
+      case 'PAUSED':
+        return '#9E9E9E';
+      case 'WORKING':
+        return '#9C27B0';
+      case 'IDLE':
+      default:
+        return '#E65100';
+    }
   };
 
-  const cardStyle: React.CSSProperties = {
-    width: '240px',
-    height: '270px',
-    borderRadius: '24px',
-    background: 'rgba(26, 19, 32, 0.90)',
-    backdropFilter: 'blur(16px)',
-    border: `3px solid ${currentColor}`,
-    boxShadow: `0 8px 32px rgba(0, 0, 0, 0.5), 0 0 20px ${currentColor}55`,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '16px 12px',
-    cursor: 'pointer',
-    color: '#FFF8E7',
-    fontFamily: '"Press Start 2P", monospace',
-    transition: 'border-color 0.3s ease, box-shadow 0.3s ease',
-    WebkitAppRegion: 'drag'
-  } as React.CSSProperties;
-
-  const headerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    WebkitAppRegion: 'no-drag'
-  } as React.CSSProperties;
-
-  const navBtnStyle: React.CSSProperties = {
-    background: 'rgba(255, 248, 231, 0.15)',
-    border: 'none',
-    color: '#FFF8E7',
-    borderRadius: '8px',
-    padding: '4px 8px',
-    cursor: 'pointer',
-    fontSize: '12px'
-  };
-
-  const avatarCircleStyle: React.CSSProperties = {
-    width: '72px',
-    height: '72px',
-    borderRadius: '50%',
-    background: currentColor,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '36px',
-    boxShadow: '0 6px 16px rgba(0, 0, 0, 0.4)',
-    WebkitAppRegion: 'no-drag',
-    transition: 'background 0.3s ease'
-  } as React.CSSProperties;
-
-  const titleStyle: React.CSSProperties = {
-    fontSize: '10px',
-    color: '#FFF8E7',
-    letterSpacing: '0.5px',
-    textAlign: 'center',
-    WebkitAppRegion: 'no-drag'
-  } as React.CSSProperties;
-
-  const badgeStyle: React.CSSProperties = {
-    fontSize: '8px',
-    padding: '4px 10px',
-    borderRadius: '12px',
-    background: `${currentColor}33`,
-    color: currentColor,
-    border: `1px solid ${currentColor}`,
-    textTransform: 'uppercase',
-    WebkitAppRegion: 'no-drag'
-  } as React.CSSProperties;
-
-  const stateSelectorContainer: React.CSSProperties = {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '4px',
-    justifyContent: 'center',
-    width: '100%',
-    WebkitAppRegion: 'no-drag'
-  } as React.CSSProperties;
+  const themeColor = getThemeColor(visualState);
 
   return (
-    <div style={containerStyle}>
-      <div onClick={handleClick} style={cardStyle}>
-        {/* Header Navigation for Pets */}
-        <div style={headerStyle}>
-          <button style={navBtnStyle} onClick={handlePrev} title="Previous pet">
-            ◀
-          </button>
-          <span style={{ fontSize: '9px', opacity: 0.8 }}>
-            {currentIndex + 1} / {entries.length || 7}
-          </span>
-          <button style={navBtnStyle} onClick={handleNext} title="Next pet">
-            ▶
-          </button>
-        </div>
+    <div
+      style={{
+        width: '100vw',
+        height: '100vh',
+        margin: 0,
+        padding: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'transparent',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        overflow: 'hidden'
+      }}
+    >
+      <style>{keyframesStyle}</style>
 
-        {/* Avatar Icon Container */}
-        <div style={avatarCircleStyle}>
+      {/* Transparent Creature Floating Box */}
+      <div
+        style={{
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          transform: `translateX(${walkOffset}px)`,
+          transition: 'transform 0.2s linear'
+        }}
+      >
+        {/* Speech Bubble Overlay */}
+        {(activeBubble || showMenu) && (
+          <div
+            style={
+              {
+                position: 'absolute',
+                bottom: '100px',
+                background: 'rgba(26, 19, 32, 0.92)',
+                backdropFilter: 'blur(16px)',
+                border: `2px solid ${themeColor}`,
+                borderRadius: '16px',
+                padding: '12px 16px',
+                color: '#FFF8E7',
+                fontSize: '10px',
+                fontFamily: '"Press Start 2P", monospace',
+                boxShadow: `0 8px 24px rgba(0, 0, 0, 0.5), 0 0 12px ${themeColor}44`,
+                maxWidth: '220px',
+                minWidth: '160px',
+                zIndex: 100,
+                WebkitAppRegion: 'no-drag'
+              } as any
+            }
+          >
+            {/* Speech Text */}
+            {activeBubble && (
+              <div style={{ marginBottom: showMenu ? '10px' : '0', lineHeight: '1.4' }}>
+                {activeBubble.text}
+              </div>
+            )}
+
+            {/* Context Menu Items */}
+            {showMenu && (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  borderTop: activeBubble ? '1px solid rgba(255,248,231,0.15)' : 'none',
+                  paddingTop: activeBubble ? '8px' : '0'
+                }}
+              >
+                <button
+                  onClick={handleSpeak}
+                  style={{
+                    background: 'rgba(255,248,231,0.1)',
+                    border: '1px solid rgba(255,248,231,0.2)',
+                    borderRadius: '8px',
+                    color: '#FFF8E7',
+                    padding: '6px 10px',
+                    fontSize: '8px',
+                    cursor: 'pointer',
+                    textAlign: 'left'
+                  }}
+                >
+                  💬 Hablar
+                </button>
+                <button
+                  onClick={handleOpenApp}
+                  style={{
+                    background: `${themeColor}44`,
+                    border: `1px solid ${themeColor}`,
+                    borderRadius: '8px',
+                    color: '#FFF8E7',
+                    padding: '6px 10px',
+                    fontSize: '8px',
+                    cursor: 'pointer',
+                    textAlign: 'left'
+                  }}
+                >
+                  🚀 Abrir La Pitaya
+                </button>
+                <button
+                  onClick={() => setShowDevGallery((p) => !p)}
+                  style={{
+                    background: 'rgba(255,248,231,0.1)',
+                    border: '1px solid rgba(255,248,231,0.2)',
+                    borderRadius: '8px',
+                    color: '#FFF8E7',
+                    padding: '6px 10px',
+                    fontSize: '8px',
+                    cursor: 'pointer',
+                    textAlign: 'left'
+                  }}
+                >
+                  ⚙️ {showDevGallery ? 'Ocultar Galería' : 'Ver Galería Dev'}
+                </button>
+                <button
+                  onClick={handleHideCompanion}
+                  style={{
+                    background: 'rgba(233,30,99,0.2)',
+                    border: '1px solid #E91E63',
+                    borderRadius: '8px',
+                    color: '#FFF8E7',
+                    padding: '6px 10px',
+                    fontSize: '8px',
+                    cursor: 'pointer',
+                    textAlign: 'left'
+                  }}
+                >
+                  🙈 Ocultar
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Floating zZz Particle when sleeping */}
+        {isSleeping && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '-20px',
+              right: '10px',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              color: '#9E9E9E',
+              animation: 'floatZzz 2s infinite ease-out'
+            }}
+          >
+            zZz
+          </div>
+        )}
+
+        {/* HERO ANIMAL CREATURE */}
+        <div
+          onClick={handleCreatureClick}
+          style={
+            {
+              width: '88px',
+              height: '88px',
+              borderRadius: '50%',
+              background: `radial-gradient(circle, ${themeColor} 0%, rgba(26,19,32,0.8) 100%)`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '48px',
+              boxShadow: `0 8px 24px rgba(0, 0, 0, 0.4), 0 0 20px ${themeColor}66`,
+              border: `3px solid ${themeColor}`,
+              WebkitAppRegion: 'drag',
+              ...getAnimationCss(currentAnimation)
+            } as any
+          }
+        >
           {emoji}
         </div>
 
-        {/* Companion Title & Agent ID */}
-        <div style={titleStyle}>
-          <div>{activeEntry.agentId.toUpperCase()}</div>
-          <div style={{ fontSize: '7px', opacity: 0.6, marginTop: '4px' }}>
-            ({activeEntry.species})
-          </div>
-        </div>
-
-        {/* Active State Badge */}
-        <div style={badgeStyle}>
-          {currentVisualState}
-        </div>
-
-        {/* State Selector Chips for Testing */}
-        <div style={stateSelectorContainer}>
-          {TEST_STATES.slice(0, 5).map((st) => (
-            <button
-              key={st}
-              onClick={(e) => handleSelectState(st, e)}
-              style={{
-                fontSize: '6px',
-                padding: '2px 4px',
-                borderRadius: '4px',
-                border: '1px solid rgba(255,255,231,0.2)',
-                background: currentVisualState === st ? currentColor : 'rgba(0,0,0,0.3)',
-                color: '#FFF8E7',
-                cursor: 'pointer'
-              }}
-            >
-              {st.slice(0, 4)}
-            </button>
-          ))}
+        {/* Small Creature Name Label */}
+        <div
+          style={
+            {
+              marginTop: '6px',
+              fontSize: '9px',
+              fontFamily: '"Press Start 2P", monospace',
+              color: '#FFF8E7',
+              background: 'rgba(26, 19, 32, 0.75)',
+              padding: '3px 8px',
+              borderRadius: '10px',
+              border: `1px solid ${themeColor}88`,
+              boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+              WebkitAppRegion: 'no-drag'
+            } as any
+          }
+        >
+          {primaryEntry.species.toUpperCase()}
         </div>
       </div>
+
+      {/* DEV GALLERY VIEW (Modal/Drawer toggleable from Menu) */}
+      {showDevGallery && (
+        <div
+          style={
+            {
+              position: 'absolute',
+              bottom: '10px',
+              background: 'rgba(26, 19, 32, 0.95)',
+              backdropFilter: 'blur(20px)',
+              border: '2px solid #E65100',
+              borderRadius: '16px',
+              padding: '12px',
+              width: '260px',
+              maxHeight: '200px',
+              overflowY: 'auto',
+              color: '#FFF8E7',
+              fontFamily: '"Press Start 2P", monospace',
+              fontSize: '8px',
+              zIndex: 200,
+              WebkitAppRegion: 'no-drag'
+            } as any
+          }
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span>DEV GALLERY</span>
+            <button
+              onClick={() => setShowDevGallery(false)}
+              style={{ background: 'none', border: 'none', color: '#FFF8E7', cursor: 'pointer' }}
+            >
+              ✕
+            </button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
+            {snapshot?.entries.map((entry) => (
+              <div
+                key={entry.agentId}
+                style={{
+                  background: 'rgba(255,248,231,0.05)',
+                  border: '1px solid rgba(255,248,231,0.1)',
+                  borderRadius: '8px',
+                  padding: '6px',
+                  textAlign: 'center'
+                }}
+              >
+                <div>{SPECIES_EMOJI_MAP[entry.species] ?? '🦊'}</div>
+                <div style={{ marginTop: '2px', fontSize: '7px' }}>{entry.agentId}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

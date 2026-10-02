@@ -1,8 +1,8 @@
 /**
- * DesktopPresenceService for La Pitaya Desktop Companions — FASE 1.
+ * DesktopPresenceService for La Pitaya Desktop Companions — FASE 2.
  *
- * Manages the desktop companion window lifecycle, visibility modes, avatar positions,
- * and safe presentation projection.
+ * Manages the desktop companion window lifecycle, visibility modes, multi-agent presence,
+ * event-driven visual reactions, and safe presentation projection.
  *
  * STRICT GOVERNANCE BOUNDARY:
  * This service receives observability signals but NEVER contains or forwards
@@ -20,7 +20,11 @@ import type {
   CompanionPosition,
   CompanionPresentation,
   CompanionPresentationEntry,
-  CompanionVisualState
+  CompanionVisualState,
+  CompanionMood,
+  CompanionAnimationState,
+  CompanionSpeechBubbleData,
+  CompanionPreferences
 } from '../shared/lapitaya/desktopCompanions/types';
 
 export interface PersistStoreLike {
@@ -45,14 +49,27 @@ export interface DesktopPresenceDeps {
 }
 
 const DEFAULT_POSITION: CompanionPosition = { x: 100, y: 100 };
-const WINDOW_SIZE = { width: 280, height: 320 };
+const WINDOW_SIZE = { width: 340, height: 340 };
+export const MAX_VISIBLE_COMPANIONS_DEFAULT = 3;
 
 export class DesktopPresenceService {
   private mode: CompanionMode = 'OFF';
   private previousModeBeforePause: CompanionMode = 'OFF';
   private companionWindow: BrowserWindow | null = null;
   private primaryVisualState: CompanionVisualState = 'IDLE';
+  private primaryMood: CompanionMood = 'CURIOUS';
+  private activePhaseAgent: LaPitayaAgentId | null = null;
   private positions: Map<LaPitayaAgentId, CompanionPosition> = new Map();
+  private speechBubbles: Map<LaPitayaAgentId, CompanionSpeechBubbleData> = new Map();
+  private verifiedRuntimeFacts: Set<string> = new Set();
+  private preferences: CompanionPreferences = {
+    mode: 'MINI',
+    alwaysOnTop: true,
+    soundEnabled: false,
+    opacity: 1,
+    reducedMotion: false,
+    maxVisibleCompanions: MAX_VISIBLE_COMPANIONS_DEFAULT
+  };
   private isDestroyed = false;
   private unsubscribeAlicia: (() => void) | null = null;
 
@@ -86,6 +103,7 @@ export class DesktopPresenceService {
   public setMode(mode: CompanionMode): void {
     if (this.isDestroyed) return;
     this.mode = mode;
+    this.preferences.mode = mode;
 
     if (mode === 'OFF') {
       this.hideWindow();
@@ -129,6 +147,19 @@ export class DesktopPresenceService {
     this.pushSnapshot();
   }
 
+  public setPreferences(prefs: Partial<CompanionPreferences>): void {
+    this.preferences = { ...this.preferences, ...prefs };
+    if (prefs.mode) {
+      this.setMode(prefs.mode);
+    } else {
+      this.pushSnapshot();
+    }
+  }
+
+  public getPreferences(): CompanionPreferences {
+    return { ...this.preferences };
+  }
+
   public isWindowVisible(): boolean {
     if (!this.companionWindow || this.companionWindow.isDestroyed()) return false;
     try {
@@ -138,27 +169,113 @@ export class DesktopPresenceService {
     }
   }
 
-  public getPresentation(): CompanionPresentation {
-    const agents: LaPitayaAgentId[] = ['alicia', 'el-inge', 'el-beni', 'valentin', 'margarito', 'jose-juan', 'el-tutu'];
+  public triggerVerifiedRuntimeFact(fact: string, agentId?: LaPitayaAgentId): boolean {
+    if (!fact || typeof fact !== 'string') return false;
+    this.verifiedRuntimeFacts.add(fact);
 
-    const entries: CompanionPresentationEntry[] = agents.map((id) => {
+    switch (fact) {
+      case 'BUILD_STARTED':
+        this.activePhaseAgent = 'el-beni';
+        this.setState('WORKING');
+        this.setSpeechBubble('el-beni', 'El Beni iniciando el build.', fact);
+        break;
+      case 'BUILD_COMPLETED':
+        this.activePhaseAgent = 'el-beni';
+        this.setState('CELEBRATING');
+        this.setSpeechBubble('alicia', 'El build terminó con éxito.', fact);
+        break;
+      case 'TEST_STARTED':
+        this.activePhaseAgent = 'margarito';
+        this.setState('WORKING');
+        this.setSpeechBubble('margarito', 'Margarito ejecutando pruebas.', fact);
+        break;
+      case 'TEST_COMPLETED':
+        this.activePhaseAgent = 'margarito';
+        this.setState('CELEBRATING');
+        this.setSpeechBubble('margarito', 'Pruebas completadas correctamente.', fact);
+        break;
+      case 'AUDIT_STARTED':
+        this.activePhaseAgent = 'jose-juan';
+        this.setState('WORKING');
+        this.setSpeechBubble('jose-juan', 'José Juan revisando auditoría.', fact);
+        break;
+      case 'AUDIT_COMPLETED':
+        this.activePhaseAgent = 'jose-juan';
+        this.setState('CELEBRATING');
+        this.setSpeechBubble('jose-juan', 'Auditoría aprobada con evidencia.', fact);
+        break;
+      case 'REQUEST_PENDING':
+      case 'APPROVAL_PENDING':
+      case 'HUMAN_APPROVAL_REQUIRED':
+        this.setState('ATTENTION');
+        this.setSpeechBubble('alicia', 'Hay una solicitud que necesita tu confirmación.', fact);
+        break;
+      default:
+        // Do not invent fake facts or arbitrary state changes
+        break;
+    }
+
+    return true;
+  }
+
+  public setSpeechBubble(agentId: LaPitayaAgentId, text: string, sourceFact?: string): void {
+    if (!LA_PITAYA_AGENT_BY_ID[agentId]) return;
+    const bubble: CompanionSpeechBubbleData = {
+      id: `bub-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      text,
+      sourceFact,
+      timestamp: Date.now(),
+      autoDismissMs: 6000
+    };
+    this.speechBubbles.set(agentId, bubble);
+    this.pushSnapshot();
+  }
+
+  public dismissSpeechBubble(agentId: LaPitayaAgentId = 'alicia'): void {
+    this.speechBubbles.delete(agentId);
+    this.pushSnapshot();
+  }
+
+  public getPresentation(): CompanionPresentation {
+    let activeAgents: LaPitayaAgentId[] = [];
+
+    if (this.mode === 'MINI') {
+      activeAgents = ['alicia'];
+    } else if (this.mode === 'FOCUS') {
+      activeAgents = [this.activePhaseAgent ?? 'alicia'];
+    } else if (this.mode === 'COMPANY') {
+      const max = this.preferences.maxVisibleCompanions || MAX_VISIBLE_COMPANIONS_DEFAULT;
+      activeAgents = (['alicia', 'el-inge', 'el-beni', 'valentin', 'margarito', 'jose-juan', 'el-tutu'] as LaPitayaAgentId[]).slice(0, max);
+    } else {
+      activeAgents = ['alicia'];
+    }
+
+    const entries: CompanionPresentationEntry[] = activeAgents.map((id) => {
       const avatar = getAnimalAvatar(id);
       const isPrimary = id === 'alicia';
       const pos = this.getPosition(id);
-      const state = isPrimary ? this.primaryVisualState : 'IDLE';
+      const visualState = isPrimary ? this.primaryVisualState : 'IDLE';
+      const animationState = this.mapVisualToAnimationState(visualState);
+      const mood = avatar?.defaultMood ?? 'CALM';
+      const bubble = this.speechBubbles.get(id) ?? null;
+
       return {
         agentId: id,
         species: avatar?.species ?? 'fox',
-        visualState: state,
-        statusText: `${avatar?.displayName ?? id} (${state})`,
+        visualState,
+        mood,
+        animationState,
+        statusText: `${avatar?.displayName ?? id} (${visualState})`,
         isPrimary,
-        position: pos
+        position: pos,
+        bubble
       };
     });
 
     return {
       mode: this.mode,
       entries,
+      activePhaseAgent: this.activePhaseAgent,
       updatedAt: Date.now()
     };
   }
@@ -368,7 +485,27 @@ export class DesktopPresenceService {
       }
     });
 
-    // Guard against any unauthorized IPC listeners receiving governance channels
+    ipcMain.on(COMPANION_IPC.TRIGGER_BUBBLE, (_event, text: string) => {
+      if (typeof text === 'string') {
+        this.setSpeechBubble('alicia', text);
+      }
+    });
+
+    ipcMain.on(COMPANION_IPC.DISMISS_BUBBLE, () => {
+      this.dismissSpeechBubble('alicia');
+    });
+
+    ipcMain.on(COMPANION_IPC.SET_MODE, (_event, mode: CompanionMode) => {
+      if (typeof mode === 'string') {
+        this.setMode(mode);
+      }
+    });
+
+    ipcMain.on(COMPANION_IPC.HIDE, () => {
+      this.hide();
+    });
+
+    // Security boundary: drop any forbidden governance IPC channels
     ipcMain.on('lapitaya:companion:*', (_event, ...args) => {
       for (const arg of args) {
         if (typeof arg === 'string' && isGovernanceIpcChannel(arg)) {
@@ -405,6 +542,34 @@ export class DesktopPresenceService {
       case 'IDLE':
       default:
         return 'IDLE';
+    }
+  }
+
+  private mapVisualToAnimationState(state: CompanionVisualState): CompanionAnimationState {
+    switch (state) {
+      case 'WALKING':
+        return 'walk';
+      case 'THINKING':
+      case 'SUGGESTING':
+        return 'think';
+      case 'WORKING':
+        return 'work';
+      case 'CELEBRATING':
+      case 'HAPPY':
+        return 'celebrate';
+      case 'CONCERNED':
+        return 'concern';
+      case 'SLEEPING':
+        return 'sleep';
+      case 'ATTENTION':
+      case 'NOTIFYING':
+        return 'attention';
+      case 'OFFLINE':
+      case 'PAUSED':
+        return 'offline';
+      case 'IDLE':
+      default:
+        return 'idle';
     }
   }
 }

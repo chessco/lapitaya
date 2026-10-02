@@ -1,5 +1,5 @@
 /**
- * Isolated Electron Preload script for Desktop Companion windows.
+ * Isolated Electron Preload script for Desktop Companion windows — FASE 2.
  *
  * Exposes ONLY safe presentation bridge APIs (`window.companionBridge`).
  * NO governance, CIMA, filesystem, terminal, or arbitrary IPC access.
@@ -7,13 +7,22 @@
 
 import { contextBridge, ipcRenderer } from 'electron';
 import { COMPANION_IPC } from '../shared/lapitaya/desktopCompanions/ipc';
-import type { CompanionPresentation, CompanionVisualState, CompanionPosition } from '../shared/lapitaya/desktopCompanions/types';
+import type {
+  CompanionPresentation,
+  CompanionVisualState,
+  CompanionPosition,
+  CompanionMode
+} from '../shared/lapitaya/desktopCompanions/types';
 
 export interface CompanionBridgeAPI {
   onSnapshot: (callback: (snapshot: CompanionPresentation) => void) => () => void;
   onSetState: (callback: (state: CompanionVisualState) => void) => () => void;
   positionChanged: (pos: CompanionPosition) => void;
   open: () => void;
+  triggerBubble: (text: string) => void;
+  dismissBubble: () => void;
+  setMode: (mode: CompanionMode) => void;
+  hide: () => void;
 }
 
 const companionBridge: CompanionBridgeAPI = {
@@ -42,6 +51,22 @@ const companionBridge: CompanionBridgeAPI = {
   },
   open: () => {
     ipcRenderer.send(COMPANION_IPC.OPEN_MAIN);
+  },
+  triggerBubble: (text: string) => {
+    if (typeof text === 'string') {
+      ipcRenderer.send(COMPANION_IPC.TRIGGER_BUBBLE, text);
+    }
+  },
+  dismissBubble: () => {
+    ipcRenderer.send(COMPANION_IPC.DISMISS_BUBBLE);
+  },
+  setMode: (mode: CompanionMode) => {
+    if (typeof mode === 'string') {
+      ipcRenderer.send(COMPANION_IPC.SET_MODE, mode);
+    }
+  },
+  hide: () => {
+    ipcRenderer.send(COMPANION_IPC.HIDE);
   }
 };
 

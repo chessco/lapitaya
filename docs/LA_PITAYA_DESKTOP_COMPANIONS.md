@@ -1,5 +1,5 @@
 # LA PITAYA — DESKTOP COMPANIONS
-## Architectural Specification & Operational Reference — FASE 1
+## Architectural Specification & Operational Reference — FASE 1 & FASE 2
 
 ---
 
@@ -7,7 +7,7 @@
 
 Desktop Companions introduces a living desktop presence layer for La Pitaya (combining the delightful desktop creature dynamics of Shimeji, Tamagotchi, Clippy, and Virtual Company AI Agents).
 
-The primary companion, **Alicia (Fox)**, alongside members of the La Pitaya hive, project themselves onto the user's desktop as floating, interactive creatures.
+In **FASE 2 (Living Desktop Experience)**, companions transition from static UI card windows to **floating, living creatures** that sit, breathe, walk, sleep, celebrate, and interact directly on the user's desktop screen.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -18,14 +18,14 @@ The primary companion, **Alicia (Fox)**, alongside members of the La Pitaya hive
 ┌──────────────────────────────▼──────────────────────────────┐
 │                 MAIN PROCESS SERVICE                        │
 │                DesktopPresenceService                       │
-│    (Window Geometry, Mode Engine, Safe Presentation)        │
+│  (Window Geometry, Mode Engine, Verified Fact Event Tap)    │
 └──────────────────────────────┬──────────────────────────────┘
                                │ IPC Push (CompanionPresentation)
 ┌──────────────────────────────▼──────────────────────────────┐
 │              UNTRUSTED COMPANION RENDERER                   │
-│          BrowserWindow (transparent, frameless)             │
+│          BrowserWindow (100% transparent, frameless)        │
 │   Preload: companionPreload.ts (No nodeIntegration)          │
-│   Component: CompanionApp.tsx (Visual State Renderer)        │
+│   Component: CompanionApp.tsx (Living Creature & Bubbles)   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -55,7 +55,7 @@ The companion process NEVER holds or receives authorization tokens, ledger entri
 
 ## 4. RELATIONSHIP WITH ALICIA & INTENTBOUNDARY
 
-Alicia's companion engine (`aliciaCompanion`) exposes a read-only observability tap (`subscribeObservability`). `DesktopPresenceService` subscribes to these updates and translates presence events (`THINKING`, `WAITING_APPROVAL`, `CELEBRATING`, `WARNING`) into companion visual states (`THINKING`, `CONCERNED`, `CELEBRATING`, `PAUSED`).
+Alicia's companion engine (`aliciaCompanion`) exposes a read-only observability tap (`subscribeObservability`). `DesktopPresenceService` subscribes to these updates and translates presence events into visual states.
 
 Interactions in the companion window (e.g. clicking Alicia) trigger `companionBridge.open()`, focusing the primary La Pitaya window where human governance decisions take place.
 
@@ -73,7 +73,7 @@ The companion window is created with the following Electron settings:
 - `backgroundColor: '#00000000'`
 - `hasShadow: false`
 
-This yields a floating, background-less desktop creature on Windows and macOS.
+In FASE 2, the renderer container background is completely transparent. The animal creature is rendered directly over the OS desktop with ambient glow shadows.
 
 ---
 
@@ -91,7 +91,7 @@ The companion window runs under its own dedicated preload script (`src/preload/c
 
 ## 7. COMPANION PRELOAD & RENDERER BOUNDARIES
 
-The companion preload exposes ONLY `window.companionBridge` containing four functions:
+The companion preload exposes ONLY `window.companionBridge` containing safe presentation bridge methods:
 
 ```typescript
 export interface CompanionBridgeAPI {
@@ -99,6 +99,10 @@ export interface CompanionBridgeAPI {
   onSetState: (callback: (state: CompanionVisualState) => void) => () => void;
   positionChanged: (pos: CompanionPosition) => void;
   open: () => void;
+  triggerBubble: (text: string) => void;
+  dismissBubble: () => void;
+  setMode: (mode: CompanionMode) => void;
+  hide: () => void;
 }
 ```
 
@@ -109,11 +113,12 @@ It explicitly omits all file system, terminal, PTY, ledger, CIMA, and main-windo
 ## 8. DESKTOPPRESENCESERVICE LIFECYCLE & STATE MODEL
 
 `DesktopPresenceService` manages:
-1. Mode transitions (`OFF`, `MINI`, `PAUSED`).
+1. Mode transitions (`OFF`, `MINI`, `COMPANY`, `FOCUS`, `PAUSED`).
 2. Window instantiation and teardown.
-3. Display boundary validation (`ensureOnScreen`).
-4. Persistence of companion positions (`desktopCompanion.position.<agentId>`).
-5. Safe snapshot generation (`getPresentation`).
+3. Verified runtime fact tap (`triggerVerifiedRuntimeFact`).
+4. Display boundary validation (`ensureOnScreen`).
+5. Persistence of companion positions (`desktopCompanion.position.<agentId>`).
+6. Safe snapshot generation (`getPresentation`).
 
 ---
 
@@ -122,49 +127,38 @@ It explicitly omits all file system, terminal, PTY, ledger, CIMA, and main-windo
 | Mode | Description | Window State |
 |---|---|---|
 | `OFF` | Companions hidden completely | Window hidden / closed |
-| `MINI` | Single primary companion (Alicia) | Floating mini widget (220x220) |
-| `COMPANION` | Primary companion with active status text | Floating widget |
-| `COMPANY` | Multi-agent desktop roster (Phase 4+) | Floating multi-creature window |
-| `FOCUS` | Compact status indicator during work | Small overlay |
+| `MINI` | Single primary companion (Alicia) | Floating creature mini (340x340) |
+| `COMPANY` | Multi-agent desktop roster | Max visible companions = 3 |
+| `FOCUS` | Active phase agent (e.g. `el-beni` during BUILD) | Focused active agent |
 | `PAUSED` | Temporarily frozen state | Frozen visuals |
 
 ---
 
-## 10. COMPANION VISUAL STATES
+## 10. COMPANION VISUAL STATES & ANIMATIONS
 
-- `IDLE`: Resting state.
-- `WALKING`: Moving across screen (Phase 2+).
-- `SLEEPING`: Low activity / dormant.
-- `THINKING`: Processing AI request.
-- `WORKING`: Executing background task.
-- `CELEBRATING`: Task succeeded / CIMA phase passed.
-- `SUGGESTING`: Proposing action to user.
-- `CONCERNED`: CIMA risk or human approval pending.
-- `NOTIFYING`: Active notification.
-- `PAUSED`: Desktop companion paused.
+- `IDLE`: Gentle breathing / floating bobbing animation (`idle`).
+- `WALKING`: Slow pacing motion across window bounds (`walk`).
+- `SLEEPING`: Low activity / dormant state with floating `zZz` particles (`sleep`).
+- `THINKING`: Glowing aura pulse + subtle rotation (`think`).
+- `WORKING`: Active pulse + tool indicator (`work`).
+- `CELEBRATING`: Bouncy sparkle animation (`celebrate`).
+- `SUGGESTING`: Proposing action to user (`think`).
+- `CONCERNED`: Amber warning glow + side-to-side shake (`concern`).
+- `ATTENTION` / `NOTIFYING`: Energetic bounce + pink notification glow (`attention`).
+- `OFFLINE`: Dormant state (`offline`).
 
 ---
 
-## 11. SAFE PRESENTATION PROJECTION MODEL
+## 11. TAMAGOTCHI MOOD LAYER
 
-`CompanionPresentation` is a clean, sanitized projection object sent to the renderer:
+`CompanionMood` adds visual personality expression without affecting CIMA or governance authority:
 
-```typescript
-export interface CompanionPresentationEntry {
-  agentId: LaPitayaAgentId;
-  species: string;
-  visualState: CompanionVisualState;
-  statusText: string;
-  isPrimary: boolean;
-  position: CompanionPosition;
-}
-
-export interface CompanionPresentation {
-  mode: CompanionMode;
-  entries: readonly CompanionPresentationEntry[];
-  updatedAt: number;
-}
-```
+- `HAPPY`: Content, cheerful glow.
+- `CURIOUS`: Observant, interested gaze.
+- `FOCUSED`: Deep work mode.
+- `CALM`: Relaxed desktop presence.
+- `SLEEPY`: Dormant pre-sleep state.
+- `EXCITED`: Task success / celebration.
 
 ---
 
@@ -172,95 +166,84 @@ export interface CompanionPresentation {
 
 Each agent in La Pitaya maps to a unique animal species:
 
-| Agent | Species | Color | Role |
-|---|---|---|---|
-| `alicia` | Fox | `#E65100` | AI Companion |
-| `el-inge` | Beaver | `#795548` | Primary Orchestrator |
-| `el-beni` | Cat | `#FF9800` | Builder |
-| `valentin` | Owl | `#3F51B5` | Architect |
-| `margarito` | Hamster | `#8D6E63` | Tester |
-| `jose-juan` | Turtle | `#2E7D32` | Auditor |
-| `el-tutu` | Rabbit | `#9E9E9E` | Learner |
+| Agent | Species | Emoji | Color | Role | Personality |
+|---|---|---|---|---|---|
+| `alicia` | Fox | 🦊 | `#E65100` | AI Companion | Curious, friendly, smart, calm |
+| `el-inge` | Beaver | 🦫 | `#795548` | Orchestrator | Methodical, leader |
+| `el-beni` | Cat | 🐱 | `#FF9800` | Builder | Energetic, practical |
+| `valentin` | Owl | 🦉 | `#3F51B5` | Architect | Wise, observant |
+| `margarito` | Hamster | 🐹 | `#8D6E63` | Tester | Meticulous, alert |
+| `jose-juan` | Turtle | 🐢 | `#2E7D32` | Auditor | Careful, deliberate |
+| `el-tutu` | Rabbit | 🐰 | `#9E9E9E` | Learner | Quick, eager |
 
 ---
 
-## 13. ALLOWED AGENT ROSTER ALLOWLIST
+## 13. SPEECH BUBBLES & INTERACTION (`CompanionSpeechBubble`)
 
-Only agent IDs belonging to the union type `LaPitayaAgentId` are accepted by `DesktopPresenceService`. Any unrecognized agent ID passed to `moveCompanion` or presentation builders throws an explicit validation error.
+Clicking a companion toggles a glassmorphic Speech Bubble overlay containing:
 
----
-
-## 14. WINDOW DRAGGING & DISPLAY BOUNDARY CLAMPING
-
-Companions can be dragged around the desktop. `DesktopPresenceService.ensureOnScreen()` calculates display workArea bounds (excluding taskbar/dock) and clamps companion coordinates so creatures never wander off-screen or get trapped off-monitor.
-
----
-
-## 15. IPC CHANNELS & GOVERNANCE ISOLATION ENFORCEMENT
-
-All IPC channels for companions use the namespace `lapitaya:companion:*`.
-
-Forbidden terms in companion IPC:
-`approve`, `risk`, `autonomy`, `capability`, `execute`, `ledger`, `cima`, `governance`, `token`, `hmac`, `auth`.
-
-Attempting to transmit any IPC containing these terms via companion channels triggers an immediate security error.
+- **Verified Facts**: Quotes derived strictly from runtime facts ("El build terminó", "Margarito ejecutando pruebas").
+- **Interactive Action Menu**:
+  - 💬 **Hablar**: Triggers friendly companion response.
+  - 🚀 **Abrir La Pitaya**: Focuses the main application window.
+  - ⚙️ **Galería Dev**: Toggles the development/preview gallery drawer.
+  - 🙈 **Ocultar**: Hides the desktop companion.
 
 ---
 
-## 16. POSITION PERSISTENCE & MULTI-SCREEN BEHAVIOR
+## 14. EVENT-DRIVEN VISUAL REACTIONS
 
-Positions are saved per agent ID in `PersistStore` under `desktopCompanion.position.<agentId>`. Upon launch, positions are loaded and verified against the current display layout using `ensureOnScreen()`.
+`DesktopPresenceService.triggerVerifiedRuntimeFact()` maps real runtime facts to visual reactions:
+
+- `BUILD_STARTED` → `el-beni` (WORKING)
+- `BUILD_COMPLETED` → `alicia` (CELEBRATING: "El build terminó con éxito.")
+- `TEST_STARTED` → `margarito` (WORKING)
+- `TEST_COMPLETED` → `margarito` (CELEBRATING)
+- `AUDIT_STARTED` → `jose-juan` (WORKING)
+- `AUDIT_COMPLETED` → `jose-juan` (CELEBRATING)
+- `REQUEST_PENDING` / `HUMAN_APPROVAL_REQUIRED` → `alicia` (ATTENTION: "Hay una solicitud que necesita tu confirmación.")
+
+Unverified or fake runtime events are strictly ignored.
 
 ---
 
-## 17. EVENT BRIDGE & OBSERVABILITY SIGNAL TAP
+## 15. THREAT MODEL & ADVERSARIAL SECURITY CONTROLS
 
-The event bridge is purely unidirectional (`Main Process` -> `Companion BrowserWindow`). The companion renderer cannot emit events back to the hive or main process, except for `POSITION_CHANGED` and `OPEN_MAIN`.
-
----
-
-## 18. THREAT MODEL & ADVERSARIAL SECURITY CONTROLS
-
-- **Threat**: Compromised renderer script attempts to approve a CIMA action.
-  - **Mitigation**: Companion renderer has no IPC channels for approvals or CIMA actions.
-- **Threat**: Malicious code sends arbitrary IPC channel names.
-  - **Mitigation**: `isAllowedCompanionChannel` rejects non-allowlisted channels.
-- **Threat**: Data leak of CIMA ledger / security tokens into desktop window.
+- **Threat**: Renderer script attempts to execute tools or approve CIMA tasks.
+  - **Mitigation**: Preload bridge rejects non-allowlisted IPC. `isGovernanceIpcChannel()` drops any payload with `approve`, `execute`, `risk`, `tokens`, etc.
+- **Threat**: Data leak of CIMA ledger or HMAC secrets.
   - **Mitigation**: `CompanionPresentation` projection strips all governance fields.
+- **Threat**: Fake runtime event injection.
+  - **Mitigation**: Unverified events do not invent runtime facts or governance state.
 
 ---
 
-## 19. RENDERER COMPONENT ARCHITECTURE
+## 16. ACCESSIBILITY & PREFERENCES
 
-`CompanionApp.tsx` renders the visual representation using React. It registers listeners with `window.companionBridge` on mount, listens for snapshots and state changes, and renders the animal avatar with glassmorphism styling and pixel-font state badges.
+Supported preferences in `CompanionPreferences`:
 
----
-
-## 20. INCREMENTAL ROADMAP (PHASES 1 - 8)
-
-- **FASE 1 (Current)**: Desktop Presence Foundation (Window, Preload, Bridge, Types, Registry, IPC, Tests).
-- **FASE 2**: Desktop Creature Engine (Shimeji movement & gravity physics).
-- **FASE 3**: Expression & Animation System (Sprite sheets & emotion states).
-- **FASE 4**: Virtual Company Roster (Multi-agent desktop presence).
-- **FASE 5**: Tamagotchi Dynamics (Energy, focus & mood state engine).
-- **FASE 6**: Clippy Modernized Contextual Assistance (Proactive suggestions).
-- **FASE 7**: Quick Action Ring & Radial Overlay (Context menu).
-- **FASE 8**: Full Desktop Company Experience Polish & Themes.
+- `soundEnabled`: boolean (default `false`)
+- `reducedMotion`: boolean (disables CSS bouncy keyframe animations)
+- `maxVisibleCompanions`: number (default `3`)
 
 ---
 
-## 21. VERIFICATION & TEST SUITE STRATEGY
+## 17. VERIFICATION & TEST SUITE STRATEGY
 
-The test suite (`test/lapitaya-desktop-companions.test.cjs`) implements 25 requirement tests (`COMP-01` to `COMP-25`) plus 8 adversarial security tests (`ADV-01` to `ADV-08`).
+The expanded test suite ([`test/lapitaya-desktop-companions.test.cjs`](file:///c:/PitayaCode/LaPitaya/test/lapitaya-desktop-companions.test.cjs)) implements **58 total tests**:
 
-Run test suite with:
+- **`COMP-01` to `COMP-25`**: FASE 1 Presence Foundation tests.
+- **`COMP-26` to `COMP-50`**: FASE 2 Living Desktop Experience tests (transparent window, idle/work/celebrate/sleep/attention animations, verified facts, speech bubbles, accessibility, multi-agent limits).
+- **`ADV-01` to `ADV-08`**: Adversarial security tests.
+
+Run full suite:
 ```bash
-node --test test/lapitaya-desktop-companions.test.cjs
+npm run test:companion
 ```
 
 ---
 
-## 22. OPERATIONAL REFERENCE & IPC CHANNEL TABLE
+## 18. OPERATIONAL REFERENCE & IPC CHANNEL TABLE
 
 | Channel | Direction | Payload | Description |
 |---|---|---|---|
@@ -268,3 +251,7 @@ node --test test/lapitaya-desktop-companions.test.cjs
 | `lapitaya:companion:setState` | Main → Companion | `CompanionVisualState` | Pushes immediate visual state change |
 | `lapitaya:companion:positionChanged` | Companion → Main | `{ x, y }` | Notifies main process of user drag |
 | `lapitaya:companion:openMain` | Companion → Main | `void` | Focuses primary La Pitaya app window |
+| `lapitaya:companion:triggerBubble` | Companion → Main | `string` | Triggers a contextual speech bubble |
+| `lapitaya:companion:dismissBubble` | Companion → Main | `void` | Dismisses current speech bubble |
+| `lapitaya:companion:setMode` | Companion → Main | `CompanionMode` | Switches companion mode |
+| `lapitaya:companion:hide` | Companion → Main | `void` | Hides companion window |
