@@ -11,6 +11,7 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { TRUSTED_HUMAN: HUMAN } = require('./fixtures/human.cjs');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -69,7 +70,7 @@ async function floor(t, opts = {}) {
   const approve = (agentId, tool, input) => {
     const a = auth(agentId, tool, input);
     assert.equal(a.decision, 'HUMAN_APPROVAL_REQUIRED', `precondition: ${JSON.stringify([tool, input])} must need approval (${a.rule})`);
-    const decided = lapitaya.decide(a.approvalId, true, 'human');
+    const decided = lapitaya.decide(a.approvalId, true, 'human', HUMAN);
     assert.ok(decided, 'human decision recorded');
     return a.approvalId;
   };
@@ -79,6 +80,7 @@ async function floor(t, opts = {}) {
   return { home, hive, lapitaya, server, hook, pre, auth, approve, tokens, ctx, dir, approvalsFile, readApprovals, writeApprovals, proj, runtimeLedger: () => lapitaya.ledger(5000) };
 }
 
+const legacyLedger = (f) => fs.writeFileSync(path.join(f.dir, 'cima-ledger.jsonl'), JSON.stringify({ kind: 'governance', ts: 1, agentId: 'valentin-1', taskId: null, phase: null, tool: 'Read', action: 'read x', category: 'read-code', risk: 'LOW', mode: 'AUTO', decision: 'ALLOW', rule: 'read', fingerprint: 'deadbeef' }) + String.fromCharCode(10)); // a ledger written by v0.14
 const executable = (a) => ['ALLOW', 'SUPERVISED', 'APPROVED'].includes(a.decision);
 const PUSH = { command: 'git push origin feature-x' };
 
@@ -110,7 +112,7 @@ test('[AUTHBIND-01] an approval of CALL A cannot authorize CALL B that has the s
   const f = await floor(t);
   const a1 = f.auth('valentin-1', 'Bash', PUSH);
   assert.equal(a1.decision, 'HUMAN_APPROVAL_REQUIRED');
-  f.lapitaya.decide(a1.approvalId, true, 'human');
+  f.lapitaya.decide(a1.approvalId, true, 'human', HUMAN);
   const cmdB = collideFnv('valentin-1', 'Bash', 'rm -rf /important/data # ', parseInt(gov.toolCallFingerprint('valentin-1', 'Bash', PUSH), 16));
   assert.ok(cmdB, 'a colliding command was constructed');
   const B = { command: cmdB };
@@ -315,7 +317,7 @@ test('[AUTHBIND-17] an expired approval is denied (pending AND approved)', async
   // a pending approval that outlived its window cannot be decided
   const p = f.auth('valentin-1', 'Bash', { command: 'git push origin late' });
   f.ctx.clock += 25 * HOUR;
-  assert.equal(f.lapitaya.decide(p.approvalId, true, 'human'), null);
+  assert.equal(f.lapitaya.decide(p.approvalId, true, 'human', HUMAN), null);
 });
 
 // ─── AUTHBIND-18/19: paths ─────────────────────────────────────────────────
@@ -539,8 +541,8 @@ test('[AUTHBIND-27] lock acquisition failure fails closed — nothing runs, a fo
   assert.equal(hookR.hookSpecificOutput.permissionDecision, 'deny');
   // every state-changing entry point refuses too
   assert.equal(f.lapitaya.openRequest({ intentId: 'i', executor: 'god', requestedBy: 'human', source: 'alicia', message: 'revisa', taskId: null, target: null, signals: [] }), null);
-  assert.equal(f.lapitaya.decide('apr-x', true, 'human'), null);
-  assert.equal(f.lapitaya.confirmRequest('req-x', { by: 'human', token: 't' }).code, 'LOCK_UNAVAILABLE');
+  assert.equal(f.lapitaya.decide('apr-x', true, 'human', HUMAN), null);
+  assert.equal(f.lapitaya.confirmRequest('req-x', { by: 'human', token: 't', human: HUMAN }).code, 'LOCK_UNAVAILABLE');
   assert.equal(f.lapitaya.recordTrace('valentin-1', 'PostToolUse', 'Read', { file_path: 'a' }, 'x'), null);
   const rec = f.lapitaya.submit('valentin-1', { taskId: 'T', phase: 'BUILD', verdict: 'PASS' });
   assert.deepEqual([rec.verdict, rec.violations], ['BLOCKED', ['STATE_UNAVAILABLE']]);
@@ -590,7 +592,10 @@ test('[AUTHBIND-27d] REAL multi-process contention: three processes appending co
   const results = await Promise.all(['proc-a', 'proc-b', 'proc-c'].map(child));
   assert.deepEqual(results.map((r) => r.denied), [0, 0, 0], 'no call was refused for want of the lock (waiting, not failing)');
   const lines = fs.readFileSync(path.join(f.dir, 'cima-ledger.jsonl'), 'utf8').split('\n').filter(Boolean);
-  assert.equal(lines.length, 3 * N, 'every decision was recorded exactly once');
+  // v0.15: each call is two chained events — its authorization decision and the commit of its trace
+  assert.equal(lines.length, 6 * N, 'every decision and every trace commit was recorded exactly once');
+  const seqs = lines.map((l) => JSON.parse(l).sequence);
+  assert.deepEqual(seqs, seqs.map((_, i) => i + 1), 'one gapless, strictly increasing sequence across three processes');
   assert.ok(lines.every((l) => { try { JSON.parse(l); return true; } catch { return false; } }), 'no torn or glued line');
   const traces = fs.readFileSync(path.join(f.dir, 'traces.jsonl'), 'utf8').split('\n').filter(Boolean);
   assert.equal(traces.length, 3 * N);
@@ -608,12 +613,12 @@ test('[AUTHBIND-28] a secondary governance write failure fails closed (decide, c
   const origError = console.error; console.error = () => {};
   try {
     down();
-    assert.equal(f.lapitaya.decide(a.approvalId, true, 'human'), null);
+    assert.equal(f.lapitaya.decide(a.approvalId, true, 'human', HUMAN), null);
   } finally { up(); }
   assert.equal(f.readApprovals().find((x) => x.id === a.approvalId).status, 'pending', 'rolled back');
   assert.equal(f.auth('valentin-1', 'Bash', PUSH).decision, 'HUMAN_APPROVAL_REQUIRED');
   // 2. approved, but the decision cannot be written → the call does not run and the approval is NOT consumed
-  f.lapitaya.decide(a.approvalId, true, 'human');
+  f.lapitaya.decide(a.approvalId, true, 'human', HUMAN);
   try { down(); const r = f.auth('valentin-1', 'Bash', PUSH); assert.deepEqual([r.decision, r.rule], ['DENY', 'LEDGER_UNAVAILABLE']); } finally { up(); }
   assert.equal(f.readApprovals().find((x) => x.id === a.approvalId).status, 'approved', 'not consumed without durable evidence');
   assert.equal(f.auth('valentin-1', 'Bash', PUSH).decision, 'APPROVED', 'and still usable once the ledger is back');
@@ -628,9 +633,9 @@ test('[AUTHBIND-28] a secondary governance write failure fails closed (decide, c
   assert.equal(f.lapitaya.submit('margarito-1', { taskId: 'T', phase: 'BUILD', verdict: 'PASS', evidence: [{ type: 'test-result', source: 'npm test' }] }).verdict, 'PASS', 'same claim records once the ledger is back');
   // 4. a REQUEST confirmation the ledger cannot evidence is not a confirmation
   const req = f.lapitaya.openRequest({ intentId: 'i1', executor: 'god', requestedBy: 'human', source: 'alicia', message: 'revisa el estado', taskId: null, target: null, signals: [] });
-  try { down(); const c = f.lapitaya.confirmRequest(req.id, { by: 'human', token: req.token }); assert.equal(c.ok, false); assert.equal(c.code, 'LEDGER_UNAVAILABLE'); } finally { up(); }
+  try { down(); const c = f.lapitaya.confirmRequest(req.id, { by: 'human', token: req.token, human: HUMAN }); assert.equal(c.ok, false); assert.equal(c.code, 'LEDGER_UNAVAILABLE'); } finally { up(); }
   assert.equal(f.lapitaya.listRequests().find((r) => r.id === req.id).status, 'PROPOSED');
-  assert.equal(f.lapitaya.confirmRequest(req.id, { by: 'human', token: req.token }).ok, true, 'the token survived the failed attempt');
+  assert.equal(f.lapitaya.confirmRequest(req.id, { by: 'human', token: req.token, human: HUMAN }).ok, true, 'the token survived the failed attempt');
   // 5. a trace that cannot be written is not evidence
   const tracesFile = (p, flags) => String(p).endsWith('traces.jsonl') && String(flags).startsWith('a');
   nodeFs.openSync = function (p, flags, ...r) { if (tracesFile(p, flags)) throw new Error('EIO simulated'); return real.call(this, p, flags, ...r); };
@@ -686,6 +691,7 @@ test('[AUTHBIND-30] the forged v0.10 governance chain remains blocked', async (t
 test('[AUTHBIND-31] a legacy (FNV-only) approval never authorizes anything — it is retired, with a ledger record', async (t) => {
   const f = await floor(t);
   fs.mkdirSync(f.dir, { recursive: true });
+  legacyLedger(f);
   const fp = gov.toolCallFingerprint('valentin-1', 'Bash', PUSH);
   f.writeApprovals([{ id: 'apr-legacy', agentId: 'valentin-1', tool: 'Bash', fingerprint: fp, category: 'irreversible', risk: 'HIGH', summary: 'x', status: 'approved', createdAt: Date.now() },
     { id: 'apr-legacy-pending', agentId: 'valentin-1', tool: 'Bash', fingerprint: fp, category: 'irreversible', risk: 'HIGH', summary: 'x', status: 'pending', createdAt: Date.now() }]);
@@ -695,7 +701,7 @@ test('[AUTHBIND-31] a legacy (FNV-only) approval never authorizes anything — i
   assert.deepEqual(rows.filter((a) => a.id.startsWith('apr-legacy')).map((a) => [a.status, a.invalidReason]), [['invalid', 'LEGACY_UNBOUND'], ['invalid', 'LEGACY_UNBOUND']]);
   assert.ok(f.runtimeLedger().some((e) => e.rule === 'APPROVAL_INVALID' && e.approvalId === 'apr-legacy'));
   // and the legacy pending one cannot be approved by the human either
-  assert.equal(f.lapitaya.decide('apr-legacy-pending', true, 'human'), null);
+  assert.equal(f.lapitaya.decide('apr-legacy-pending', true, 'human', HUMAN), null);
   // the pure classifier never matches on the legacy fingerprint, even if handed a perfect legacy record
   const pure = gov.authorizeToolCall({ agentId: 'valentin-1', tool: 'Bash', input: PUSH, approvals: [{ id: 'a', agentId: 'valentin-1', tool: 'Bash', fingerprint: fp, status: 'approved', createdAt: 1 }] });
   assert.equal(pure.decision, 'HUMAN_APPROVAL_REQUIRED');
@@ -706,6 +712,7 @@ test('[AUTHBIND-32] a hand-written approval with a consistent binding but no sea
   const subject = { v: 1, call: { agent: 'valentin-1', provider: 'claude', tool: 'Bash', targets: [], input: binding.inputDigest(PUSH) },
     context: { task: null, risk: 'HIGH', category: 'irreversible', mode: 'HUMAN_APPROVAL', stage: 'SUPERVISED', rule: 'shell:git-push', request: null } };
   fs.mkdirSync(f.dir, { recursive: true });
+  legacyLedger(f);
   f.writeApprovals([{ id: 'apr-forged', agentId: 'valentin-1', tool: 'Bash', fingerprint: 'x', category: 'irreversible', risk: 'HIGH', summary: 'x', status: 'approved',
     createdAt: Date.now() + 1, expiresAt: Date.now() + HOUR * 24 * 365, binding: binding.makeBinding(subject), seal: 'f'.repeat(64) }]);
   assert.equal(executable(f.auth('valentin-1', 'Bash', PUSH)), false);
@@ -831,16 +838,16 @@ test('[AUTHBIND-40] a REQUEST proposal is bound by a keyed SHA-256 (not FNV-32):
   row.scope = 'MEDIUM';
   row.fingerprint = crypto.createHash('sha256').update(JSON.stringify([row.id, row.intentId, row.executor, row.requestedBy, row.source, row.message, row.taskId, row.target, row.scope, row.createdAt])).digest('hex');
   fs.writeFileSync(file, JSON.stringify(rows));
-  const c = f.lapitaya.confirmRequest(a.id, { by: 'human', token: a.token });
+  const c = f.lapitaya.confirmRequest(a.id, { by: 'human', token: a.token, human: HUMAN });
   assert.deepEqual([c.ok, c.code], [false, 'TAMPERED']);
   // 2. a legacy (FNV-32) fingerprint is refused as stale, never confirmed
   const b = open();
   rows = read();
   rows.find((p) => p.id === b.id).fingerprint = '0badc0de';
   fs.writeFileSync(file, JSON.stringify(rows));
-  const d = f.lapitaya.confirmRequest(b.id, { by: 'human', token: b.token });
+  const d = f.lapitaya.confirmRequest(b.id, { by: 'human', token: b.token, human: HUMAN });
   assert.deepEqual([d.ok, d.code], [false, 'STALE_PROPOSAL']);
   // 3. an untouched proposal still confirms
   const ok = open();
-  assert.equal(f.lapitaya.confirmRequest(ok.id, { by: 'human', token: ok.token }).ok, true);
+  assert.equal(f.lapitaya.confirmRequest(ok.id, { by: 'human', token: ok.token, human: HUMAN }).ok, true);
 });

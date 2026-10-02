@@ -1,0 +1,210 @@
+{
+  "electron": "32.3.3",
+  "node": "20.18.1",
+  "results": [
+    {
+      "id": "V1a",
+      "desc": "a pending request closes the floor at the real hook",
+      "pass": true,
+      "detail": "REQUEST_CONFIRMATION_REQUIRED — request req-muq8arrs-1 is a proposal w"
+    },
+    {
+      "id": "V1b",
+      "desc": "an untrusted page cannot confirm",
+      "pass": true,
+      "detail": "{\"ok\":false,\"code\":\"NOT_AUTHORIZED\",\"reason\":\"only the human confirms a request\"}"
+    },
+    {
+      "id": "V1c",
+      "desc": "the trusted human page confirms; the confirmation is recorded with the runtime-resolved human owner",
+      "pass": true,
+      "detail": "true"
+    },
+    {
+      "id": "V1d",
+      "desc": "LOW work executes after the confirmation",
+      "pass": true,
+      "detail": "\"\""
+    },
+    {
+      "id": "V1e",
+      "desc": "the HIGH call is held for a human",
+      "pass": true,
+      "detail": "\"\""
+    },
+    {
+      "id": "V1f",
+      "desc": "an untrusted page cannot approve",
+      "pass": true,
+      "detail": "\"\""
+    },
+    {
+      "id": "V1g",
+      "desc": "the trusted human page approves",
+      "pass": true,
+      "detail": "\"\""
+    },
+    {
+      "id": "V1h",
+      "desc": "the exact approved call executes (approval consumed)",
+      "pass": true,
+      "detail": "\"\""
+    },
+    {
+      "id": "V2a",
+      "desc": "INDEPENDENT verification from disk: the chain, MACs, sequence and keyed anchor all verify",
+      "pass": true,
+      "detail": "{\"events\":11,\"head\":11}"
+    },
+    {
+      "id": "V2b",
+      "desc": "the stream orders the facts: REQUEST_PROPOSED → REQUEST_CONFIRMED … HUMAN_APPROVAL_REQUIRED → HUMAN_APPROVED → APPROVAL_CONSUMED → TOOL_EXECUTED",
+      "pass": true,
+      "detail": "REQUEST_PROPOSED › AUTHORIZATION_DENIED › REQUEST_CONFIRMATION_DENIED › REQUEST_REVALIDATED › REQUEST_CONFIRMED › AUTHORIZATION_GRANTED › TOOL_EXECUTED › HUMAN_APPROVAL_REQUIRED › HUMAN_APPROVED › APPROVAL_CONSUMED › TOOL_EXECUTED"
+    },
+    {
+      "id": "V2c",
+      "desc": "the human owner on the events is the one main resolved (not a renderer argument)",
+      "pass": true,
+      "detail": "hum-1c43e061651f02bf844b"
+    },
+    {
+      "id": "V2d",
+      "desc": "AUTHORIZED ≠ EXECUTED: the TOOL_EXECUTED event cites the authorization event it relates to",
+      "pass": true,
+      "detail": "\"\""
+    },
+    {
+      "id": "V3a",
+      "desc": "Alicia (the observability projection over IPC) reports HEALTHY with facts",
+      "pass": true,
+      "detail": "{\"status\":\"HEALTHY\",\"recovery\":\"HEALTHY\",\"codes\":[],\"headSequence\":11,\"legacyUnverified\":false}"
+    },
+    {
+      "id": "C1",
+      "desc": "a corrupted ledger closes governance at the real hook: LEDGER_CORRUPTED",
+      "pass": true,
+      "detail": "LEDGER_CORRUPTED — La Pitaya could not authorize this call, so it was NOT executed (governance state"
+    },
+    {
+      "id": "C2",
+      "desc": "the independent verifier agrees the ledger is damaged",
+      "pass": true,
+      "detail": "\"\""
+    },
+    {
+      "id": "C3",
+      "desc": "Alicia reports CORRUPTED and RECOVERY_REQUIRED, serves no ledger facts, and decides nothing",
+      "pass": true,
+      "detail": "{\"status\":\"CORRUPTED\",\"recovery\":\"RECOVERY_REQUIRED\",\"codes\":[\"SEQUENCE_GAP\"],\"headSequence\":3,\"legacyUnverified\":false}"
+    },
+    {
+      "id": "C4",
+      "desc": "the ledger channel serves nothing while the ledger does not verify",
+      "pass": true,
+      "detail": "\"\""
+    },
+    {
+      "id": "C5",
+      "desc": "human decisions are refused while the ledger is damaged (no decision without durable evidence)",
+      "pass": true,
+      "detail": "LEDGER_CORRUPTED"
+    },
+    {
+      "id": "C6",
+      "desc": "the renderer has NO repair capability: no recover/repair channel exists",
+      "pass": true,
+      "detail": "\"\""
+    },
+    {
+      "id": "C7",
+      "desc": "after an external repair the verification passes again and Alicia shows RECOVERED (the repair was verified, not assumed)",
+      "pass": true,
+      "detail": "{\"status\":\"HEALTHY\",\"recovery\":\"RECOVERED\",\"codes\":[],\"headSequence\":12,\"legacyUnverified\":false}"
+    },
+    {
+      "id": "I1",
+      "desc": "a proposal edited to CONFIRMED on disk is INCONSISTENT with its events: governance closed, Alicia says so",
+      "pass": true,
+      "detail": "[\"PROPOSAL_STATE_MISMATCH\"]"
+    },
+    {
+      "id": "I1b",
+      "desc": "with the proposal restored, the human cancels it through the trusted channel (an event-first transition)",
+      "pass": true,
+      "detail": "\"\""
+    },
+    {
+      "id": "I2",
+      "desc": "an approval \"approved\" in state with no HUMAN_APPROVED event — even with a valid seal — is never APPROVED",
+      "pass": true,
+      "detail": "[\"APPROVAL_UNEVIDENCED\"]"
+    },
+    {
+      "id": "I3",
+      "desc": "restoring the state files restores governance",
+      "pass": true,
+      "detail": "\"\""
+    },
+    {
+      "id": "R1",
+      "desc": "a truncated final record is detected (TRUNCATED_TAIL) and governance closes",
+      "pass": true,
+      "detail": "LEDGER_CORRUPTED — La Pitaya could not authorize this call, so it was NOT executed (governance state file corrupted: cim"
+    },
+    {
+      "id": "R2",
+      "desc": "the operator tool recovers: exit 0, damaged ledger quarantined whole, verified prefix kept",
+      "pass": true,
+      "detail": "[\"ledger quarantined: cima-ledger.jsonl → cima-ledger.quarantine-1790901148362-fd4e0879.jsonl\",\"ledger rebuilt from the verified prefix (10518 bytes, through sequence 15)\",\"LEDGER_RECOVERED event appended and the head re-anchored\"]"
+    },
+    {
+      "id": "R3",
+      "desc": "the quarantined file is byte-identical to the damaged ledger (evidence preserved)",
+      "pass": true,
+      "detail": "\"\""
+    },
+    {
+      "id": "R4",
+      "desc": "INDEPENDENT verification of the recovered ledger passes; it ends with LEDGER_RECOVERED naming the operator",
+      "pass": true,
+      "detail": "LEDGER_RECOVERED"
+    },
+    {
+      "id": "R5",
+      "desc": "after recovery governance runs again and Alicia shows HEALTHY / RECOVERED",
+      "pass": true,
+      "detail": "{\"status\":\"HEALTHY\",\"recovery\":\"RECOVERED\",\"codes\":[],\"headSequence\":17,\"legacyUnverified\":false}"
+    },
+    {
+      "id": "R6",
+      "desc": "recovery invented nothing: the previously approved & consumed call needs a NEW human approval",
+      "pass": true,
+      "detail": "\"\""
+    },
+    {
+      "id": "R7",
+      "desc": "no HUMAN_APPROVED / APPROVAL_CONSUMED / REQUEST_CONFIRMED / TOOL_EXECUTED exists after the recovery boundary: nothing was invented",
+      "pass": true,
+      "detail": "LEDGER_RECOVERED › AUTHORIZATION_GRANTED › HUMAN_APPROVAL_REQUIRED"
+    },
+    {
+      "id": "S1",
+      "desc": "no agent token, seal key or event MAC ever crossed IPC to a renderer",
+      "pass": true,
+      "detail": "{\"crossings\":16,\"leaked\":0,\"macs\":0}"
+    },
+    {
+      "id": "S2",
+      "desc": "no renderer console errors / crashes",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "id": "E9",
+      "desc": "REAL El Inge (agent CLI) execution",
+      "pass": false,
+      "detail": "NOT VALIDATED — no provider CLI/credentials are run by this harness"
+    }
+  ]
+}

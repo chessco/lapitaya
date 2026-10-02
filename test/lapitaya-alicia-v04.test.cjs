@@ -8,6 +8,7 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { TRUSTED_HUMAN: HUMAN } = require('./fixtures/human.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
 // v0.4.1: the floor (real runtime + intent boundary + companion) is shared with the v0.4.1 suite.
@@ -83,7 +84,7 @@ test('[ALICIA-03] Alicia receives governance events from the existing runtime ev
   assert.equal(s.presence, 'WAITING_APPROVAL');
   assert.equal(s.context.currentRisk, 'HIGH');
 
-  f.lapitaya.decide(approvalId, false, 'human');
+  f.lapitaya.decide(approvalId, false, 'human', HUMAN);
   s = f.companion.snapshot();
   assert.ok(s.notifications.some((n) => n.eventType === 'approval.denied' && n.technical.decision === 'HUMAN_REJECTED'));
 

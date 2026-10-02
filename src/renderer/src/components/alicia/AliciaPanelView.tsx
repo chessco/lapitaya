@@ -2,7 +2,7 @@ import type { CSSProperties, FormEvent } from 'react';
 import type { AliciaSubmitResult } from '@shared/lapitaya/alicia';
 import type { ObservabilityView } from '@shared/lapitaya/alicia/observability';
 import { EXPLAINED_CODES, type ConfirmationSnapshot, type ProposalView } from './confirmationController';
-import { GovernanceActivity, ProposalGovernance } from './GovernanceExplanationView';
+import { GovernanceActivity, GovernanceHealthBanner, ProposalGovernance } from './GovernanceExplanationView';
 import type { AcknowledgedIds, DecisionCenterModel, HighDecisionView } from './decisionCenter';
 import { DecisionCenterSection, HighApprovalCard } from './DecisionCenterView';
 
@@ -234,6 +234,7 @@ export function AliciaPanelView(p: AliciaPanelViewProps) {
         />
       ))}
 
+      {p.observability && <GovernanceHealthBanner t={t} view={p.observability} />}
       {p.observability && <GovernanceActivity t={t} view={p.observability} />}
 
       <div aria-live="polite" data-field="conversation" style={{ marginBottom: 6 }}>

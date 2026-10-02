@@ -6,6 +6,7 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
+const { TRUSTED_HUMAN: HUMAN } = require('./fixtures/human.cjs');
 const { mkdtempSync, rmSync, writeFileSync, readFileSync, mkdirSync, existsSync } = require('node:fs');
 const { join } = require('node:path');
 const { tmpdir } = require('node:os');
@@ -116,7 +117,8 @@ test('STATE-05: malformed ledger handled deterministically', async (t) => {
   writeFileSync(join(lapitayaDir, 'cima-ledger.jsonl'), '{"kind":"governance",invalid_json\n', 'utf8');
   const auth = lapitaya.authorize('agent-1', 'Read', { file_path: 'foo.txt' });
   assert.strictEqual(auth.decision, 'DENY');
-  assert.strictEqual(auth.rule, 'GOVERNANCE_STATE_CORRUPT');
+  // v0.15: a damaged ledger is named explicitly
+  assert.strictEqual(auth.rule, 'LEDGER_CORRUPTED');
 });
 
 test('STATE-06: truncated ledger handled deterministically', async (t) => {
@@ -171,7 +173,7 @@ test('STATE-11: expired REQUEST cannot execute', async (t) => {
 
   // Fast forward past TTL (24h + 1ms)
   nowTime += 24 * 60 * 60 * 1000 + 1;
-  const res = lapitaya.confirmRequest(req.id, { by: 'human', token: req.token });
+  const res = lapitaya.confirmRequest(req.id, { by: 'human', token: req.token, human: HUMAN });
   assert.strictEqual(res.ok, false);
   assert.strictEqual(res.code, 'NOT_CONFIRMABLE');
   assert.match(res.reason, /EXPIRED/);
@@ -193,7 +195,7 @@ test('STATE-12: expired HIGH approval cannot execute', async (t) => {
 
   // Fast forward past TTL
   nowTime += 24 * 60 * 60 * 1000 + 1;
-  const decided = lapitaya.decide(approvalId, true, 'human');
+  const decided = lapitaya.decide(approvalId, true, 'human', HUMAN);
   assert.strictEqual(decided, null);
 });
 
@@ -232,7 +234,7 @@ test('STATE-14: provider cannot extend expiration', async (t) => {
   nowTime += 24 * 60 * 60 * 1000 + 1;
 
   // Confirming expired request under provider context is rejected
-  const res = lapitaya.confirmRequest(req.id, { by: 'human', token: req.token });
+  const res = lapitaya.confirmRequest(req.id, { by: 'human', token: req.token, human: HUMAN });
   assert.strictEqual(res.ok, false);
 });
 
@@ -249,7 +251,7 @@ test('STATE-15: human decision after expiration rejected', async (t) => {
     message: 'necesito que revises el estado', taskId: 'task-1', target: null, signals: []
   });
   nowTime += 24 * 60 * 60 * 1000 + 1;
-  const confirmRes = lapitaya.confirmRequest(req.id, { by: 'human', token: req.token });
+  const confirmRes = lapitaya.confirmRequest(req.id, { by: 'human', token: req.token, human: HUMAN });
   assert.strictEqual(confirmRes.ok, false);
 });
 
@@ -260,10 +262,10 @@ test('STATE-16: duplicate REQUEST confirmation rejected', async (t) => {
     message: 'necesito que revises el estado', taskId: 'task-1', target: null, signals: []
   });
   assert.ok(req);
-  const first = lapitaya.confirmRequest(req.id, { by: 'human', token: req.token });
+  const first = lapitaya.confirmRequest(req.id, { by: 'human', token: req.token, human: HUMAN });
   assert.strictEqual(first.ok, true);
 
-  const second = lapitaya.confirmRequest(req.id, { by: 'human', token: req.token });
+  const second = lapitaya.confirmRequest(req.id, { by: 'human', token: req.token, human: HUMAN });
   assert.strictEqual(second.ok, false);
   assert.strictEqual(second.code, 'NOT_CONFIRMABLE');
 });
@@ -275,11 +277,11 @@ test('STATE-17: duplicate HIGH approval rejected', async (t) => {
   const approvalId = auth.approvalId;
   assert.ok(approvalId);
 
-  const first = lapitaya.decide(approvalId, true, 'human');
+  const first = lapitaya.decide(approvalId, true, 'human', HUMAN);
   assert.ok(first);
   assert.strictEqual(first.status, 'approved');
 
-  const second = lapitaya.decide(approvalId, true, 'human');
+  const second = lapitaya.decide(approvalId, true, 'human', HUMAN);
   assert.strictEqual(second, null);
 });
 
@@ -290,13 +292,13 @@ test('STATE-18: confirm/cancel race produces one valid result', async (t) => {
     message: 'necesito que revises el estado', taskId: 'task-1', target: null, signals: []
   });
   assert.ok(req);
-  const confirmed = lapitaya.confirmRequest(req.id, { by: 'human', token: req.token });
+  const confirmed = lapitaya.confirmRequest(req.id, { by: 'human', token: req.token, human: HUMAN });
   assert.strictEqual(confirmed.ok, true);
 
-  const cancelled = lapitaya.cancelRequest(req.id, 'human');
+  const cancelled = lapitaya.cancelRequest(req.id, 'human', HUMAN);
   assert.strictEqual(cancelled.ok, true); // move CONFIRMED -> CANCELLED is allowed
 
-  const secondConfirm = lapitaya.confirmRequest(req.id, { by: 'human', token: req.token });
+  const secondConfirm = lapitaya.confirmRequest(req.id, { by: 'human', token: req.token, human: HUMAN });
   assert.strictEqual(secondConfirm.ok, false);
 });
 
@@ -307,11 +309,11 @@ test('STATE-19: approve/reject race produces one valid result', async (t) => {
   const approvalId = auth.approvalId;
   assert.ok(approvalId);
 
-  const approved = lapitaya.decide(approvalId, true, 'human');
+  const approved = lapitaya.decide(approvalId, true, 'human', HUMAN);
   assert.ok(approved);
   assert.strictEqual(approved.status, 'approved');
 
-  const rejected = lapitaya.decide(approvalId, false, 'human');
+  const rejected = lapitaya.decide(approvalId, false, 'human', HUMAN);
   assert.strictEqual(rejected, null);
 });
 
@@ -351,7 +353,7 @@ test('STATE-22: multi-instance same Hive protected', async (t) => {
   });
   assert.ok(reqA);
 
-  const confirmB = instanceB.confirmRequest(reqA.id, { by: 'human', token: reqA.token });
+  const confirmB = instanceB.confirmRequest(reqA.id, { by: 'human', token: reqA.token, human: HUMAN });
   assert.strictEqual(confirmB.ok, true);
 });
 
@@ -404,9 +406,9 @@ test('STATE-27: invalid state transition rejected', async (t) => {
     message: 'necesito que revises el estado', taskId: 'task-1', target: null, signals: []
   });
   assert.ok(req);
-  lapitaya.cancelRequest(req.id, 'human');
+  lapitaya.cancelRequest(req.id, 'human', HUMAN);
 
-  const tryConfirm = lapitaya.confirmRequest(req.id, { by: 'human', token: req.token });
+  const tryConfirm = lapitaya.confirmRequest(req.id, { by: 'human', token: req.token, human: HUMAN });
   assert.strictEqual(tryConfirm.ok, false);
   assert.strictEqual(tryConfirm.code, 'NOT_CONFIRMABLE');
 });
@@ -422,7 +424,7 @@ test('STATE-28: expired state cannot return to executable state', async (t) => {
     message: 'necesito que revises el estado', taskId: 'task-1', target: null, signals: []
   });
   nowTime += 24 * 60 * 60 * 1000 + 1;
-  const tryConfirm = lapitaya.confirmRequest(req.id, { by: 'human', token: req.token });
+  const tryConfirm = lapitaya.confirmRequest(req.id, { by: 'human', token: req.token, human: HUMAN });
   assert.strictEqual(tryConfirm.ok, false);
 });
 

@@ -11,6 +11,7 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { TRUSTED_HUMAN: HUMAN } = require('./fixtures/human.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
 const { floor, loadTs } = require('./fixtures/lapitaya-floor.cjs');
@@ -133,7 +134,7 @@ test('[INTENT-05] ACTION HIGH → HUMAN_APPROVAL_REQUIRED → Alicia explains �
   let pre = await f.pre('god', call.tool, call.input);
   assert.equal(pre.hookSpecificOutput.permissionDecision, 'deny');
   // Only the human decides — through the existing decide().
-  f.lapitaya.decide(approvalId, true, 'human');
+  f.lapitaya.decide(approvalId, true, 'human', HUMAN);
   pre = await f.pre('god', call.tool, call.input);
   assert.equal(f.server.lastPreDecision, 'APPROVED', 'one execution');
   pre = await f.pre('god', call.tool, call.input);

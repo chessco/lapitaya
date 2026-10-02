@@ -108,6 +108,24 @@ export function FactTimeline({ t, id, timeline, labelKey, labelVars }: {
   );
 }
 
+/** v0.15: the runtime's verdict on its own governance records. Read-only: no control, no repair, no decision. */
+export function GovernanceHealthBanner({ t, view }: { t: T; view: ObservabilityView }) {
+  const h = view.health;
+  if (!h || (h.status === 'HEALTHY' && h.recovery === 'HEALTHY' && !h.legacyUnverified)) return null;
+  const bad = h.status !== 'HEALTHY';
+  return (
+    <section data-field="governance-health" data-status={h.status} data-recovery={h.recovery} role={bad ? 'alert' : 'status'} aria-labelledby="alicia-governance-health" style={{ marginBottom: 8, padding: '6px 8px', background: bad ? 'var(--cth-cream-100)' : 'transparent', boxShadow: bad ? 'inset 0 0 0 2px var(--cth-ink-700)' : 'inset 0 0 0 1px var(--cth-ink-100)' }}>
+      <h3 id="alicia-governance-health" style={{ margin: '0 0 2px', fontFamily: 'var(--cth-font-display)', fontSize: 9, color: 'var(--cth-ink-700)' }}>
+        {t(`${NS}.healthTitle`)} · <code style={mono}>{h.status}</code>
+      </h3>
+      <div>{t(`${NS}.health.${h.status}`)}</div>
+      {h.recovery !== 'HEALTHY' && <div style={muted}>{t(`${NS}.recovery.${h.recovery}`)}</div>}
+      {h.codes.length > 0 && <div style={muted}>{t(`${NS}.healthCodes`)} <code style={mono}>{h.codes.join(' · ')}</code></div>}
+      {h.legacyUnverified && <div style={muted}>{t(`${NS}.legacyUnverified`)}</div>}
+    </section>
+  );
+}
+
 /** Recent relevant facts across the floor (blocks, confirmations, approvals, completion, execution). */
 export function GovernanceActivity({ t, view }: { t: T; view: ObservabilityView }) {
   return (

@@ -1,0 +1,39 @@
+✔ [AUTH-01] Valid trusted agent context accepted (4167.4858ms)
+✔ [AUTH-02] Missing agent context denied (3404.0968ms)
+✔ [AUTH-03] Invalid agent context denied (3571.3177ms)
+✔ [AUTH-04] Payload agent_id cannot override trusted identity (3333.7992ms)
+✔ [AUTH-05] Agent A cannot impersonate Agent B (4050.1302ms)
+✔ [AUTH-06] Folder name cannot establish identity (4295.5843ms)
+✔ [AUTH-07] Message from cannot establish identity (4925.2233ms)
+✔ [AUTH-08] Agent cannot self-declare human (3832.7462ms)
+✔ [AUTH-09] Human DECISION requires trusted human identity (3434.3884ms)
+✔ [AUTH-10] Fake human identity denied (3412.2456ms)
+✔ [AUTH-11] Human identity from renderer payload ignored (3083.3198ms)
+✔ [AUTH-12] Human identity from trusted v0.8 IPC accepted (3027.6973ms)
+✔ [AUTH-13] Builder cannot impersonate Auditor (3222.3829ms)
+✔ [AUTH-14] Auditor cannot impersonate Builder (5204.8157ms)
+✔ [AUTH-15] Agent cannot manufacture BUILD PASS (3306.1065ms)
+✔ [AUTH-16] Agent cannot manufacture TEST PASS (3877.7445ms)
+✔ [AUTH-17] Agent cannot manufacture AUDIT PASS (2832.0724ms)
+✔ [AUTH-18] Agent cannot manufacture DECISION PASS (2867.341ms)
+✔ [AUTH-19] Missing identity fails closed (3490.0283ms)
+✔ [AUTH-20] Identity mismatch fails closed (2745.1438ms)
+✔ [AUTH-21] Identity is preserved in evidence (2755.6417ms)
+✔ [AUTH-22] Decision owner remains v0.8 trusted identity (3324.8299ms)
+✔ [AUTH-23] Cross-window human identity remains correct (2609.3986ms)
+✔ [AUTH-24] Replay of authenticated context rejected (2306.1414ms)
+✔ [AUTH-25] Wrong task context rejected (2088.4076ms)
+✔ [AUTH-26] Wrong agent assignment rejected (3623.9483ms)
+✔ [AUTH-27] Tampered context rejected (2143.5731ms)
+✔ [AUTH-28] No secrets exposed (1.5875ms)
+✔ [AUTH-29] No raw credentials exposed (0.2965ms)
+✔ [AUTH-30] Real Electron human decision works (1825.7104ms)
+✔ [ADVERSARIAL-CHAIN] Forged CIMA chain fails closed and breaks the chain (1816.9735ms)
+ℹ tests 31
+ℹ suites 0
+ℹ pass 31
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 101233.3032

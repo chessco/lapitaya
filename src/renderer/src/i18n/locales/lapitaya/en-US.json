@@ -218,6 +218,22 @@
       "activityTitle": "GOVERNANCE ACTIVITY",
       "activityHint": "Facts recorded by the CIMA runtime. Alicia explains them; she does not decide them.",
       "activityEmpty": "No relevant governance facts yet.",
+      "healthTitle": "GOVERNANCE STATE",
+      "healthHint": "The runtime's own verdict about whether its records can be trusted. Alicia shows it; she cannot repair or change it.",
+      "health": {
+        "HEALTHY": "The governance records verify.",
+        "CORRUPTED": "The governance records are damaged. Governance is closed: nothing is authorized until an operator recovers it.",
+        "INCONSISTENT": "The governance state disagrees with its recorded events. Governance is closed until an operator resolves it.",
+        "UNAVAILABLE": "The runtime cannot verify its governance records right now. Governance is closed."
+      },
+      "recovery": {
+        "HEALTHY": "No recovery has been needed.",
+        "CORRUPTED": "Damage detected.",
+        "RECOVERY_REQUIRED": "Recovery by an operator is required. The damaged evidence is kept untouched.",
+        "RECOVERED": "An operator recovered the records and the result was verified."
+      },
+      "healthCodes": "Codes:",
+      "legacyUnverified": "Records written before v0.15 are trusted as found; their origin is not proven.",
       "unavailable": "The reason cannot be confirmed with the available evidence.",
       "notAvailable": "Not available",
       "evidence": "Evidence:",

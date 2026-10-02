@@ -13,6 +13,7 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { TRUSTED_HUMAN: HUMAN } = require('./fixtures/human.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
 const React = require('react');
@@ -47,7 +48,7 @@ function request(f, message = 'Quiero que revisemos este proyecto.', opts = {}) 
   assert.equal(r.outcome.type, 'REQUEST', message);
   return f.lapitaya.listRequests().find((p) => p.id === r.outcome.proposalId);
 }
-const confirm = (f, p) => f.lapitaya.confirmRequest(p.id, { by: 'human', token: p.token });
+const confirm = (f, p) => f.lapitaya.confirmRequest(p.id, { by: 'human', token: p.token, human: HUMAN });
 async function attempt(f, agentId, call) {
   const r = await f.pre(agentId, call.tool, call.input);
   return { denied: r?.hookSpecificOutput?.permissionDecision === 'deny', decision: f.server.lastPreDecision };
@@ -83,8 +84,8 @@ function renderPanel(snapshot, observability, lng = 'es-MX', acknowledged = []) 
 async function uiSnapshot(f) {
   const ui = C.createConfirmationController({
     requests: async () => f.lapitaya.listRequests(), approvals: async () => f.lapitaya.listApprovals(),
-    confirm: async (id, token) => f.lapitaya.confirmRequest(id, { by: 'human', token }),
-    cancel: async (id) => f.lapitaya.cancelRequest(id, 'human')
+    confirm: async (id, token) => f.lapitaya.confirmRequest(id, { by: 'human', token, human: HUMAN }),
+    cancel: async (id) => f.lapitaya.cancelRequest(id, 'human', HUMAN)
   });
   await ui.refresh();
   return ui;
@@ -131,7 +132,7 @@ test('[OBS-02] REQUEST_CONFIRMATION_REQUIRED → blocked, rule, runtime risk, "n
   const line = JSON.parse(lineFor(f, o.evidence.ref));
   assert.deepEqual([line.kind, line.decision, line.rule], ['governance', 'DENY', 'REQUEST_CONFIRMATION_REQUIRED']);
   // Once the human cancels, the same fact explains what it was: nothing executed.
-  f.lapitaya.cancelRequest(p.id, 'human');
+  f.lapitaya.cancelRequest(p.id, 'human', HUMAN);
   o = latestOf(project(f.lapitaya), 'REQUEST_CONFIRMATION_REQUIRED');
   assert.deepEqual([o.nextState, o.requiredHumanAction], ['NOT_EXECUTED', 'NONE']);
   assert.equal(O.explainObservation(o, 'es-MX').next, 'No se ejecutó ninguna herramienta.');
@@ -152,7 +153,7 @@ test('[OBS-04] STALE_PROPOSAL → correct explanation', async (t) => {
   const f = await floor(t);
   const s = f.lapitaya.openRequest({ intentId: 'int-stale', executor: 'god', requestedBy: 'human', source: 'alicia',
     message: 'borra la base de datos', taskId: null, target: null, signals: [] });
-  assert.equal(f.lapitaya.confirmRequest(s.id, { by: 'human', token: s.token }).code, 'STALE_PROPOSAL');
+  assert.equal(f.lapitaya.confirmRequest(s.id, { by: 'human', token: s.token, human: HUMAN }).code, 'STALE_PROPOSAL');
   const o = project(f.lapitaya).byProposal[s.id].latest;
   assert.deepEqual([o.category, o.rule, o.runtimeStatus, o.nextState], ['REQUEST_BLOCKED', 'STALE_PROPOSAL', 'BLOCKED', 'CLOSED']);
   assert.equal(O.explainObservation(o, 'es-MX').why, 'La propuesta ya no es válida; hay que volver a pedirla.');
@@ -161,7 +162,7 @@ test('[OBS-04] STALE_PROPOSAL → correct explanation', async (t) => {
 test('[OBS-05] TAMPERED → correct explanation', async (t) => {
   const f = await floor(t);
   const p = request(f);
-  assert.equal(f.lapitaya.confirmRequest(p.id, { by: 'human', token: 'f'.repeat(32) }).code, 'TAMPERED');
+  assert.equal(f.lapitaya.confirmRequest(p.id, { by: 'human', token: 'f'.repeat(32), human: HUMAN }).code, 'TAMPERED');
   const o = latestOf(project(f.lapitaya), 'REQUEST_CONFIRMATION_DENIED');
   assert.deepEqual([o.rule, o.agent, o.proposalId, o.nextState], ['TAMPERED', 'human', p.id, 'NOT_EXECUTED']);
   assert.equal(O.explainObservation(o, 'es-MX').why, 'La confirmación no coincide con la propuesta, así que se rechazó.');
@@ -199,7 +200,7 @@ test('[OBS-07] HUMAN_APPROVAL_REQUIRED → "not an approval", then approval → 
   assert.match(es.next, /Confirmar el REQUEST no aprobó esta acción HIGH\./);
   assert.doesNotMatch(JSON.stringify(es), /[Aa]probad[ao]\b|approved/);
   // The human approves separately; the agent retries; the harness records the run.
-  f.lapitaya.decide(apr.id, true, 'human');
+  f.lapitaya.decide(apr.id, true, 'human', HUMAN);
   assert.equal((await attempt(f, 'god', HIGH_CALL)).decision, 'APPROVED');
   await f.post('god', HIGH_CALL.tool, HIGH_CALL.input, { stdout: '', stderr: '', interrupted: false });
   v = project(f.lapitaya);
@@ -262,12 +263,13 @@ test('[OBS-11] no second ledger: Alicia persists nothing; the projection reads t
   for (let i = 0; i < 3; i++) project(f.lapitaya);
   const files = fs.readdirSync(path.join(f.hive.root(), 'lapitaya')).sort();
   // '.seal.key' (v0.14) is the RUNTIME's own approval-seal key — Alicia still persists nothing.
-  assert.deepEqual(files.filter((x) => !['approvals.json', 'cima-ledger.jsonl', 'proposals.json', 'traces.jsonl', '.seal.key'].includes(x)), [], `unexpected files: ${files}`);
+  assert.deepEqual(files.filter((x) => !['approvals.json', 'cima-ledger.jsonl', 'proposals.json', 'traces.jsonl', '.seal.key', 'ledger-head.json'].includes(x)), [], `unexpected files: ${files}`);
   const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : [e.name]));
   assert.equal(walk(f.hive.root()).filter((n) => /alicia|observ/i.test(n)).length, 0);
   const handler = code(read('src/main/index.ts'));
   const h = handler.slice(handler.indexOf("ipcMain.handle('lapitaya:observability'"), handler.indexOf("ipcMain.handle('lapitaya:ledger'"));
-  assert.match(h, /projectObservability\(\{\s*ledger: lapitaya\.ledger\(3000\),\s*traces: lapitaya\.recentTraces\(1000\),\s*approvals: lapitaya\.listApprovals\(\),\s*requests: lapitaya\.listRequests\(\)\s*\}/);
+  // v0.15: the projection reads ONE verified snapshot (verdict, ledger, traces, approvals, requests from a single lock hold)
+  assert.match(h, /governanceSnapshot\(\{ ledgerLimit: 3000, traceLimit: 1000 \}\)[\s\S]*projectObservability\(\{\s*ledger: snap\.ledger,\s*traces: snap\.traces,\s*approvals: snap\.approvals,\s*requests: snap\.requests,\s*health: snap\.health\s*\}/);
   assert.doesNotMatch(h, /append|write|confirmRequest|cancelRequest|decide|authorize/);
 });
 
@@ -495,7 +497,7 @@ test('[OBS-NEG-01] Alicia cannot fabricate PASS, DENY, HIGH, evidence, approval 
   assert.equal(f.lapitaya.listRequests().find((x) => x.id === p.id).status, 'PROPOSED');
   // Alicia's own outputs are not inputs of the projection.
   const params = read('src/shared/lapitaya/alicia/observability.ts').match(/export interface ObservabilitySources \{([\s\S]*?)\}/)[1];
-  assert.deepEqual([...params.matchAll(/^\s+(\w+)\??:/gm)].map((m) => m[1]), ['ledger', 'traces', 'approvals', 'requests']);
+  assert.deepEqual([...params.matchAll(/^\s+(\w+)\??:/gm)].map((m) => m[1]), ['health', 'ledger', 'traces', 'approvals', 'requests']);
   const notifications = f.companion.snapshot().notifications;
   const fromNotifications = O.projectObservability({ ledger: notifications, traces: notifications });
   assert.deepEqual([fromNotifications.recent.length, Object.keys(fromNotifications.byProposal).length], [0, 0], 'notifications/replies project to nothing');

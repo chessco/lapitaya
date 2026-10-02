@@ -218,6 +218,22 @@
       "activityTitle": "ACTIVIDAD DE GOBERNANZA",
       "activityHint": "Hechos registrados por el runtime de CIMA. Alicia los explica; no los decide.",
       "activityEmpty": "Todavía no hay hechos de gobernanza relevantes.",
+      "healthTitle": "ESTADO DE GOBERNANZA",
+      "healthHint": "El veredicto del propio runtime sobre si sus registros son confiables. Alicia lo muestra; no puede repararlo ni cambiarlo.",
+      "health": {
+        "HEALTHY": "Los registros de gobernanza se verifican.",
+        "CORRUPTED": "Los registros de gobernanza están dañados. La gobernanza está cerrada: nada se autoriza hasta que un operador la recupere.",
+        "INCONSISTENT": "El estado de gobernanza no coincide con sus eventos registrados. La gobernanza está cerrada hasta que un operador lo resuelva.",
+        "UNAVAILABLE": "El runtime no puede verificar ahora sus registros de gobernanza. La gobernanza está cerrada."
+      },
+      "recovery": {
+        "HEALTHY": "No hizo falta ninguna recuperación.",
+        "CORRUPTED": "Daño detectado.",
+        "RECOVERY_REQUIRED": "Se requiere la recuperación por un operador. La evidencia dañada se conserva intacta.",
+        "RECOVERED": "Un operador recuperó los registros y el resultado fue verificado."
+      },
+      "healthCodes": "Códigos:",
+      "legacyUnverified": "Los registros anteriores a v0.15 se aceptan tal como estaban; su origen no está demostrado.",
       "unavailable": "No se puede confirmar el motivo con la evidencia disponible.",
       "notAvailable": "No disponible",
       "evidence": "Evidencia:",

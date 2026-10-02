@@ -1,0 +1,82 @@
+{
+  "results": [
+    {
+      "id": "H0",
+      "desc": "the real app boots on a fresh healthy hive; the real renderer loads",
+      "pass": true,
+      "detail": "207"
+    },
+    {
+      "id": "H1",
+      "desc": "the real main process answers the observability channel with a HEALTHY governance verdict (v0.15 snapshot path)",
+      "pass": true,
+      "detail": "{\"status\":\"HEALTHY\",\"recovery\":\"HEALTHY\",\"codes\":[],\"headSequence\":0,\"legacyUnverified\":false}"
+    },
+    {
+      "id": "H2",
+      "desc": "the human can still send (v0.14 sender authenticity intact)",
+      "pass": true,
+      "detail": "true"
+    },
+    {
+      "id": "H3",
+      "desc": "a renderer still cannot send as an agent",
+      "pass": true,
+      "detail": "SENDER_NOT_PERMITTED — the renderer may only send as the human (not \"god\")"
+    },
+    {
+      "id": "H4",
+      "desc": "the ledger channel serves verified events without any keyed seal",
+      "pass": true,
+      "detail": "0"
+    },
+    {
+      "id": "H5",
+      "desc": "no renderer errors",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "id": "D1",
+      "desc": "the real app on a damaged ledger reports CORRUPTED and RECOVERY_REQUIRED to the renderer, with codes, and serves no facts",
+      "pass": true,
+      "detail": "{\"status\":\"CORRUPTED\",\"recovery\":\"RECOVERY_REQUIRED\",\"codes\":[\"BOUNDARY_MISMATCH\"],\"headSequence\":0,\"legacyUnverified\":true}"
+    },
+    {
+      "id": "D2",
+      "desc": "the ledger channel serves nothing",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "id": "D3",
+      "desc": "human channels decide nothing while the ledger is damaged",
+      "pass": true,
+      "detail": "{\"conf\":\"LEDGER_CORRUPTED\",\"dec\":null}"
+    },
+    {
+      "id": "D4",
+      "desc": "the renderer bridge has no recover/repair/quarantine capability",
+      "pass": true,
+      "detail": "[\"lapitayaDecide\",\"lapitayaRequests\",\"lapitayaConfirmRequest\",\"lapitayaCancelRequest\",\"lapitayaCompleteRequest\",\"lapitayaLedger\",\"lapitayaIdentity\",\"lapitayaObservability\",\"onLapitayaGovernance\"]"
+    },
+    {
+      "id": "D5",
+      "desc": "the damaged ledger was left exactly as found (no silent repair, nothing appended)",
+      "pass": true,
+      "detail": "\"\""
+    },
+    {
+      "id": "D6",
+      "desc": "the app itself keeps running (messaging is not governance): no crash",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "id": "D7",
+      "desc": "the main process logged no crash",
+      "pass": true,
+      "detail": "\"\""
+    }
+  ]
+}

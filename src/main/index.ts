@@ -4123,11 +4123,14 @@ ipcMain.handle('alicia:submit', (evt, message: unknown, opts: unknown) => {
 ipcMain.handle('lapitaya:observability', (_evt, opts: unknown) => {
   const o = (opts && typeof opts === 'object' ? opts : {}) as Record<string, unknown>;
   const recentLimit = typeof o.recentLimit === 'number' && o.recentLimit > 0 ? Math.min(o.recentLimit, 50) : 12;
+  // v0.15: ONE snapshot — the verdict, ledger, traces, approvals and requests are read in a single lock hold
+  const snap = lapitaya.governanceSnapshot({ ledgerLimit: 3000, traceLimit: 1000 });
   return projectObservability({
-    ledger: lapitaya.ledger(3000),
-    traces: lapitaya.recentTraces(1000),
-    approvals: lapitaya.listApprovals(),
-    requests: lapitaya.listRequests()
+    ledger: snap.ledger,
+    traces: snap.traces,
+    approvals: snap.approvals,
+    requests: snap.requests,
+    health: snap.health
   }, { recentLimit });
 });
 ipcMain.handle('lapitaya:ledger', (_evt, limit: unknown) =>

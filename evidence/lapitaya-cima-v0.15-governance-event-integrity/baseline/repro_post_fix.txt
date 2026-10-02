@@ -1,0 +1,11 @@
+R1 authorize after tail deletion                     ["DENY","LEDGER_CORRUPTED"]
+R2 authorize after middle deletion                   ["DENY","LEDGER_CORRUPTED"]
+R3 authorize after reorder                           ["DENY","LEDGER_CORRUPTED"]
+R4 completionGate on a text-forged DECISION PASS     [false,"DECISION_GATE: governance state file corrupted: cima-ledger."]
+R5 authorize with a fake HUMAN_APPROVED line present ["DENY","LEDGER_CORRUPTED"]
+R6 gate before / after the edit                      ["DENY:REQUEST_CONFIRMATION_REQUIRED","DENY:GOVERNANCE_STATE_INCONSISTENT"]
+R7 authorize with state-only approval                ["DENY","GOVERNANCE_STATE_INCONSISTENT"]
+R8 A.listApprovals / A.cimaRecords (disk has 1 / 1)  [1,1]
+R9 authorize on a truncated tail                     ["DENY","LEDGER_CORRUPTED"]
+R9 recovery API present?                             true
+R10                                                  v0.15: a hand-built repeated-line ledger is (correctly) corrupt; see ../performance/results.json for real chains

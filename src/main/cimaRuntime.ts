@@ -32,6 +32,12 @@ import {
   type SealedFields
 } from './authBinding';
 import { canonicalizePath, isInside, pathsOfInput, type AuthorizationSubject, type CanonicalPath } from '../shared/lapitaya/authSubject';
+import { GovernanceEventStore, classify } from './governanceStore';
+import { traceHashOf } from './ledgerChain';
+import { createHash, createHmac } from 'node:crypto';
+import { copyFileSync, writeFileSync } from 'node:fs';
+import { canonicalJson } from '../shared/lapitaya/authSubject';
+import { healthView, type GovernanceHealthView, type GovernanceVerification, type IntegrityFinding, type RecoveryState } from '../shared/lapitaya/governanceIntegrity';
 import type { ToolCallContext, ToolRisk } from '../shared/lapitaya/toolRisk';
 import { DEFAULT_AUTONOMY_STAGE, type AutonomyStage } from '../shared/lapitaya/autonomy';
 import { classifyToolCall, foreignAgentDirsInCommand, isShellMutation } from '../shared/lapitaya/toolRisk';
@@ -48,6 +54,40 @@ import {
   requestGate, requestScope, classifyIntentMessage,
   type IntentRecord, type IntentTarget, type RequestProposal, type RequestStatus
 } from '../shared/lapitaya/intent';
+
+/** One entry of governance-recovery.json: what was detected, and — only after an operator acted — what was done. */
+export interface RecoveryRecord {
+  id: string;
+  ts: number;
+  /** RECOVERY_REQUIRED: damage detected, an operator must act. RECOVERED: a recovery was performed and verified. */
+  state: 'RECOVERY_REQUIRED' | 'RECOVERED';
+  reason: string;
+  /** Distinct defect signature (so a persistent defect is recorded once, not on every call). */
+  signature: string;
+  action: string;
+  findings: Array<{ code: string; file: string; detail: string; sequence?: number; line?: number }>;
+  operator?: { name: string; os: string; host: string };
+  scope?: string;
+  quarantined?: Array<{ file: string; sha256: string; bytes: number }>;
+  recoveredThroughSequence?: number;
+  anchorSequenceBefore?: number;
+  corruptedFromLine?: number;
+  previousEntryHash: string;
+  entryHash: string;
+  mac: string;
+}
+
+export interface RecoveryResult {
+  ok: boolean;
+  /** NOTHING_TO_RECOVER | NOT_A_LEDGER_PROBLEM | LOCK_UNAVAILABLE | KEY_UNAVAILABLE | NOT_CONFIRMED | OPERATOR_REQUIRED | STILL_UNHEALTHY */
+  reason?: string;
+  actions: string[];
+  quarantined: Array<{ file: string; sha256: string; bytes: number }>;
+  verification: GovernanceVerification | null;
+}
+
+const RECOVERY_DOMAIN = 'lapitaya/recovery-entry/v1\n';
+const RECOVERY_GENESIS = createHash('sha256').update('lapitaya/recovery-genesis/v1').digest('hex');
 
 /** One transition of a REQUEST proposal, as it lands in the ledger (v0.4.2). */
 export interface RequestTransitionRecord {
@@ -152,19 +192,36 @@ function outputHead(response: unknown): string {
 }
 
 export class CimaRuntimeService {
-  private traces: ExecutionTrace[] = [];
-  private records: CimaRecord[] = [];
+  /** v0.15: everything derived from the ledger/traces lives in the event store; these are its views. */
+  private readonly store: GovernanceEventStore;
+  private get traces(): ExecutionTrace[] { return this.store.traces as unknown as ExecutionTrace[]; }
+  private get records(): CimaRecord[] { return this.store.records as unknown as CimaRecord[]; }
+  private get assignments(): CimaAssignment[] { return this.store.assignments as unknown as CimaAssignment[]; }
+  private get actionFingerprints(): Set<string> { return this.store.actionFingerprints; }
   private approvals: Approval[] = [];
-  private assignments: CimaAssignment[] = [];
+  /** The verdict of the last verification, and whether detection has been recorded. */
+  private health: GovernanceVerification | null = null;
+  private recovering = false;
   /** v0.4.2: REQUEST proposals (proposals.json) and the exact calls of governed
    *  ACTION intents, which keep their own CIMA path while a request is open. */
   private proposals: RequestProposal[] = [];
-  private actionFingerprints = new Set<string>();
   private loadedFor: string | null = null;
   private seq = 0;
   private corruptedFiles = new Set<string>();
 
-  constructor(private readonly deps: CimaRuntimeDeps) {}
+  constructor(private readonly deps: CimaRuntimeDeps) {
+    this.store = new GovernanceEventStore({
+      dir: () => this.dir(),
+      key: () => this.sealKey(),
+      now: () => this.now(),
+      locked: () => this.lockDepth > 0,
+      writeJson: (file, value) => this.writeState(file, value),
+      snapshot: () => ({
+        proposals: this.proposals.map((p) => ({ id: p.id, status: p.status, intentId: p.intentId, scope: p.scope })),
+        approvals: this.approvals.map((a) => ({ id: a.id, status: a.status, agentId: a.agentId }))
+      })
+    });
+  }
 
   private now(): number { return this.deps.now ? this.deps.now() : Date.now(); }
 
@@ -203,7 +260,10 @@ export class CimaRuntimeService {
         acquired = true;
         break;
       } catch (e) {
-        if ((e as NodeJS.ErrnoException)?.code !== 'EEXIST') { why = `cannot create the governance lock: ${String(e).slice(0, 100)}`; break; }
+        // EEXIST: someone holds it. EPERM/EACCES/EBUSY: on Windows the lock file of a process that has just released it is
+        // still being deleted — the same situation, so wait. Anything else (no such directory, …) cannot be waited out.
+        const code = (e as NodeJS.ErrnoException)?.code;
+        if (code !== 'EEXIST' && code !== 'EPERM' && code !== 'EACCES' && code !== 'EBUSY') { why = `cannot create the governance lock: ${String(e).slice(0, 100)}`; break; }
       }
       let stale = false;
       try { stale = Date.now() - statSync(lockPath).mtimeMs > STALE_LOCK_MS; } catch { stale = false; }
@@ -225,77 +285,130 @@ export class CimaRuntimeService {
     }
   }
 
-  /** (Re)load persisted state when the hive root changes. */
+  /**
+   * (Re)load persisted state — once per lock hold. v0.15: the ledger is verified (incrementally after the first full
+   * verification of this process), the head anchor and the traces are checked, proposals.json / approvals.json are
+   * read, and the state is reconciled against the events. Anything that does not verify blocks governance (fail closed).
+   */
   private load(): void {
     const dir = this.dir();
     if (dir === this.loadedFor) return;
     this.loadedFor = dir;
-    this.traces = [];
-    this.records = [];
     this.approvals = [];
-    this.assignments = [];
     this.proposals = [];
-    this.actionFingerprints = new Set();
     this.corruptedFiles.clear();
     if (!dir) return;
 
-    const readLines = (f: string): unknown[] => {
-      const p = join(dir, f);
+    const findings: IntegrityFinding[] = [];
+    const readJsonArray = (file: string): unknown[] | null => {
+      const p = join(dir, file);
       if (!existsSync(p)) return [];
       try {
-        const raw = readFileSync(p, 'utf8');
-        const lines = raw.split('\n').filter(Boolean);
-        const parsed: unknown[] = [];
-        for (const line of lines) {
-          try {
-            parsed.push(JSON.parse(line));
-          } catch {
-            this.corruptedFiles.add(f);
-          }
-        }
-        return parsed;
-      } catch {
-        this.corruptedFiles.add(f);
-        return [];
-      }
+        const v = JSON.parse(readFileSync(p, 'utf8'));
+        if (Array.isArray(v)) return v;
+      } catch { /* reported below */ }
+      findings.push({ code: 'STATE_FILE_CORRUPTED', severity: 'error', file, detail: `${file} is not a JSON array` });
+      return null;
     };
+    const a = readJsonArray('approvals.json');
+    if (a) this.approvals = a as Approval[];
+    const r = readJsonArray('proposals.json');
+    if (r) this.proposals = r as RequestProposal[];
 
-    this.traces = (readLines('traces.jsonl') as ExecutionTrace[]).slice(-MAX_TRACES_IN_MEMORY);
-    const ledger = readLines('cima-ledger.jsonl') as LedgerEntry[];
-    this.records = ledger.filter((e): e is CimaRecord => e?.kind === 'cima');
-    this.assignments = ledger.filter((e): e is CimaAssignment => e?.kind === 'cima-assignment');
-    for (const e of ledger) {
-      if (e?.kind === 'intent' && e.type === 'ACTION' && e.status === 'GOVERNED' && e.callFingerprint && e.target?.tool) this.actionFingerprints.add(e.callFingerprint);
+    const fresh = this.store.refresh();
+    findings.push(...fresh.findings);
+    this.recoveryLog();
+    if (this.recoveryDamage) findings.push({ code: 'STATE_FILE_CORRUPTED', severity: 'error', file: 'governance-recovery.json', detail: this.recoveryDamage });
+    if (!findings.some((f) => f.severity === 'error' && f.file !== 'proposals.json' && f.file !== 'approvals.json')) {
+      // reconcile only a state we could read, against a ledger we could trust
+      this.store.reconcile(r ? this.proposals : [], a ? this.approvals : [], findings);
     }
-    const approvalsPath = join(dir, 'approvals.json');
-    if (existsSync(approvalsPath)) {
-      try {
-        const a = JSON.parse(readFileSync(approvalsPath, 'utf8'));
-        if (Array.isArray(a)) {
-          this.approvals = a;
-        } else {
-          this.corruptedFiles.add('approvals.json');
-        }
-      } catch {
-        this.corruptedFiles.add('approvals.json');
-      }
+    const v = this.store.verification(findings, fresh.mode, this.recoveryStateFor(findings));
+    this.health = v;
+    for (const f of findings) {
+      if (f.severity !== 'error') continue;
+      if (f.file === 'proposals.json' || f.file === 'approvals.json' || f.file === 'traces.jsonl' || f.file === 'governance-recovery.json') this.corruptedFiles.add(f.file);
+      else if (f.file === 'cima-ledger.jsonl' || f.file === 'ledger-head.json') this.corruptedFiles.add('cima-ledger.jsonl');
+      else this.corruptedFiles.add('governance-state');
     }
-    const proposalsPath = join(dir, 'proposals.json');
-    if (existsSync(proposalsPath)) {
-      try {
-        const r = JSON.parse(readFileSync(proposalsPath, 'utf8'));
-        if (Array.isArray(r)) {
-          this.proposals = r;
-        } else {
-          this.corruptedFiles.add('proposals.json');
-        }
-      } catch {
-        this.corruptedFiles.add('proposals.json');
-      }
+    if (v.status === 'HEALTHY') {
+      this.noteRecovered();
+      this.vetApprovals();
+      this.checkExpirations();
+    } else {
+      this.noteDetection(v);
     }
+  }
 
-    this.vetApprovals();
-    this.checkExpirations();
+  // ─── integrity verdict (v0.15) ───────────────────────────────────────────
+
+  /** The rule a refused call is denied with, from what verification found. */
+  private blockCode(): string {
+    const st = this.health?.status ?? 'CORRUPTED';
+    const ledgerBad = this.corruptedFiles.has('cima-ledger.jsonl');
+    if (st === 'CORRUPTED') return ledgerBad ? 'LEDGER_CORRUPTED' : 'GOVERNANCE_STATE_CORRUPT';
+    if (st === 'INCONSISTENT') return 'GOVERNANCE_STATE_INCONSISTENT';
+    if (st === 'UNAVAILABLE') return 'GOVERNANCE_STATE_UNAVAILABLE';
+    return 'GOVERNANCE_STATE_CORRUPT';
+  }
+
+  /** Human-readable cause of a refusal (codes and places only; never record contents). */
+  private blockDetail(): string {
+    const errs = (this.health?.findings ?? []).filter((f) => f.severity === 'error');
+    const where = Array.from(this.corruptedFiles).join(', ');
+    const why = errs.slice(0, 3).map((f) => `${f.code}${f.line ? ` line ${f.line}` : ''}${f.sequence ? ` seq ${f.sequence}` : ''}`).join('; ');
+    const st = this.health?.status ?? 'CORRUPTED';
+    return `governance state ${st === 'CORRUPTED' ? 'file corrupted' : st.toLowerCase()}: ${where}${why ? ` [${why}]` : ''}`;
+  }
+
+  /** Where the recovery lifecycle stands, given what verification just found and what the recovery log says. */
+  private recoveryStateFor(findings: readonly IntegrityFinding[]): RecoveryState {
+    const bad = classify(findings) !== 'HEALTHY';
+    const last = this.recoveryLog().at(-1);
+    if (bad) return last?.state === 'RECOVERY_REQUIRED' ? 'RECOVERY_REQUIRED' : 'CORRUPTED';
+    return last?.state === 'RECOVERED' ? 'RECOVERED' : 'HEALTHY';
+  }
+
+  /** Detection is recorded once per distinct defect, in the recovery log (never in the ledger: it holds governance facts). */
+  private noteDetection(v: GovernanceVerification): void {
+    if (this.lockDepth === 0 || this.recovering) return;
+    const sig = v.findings.filter((f) => f.severity === 'error').slice(0, 3).map((f) => `${f.code}:${f.sequence ?? ''}:${f.line ?? ''}`).join('|');
+    const last = this.recoveryLog().at(-1);
+    if (last?.state === 'RECOVERY_REQUIRED' && last.signature === sig) { v.recovery = 'RECOVERY_REQUIRED'; return; }
+    if (this.appendRecoveryRecord({ state: 'RECOVERY_REQUIRED', reason: v.status, signature: sig, findings: v.findings.filter((f) => f.severity === 'error').slice(0, 10).map((f) => ({ code: f.code, file: f.file, detail: f.detail, sequence: f.sequence, line: f.line })), action: 'DETECTED' })) v.recovery = 'RECOVERY_REQUIRED';
+  }
+
+  /** Verification passes although the log says recovery is required: the damage was repaired outside the runtime. */
+  private noteRecovered(): void {
+    if (this.lockDepth === 0 || this.recovering) return;
+    const last = this.recoveryLog().at(-1);
+    if (last?.state !== 'RECOVERY_REQUIRED') return;
+    if (this.appendRecoveryRecord({ state: 'RECOVERED', reason: 'HEALTHY', signature: '', findings: [], action: 'VERIFIED_AFTER_EXTERNAL_REPAIR' }) && this.health) this.health.recovery = 'RECOVERED';
+  }
+
+  /** The verdict of the last verification (read-only; the UI shows it, never computes it). */
+  integrityView(): GovernanceHealthView | null {
+    return this.withLock(() => ({ status: 'UNAVAILABLE', recovery: 'CORRUPTED', codes: ['LOCK_UNAVAILABLE'], headSequence: 0, legacyUnverified: false } as GovernanceHealthView), () => {
+      this.load();
+      return this.health ? healthView(this.health) : null;
+    });
+  }
+
+  /**
+   * Verify the governance state now: ledger chain, head anchor, traces and the reconciliation of proposals/approvals with
+   * the events. `full` forces a re-verification of the whole chain from genesis. Never repairs anything.
+   */
+  verifyGovernanceState(opts: { full?: boolean } = {}): GovernanceVerification {
+    const unavailable = (why: string): GovernanceVerification => ({
+      status: 'UNAVAILABLE', recovery: 'CORRUPTED', findings: [{ code: 'LOCK_UNAVAILABLE', severity: 'error', file: '.governance.lock', detail: why }],
+      ledger: { events: 0, headSequence: 0, headHash: '', legacyEvents: 0, legacyUnverified: false }, checkedAt: this.now(), mode: 'full'
+    });
+    return this.withLock(unavailable, () => {
+      if (opts.full) { this.store.reset(); }
+      this.loadedFor = null;
+      this.load();
+      return this.health ?? unavailable('no hive');
+    });
   }
 
   /**
@@ -505,8 +618,21 @@ export class CimaRuntimeService {
     return null;
   }
 
-  /** Append one JSON line with fsync durability. Returns false when write fails. */
+  /**
+   * Append one record. The LEDGER only ever grows by verified events: a record is stamped (eventId, sequence, previous
+   * hash, hash) and chained under the lock, and nothing is appended to a ledger that does not verify. Other files
+   * (traces.jsonl) are plain JSON lines.
+   */
   private append(file: string, entry: unknown): boolean {
+    if (file === 'cima-ledger.jsonl') {
+      if (this.lockDepth === 0) return false;
+      if (this.corruptedFiles.size > 0 && !this.recovering) return false;
+      return this.store.append(entry);
+    }
+    return this.appendPlain(file, entry);
+  }
+
+  private appendPlain(file: string, entry: unknown): boolean {
     const dir = this.dir();
     if (!dir) return false;
     try {
@@ -591,7 +717,7 @@ export class CimaRuntimeService {
         return deny('GOVERNANCE_STATE_UNAVAILABLE', `cannot load governance state: ${String(e).slice(0, 120)}`);
       }
       if (this.corruptedFiles.size > 0) {
-        return deny('GOVERNANCE_STATE_CORRUPT', `governance state file corrupted: ${Array.from(this.corruptedFiles).join(', ')}`);
+        return deny(this.blockCode(), `${this.blockDetail()}`);
       }
       // v0.14 sender authenticity: an agent sends only through its own outbox.
       const spoof = this.senderSpoof(agentId, tool, input, root);
@@ -764,7 +890,7 @@ export class CimaRuntimeService {
         return denyAuthorization('GOVERNANCE_STATE_UNAVAILABLE', `cannot load governance state: ${String(e).slice(0, 120)}`, executorId, tool, input);
       }
       if (this.corruptedFiles.size > 0) {
-        return denyAuthorization('GOVERNANCE_STATE_CORRUPT', `governance state file corrupted: ${Array.from(this.corruptedFiles).join(', ')}`, executorId, tool, input);
+        return denyAuthorization(this.blockCode(), `${this.blockDetail()}`, executorId, tool, input);
       }
       let auth = authorizeToolCall({
         agentId: executorId, tool, input,
@@ -801,9 +927,9 @@ export class CimaRuntimeService {
     return this.withLock(() => false, () => {
       this.load();
       if (this.corruptedFiles.size > 0) return false;
+      // A governed ACTION's exact call keeps its own CIMA path while a REQUEST is open: the store adds its
+      // callFingerprint to the exemption set when (and only when) it APPLIES the recorded event.
       const ok = this.append('cima-ledger.jsonl', rec);
-      // A governed ACTION's exact call keeps its own CIMA path while a REQUEST is open.
-      if (ok && rec.type === 'ACTION' && rec.status === 'GOVERNED' && rec.callFingerprint && rec.target?.tool) this.actionFingerprints.add(rec.callFingerprint);
       this.deps.onEvent?.({ type: 'intent', data: rec });
       return ok;
     });
@@ -900,8 +1026,10 @@ export class CimaRuntimeService {
   }
 
   listRequests(): RequestProposal[] {
-    this.load();
-    return this.proposals.map((p) => ({ ...p })).sort((a, b) => b.createdAt - a.createdAt);
+    return this.withLock(() => [] as RequestProposal[], () => {
+      this.load();
+      return this.proposals.map((p) => ({ ...p })).sort((a, b) => b.createdAt - a.createdAt);
+    });
   }
 
   /**
@@ -915,10 +1043,10 @@ export class CimaRuntimeService {
   confirmRequest(proposalId: unknown, ctx: { by?: unknown; token?: unknown; intentId?: unknown; human?: unknown } = {}): RequestConfirmation {
     return this.withLock((why) => ({ ok: false, code: 'LOCK_UNAVAILABLE', reason: `${why}; nothing was confirmed` }), () => {
       this.load();
-      if (this.corruptedFiles.size > 0) return { ok: false, code: 'GOVERNANCE_STATE_CORRUPT', reason: `governance state file corrupted: ${Array.from(this.corruptedFiles).join(', ')}` };
+      if (this.corruptedFiles.size > 0) return { ok: false, code: this.blockCode(), reason: `${this.blockDetail()}` };
       const p = typeof proposalId === 'string' ? this.proposals.find((x) => x.id === proposalId) : undefined;
-      // v0.8: the trusted human context (resolved in main, never by the renderer). Absent = legacy
-      // callers; PRESENT but malformed = refused, never silently downgraded to anonymous.
+      // v0.8/v0.15: the trusted human context (resolved in main, never by the renderer). A human decision is a
+      // verified event with its owner: without a well-formed context there is no decision.
       const hc = ctx.human === undefined ? null : parseHumanContext(ctx.human);
       const owner = hc ? ownerOf(hc) : null;
       const deny = (code: string, reason: string): RequestConfirmation => {
@@ -926,12 +1054,15 @@ export class CimaRuntimeService {
         return { ok: false, code, reason };
       };
       if (ctx.by !== 'human') return deny('NOT_AUTHORIZED', 'only the human confirms a request');
-      if (ctx.human !== undefined && !hc) return deny('NOT_AUTHORIZED', 'invalid human context');
+      if (!hc) return deny('NOT_AUTHORIZED', ctx.human === undefined ? 'a trusted human context is required' : 'invalid human context');
       if (typeof proposalId !== 'string' || !proposalId) return deny('INVALID_CONFIRMATION', 'missing proposal id');
       if (!p) return deny('UNKNOWN_PROPOSAL', `no proposal ${proposalId.slice(0, 80)}`);
       if (ctx.intentId !== undefined && ctx.intentId !== p.intentId) return deny('WRONG_CONTEXT', `proposal ${p.id} belongs to intent ${p.intentId}`);
       if (p.executor !== this.deps.godId()) return deny('WRONG_CONTEXT', `proposal ${p.id} was made for orchestrator ${p.executor}`);
       if (p.status !== 'PROPOSED') return deny('NOT_CONFIRMABLE', `proposal ${p.id} is ${p.status}`);
+      // the events are authoritative: a proposal whose events say it already left PROPOSED is not confirmable
+      const evStatus = this.store.proposalEvents.get(p.id)?.status;
+      if (evStatus !== undefined && evStatus !== 'PROPOSED' && evStatus !== 'CONFIRMED') return deny('NOT_CONFIRMABLE', `proposal ${p.id} is ${evStatus} by its events`);
       if (typeof ctx.token !== 'string' || !ctx.token) return deny('INVALID_CONFIRMATION', 'missing confirmation token');
       if (!p.token || ctx.token !== p.token) return deny('TAMPERED', 'the confirmation token does not match this proposal');
       if (/^[0-9a-f]{8}$/.test(String(p.fingerprint))) return deny('STALE_PROPOSAL', `proposal ${p.id} carries a legacy FNV-32 fingerprint; submit the request again`);
@@ -951,15 +1082,17 @@ export class CimaRuntimeService {
       const token = p.token;
       p.status = 'CONFIRMED'; p.confirmedAt = this.now(); p.confirmedBy = 'human'; p.token = null;
       if (owner) p.confirmedOwner = owner;
-      if (!this.saveProposals()) {
-        p.status = 'PROPOSED'; p.confirmedAt = undefined; p.confirmedBy = undefined; p.confirmedOwner = undefined; p.token = token;
-        return deny('LEDGER_UNAVAILABLE', 'the confirmation could not be persisted');
-      }
+      // v0.15: EVENT FIRST. The verified event is the fact; the state follows it. A crash in between leaves the
+      // state BEHIND its events (reported, never granting anything), never ahead of them.
+      const revert = (): void => { p.status = 'PROPOSED'; p.confirmedAt = undefined; p.confirmedBy = undefined; p.confirmedOwner = undefined; p.token = token; };
       if (!this.transition(p, 'CONFIRMED', 'human', { human: owner })) {
-        // v0.14: a confirmation the ledger cannot evidence is not a confirmation.
-        p.status = 'PROPOSED'; p.confirmedAt = undefined; p.confirmedBy = undefined; p.confirmedOwner = undefined; p.token = token;
-        this.saveProposals();
+        // a confirmation the ledger cannot evidence is not a confirmation.
+        revert();
         return deny('LEDGER_UNAVAILABLE', 'the confirmation could not be recorded in the ledger');
+      }
+      if (!this.saveProposals()) {
+        revert();
+        return deny('LEDGER_UNAVAILABLE', 'the confirmation was recorded but could not be persisted; confirm again');
       }
       return { ok: true, proposal: { ...p } };
     });
@@ -978,25 +1111,28 @@ export class CimaRuntimeService {
   private closeRequest(proposalId: unknown, by: unknown, from: RequestStatus[], to: 'CANCELLED' | 'COMPLETED', human?: unknown): RequestConfirmation {
     return this.withLock((why) => ({ ok: false, code: 'LOCK_UNAVAILABLE', reason: `${why}; nothing was changed` }), () => {
       this.load();
-      if (this.corruptedFiles.size > 0) return { ok: false, code: 'GOVERNANCE_STATE_CORRUPT', reason: `governance state file corrupted: ${Array.from(this.corruptedFiles).join(', ')}` };
+      if (this.corruptedFiles.size > 0) return { ok: false, code: this.blockCode(), reason: `${this.blockDetail()}` };
       if (by !== 'human') return { ok: false, code: 'NOT_AUTHORIZED', reason: 'only the human closes a request' };
       const hc = human === undefined ? null : parseHumanContext(human);
-      if (human !== undefined && !hc) return { ok: false, code: 'NOT_AUTHORIZED', reason: 'invalid human context' };
-      const owner = hc ? ownerOf(hc) : null;
+      if (!hc) return { ok: false, code: 'NOT_AUTHORIZED', reason: human === undefined ? 'a trusted human context is required' : 'invalid human context' };
+      const owner = ownerOf(hc);
       const p = typeof proposalId === 'string' ? this.proposals.find((x) => x.id === proposalId) : undefined;
       if (!p) return { ok: false, code: 'UNKNOWN_PROPOSAL', reason: 'no such proposal' };
       if (!from.includes(p.status)) return { ok: false, code: 'NOT_CONFIRMABLE', reason: `proposal ${p.id} is ${p.status}` };
+      const evStatus = this.store.proposalEvents.get(p.id)?.status;
+      if (evStatus !== undefined && !from.includes(evStatus as RequestStatus)) return { ok: false, code: 'NOT_CONFIRMABLE', reason: `proposal ${p.id} is ${evStatus} by its events` };
       const prev = { status: p.status, token: p.token };
       p.status = to; p.closedAt = this.now(); p.closedBy = 'human'; p.token = null;
       if (owner) p.closedOwner = owner;
-      if (!this.saveProposals()) {
-        p.status = prev.status; p.token = prev.token; p.closedAt = undefined; p.closedBy = undefined; p.closedOwner = undefined;
-        return { ok: false, code: 'LEDGER_UNAVAILABLE', reason: 'the change could not be persisted' };
-      }
+      // v0.15: event first, then state (see confirmRequest)
+      const undoClose = (): void => { p.status = prev.status; p.token = prev.token; p.closedAt = undefined; p.closedBy = undefined; p.closedOwner = undefined; };
       if (!this.transition(p, to, 'human', { human: owner })) {
-        p.status = prev.status; p.token = prev.token; p.closedAt = undefined; p.closedBy = undefined; p.closedOwner = undefined;
-        this.saveProposals();
+        undoClose();
         return { ok: false, code: 'LEDGER_UNAVAILABLE', reason: 'the change could not be recorded in the ledger' };
+      }
+      if (!this.saveProposals()) {
+        undoClose();
+        return { ok: false, code: 'LEDGER_UNAVAILABLE', reason: 'the change was recorded but could not be persisted; try again' };
       }
       return { ok: true, proposal: { ...p } };
     });
@@ -1049,11 +1185,13 @@ export class CimaRuntimeService {
 
   /** May this task be marked done? (Runtime-recorded DECISION PASS only.) */
   completionGate(taskId: string): CompletionVerdict {
-    this.load();
-    if (this.corruptedFiles.size > 0) {
-      return { governed: false, allowed: false, reason: `DECISION_GATE: governance state file corrupted (${Array.from(this.corruptedFiles).join(', ')})` };
-    }
-    return completionVerdict(this.cimaState(), taskId);
+    return this.withLock((why): CompletionVerdict => ({ governed: false, allowed: false, reason: `DECISION_GATE: governance state unavailable (${why})` }), () => {
+      this.load();
+      if (this.corruptedFiles.size > 0) {
+        return { governed: false, allowed: false, reason: `DECISION_GATE: ${this.blockDetail()}` };
+      }
+      return completionVerdict(this.cimaState(), taskId);
+    });
   }
 
   /**
@@ -1062,9 +1200,13 @@ export class CimaRuntimeService {
    * cannot be judged and is reported as a violation for `*`.
    */
   blockedCompletions(beforeText: string | null, afterText: string): Array<{ taskId: string; reason: string }> {
+    return this.withLock((why) => [{ taskId: '*', reason: `DECISION_GATE: governance state unavailable (${why})` }], () => this.blockedCompletionsLocked(beforeText, afterText));
+  }
+
+  private blockedCompletionsLocked(beforeText: string | null, afterText: string): Array<{ taskId: string; reason: string }> {
     this.load();
     if (this.corruptedFiles.size > 0) {
-      return [{ taskId: '*', reason: `DECISION_GATE: governance state file corrupted (${Array.from(this.corruptedFiles).join(', ')})` }];
+      return [{ taskId: '*', reason: `DECISION_GATE: ${this.blockDetail()}` }];
     }
     let done: string[];
     try { done = newlyCompleted(beforeText, afterText); } catch (e) {
@@ -1079,6 +1221,10 @@ export class CimaRuntimeService {
 
   /** Log a completion the runtime blocked (from any path: tool, hive API, reconciler). */
   recordBlockedCompletion(taskId: string, reason: string, via: string, agentId = 'runtime'): void {
+    this.withLock(() => undefined, () => { this.load(); this.recordBlockedCompletionLocked(taskId, reason, via, agentId); });
+  }
+
+  private recordBlockedCompletionLocked(taskId: string, reason: string, via: string, agentId: string): void {
     this.append('cima-ledger.jsonl', {
       kind: 'governance', ts: this.now(), agentId, taskId, phase: 'DECISION' as CimaPhase, tool: via,
       action: `complete task ${taskId}`, category: 'governance-tamper', risk: 'HIGH', mode: 'HUMAN_APPROVAL',
@@ -1136,18 +1282,23 @@ export class CimaRuntimeService {
   // ─── human approval ──────────────────────────────────────────────────────
 
   listApprovals(): Approval[] {
-    this.load();
-    return this.approvals.map((a) => this.publicApproval(a)).sort((a, b) => b.createdAt - a.createdAt);
+    return this.withLock(() => [] as Approval[], () => {
+      this.load();
+      return this.approvals.map((a) => this.publicApproval(a)).sort((a, b) => b.createdAt - a.createdAt);
+    });
   }
 
-  /** The human's explicit decision. Only a PENDING, unexpired, trusted request can be decided. */
+  /**
+   * The human's explicit decision. Only a PENDING, unexpired, trusted approval can be decided, and only with a
+   * well-formed trusted human context (the owner is part of the verified HUMAN_APPROVED / HUMAN_REJECTED event).
+   * v0.15: the event is written FIRST; the approval state follows it.
+   */
   decide(id: string, approve: boolean, by = 'human', human?: unknown): Approval | null {
     return this.withLock(() => null, () => {
       this.load();
       if (this.corruptedFiles.size > 0) return null;
-      // v0.8: a human context that is present but malformed decides nothing.
       const hc = human === undefined ? null : parseHumanContext(human);
-      if (human !== undefined && !hc) return null;
+      if (!hc) return null; // a human decision without a trusted human is not a decision
       const a = this.approvals.find((x) => x.id === id);
       if (!a || a.status !== 'pending') return null;
       if (!this.approvalTrusted(a)) { this.retire(a, 'invalid', 'SEAL_MISMATCH'); return null; }
@@ -1160,17 +1311,16 @@ export class CimaRuntimeService {
       a.status = approve ? 'approved' : 'rejected';
       a.decidedAt = this.now();
       a.decidedBy = by;
-      if (hc) a.decidedOwner = ownerOf(hc);
-      if (!this.seal(a) || !this.saveApprovals()) return undo();
-      // v0.14: a human decision the ledger cannot evidence is not a decision.
+      a.decidedOwner = ownerOf(hc);
       const recorded = this.append('cima-ledger.jsonl', {
         kind: 'governance', ts: a.decidedAt, agentId: a.agentId, taskId: null, phase: null,
         tool: a.tool, action: a.summary, category: a.category, risk: a.risk, mode: 'HUMAN_APPROVAL',
         decision: approve ? 'HUMAN_APPROVED' : 'HUMAN_REJECTED', rule: 'human', approvalId: a.id,
         ...(a.binding ? { authFingerprint: a.binding.fingerprint } : {}),
-        ...(a.decidedOwner ? { human: a.decidedOwner } : {})
+        human: a.decidedOwner
       } satisfies GovernanceRecord);
-      if (!recorded) { undo(); this.saveApprovals(); return null; }
+      if (!recorded) return undo();
+      if (!this.seal(a) || !this.saveApprovals()) return undo(); // the event stands; the state is behind it and grants nothing
       const pub = this.publicApproval(a);
       this.deps.onEvent?.({ type: 'approval-decided', data: pub });
       return pub;
@@ -1208,10 +1358,20 @@ export class CimaRuntimeService {
       trace.callFingerprint = this.callFingerprintFor(agentId, tool, input);
       // Coordination writes inside the hive are not "modifying code".
       if (kind === 'write' && cls.category === 'hive-coordination') trace.kind = 'tool';
-      // v0.14: evidence that is not durable is not evidence — only a recorded trace can back a claim.
-      if (!this.append('traces.jsonl', trace)) return null;
-      this.traces.push(trace);
-      if (this.traces.length > MAX_TRACES_IN_MEMORY) this.traces.splice(0, this.traces.length - MAX_TRACES_IN_MEMORY);
+      // v0.15: evidence is the trace line AND the chained event that commits to its hash. A trace that is not
+      // committed is not evidence. The event says what ran and how it ended (TOOL_EXECUTED ≠ TOOL_FAILED) and
+      // which authorization decision it relates to — it never says the call was authorized or that it succeeded
+      // unless the facts do.
+      if (!this.appendPlain('traces.jsonl', trace)) return null;
+      const decisionEvent = trace.callFingerprint ? this.store.decisionByCall.get(`${agentId}\u0000${trace.callFingerprint}`) ?? null : null;
+      const committed = this.append('cima-ledger.jsonl', {
+        kind: 'execution', eventType: trace.ok ? 'TOOL_EXECUTED' : 'TOOL_FAILED', ts: trace.ts,
+        traceId: trace.id, traceHash: traceHashOf(trace), agentId, tool, ok: trace.ok,
+        ...(trace.callFingerprint ? { callFingerprint: trace.callFingerprint } : {}),
+        authorizationEventId: decisionEvent
+      });
+      if (!committed) return null;
+      this.store.acceptTrace(trace as unknown as Record<string, unknown>);
       // v0.6 observability: that a governed call ran — no command, path or output.
       this.deps.onEvent?.({ type: 'trace', data: { id: trace.id, ts: trace.ts, agentId, tool, ok: trace.ok } });
       return trace;
@@ -1220,8 +1380,10 @@ export class CimaRuntimeService {
 
   /** The most recent execution traces (read-only; PostToolUse evidence). */
   recentTraces(limit = 500): ExecutionTrace[] {
-    this.load();
-    return this.traces.slice(-limit).map((t) => ({ ...t }));
+    return this.withLock(() => [] as ExecutionTrace[], () => {
+      this.load();
+      return this.traces.slice(-limit).map((t) => ({ ...t }));
+    });
   }
 
   // ─── 3. CIMA submissions from the router ─────────────────────────────────
@@ -1231,11 +1393,10 @@ export class CimaRuntimeService {
   handle(from: string, to: string, cima: unknown, messageId?: string, humanCtx?: DecisionOwner | null): CimaRecord | CimaAssignment {
     return this.withLock((why) => stateUnavailableRecord(cima, from, this.now(), why, messageId), () => {
       this.load();
-      if (this.corruptedFiles.size > 0) return stateUnavailableRecord(cima, from, this.now(), `governance state file corrupted: ${Array.from(this.corruptedFiles).join(', ')}`, messageId);
+      if (this.corruptedFiles.size > 0) return stateUnavailableRecord(cima, from, this.now(), `${this.blockDetail()}`, messageId);
       const assignment = parseAssignment(cima, from, to, this.now(), messageId);
       if (assignment) {
         if (!this.append('cima-ledger.jsonl', assignment)) return stateUnavailableRecord(cima, from, this.now(), 'the ledger could not record the assignment', messageId);
-        this.assignments.push(assignment);
         this.deps.onEvent?.({ type: 'cima-record', data: assignment });
         return assignment;
       }
@@ -1246,28 +1407,229 @@ export class CimaRuntimeService {
   submit(agentId: string, cima: unknown, messageId?: string, humanCtx?: DecisionOwner | null): CimaRecord {
     return this.withLock((why) => stateUnavailableRecord(cima, agentId, this.now(), why, messageId), () => {
       this.load();
-      if (this.corruptedFiles.size > 0) return stateUnavailableRecord(cima, agentId, this.now(), `governance state file corrupted: ${Array.from(this.corruptedFiles).join(', ')}`, messageId);
+      if (this.corruptedFiles.size > 0) return stateUnavailableRecord(cima, agentId, this.now(), `${this.blockDetail()}`, messageId);
       const rec = evaluateSubmission(this.cimaState(), cima, agentId, this.now(), messageId, humanCtx);
       // v0.14: a verdict the ledger cannot record is never returned as recorded.
       if (!this.append('cima-ledger.jsonl', rec)) return stateUnavailableRecord(cima, agentId, this.now(), 'the ledger could not record the verdict', messageId);
-      this.records.push(rec);
       this.deps.onEvent?.({ type: 'cima-record', data: rec });
       return rec;
     });
   }
 
-  ledger(limit = 200): LedgerEntry[] {
+  // ─── recovery log + explicit recovery (v0.15) ─────────────────────────────
+
+  private recoveryDamage: string | null = null;
+
+  /** The verified entries of governance-recovery.json (a hash-chained, HMAC'd append-only list). */
+  private recoveryLog(): RecoveryRecord[] {
+    this.recoveryDamage = null;
     const dir = this.dir();
     if (!dir) return [];
-    const p = join(dir, 'cima-ledger.jsonl');
+    const p = join(dir, 'governance-recovery.json');
     if (!existsSync(p)) return [];
-    return readFileSync(p, 'utf8').split('\n').filter(Boolean).slice(-limit).flatMap((l) => {
-      try { return [JSON.parse(l) as LedgerEntry]; } catch { return []; }
+    let rows: RecoveryRecord[];
+    try { const v = JSON.parse(readFileSync(p, 'utf8')); if (!Array.isArray(v)) throw new Error('not an array'); rows = v as RecoveryRecord[]; } catch {
+      this.recoveryDamage = 'governance-recovery.json is not a JSON array'; return [];
+    }
+    const key = this.sealKey();
+    let prev = RECOVERY_GENESIS;
+    const ok: RecoveryRecord[] = [];
+    for (const r of rows) {
+      const { entryHash, mac, ...rest } = r as RecoveryRecord & Record<string, unknown>;
+      let good = r && typeof r === 'object' && r.previousEntryHash === prev && typeof entryHash === 'string';
+      if (good) { try { good = createHash('sha256').update(RECOVERY_DOMAIN + canonicalJson(rest)).digest('hex') === entryHash; } catch { good = false; } }
+      if (good && key) good = createHmac('sha256', key).update(String(entryHash)).digest('hex') === mac;
+      if (!good) { this.recoveryDamage = `entry ${ok.length + 1} of governance-recovery.json does not verify`; return ok; }
+      ok.push(r); prev = String(entryHash);
+    }
+    return ok;
+  }
+
+  private appendRecoveryRecord(partial: Omit<RecoveryRecord, 'id' | 'ts' | 'previousEntryHash' | 'entryHash' | 'mac'>): boolean {
+    const key = this.sealKey();
+    if (!key || this.recoveryDamage) return false;
+    const log = this.recoveryLog();
+    if (this.recoveryDamage) return false;
+    const prev = log.length ? log[log.length - 1].entryHash : RECOVERY_GENESIS;
+    const body = { id: this.nextId('rec'), ts: this.now(), ...partial, previousEntryHash: prev };
+    // undefined members are dropped by canonicalJson, and JSON.stringify drops them on disk: they hash identically
+    const entryHash = createHash('sha256').update(RECOVERY_DOMAIN + canonicalJson(body)).digest('hex');
+    const mac = createHmac('sha256', key).update(entryHash).digest('hex');
+    return this.writeState('governance-recovery.json', [...log, { ...body, entryHash, mac }]);
+  }
+
+  /** The recovery log, for the operator and the UI (read-only; an unverifiable log is reported, never trusted). */
+  recoveryHistory(): RecoveryRecord[] {
+    return this.withLock(() => [] as RecoveryRecord[], () => this.recoveryLog().map((r) => ({ ...r })));
+  }
+
+  /**
+   * EXPLICIT, OPERATOR-DRIVEN recovery. It is deliberately not reachable from the renderer, an agent, the companion layer or any
+   * message: it is a method of the runtime for the operator tooling (scripts/lapitaya-recover.cjs) run with the app
+   * stopped. It never invents a governance fact:
+   *
+   *   ledger  — the damaged ledger is kept whole as cima-ledger.quarantine-*.jsonl (evidence, never edited); the new
+   *             ledger is the VERIFIED PREFIX, byte for byte, followed by one LEDGER_RECOVERED event naming the
+   *             quarantine, its SHA-256, the first bad line and the operator. Events at and after the first defect are
+   *             not replayed: what only they established is simply no longer established.
+   *   state   — unreadable proposals.json/approvals.json are quarantined; state that claims more than the events
+   *             justify is brought DOWN to the events (proposal → BLOCKED/event status, approval → invalid), each with
+   *             an event. Nothing is ever promoted to APPROVED / CONFIRMED / PASS / EXECUTED.
+   */
+  recover(opts: { scope: 'ledger' | 'state' | 'all'; operator: { name: string; os?: string; host?: string }; confirm: string }): RecoveryResult {
+    const fail = (reason: string, verification: GovernanceVerification | null = null): RecoveryResult => ({ ok: false, reason, actions: [], quarantined: [], verification });
+    const name = typeof opts?.operator?.name === 'string' ? opts.operator.name.trim().slice(0, 80) : '';
+    if (!name) return fail('OPERATOR_REQUIRED');
+    if (opts.confirm !== 'RECOVER') return fail('NOT_CONFIRMED');
+    const operator = { name, os: String(opts.operator.os ?? '').slice(0, 80), host: String(opts.operator.host ?? '').slice(0, 80) };
+    return this.withLock((why) => fail('LOCK_UNAVAILABLE: ' + why), () => {
+      const dir = this.dir();
+      if (!dir) return fail('NO_HIVE');
+      if (!this.sealKey()) return fail('KEY_UNAVAILABLE');
+      const actions: string[] = [];
+      let detail: Partial<RecoveryRecord> = {};
+      const quarantined: Array<{ file: string; sha256: string; bytes: number }> = [];
+      const stamp = this.now();
+      const quarantine = (file: string, tag: string): void => {
+        const from = join(dir, file);
+        const bytes = readFileSync(from);
+        const sha = createHash('sha256').update(bytes).digest('hex');
+        const to = `${file.replace(/\.jsonl?$/, '')}.quarantine-${stamp}-${sha.slice(0, 8)}${file.endsWith('.jsonl') ? '.jsonl' : '.json'}`;
+        writeFileSync(join(dir, to), bytes, { flag: 'wx' });
+        quarantined.push({ file: to, sha256: sha, bytes: bytes.length });
+        actions.push(`${tag}: ${file} → ${to}`);
+      };
+      const reload = (full: boolean): GovernanceVerification => { if (full) this.store.reset(); this.loadedFor = null; this.load(); return this.health!; };
+
+      this.recovering = true;
+      try {
+        let v = reload(true);
+        if (v.status === 'HEALTHY') return fail('NOTHING_TO_RECOVER', v);
+        const ledgerBad = v.findings.some((f) => f.severity === 'error' && (f.file === 'cima-ledger.jsonl' || f.file === 'ledger-head.json'));
+        const stateBad = v.findings.some((f) => f.severity === 'error' && !(f.file === 'cima-ledger.jsonl' || f.file === 'ledger-head.json'));
+        if (opts.scope === 'ledger' && !ledgerBad) return fail('NOT_A_LEDGER_PROBLEM', v);
+        const before = v.findings.filter((f) => f.severity === 'error').slice(0, 10).map((f) => ({ code: f.code, file: f.file, detail: f.detail, sequence: f.sequence, line: f.line }));
+
+        // ── ledger ──
+        if (ledgerBad && (opts.scope === 'ledger' || opts.scope === 'all')) {
+          const lp = join(dir, 'cima-ledger.jsonl');
+          const chain = this.store.chain;
+          const anchorSeq = (() => { try { return (JSON.parse(readFileSync(join(dir, 'ledger-head.json'), 'utf8')) as { sequence?: number }).sequence; } catch { return undefined; } })();
+          const bytes = existsSync(lp) ? readFileSync(lp) : Buffer.alloc(0);
+          const validEnd = chain.error ? Math.max(0, chain.errorOffset) : chain.offset;
+          const through = chain.sequence;
+          if (existsSync(lp)) quarantine('cima-ledger.jsonl', 'ledger quarantined');
+          const tmp = join(dir, `cima-ledger.jsonl.recover.${stamp}`);
+          writeFileSync(tmp, bytes.subarray(0, validEnd));
+          renameSync(tmp, lp);
+          actions.push(`ledger rebuilt from the verified prefix (${validEnd} bytes, through sequence ${through})`);
+          reload(true);
+          const recorded = this.append('cima-ledger.jsonl', {
+            kind: 'ledger', eventType: 'LEDGER_RECOVERED', ts: stamp, scope: opts.scope,
+            reasonCodes: before.map((f) => f.code), quarantineFile: quarantined.at(-1)?.file ?? null, quarantineSha256: quarantined.at(-1)?.sha256 ?? null,
+            quarantineBytes: quarantined.at(-1)?.bytes ?? 0, corruptedFromLine: chain.error?.line ?? null, corruptedFromByte: chain.error ? chain.errorOffset : null,
+            recoveredThroughSequence: through, anchorSequenceBefore: anchorSeq ?? null, operator,
+            note: 'events at and after the first defect were quarantined, not replayed; no governance fact was created'
+          });
+          if (!recorded) return { ok: false, reason: 'STILL_UNHEALTHY', actions, quarantined, verification: reload(false) };
+          actions.push('LEDGER_RECOVERED event appended and the head re-anchored');
+          detail = { recoveredThroughSequence: through, anchorSequenceBefore: anchorSeq, corruptedFromLine: chain.error?.line };
+          v = reload(true);
+        }
+
+        // ── state ──
+        if ((stateBad || this.health!.status !== 'HEALTHY') && (opts.scope === 'state' || opts.scope === 'all')) {
+          v = reload(false);
+          for (const file of ['proposals.json', 'approvals.json']) {
+            if (v.findings.some((f) => f.severity === 'error' && f.file === file && f.code === 'STATE_FILE_CORRUPTED') && existsSync(join(dir, file))) {
+              quarantine(file, 'state file quarantined');
+              this.append('cima-ledger.jsonl', { kind: 'ledger', eventType: 'STATE_FILE_QUARANTINED', ts: stamp, file, operator, note: 'the file was kept as evidence; governance continues with an empty state for it' });
+              renameSync(join(dir, file), join(dir, `${file}.removed.${stamp}`));
+              actions.push(`${file} removed from service (empty state)`);
+            }
+          }
+          v = reload(false);
+          // state that claims more than the events justify is brought DOWN to the events
+          for (const f of v.findings.filter((x) => x.severity === 'error')) {
+            const m = /(?:proposal|approval) (\S+) /.exec(f.detail);
+            const id = m?.[1];
+            if (!id) continue;
+            if (f.code === 'PROPOSAL_MISSING') {
+              const ev = this.store.proposalEvents.get(id);
+              if (ev) { this.append('cima-ledger.jsonl', { kind: 'request', ts: stamp, proposalId: id, intentId: ev.intentId ?? '', transition: 'BLOCKED', status: 'BLOCKED', by: 'runtime', scope: ev.scope === 'MEDIUM' ? 'MEDIUM' : 'LOW', code: 'RECOVERY', reason: 'the proposal was missing from proposals.json; blocked, never promoted' }); actions.push(`proposal ${id} blocked (state lost)`); }
+            } else if (f.code === 'PROPOSAL_UNEVIDENCED' || f.code === 'PROPOSAL_STATE_MISMATCH') {
+              const p = this.proposals.find((x) => x.id === id);
+              const ev = this.store.proposalEvents.get(id);
+              if (p) {
+                p.status = (ev && ev.status !== 'CONFIRMED' ? ev.status : 'BLOCKED') as RequestStatus; p.token = null; p.closedBy = 'runtime';
+                if (!ev) this.proposals.splice(this.proposals.indexOf(p), 1);
+                actions.push(`proposal ${id} brought down to ${ev ? p.status : 'removed (no events)'}`);
+              }
+            } else if (f.code === 'APPROVAL_UNEVIDENCED' || f.code === 'APPROVAL_STATE_MISMATCH') {
+              const a = this.approvals.find((x) => x.id === id);
+              if (a) {
+                a.status = 'invalid'; a.invalidReason = 'RECOVERY_UNEVIDENCED';
+                this.append('cima-ledger.jsonl', { kind: 'governance', ts: stamp, agentId: a.agentId, taskId: null, phase: null, tool: a.tool, action: `approval ${a.id} retired (RECOVERY_UNEVIDENCED)`, category: 'governance-tamper', risk: 'HIGH', mode: 'HUMAN_APPROVAL', decision: 'DENY', rule: 'APPROVAL_INVALID', approvalId: a.id });
+                actions.push(`approval ${id} retired (not evidenced by any event)`);
+              }
+            }
+          }
+          this.saveProposals(); this.saveApprovals();
+          v = reload(false);
+        }
+
+        v = this.health ?? v;
+        this.appendRecoveryRecord({
+          state: v.status === 'HEALTHY' ? 'RECOVERED' : 'RECOVERY_REQUIRED', reason: v.status === 'HEALTHY' ? 'HEALTHY' : v.status, signature: '',
+          action: v.status === 'HEALTHY' ? 'RECOVERED_AND_VERIFIED' : 'RECOVERY_INCOMPLETE', findings: v.findings.filter((f) => f.severity === 'error').slice(0, 10).map((f) => ({ code: f.code, file: f.file, detail: f.detail })),
+          operator, scope: opts.scope, quarantined: [...quarantined], ...detail
+        });
+        v = reload(false);
+        return { ok: v.status === 'HEALTHY', ...(v.status === 'HEALTHY' ? {} : { reason: 'STILL_UNHEALTHY' }), actions, quarantined, verification: v };
+      } finally { this.recovering = false; }
+    });
+  }
+
+  /**
+   * ONE consistent read of everything a view is built from: the verdict, the ledger tail, the traces, the approvals
+   * and the proposals — all from a single lock hold, so a writer can never be half-visible (v0.15 snapshot consistency).
+   * Nothing is served from a state that does not verify.
+   */
+  governanceSnapshot(opts: { ledgerLimit?: number; traceLimit?: number } = {}): {
+    health: GovernanceHealthView | null; ledger: LedgerEntry[]; traces: ExecutionTrace[]; approvals: Approval[]; requests: RequestProposal[];
+  } {
+    return this.withLock(() => ({ health: null, ledger: [], traces: [], approvals: [], requests: [] }), () => {
+      this.load();
+      const health = this.health ? healthView(this.health) : null;
+      if (this.corruptedFiles.size > 0) return { health, ledger: [], traces: [], approvals: [], requests: [] };
+      return {
+        health,
+        ledger: this.publicEvents(this.store.recentEvents.slice(-(opts.ledgerLimit ?? 200))),
+        traces: this.traces.slice(-(opts.traceLimit ?? 500)).map((t) => ({ ...t })),
+        approvals: this.approvals.map((a) => this.publicApproval(a)).sort((a, b) => b.createdAt - a.createdAt),
+        requests: this.proposals.map((p) => ({ ...p })).sort((a, b) => b.createdAt - a.createdAt)
+      };
+    });
+  }
+
+  /** What leaves the runtime: the event as recorded, without its keyed seal (a MAC is not a secret, but it is the runtime's). */
+  private publicEvents(events: Array<Record<string, unknown>>): LedgerEntry[] {
+    return events.map((e) => { const { eventMac: _m, ...rest } = e; return rest; }) as unknown as LedgerEntry[];
+  }
+
+  /** The most recent verified ledger records (legacy and v0.15 events), from one verified snapshot. [] when it cannot be trusted. */
+  ledger(limit = 200): LedgerEntry[] {
+    return this.withLock(() => [] as LedgerEntry[], () => {
+      this.load();
+      if (this.corruptedFiles.size > 0) return [];
+      return this.publicEvents(this.store.recentEvents.slice(-limit));
     });
   }
 
   cimaRecords(taskId?: string): CimaRecord[] {
-    this.load();
-    return taskId ? this.records.filter((r) => r.taskId === taskId) : this.records.slice();
+    return this.withLock(() => [] as CimaRecord[], () => {
+      this.load();
+      return taskId ? this.records.filter((r) => r.taskId === taskId) : this.records.slice();
+    });
   }
 }

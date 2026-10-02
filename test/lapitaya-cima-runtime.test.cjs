@@ -9,6 +9,7 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { TRUSTED_HUMAN: HUMAN } = require('./fixtures/human.cjs');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -151,7 +152,7 @@ test('explicit approval lets the IDENTICAL call run exactly once', async (t) => 
   await f.pre('el-beni-1', 'Bash', call);
   const [pending] = f.lapitaya.listApprovals();
   // A different command is not covered by the approval.
-  f.lapitaya.decide(pending.id, true);
+  f.lapitaya.decide(pending.id, true, 'human', HUMAN);
   assert.equal(f.denied(await f.pre('el-beni-1', 'Bash', { command: 'node scripts/migrate.cjs --drop-all-tables --yes' })), true);
   // The approved call runs once …
   assert.equal(f.denied(await f.pre('el-beni-1', 'Bash', call)), false);
@@ -168,10 +169,10 @@ test('another agent cannot use someone else\'s approval; rejection keeps it bloc
   const call = { command: 'git push origin lapitaya/x' };
   await f.pre('el-beni-1', 'Bash', call);
   const [a] = f.lapitaya.listApprovals();
-  f.lapitaya.decide(a.id, false);
+  f.lapitaya.decide(a.id, false, 'human', HUMAN);
   assert.equal(f.denied(await f.pre('el-beni-1', 'Bash', call)), true);
   assert.equal(f.denied(await f.pre('margarito-1', 'Bash', call)), true);
-  assert.equal(f.lapitaya.decide(a.id, true), null, 'a decided request cannot be re-decided');
+  assert.equal(f.lapitaya.decide(a.id, true, 'human', HUMAN), null, 'a decided request cannot be re-decided');
 });
 
 test('an agent cannot switch its own guard off (governance-tamper is HIGH)', async (t) => {

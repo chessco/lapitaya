@@ -17,6 +17,7 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { TRUSTED_HUMAN: HUMAN } = require('./fixtures/human.cjs');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -204,7 +205,7 @@ test('[FC-13] approved HIGH runs exactly once, then requires approval again', as
   const call = { command: 'git push origin lapitaya/v0.3' };
   assert.equal(f.denied(await f.pre('el-beni-1', 'Bash', call)), true);
   const [pending] = f.lapitaya.listApprovals();
-  f.lapitaya.decide(pending.id, true);
+  f.lapitaya.decide(pending.id, true, 'human', HUMAN);
   assert.equal(f.denied(await f.pre('el-beni-1', 'Bash', call)), false);
   assert.equal(f.lapitaya.listApprovals().find(a => a.id === pending.id).status, 'consumed');
   assert.equal(f.denied(await f.pre('el-beni-1', 'Bash', call)), true);
@@ -445,7 +446,7 @@ test('[RG-05] HIGH approval regression: deny->approve->one execution->deny again
   const call = { command:'node scripts/migrate.cjs --drop-all-tables' };
   assert.equal(f.denied(await f.pre('el-beni-1', 'Bash', call)), true);
   const [pending] = f.lapitaya.listApprovals();
-  f.lapitaya.decide(pending.id, true);
+  f.lapitaya.decide(pending.id, true, 'human', HUMAN);
   assert.equal(f.denied(await f.pre('el-beni-1', 'Bash', call)), false);
   assert.equal(f.denied(await f.pre('el-beni-1', 'Bash', call)), true);
 });

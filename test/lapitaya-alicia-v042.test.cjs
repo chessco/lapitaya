@@ -11,6 +11,7 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { TRUSTED_HUMAN: HUMAN } = require('./fixtures/human.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
 const { floor, loadTs } = require('./fixtures/lapitaya-floor.cjs');
@@ -34,7 +35,7 @@ function request(f, message = 'Quiero que revisemos este proyecto.', opts = {}) 
   return f.lapitaya.listRequests().find((p) => p.id === r.outcome.proposalId);
 }
 /** The human confirms (the IPC handler's exact call). */
-const confirm = (f, p, token = p.token) => f.lapitaya.confirmRequest(p.id, { by: 'human', token });
+const confirm = (f, p, token = p.token) => f.lapitaya.confirmRequest(p.id, { by: 'human', token, human: HUMAN });
 async function attempt(f, agentId, call) {
   const r = await f.pre(agentId, call.tool, call.input);
   return {
@@ -114,7 +115,7 @@ test('[REQ-06] REQUEST + confirmation + HIGH → existing HUMAN_APPROVAL flow; c
   assert.deepEqual([a.denied, a.decision], [true, 'HUMAN_APPROVAL_REQUIRED'], 'no automatic execution');
   const [approval] = f.lapitaya.listApprovals();
   assert.equal(approval.agentId, 'god');
-  f.lapitaya.decide(approval.id, true, 'human');
+  f.lapitaya.decide(approval.id, true, 'human', HUMAN);
   a = await attempt(f, 'god', HIGH_CALL);
   assert.deepEqual([a.denied, a.decision], [false, 'APPROVED'], 'runs once with the separate HIGH approval');
   a = await attempt(f, 'god', HIGH_CALL);
@@ -130,7 +131,7 @@ test('[REQ-07] confirmation replay: one confirmation → one transition; it can 
   assert.deepEqual([again.ok, again.code], [false, 'NOT_CONFIRMABLE']);
   assert.equal((await attempt(f, 'god', TEST_CALL)).denied, false);
   // The human closes it; a NEW request starts gated again, whatever came before.
-  assert.equal(f.lapitaya.completeRequest(p1.id, 'human').ok, true);
+  assert.equal(f.lapitaya.completeRequest(p1.id, 'human', HUMAN).ok, true);
   const p2 = request(f, 'Quiero que analicemos el módulo de pagos.');
   assert.equal((await attempt(f, 'god', TEST_CALL)).denied, true, 'second execution attempt is BLOCKED');
   const reused = confirm(f, p2, token1);
@@ -242,14 +243,14 @@ test('[REQ-NEG] only the human confirms; metadata never authorizes; malformed co
   const f = await floor(t);
   await f.hive.ensureAgent({ id: 'codex-1', name: 'Codex Worker', provider: 'codex', cwd: f.home });
   const p = request(f, 'Quiero que revisemos el proyecto', { suggestedRisk: 'LOW' });
-  const deny = (ctx, id = p.id) => { const r = f.lapitaya.confirmRequest(id, ctx); assert.equal(r.ok, false); return r.code; };
+  const deny = (ctx, id = p.id) => { const r = f.lapitaya.confirmRequest(id, { human: HUMAN, ...ctx }); assert.equal(r.ok, false); return r.code; };
   // Authority
   for (const by of ['alicia', 'god', 'el-inge', 'el-beni-1', 'margarito-1', 'jose-juan-1', 'el-tutu-1', 'codex-1', 'codex', 'Human', undefined]) {
     assert.equal(deny({ by, token: p.token }), 'NOT_AUTHORIZED', String(by));
   }
   // Malformed / tampered / wrong context
   assert.equal(deny({ by: 'human', token: p.token }, ''), 'INVALID_CONFIRMATION', 'missing proposalId');
-  assert.equal(f.lapitaya.confirmRequest(null, { by: 'human', token: p.token }).code, 'INVALID_CONFIRMATION', 'null proposalId');
+  assert.equal(f.lapitaya.confirmRequest(null, { by: 'human', token: p.token, human: HUMAN }).code, 'INVALID_CONFIRMATION', 'null proposalId');
   assert.equal(deny({ by: 'human', token: p.token }, 'req-does-not-exist'), 'UNKNOWN_PROPOSAL');
   assert.equal(deny({ by: 'human', token: p.token, intentId: 'int-someone-else' }), 'WRONG_CONTEXT');
   assert.equal(deny({ by: 'human' }), 'INVALID_CONFIRMATION', 'missing token');
@@ -258,7 +259,7 @@ test('[REQ-NEG] only the human confirms; metadata never authorizes; malformed co
   assert.equal((await attempt(f, 'god', TEST_CALL)).denied, true, 'REQUEST alone cannot execute');
   // Cancelled and superseded proposals are not confirmable.
   const c = request(f, 'Quiero que analicemos el login', { taskId: 'T-X' });
-  assert.equal(f.lapitaya.cancelRequest(c.id, 'human').ok, true);
+  assert.equal(f.lapitaya.cancelRequest(c.id, 'human', HUMAN).ok, true);
   assert.equal(deny({ by: 'human', token: c.token }, c.id), 'NOT_CONFIRMABLE', 'cancelled');
   const s1 = request(f, 'Quiero que analicemos el checkout', { taskId: 'T-Y' });
   request(f, 'Quiero que analicemos el checkout otra vez', { taskId: 'T-Y' });
@@ -280,7 +281,7 @@ test('[REQ-NEG-TAMPER] a proposal edited on disk is refused; re-validation block
   list.find((x) => x.id === p.id).scope = 'MEDIUM';             // widen the scope behind the runtime's back
   fs.writeFileSync(file, JSON.stringify(list));
   const fresh = new CimaRuntimeService({ hiveRoot: () => f.hive.root(), godId: () => 'god' });
-  const r = fresh.confirmRequest(p.id, { by: 'human', token: p.token });
+  const r = fresh.confirmRequest(p.id, { by: 'human', token: p.token, human: HUMAN });
   assert.deepEqual([r.ok, r.code], [false, 'TAMPERED']);
   // Re-validation: a proposal whose (untampered) words no longer read as a
   // REQUEST under today's rules is refused and closed, not confirmed. Opened
@@ -288,7 +289,7 @@ test('[REQ-NEG-TAMPER] a proposal edited on disk is refused; re-validation block
   const s = fresh.openRequest({ intentId: 'int-stale', executor: 'god', requestedBy: 'human', source: 'alicia',
     message: 'borra la base de datos', taskId: null, target: null, signals: [] });
   assert.equal(I.classifyIntentMessage(s.message).type, 'ACTION');
-  const st = fresh.confirmRequest(s.id, { by: 'human', token: s.token });
+  const st = fresh.confirmRequest(s.id, { by: 'human', token: s.token, human: HUMAN });
   assert.deepEqual([st.ok, st.code], [false, 'STALE_PROPOSAL']);
   assert.equal(fresh.listRequests().find((x) => x.id === s.id).status, 'BLOCKED');
 });
@@ -351,7 +352,7 @@ test('[REQ-EVENTS] proposal transitions ride the EXISTING runtime stream; Alicia
   const f = await floor(t);
   const p = request(f);
   confirm(f, p);
-  f.lapitaya.completeRequest(p.id, 'human');
+  f.lapitaya.completeRequest(p.id, 'human', HUMAN);
   const types = f.runtimeEvents.filter((e) => e.type === 'request').map((e) => e.data.transition);
   assert.deepEqual(types, ['PROPOSED', 'REVALIDATED', 'CONFIRMED', 'COMPLETED']);
   const n = f.companion.snapshot({ locales: { notificationLocale: 'es-MX' } }).notifications;

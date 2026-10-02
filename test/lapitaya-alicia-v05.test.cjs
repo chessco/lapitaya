@@ -16,6 +16,7 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { TRUSTED_HUMAN: HUMAN } = require('./fixtures/human.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
 const React = require('react');
@@ -45,8 +46,8 @@ function ipcPort(runtime) {
   const port = {
     requests: async () => { calls.push(['requests']); return runtime.listRequests(); },
     approvals: async () => { calls.push(['approvals']); return runtime.listApprovals(); },
-    confirm: async (id, token) => { calls.push(['confirm', id, token]); return runtime.confirmRequest(id, { by: 'human', token }); },
-    cancel: async (id) => { calls.push(['cancel', id]); return runtime.cancelRequest(id, 'human'); }
+    confirm: async (id, token) => { calls.push(['confirm', id, token]); return runtime.confirmRequest(id, { by: 'human', token, human: HUMAN }); },
+    cancel: async (id) => { calls.push(['cancel', id]); return runtime.cancelRequest(id, 'human', HUMAN); }
   };
   return { port, calls, decisions: () => calls.filter(([k]) => k === 'confirm' || k === 'cancel') };
 }
@@ -234,7 +235,7 @@ test('[UI-06] a successful cancellation updates the state; the runtime processes
   assert.equal(button(c, 'cancel'), null);
   // A cancelled proposal cannot be confirmed afterwards, by the UI or the runtime.
   assert.equal(await ui.confirm(id), null);
-  assert.equal(f.lapitaya.confirmRequest(id, { by: 'human', token: 'x' }).code, 'NOT_CONFIRMABLE');
+  assert.equal(f.lapitaya.confirmRequest(id, { by: 'human', token: 'x', human: HUMAN }).code, 'NOT_CONFIRMABLE');
 });
 
 test('[UI-07] double-click / double-submit sends ONE confirmation; buttons disabled while in flight', async (t) => {
@@ -287,7 +288,7 @@ test('[UI-08] stale / changed-elsewhere / replaced proposals show the runtime st
   const other = f.companion.submit('Quiero que revisemos el módulo de pagos.').outcome.proposalId;
   const stale = C.createConfirmationController(spy.port);
   await stale.refresh();
-  f.lapitaya.confirmRequest(other, { by: 'human', token: f.lapitaya.listRequests().find((p) => p.id === other).token });
+  f.lapitaya.confirmRequest(other, { by: 'human', token: f.lapitaya.listRequests().find((p) => p.id === other).token, human: HUMAN });
   const r2 = await stale.confirm(other);
   assert.deepEqual([r2.ok, r2.code], [false, 'NOT_CONFIRMABLE']);
   v = stale.getSnapshot().views.find((x) => x.id === other);
@@ -296,7 +297,7 @@ test('[UI-08] stale / changed-elsewhere / replaced proposals show the runtime st
   // Cancelled elsewhere: the UI shows CANCELLED on its next refresh.
   const third = f.companion.submit('Quiero que analicemos el reporte.').outcome.proposalId;
   await stale.refresh();
-  f.lapitaya.cancelRequest(third, 'human');
+  f.lapitaya.cancelRequest(third, 'human', HUMAN);
   await stale.refresh();
   assert.equal(stale.getSnapshot().views.find((x) => x.id === third).uiState, 'CANCELLED');
   // Replaced: a newer REQUEST for the same task supersedes the older one.

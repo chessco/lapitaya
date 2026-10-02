@@ -19,6 +19,18 @@
  */
 import { aliciaText, explanationKey, riskLabel } from './messages';
 
+// The Alicia layer keeps its own copy of the health vocabulary: it imports nothing from the governance modules
+// (the runtime's `healthView` is structurally the same shape; `readHealth` re-validates it field by field).
+const GOVERNANCE_HEALTH = ['HEALTHY', 'CORRUPTED', 'INCONSISTENT', 'UNAVAILABLE'] as const;
+const RECOVERY_STATES = ['HEALTHY', 'CORRUPTED', 'RECOVERY_REQUIRED', 'RECOVERED'] as const;
+export interface GovernanceHealthView {
+  status: (typeof GOVERNANCE_HEALTH)[number];
+  recovery: (typeof RECOVERY_STATES)[number];
+  codes: string[];
+  headSequence: number;
+  legacyUnverified: boolean;
+}
+
 /** FNV-1a, 32-bit, hex — the same algorithm the runtime uses for call
  *  fingerprints, kept local: the Alicia layer does not import governance code. */
 function fnv1a(text: string): string {
@@ -135,6 +147,8 @@ export interface GovernanceObservation {
 }
 
 export interface ObservabilitySources {
+  /** v0.15: the runtime's verdict about its own governance state (read-only; enumerated values only). */
+  health?: unknown;
   ledger: readonly unknown[];
   traces?: readonly unknown[];
   approvals?: readonly unknown[];
@@ -153,6 +167,22 @@ export interface ObservabilityView {
   byApproval?: Readonly<Record<string, { timeline: readonly GovernanceObservation[]; latest: GovernanceObservation | null }>>;
   /** v0.7: resolved human decisions (REQUEST confirmations/closures, HIGH approvals/rejections), newest first. */
   history?: readonly GovernanceObservation[];
+  /**
+   * v0.15: is the evidence this view is built from TRUSTED? HEALTHY / CORRUPTED / INCONSISTENT / UNAVAILABLE and where the
+   * recovery stands. When it is not HEALTHY the runtime serves no ledger facts at all; Alicia says so and decides nothing.
+   */
+  health?: GovernanceHealthView | null;
+}
+
+/** Whitelist read of the runtime's health verdict: enum values, identifier-shaped codes, one integer. Nothing else leaves. */
+export function readHealth(v: unknown): GovernanceHealthView | null {
+  const o = obj(v);
+  const status = (GOVERNANCE_HEALTH as readonly unknown[]).includes(o.status) ? (o.status as GovernanceHealthView['status']) : null;
+  const recovery = (RECOVERY_STATES as readonly unknown[]).includes(o.recovery) ? (o.recovery as GovernanceHealthView['recovery']) : null;
+  if (!status || !recovery) return null;
+  const codes = (Array.isArray(o.codes) ? o.codes : []).filter((c): c is string => typeof c === 'string' && /^[A-Z_]{3,40}$/.test(c)).slice(0, 10);
+  const seq = typeof o.headSequence === 'number' && Number.isInteger(o.headSequence) && o.headSequence >= 0 ? o.headSequence : 0;
+  return { status, recovery, codes, headSequence: seq, legacyUnverified: o.legacyUnverified === true };
 }
 
 /** The human decisions the Decision Center lists as resolved (runtime facts only). */
@@ -174,9 +204,10 @@ function looksSecret(v: string): boolean {
   return /[0-9a-f]{24,}/i.test(v) || /^(sk|pk|rk|ghp|gho|xox[abp])[-_]/i.test(v) || /token|secret|password|apikey|api_key/i.test(v);
 }
 
-/** The evidence reference of a ledger record: the hash of its exact line. */
+/** The evidence reference of a ledger record: the hash of its exact line (v0.15: without the runtime's keyed seal, which never leaves the runtime). */
 export function evidenceRef(record: unknown): string {
-  return `EVT-${fnv1a(JSON.stringify(record))}`;
+  const { eventMac: _seal, ...line } = (record && typeof record === 'object' ? record : {}) as Record<string, unknown>;
+  return `EVT-${fnv1a(JSON.stringify(record && typeof record === 'object' ? line : record))}`;
 }
 
 // ─── one record → observations ─────────────────────────────────────────────
@@ -455,7 +486,7 @@ export function projectObservability(src: ObservabilitySources, opts: { recentLi
     byApproval[aid] = { timeline: timeline.length ? timeline : pending ? [pending] : [], latest: pending ?? timeline[timeline.length - 1] ?? null };
   }
   const history = collapse(ordered.filter((o) => RESOLVED_DECISION_CATEGORIES.has(o.category))).reverse().slice(0, opts.historyLimit ?? 20);
-  return deepFreeze({ recent, byProposal, pendingApprovals, byApproval, history });
+  return deepFreeze({ recent, byProposal, pendingApprovals, byApproval, history, health: readHealth(src.health) });
 }
 
 // ─── the same explanation as text (non-UI hosts, evidence, tests) ───────────

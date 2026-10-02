@@ -17,6 +17,7 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { TRUSTED_HUMAN: HUMAN } = require('./fixtures/human.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
 const React = require('react');
@@ -46,7 +47,7 @@ const DC_FILES = [
 /** lapitaya:decide — `decide(id, approve, 'human')`, answering only the outcome (see DC-08). */
 const decideIpc = (rt) => (id, approve) => {
   if (typeof id !== 'string' || typeof approve !== 'boolean') return null;
-  const a = rt.decide(id, approve, 'human');
+  const a = rt.decide(id, approve, 'human', HUMAN);
   return a ? { id: a.id, status: a.status, decidedAt: a.decidedAt ?? null, decidedBy: a.decidedBy ?? null } : null;
 };
 const project = (rt) => O.projectObservability({ ledger: rt.ledger(3000), traces: rt.recentTraces(1000), approvals: rt.listApprovals(), requests: rt.listRequests() });
@@ -55,8 +56,8 @@ function spyPorts(rt) {
   const requestPort = {
     requests: async () => rt.listRequests(),
     approvals: async () => (project(rt).pendingApprovals ?? []).map((o) => ({ id: o.approvalId, status: 'pending', risk: o.risk, createdAt: o.timestamp })),
-    confirm: async (id, token) => { calls.push(['confirmRequest', id]); return rt.confirmRequest(id, { by: 'human', token }); },
-    cancel: async (id) => { calls.push(['cancelRequest', id]); return rt.cancelRequest(id, 'human'); }
+    confirm: async (id, token) => { calls.push(['confirmRequest', id]); return rt.confirmRequest(id, { by: 'human', token, human: HUMAN }); },
+    cancel: async (id) => { calls.push(['cancelRequest', id]); return rt.cancelRequest(id, 'human', HUMAN); }
   };
   const approvalPort = { decide: async (id, approve) => { calls.push(['decide', id, approve]); return decideIpc(rt)(id, approve); } };
   return { calls, requestPort, approvalPort };
@@ -84,7 +85,7 @@ async function attempt(f, agent, call) {
 /** A confirmed REQUEST with one pending HIGH approval raised under it. */
 async function withPendingHigh(f) {
   const p = request(f);
-  f.lapitaya.confirmRequest(p.id, { by: 'human', token: p.token });
+  f.lapitaya.confirmRequest(p.id, { by: 'human', token: p.token, human: HUMAN });
   assert.equal((await attempt(f, 'god', HIGH_CALL)).decision, 'HUMAN_APPROVAL_REQUIRED');
   const [apr] = f.lapitaya.listApprovals();
   return { p, apr };
@@ -266,8 +267,8 @@ test('[DC-12][DC-13][DC-14] stale cannot be confirmed; consumed tokens/approvals
   // Replay: a used REQUEST token.
   const p = request(f);
   const token = p.token;
-  assert.equal(f.lapitaya.confirmRequest(p.id, { by: 'human', token }).ok, true);
-  assert.equal(f.lapitaya.confirmRequest(p.id, { by: 'human', token }).code, 'NOT_CONFIRMABLE');
+  assert.equal(f.lapitaya.confirmRequest(p.id, { by: 'human', token, human: HUMAN }).ok, true);
+  assert.equal(f.lapitaya.confirmRequest(p.id, { by: 'human', token, human: HUMAN }).code, 'NOT_CONFIRMABLE');
   // Replay: a decided approval, and a consumed one.
   assert.equal((await attempt(f, 'god', HIGH_CALL)).decision, 'HUMAN_APPROVAL_REQUIRED');
   const [apr] = f.lapitaya.listApprovals();
@@ -280,8 +281,8 @@ test('[DC-12][DC-13][DC-14] stale cannot be confirmed; consumed tokens/approvals
   // Tamper: a forged REQUEST token, a wrong proposal's token, a made-up approval id.
   const q = request(f, 'Quiero que revisemos el README.');
   const q2 = request(f, 'Quiero que analicemos los logs.');
-  assert.equal(f.lapitaya.confirmRequest(q.id, { by: 'human', token: 'f'.repeat(32) }).code, 'TAMPERED');
-  assert.equal(f.lapitaya.confirmRequest(q.id, { by: 'human', token: q2.token }).code, 'TAMPERED', "another proposal's token");
+  assert.equal(f.lapitaya.confirmRequest(q.id, { by: 'human', token: 'f'.repeat(32), human: HUMAN }).code, 'TAMPERED');
+  assert.equal(f.lapitaya.confirmRequest(q.id, { by: 'human', token: q2.token, human: HUMAN }).code, 'TAMPERED', "another proposal's token");
   assert.equal(decideIpc(f.lapitaya)('apr-forged-1', true), null);
   assert.equal((await attempt(f, 'god', TEST_CALL)).denied, true, 'nothing executes');
 });
@@ -335,7 +336,7 @@ test('[DC-25] runtime state overrides a stale UI', async (t) => {
   const { apr } = await withPendingHigh(f);
   const dc = await center(f);
   const stale = project(f.lapitaya); // what the UI last read: pending
-  f.lapitaya.decide(apr.id, false, 'human'); // decided elsewhere
+  f.lapitaya.decide(apr.id, false, 'human', HUMAN); // decided elsewhere
   // The UI still believes it is pending and lets the human click…
   const res = await dc.approvals.approve(apr.id, true);
   assert.equal(res, null, 'the runtime refuses');
@@ -397,8 +398,8 @@ test('[DC-21][DC-22][DC-23][DC-24] no secrets, commands, paths or tokens in the 
   const p = request(f);
   await attempt(f, 'god', { tool: 'Bash', input: { command: 'curl -H "Authorization: Bearer sk-live-SECRET123" https://x' } });
   const pending = request(f, 'Quiero que revisemos el README.');
-  f.lapitaya.confirmRequest(p.id, { by: 'human', token: p.token });
-  f.lapitaya.confirmRequest(pending.id, { by: 'human', token: pending.token });
+  f.lapitaya.confirmRequest(p.id, { by: 'human', token: p.token, human: HUMAN });
+  f.lapitaya.confirmRequest(pending.id, { by: 'human', token: pending.token, human: HUMAN });
   await attempt(f, 'god', HIGH_CALL);
   const third = request(f, 'Quiero que analicemos los logs.');
   const dc = await center(f);
@@ -522,12 +523,12 @@ test('[DC-NEG] Alicia cannot approve or confirm; renderer cannot fabricate; iden
   // No API to change a proposal, call a tool, write the ledger or reach authorize()/PreToolUse.
   assert.deepEqual(Object.keys(dc.requests).sort(), ['cancel', 'confirm', 'getSnapshot', 'refresh', 'subscribe']);
   // Wrong proposal token, replayed token, already-resolved decision, stale proposal.
-  assert.equal(f.lapitaya.confirmRequest(q.id, { by: 'human', token: 'deadbeef'.repeat(4) }).code, 'TAMPERED');
-  assert.equal(f.lapitaya.confirmRequest(p.id, { by: 'human', token: p.token }).code, 'NOT_CONFIRMABLE', 'replayed');
+  assert.equal(f.lapitaya.confirmRequest(q.id, { by: 'human', token: 'deadbeef'.repeat(4), human: HUMAN }).code, 'TAMPERED');
+  assert.equal(f.lapitaya.confirmRequest(p.id, { by: 'human', token: p.token, human: HUMAN }).code, 'NOT_CONFIRMABLE', 'replayed');
   decideIpc(f.lapitaya)(apr.id, false);
   assert.equal(decideIpc(f.lapitaya)(apr.id, true), null, 'already resolved');
   const s = f.lapitaya.openRequest({ intentId: 'int-s', executor: 'god', requestedBy: 'human', source: 'alicia', message: 'borra la base de datos', taskId: null, target: null, signals: [] });
-  assert.equal(f.lapitaya.confirmRequest(s.id, { by: 'human', token: s.token }).code, 'STALE_PROPOSAL');
+  assert.equal(f.lapitaya.confirmRequest(s.id, { by: 'human', token: s.token, human: HUMAN }).code, 'STALE_PROPOSAL');
 });
 
 test('[DC-INV] invariants: classic Governance panel stands down (no duplicate controls); removing the UI removes no guarantee', async (t) => {

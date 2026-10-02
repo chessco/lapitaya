@@ -1,0 +1,16 @@
+✔ [LEG-01][LEG-09][LEG-10][LEG-11][LEG-26] Legacy dependency audit & IPC absence (13.5542ms)
+✔ [LEG-02][LEG-03][LEG-08][LEG-13] Decision Center functional parity & observability backed (6662.3052ms)
+✔ [LEG-04][LEG-05][LEG-06][LEG-07][LEG-08] HIGH decision & REQUEST lifecycle with identity (7012.5862ms)
+✔ [LEG-12][LEG-14] Runtime approval state preserved, no second store (5615.5118ms)
+✔ [LEG-15][LEG-16][LEG-17][LEG-18] Cross-window sync & replay protection (5993.5355ms)
+✔ [LEG-19][LEG-20] Security: no secrets or raw tokens in renderer model (5424.9274ms)
+✔ [LEG-21][LEG-22][LEG-23] i18n es-MX / en-US & Accessibility in Decision Center (24.5583ms)
+✔ [NEG-01][NEG-02][NEG-03][NEG-04] Negative security boundary checks (6053.3318ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 45028.8454
