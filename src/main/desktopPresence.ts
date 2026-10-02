@@ -45,7 +45,7 @@ export interface DesktopPresenceDeps {
 }
 
 const DEFAULT_POSITION: CompanionPosition = { x: 100, y: 100 };
-const WINDOW_SIZE = { width: 220, height: 220 };
+const WINDOW_SIZE = { width: 280, height: 320 };
 
 export class DesktopPresenceService {
   private mode: CompanionMode = 'OFF';
@@ -139,19 +139,22 @@ export class DesktopPresenceService {
   }
 
   public getPresentation(): CompanionPresentation {
-    const aliciaAvatar = getAnimalAvatar('alicia');
-    const aliciaPos = this.getPosition('alicia');
+    const agents: LaPitayaAgentId[] = ['alicia', 'el-inge', 'el-beni', 'valentin', 'margarito', 'jose-juan', 'el-tutu'];
 
-    const entries: CompanionPresentationEntry[] = [
-      {
-        agentId: 'alicia',
-        species: aliciaAvatar?.species ?? 'fox',
-        visualState: this.primaryVisualState,
-        statusText: `Alicia (${this.primaryVisualState})`,
-        isPrimary: true,
-        position: aliciaPos
-      }
-    ];
+    const entries: CompanionPresentationEntry[] = agents.map((id) => {
+      const avatar = getAnimalAvatar(id);
+      const isPrimary = id === 'alicia';
+      const pos = this.getPosition(id);
+      const state = isPrimary ? this.primaryVisualState : 'IDLE';
+      return {
+        agentId: id,
+        species: avatar?.species ?? 'fox',
+        visualState: state,
+        statusText: `${avatar?.displayName ?? id} (${state})`,
+        isPrimary,
+        position: pos
+      };
+    });
 
     return {
       mode: this.mode,

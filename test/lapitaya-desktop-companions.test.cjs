@@ -181,8 +181,8 @@ test('COMP-12: ensureOnScreen() clamps coordinates within work area', () => {
   const service = new DesktopPresenceService();
   const display = { x: 0, y: 0, width: 1920, height: 1080 };
   const clampedFar = service.ensureOnScreen({ x: 5000, y: 5000 }, display);
-  assert.strictEqual(clampedFar.x, 1920 - 220);
-  assert.strictEqual(clampedFar.y, 1080 - 220);
+  assert.strictEqual(clampedFar.x, 1920 - 280);
+  assert.strictEqual(clampedFar.y, 1080 - 320);
 
   const clampedNeg = service.ensureOnScreen({ x: -100, y: -100 }, display);
   assert.strictEqual(clampedNeg.x, 0);

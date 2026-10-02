@@ -5535,6 +5535,11 @@ app.whenReady().then(() => {
   // off, the app keeps Electron's default menu — zero behavior change.
   if (readConfig().multiWindow) installAppMenu();
   createWindow();
+  try {
+    desktopPresence.show('MINI');
+  } catch (e) {
+    console.error('[desktopPresence] auto-show failed:', e);
+  }
   // Auto-start the Slack webhook server when configured. Best-effort: a tunnel
   // failure (offline) is logged, not fatal. The tunnel URL is ephemeral and
   // changes per restart, so the user re-pastes it via Settings → Start.
