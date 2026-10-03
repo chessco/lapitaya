@@ -1,0 +1,8 @@
+✔ ROS-05: Rosalba is classified as Builder for CIMA separation purposes (3440.3344ms)
+✔ ROS-06: Rosalba cannot audit (or test-pass) her own work (5449.869ms)
+✔ ROS-07: Rosalba cannot approve HIGH (4319.0203ms)
+✔ ROS-08: a HIGH action by Rosalba requires HUMAN_APPROVAL (even in autoMode) (4649.6029ms)
+✔ ROS-33: Builder != Auditor remains enforced across the senior flow (3060.3399ms)
+✔ ROS-35: Rosalba cannot mutate the policy / capability registry at runtime (1782.6214ms)
+PASS E11 Margarito TEST PASS; Rosalba self-AUDIT refused (BUILDER_NOT_AUDITOR); José Juan AUDIT PASS
+     {"test":"PASS","self":["BLOCKED",["BUILDER_NOT_AUDITOR"]],"audit":["PASS",[]],"entries":[{"id":"alicia","state":"IDLE","species":"fox","bubble":null},{"id":"jose-juan","state":"CELEBRATING","species":"turtle","bubble":{"sourceFact":"AUDIT_COMPLETED","text":"La auditoría terminó con veredicto PASS."}},{"id":"margarito","state":"CELEBRATING","species":"hamster","bubble":{"sourceFact":"TEST_COMPLETED","text":"Las pruebas pasaron."}}]}

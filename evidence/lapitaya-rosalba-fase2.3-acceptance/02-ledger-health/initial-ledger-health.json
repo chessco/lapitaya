@@ -1,0 +1,21 @@
+{
+ "at": "2026-10-03T17:48:15.849Z",
+ "status": "HEALTHY",
+ "recovery": "HEALTHY",
+ "mode": "full",
+ "ledger": {
+  "events": 1292,
+  "headSequence": 1292,
+  "headHash": "80e411e5d96d…",
+  "legacyEvents": 283,
+  "legacyUnverified": true
+ },
+ "lastLineSequence": 1292,
+ "findings": [
+  {
+   "code": "LEGACY_UNVERIFIED",
+   "severity": "warning",
+   "file": "cima-ledger.jsonl"
+  }
+ ]
+}

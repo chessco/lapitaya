@@ -1,0 +1,15 @@
+== code changes since 861bc78e (empty = none) ==
+
+== protected files vs b13585b2 (empty = unchanged) ==
+
+== companion preload API ==
+18:  onSnapshot: (callback: (snapshot: CompanionPresentation) => void) => () => void;
+19:  open: () => void;
+20:  dismissBubble: () => void;
+21:  setMode: (mode: CompanionMode) => void;
+22:  hide: () => void;
+23:  setInteractive: (interactive: boolean) => void;
+24:  drag: (phase: CompanionDragPhase, dx: number, dy: number) => void;
+
+== rosalba authority symbols (expect none) ==
+none

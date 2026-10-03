@@ -1,0 +1,18 @@
+{
+ "id": "rosalba",
+ "display": "Rosalba",
+ "displayEn": "Rosalba",
+ "esMX": "Desarrolladora Senior",
+ "enUS": "Senior Software Developer",
+ "avatar": "dog 🐶",
+ "sprite": "pam",
+ "cimaRole": "builder",
+ "phases": [
+  "BUILD"
+ ],
+ "seniority": "senior",
+ "defaultBuildOwner": "el-beni"
+}
+roster: El Inge, Valentín, Rosalba, El Beni, Margarito, José Juan, El Tutú, Alicia (8)
+92:const ALL_AGENTS: readonly LaPitayaAgentId[] = LA_PITAYA_AGENTS.map((a) => a.id);
+94:const COMPANY_FILL_ORDER: readonly LaPitayaAgentId[] = ['el-beni', 'margarito', 'jose-juan', 'el-inge', 'valentin', 'el-tutu', 'rosalba'];
