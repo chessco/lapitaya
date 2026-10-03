@@ -296,6 +296,25 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
     setOrchSpawnOn(next);
     stage({ orchestratorMaySpawn: next } as Partial<HarnessConfig>);
   };
+  // FASE 3 Execution Awake: default ON, so only an explicit `false` reads as off.
+  const [keepAwakeOn, setKeepAwakeOn] = useState<boolean>(cfgX.keepAwakeDuringExecution !== false);
+  const toggleExecutionAwake = async () => {
+    const next = !keepAwakeOn;
+    setKeepAwakeOn(next);
+    stage({ keepAwakeDuringExecution: next } as Partial<HarnessConfig>);
+  };
+  const [awakeState, setAwakeState] = useState<{ enabled: boolean; active: boolean; activeExecutionCount: number; onBattery: boolean | null } | null>(null);
+  useEffect(() => {
+    let live = true;
+    const poll = (): void => {
+      try {
+        void window.cth.lapitayaExecutionAwakeState().then((s) => { if (live) setAwakeState(s); }).catch(() => undefined);
+      } catch { /* no bridge */ }
+    };
+    poll();
+    const h = setInterval(poll, 5000);
+    return () => { live = false; clearInterval(h); };
+  }, []);
   const [defaultModelSel, setDefaultModelSel] = useState<string>(cfgX.defaultModel ?? 'claude-fable-5');
   const saveDefaultModel = (id: string): void => {
     setDefaultModelSel(id);
@@ -1286,6 +1305,33 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
                           </div>
                           <PixelButton variant={orchSpawnOn ? 'primary' : 'secondary'} size="sm" onClick={toggleOrchSpawn}>
                             {orchSpawnOn ? `me and ${godName}` : 'only me'}
+                          </PixelButton>
+                        </div>
+                      </div>
+
+                      <div style={{ height: 1, background: 'var(--cth-ink-300)', margin: '12px 0' }} />
+
+                      {/* FASE 3 Execution Awake — infrastructure, never a governance setting. */}
+                      <div data-setting="keep-awake-during-execution">
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <span style={{ fontSize: 13, lineHeight: '20px', color: 'var(--cth-ink-900)' }}>
+                              {t('lapitaya:executionAwake.title')}
+                            </span>
+                            <span style={{ fontSize: 12, lineHeight: '16px', color: 'var(--cth-ink-500)' }}>
+                              {t('lapitaya:executionAwake.desc')}
+                            </span>
+                            <span data-field="keep-awake-status" style={{ fontSize: 11, lineHeight: '16px', color: 'var(--cth-ink-500)' }}>
+                              {!keepAwakeOn
+                                ? t('lapitaya:executionAwake.statusOff')
+                                : awakeState?.active
+                                  ? t('lapitaya:executionAwake.statusActive', { count: awakeState.activeExecutionCount })
+                                  : t('lapitaya:executionAwake.statusIdle')}
+                              {keepAwakeOn && awakeState?.onBattery ? ` · ${t('lapitaya:executionAwake.battery')}` : ''}
+                            </span>
+                          </div>
+                          <PixelButton variant={keepAwakeOn ? 'primary' : 'secondary'} size="sm" onClick={toggleExecutionAwake}>
+                            {keepAwakeOn ? t('lapitaya:executionAwake.on') : t('lapitaya:executionAwake.off')}
                           </PixelButton>
                         </div>
                       </div>

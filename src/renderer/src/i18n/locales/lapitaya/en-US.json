@@ -19,6 +19,17 @@
   "titles": {
     "rosalba": "Senior Software Developer"
   },
+  "executionAwake": {
+    "title": "Keep computer awake during executions",
+    "desc": "Prevents automatic system sleep while agents are actively working.",
+    "on": "On",
+    "off": "Off",
+    "indicator": "Computer kept awake while agents work",
+    "statusActive": "● Execution active · sleep temporarily prevented ({{count}})",
+    "statusIdle": "No active executions · the computer can sleep normally",
+    "statusOff": "Off · La Pitaya does not prevent sleep",
+    "battery": "On battery: keeping the computer awake uses more energy."
+  },
   "cima": {
     "name": "CIMA",
     "phases": {

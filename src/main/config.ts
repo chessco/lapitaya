@@ -202,6 +202,11 @@ export interface HarnessConfig {
    *  Off does not FAIL a queued spawn request, it declines to consume one. The
    *  request sits in HIVE_ROOT/spawn-requests until the toggle is turned on. */
   orchestratorMaySpawn: boolean;
+  /** FASE 3 Execution Awake: hold an OS `prevent-app-suspension` blocker while agents are really
+   *  working (CIMA assignments, live workers, agent turns), so automatic sleep does not cut a
+   *  long BUILD/TEST/AUDIT. Default ON for new installs; an explicit choice is kept. OFF means
+   *  La Pitaya never prevents sleep. Never affects any CIMA verdict, risk or approval. */
+  keepAwakeDuringExecution: boolean;
   /** The command we run when spawning a new agent. */
   defaultCommand: string;
   /** Default model for newly spawned agents (e.g. 'claude-sonnet-4-6[1m]'); unset = CLI default. */
@@ -429,6 +434,7 @@ const DEFAULTS: HarnessConfig = {
   registeredRepos: [],
   autoMode: true,
   orchestratorMaySpawn: false,
+  keepAwakeDuringExecution: true,
   defaultCommand: 'claude',
   godProvider: 'claude',
   godModel: 'claude-opus-4-8',

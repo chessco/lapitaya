@@ -34,6 +34,7 @@ import { createHumanGovernanceHandlers, resolveRendererSender } from './humanGov
 import { loadOrCreateKey } from './authBinding';
 import { AUTONOMY_STAGES, DEFAULT_AUTONOMY_STAGE, type AutonomyStage } from '../shared/lapitaya/autonomy';
 import { agentByName, phaseForAgent } from '../shared/lapitaya/agents';
+import { ExecutionAwakeService, type ExecutionAwakeState } from './executionAwake';
 import { recordBanner } from '../shared/lapitaya/cimaRuntime';
 import { LA_PITAYA_NAME } from '../shared/lapitaya/brand';
 import {
@@ -273,6 +274,16 @@ const lapitayaSealKeyFile = (): Buffer | null => {
   if (lapitayaSealKey === undefined) lapitayaSealKey = loadOrCreateKey(join(app.getPath('userData'), 'lapitaya-governance-seal.key'));
   return lapitayaSealKey;
 };
+// FASE 3 Execution Awake — the ONE owner of the OS power-save blocker (syncKeepAwake delegates
+// here). Fed only by authoritative lifecycle signals: CIMA runtime events, worker spawn/teardown
+// and token-authenticated hook turns. No renderer channel can start, stop or name an execution.
+const executionAwake = new ExecutionAwakeService({
+  blocker: powerSaveBlocker,
+  enabled: readConfig().keepAwakeDuringExecution !== false,
+  mode: () => (readConfig().strongKeepalive ? 'prevent-display-sleep' : 'prevent-app-suspension'),
+  log: (line) => console.log(line),
+  onChange: (state) => { onExecutionAwakeChanged(state); }
+});
 const lapitaya = new CimaRuntimeService({
   hiveRoot: () => hive.root(),
   godId: () => hive.registry().godId ?? 'god',
@@ -293,6 +304,8 @@ const lapitaya = new CimaRuntimeService({
     try { aliciaEvents = fromRuntimeEvent(e, Date.now()); for (const ev of aliciaEvents) alicia().notify(ev); } catch { /* never break governance */ }
     // The desktop companions present the same verified facts (read-only; presentation only).
     try { desktopPresence.observeAliciaEvents(aliciaEvents); } catch { /* never break governance */ }
+    // Execution Awake reads the same authoritative event (assignment opens, verdict closes). Read-only.
+    try { executionAwake.noteRuntimeEvent(e); } catch { /* never break governance */ }
   }
 });
 // La Pitaya Alicia v0.4.1 — the intent boundary. The ONLY path from Alicia to
@@ -397,7 +410,11 @@ const hookServer = new HookServer(
   control,
   breaker,
   standingGoalFromRoster,
-  (agentId, event, message) => workerWake.noteHook(agentId, event, message),
+  (agentId, event, message) => {
+    workerWake.noteHook(agentId, event, message);
+    // A token-authenticated agent turn (UserPromptSubmit … Stop) is real work for Execution Awake.
+    try { executionAwake.noteHook(agentId, event); } catch { /* infrastructure only */ }
+  },
   lapitaya
 );
 const memory = new MemoryManager(
@@ -437,7 +454,9 @@ const desktopPresence = new DesktopPresenceService({
   mainWindowGetter: () => mainWindow,
   // FASE 2.3: which La Pitaya agent a verified event's hive id is — from the NAME the hive registry
   // holds for that worker (the spawn-request `name`), the same lookup phaseOf uses. Read-only.
-  resolveAgent: (hiveAgentId) => agentByName(hive.registry().agents[hiveAgentId]?.name)?.id ?? null
+  resolveAgent: (hiveAgentId) => agentByName(hive.registry().agents[hiveAgentId]?.name)?.id ?? null,
+  // FASE 3 Living Desktop: slow, bounded ambient strolls for IDLE companions (one check every 20 s).
+  ambientScheduler: true
 });
 /** The PRIMARY window — the one running the hive/god orchestration and the sink
  *  for process-global timer events (missions, breaker, Slack ingestion). It is
@@ -544,6 +563,9 @@ function teardownPty(id: string): void {
   // (workers card via the hive:agentSpawned broadcast in processSpawnRequest).
   // pty id == worker id == agent id for workers.
   const wasWorker = liveWorkers.has(id);
+  // Execution Awake: this agent's process is gone, so none of its executions is still running.
+  const endedAgentId = ptyToAgent.get(id);
+  try { executionAwake.agentEnded(id); if (endedAgentId) executionAwake.agentEnded(endedAgentId); } catch { /* infrastructure only */ }
   // 0) Revoke this id's broker capability (if any). Idempotent + harmless for a
   //    non-worker PTY; ensures a dead worker's token can never reach an integration.
   try { integrationBroker.revoke(id); } catch { /* best-effort */ }
@@ -741,28 +763,42 @@ ptyManager.setExitHandler((id, exitCode, info) => {
  *  suspension') still lets the Mac truly sleep; we survive that and catch up once
  *  on resume (see onSystemResume). Re-evaluated on every call so toggling the
  *  flag while agents run swaps the blocker mode live. */
-type KeepAwakeMode = 'prevent-app-suspension' | 'prevent-display-sleep';
-let keepAwakeId: number | null = null;
-let keepAwakeMode: KeepAwakeMode | null = null;
 function syncKeepAwake(): void {
-  const live = ptyManager.list().length > 0;
-  const desired: KeepAwakeMode | null = live
-    ? (readConfig().strongKeepalive ? 'prevent-display-sleep' : 'prevent-app-suspension')
-    : null;
-  if (desired === keepAwakeMode) return; // no change — avoid stop/start churn + log spam
-  // Tear down the current blocker (mode change, or going idle with no agents).
-  if (keepAwakeId !== null) {
-    try { if (powerSaveBlocker.isStarted(keepAwakeId)) powerSaveBlocker.stop(keepAwakeId); } catch { /* noop */ }
-    keepAwakeId = null;
-  }
-  keepAwakeMode = desired;
-  if (desired) {
-    keepAwakeId = powerSaveBlocker.start(desired);
-    console.log(`[power] keep-awake ON (${desired}) — agents running`);
-  } else {
-    console.log('[power] keep-awake off — no agents');
-  }
+  // FASE 3: the blocker now follows AUTHORITATIVE executions (CIMA assignments, live workers,
+  // agent turns) and the user's `keepAwakeDuringExecution` switch, instead of "any PTY alive"
+  // (El Inge's always-open PTY used to pin the machine awake for as long as a hive was open).
+  // Same blocker types as before: prevent-app-suspension, or prevent-display-sleep with
+  // config.strongKeepalive. Re-evaluated here on PTY changes and on system resume.
+  executionAwake.sync();
 }
+
+/** Diagnostics (not the CIMA ledger): userData/lapitaya-execution-awake.json + the companions. */
+function onExecutionAwakeChanged(state: ExecutionAwakeState): void {
+  let onBattery: boolean | null = null;
+  try { onBattery = powerMonitor.isOnBatteryPower(); } catch { /* not available before ready */ }
+  try {
+    writeFileSync(join(app.getPath('userData'), 'lapitaya-execution-awake.json'), JSON.stringify({
+      at: new Date().toISOString(), enabled: state.enabled, active: state.active, activeExecutionCount: state.activeExecutionCount,
+      mode: state.mode, onBattery, executions: state.executions.map((x) => ({ id: x.id, source: x.source, since: new Date(x.since).toISOString() }))
+    }, null, 2), 'utf8');
+  } catch { /* diagnostics are best-effort */ }
+  try { desktopPresence.setLivingContext({ executionActive: state.activeExecutionCount > 0, awakeActive: state.active }); } catch { /* presentation only */ }
+}
+
+/** Living Desktop: the OS idle time is PRESENTATION context (companion sleep) — never governance evidence. */
+const userIdleTimer = setInterval(() => {
+  try { desktopPresence.setLivingContext({ userIdleMs: powerMonitor.getSystemIdleTime() * 1000 }); } catch { /* before ready */ }
+  try { executionAwake.sweep(); } catch { /* infrastructure only */ }
+}, 30_000);
+(userIdleTimer as { unref?: () => void }).unref?.();
+
+// Read-only diagnostics for Settings (no channel can start, stop or name an execution).
+ipcMain.handle('lapitaya:executionAwake:state', () => {
+  const s = executionAwake.state();
+  let onBattery: boolean | null = null;
+  try { onBattery = powerMonitor.isOnBatteryPower(); } catch { /* unavailable */ }
+  return { enabled: s.enabled, active: s.active, activeExecutionCount: s.activeExecutionCount, mode: s.mode, onBattery };
+});
 
 /** A mission's live scheduler handles: the initial `setTimeout` that waits out
  *  the time remaining until its next due fire, and the steady `setInterval`
@@ -3879,6 +3915,8 @@ function teardownAndQuit(): void {
   allowQuit = true;
   // Each teardown step is best-effort: a throw here (e.g. a dying child or a
   // half-torn-down socket) must never abort the quit or pop a crash dialog.
+  try { executionAwake.dispose(); } catch (e) { console.error('[quit] executionAwake.dispose:', e); }
+  try { clearInterval(userIdleTimer); } catch { /* best-effort */ }
   try { clearMissionTimers(); } catch (e) { console.error('[quit] clearMissionTimers:', e); }
   try { clearContextTimers(); } catch (e) { console.error('[quit] clearContextTimers:', e); }
   try { stopWebhookDoneObserver(); } catch (e) { console.error('[quit] stopWebhookDoneObserver:', e); }
@@ -4994,6 +5032,8 @@ async function processSpawnRequest(filePath: string): Promise<void> {
   const tokenCap = typeof raw.tokenCap === 'number' && Number.isFinite(raw.tokenCap) && raw.tokenCap > 0
     ? raw.tokenCap : undefined;
   liveWorkers.set(workerId, { workerId, reqId, name: meta.name, slack, baseBranch, spawnedAt: Date.now(), tokenCap });
+  // A live ephemeral worker is an execution until teardownPty (done, reap, crash, stop).
+  try { executionAwake.workerStarted(workerId); } catch { /* infrastructure only */ }
 
   // Dispatch the objective via the standard inbox path (zero new transport),
   // reusing the autonomous-request preamble so the worker gets the exact Slack
@@ -5596,6 +5636,9 @@ app.on('before-quit', (e) => {
 // Every window loads the config once at start-up, so tell them all when a
 // setting is saved — a floor left out would keep showing what it opened with.
 onConfigWritten((config) => {
+  // Execution Awake follows the user's switch live (OFF stops a held blocker at once; ON re-arms
+  // it if real executions are still running) and picks up a strongKeepalive mode change.
+  try { executionAwake.setEnabled(config.keepAwakeDuringExecution !== false); executionAwake.sync(); } catch { /* infrastructure only */ }
   for (const w of allWindows) {
     if (w.isDestroyed() || w.webContents.isDestroyed()) continue;
     w.webContents.send('config:changed', config);
@@ -5627,6 +5670,8 @@ app.on('window-all-closed', () => {
 // exactly what's left to do.
 let analyticsFlushed = false;
 app.on('will-quit', (e) => {
+  // Never leak the OS power-save blocker past the app (Electron would release it at exit anyway).
+  try { executionAwake.dispose(); } catch { /* best-effort */ }
   if (analyticsFlushed) return;
   analyticsFlushed = true;
   e.preventDefault();

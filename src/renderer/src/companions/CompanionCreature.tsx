@@ -41,6 +41,16 @@ export interface CompanionCreatureProps {
   displayName: string;
   /** Localized job title for agents that have one (Rosalba → "Desarrolladora Senior"); else the species is shown. */
   title?: string | null;
+  /** FASE 3: the ambient beat while the runtime state is IDLE (presentation only). */
+  ambient?: 'IDLE' | 'WALKING' | 'THINKING' | 'RESTING';
+  /** FASE 3: personality cue shown while WORKING (⌨️ 🧪 🔍 …). */
+  workCue?: string | null;
+  /** FASE 3: calm Execution Awake indicator text (Alicia only, while the blocker is held). */
+  awakeLabel?: string | null;
+  /** FASE 3: celebration strength 0–1 (personality). */
+  celebrationIntensity?: number;
+  /** FASE 3: switch the companions to FOCUS mode (presentation action). */
+  onFocusMode?: (e: React.MouseEvent) => void;
   /** Localized name of the companion Alicia is relaying, if any. */
   relayedName?: string | null;
   relayedSpecies?: string | null;
@@ -85,6 +95,14 @@ const KEYFRAMES = `
   @keyframes companionSleep {
     0%, 100% { transform: translateY(0) scale(0.95); opacity: 0.85; }
     50% { transform: translateY(4px) scale(0.97); opacity: 1; }
+  }
+  @keyframes companionRest {
+    0%, 100% { transform: translateY(2px) scale(0.97); }
+    50% { transform: translateY(4px) scale(0.96); }
+  }
+  @keyframes thinkDots {
+    0%, 100% { opacity: 0.35; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(-3px); }
   }
   @keyframes floatZzz {
     0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
@@ -253,6 +271,11 @@ export function CompanionCreature(props: CompanionCreatureProps): React.ReactEle
               <button {...{ [ROLE_ATTR]: 'menu-hide' }} onClick={props.onHide} style={menuButton('rgba(233,30,99,0.2)')}>
                 🙈 Ocultar
               </button>
+              {props.onFocusMode && (
+                <button {...{ [ROLE_ATTR]: 'menu-focus' }} onClick={props.onFocusMode} style={menuButton('rgba(255,248,231,0.1)')}>
+                  🎯 Enfoque
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -279,6 +302,25 @@ export function CompanionCreature(props: CompanionCreatureProps): React.ReactEle
             zZz
           </div>
         )}
+        {!isSleeping && entry.visualState === 'IDLE' && props.ambient === 'THINKING' && (
+          <div {...{ [ROLE_ATTR]: 'ambient-thinking' }} style={{ position: 'absolute', top: '-18px', right: '-4px', fontSize: '14px', animation: 'thinkDots 1.6s infinite ease-in-out' }}>
+            💭
+          </div>
+        )}
+        {entry.visualState === 'WORKING' && props.workCue && (
+          <div {...{ [ROLE_ATTR]: 'work-cue' }} style={{ position: 'absolute', top: '-14px', left: '-8px', fontSize: '16px', animation: 'thinkDots 1.2s infinite ease-in-out' }}>
+            {props.workCue}
+          </div>
+        )}
+        {props.awakeLabel && (
+          <div
+            {...{ [ROLE_ATTR]: 'awake-indicator' }}
+            title={props.awakeLabel}
+            style={{ position: 'absolute', bottom: '-18px', left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap', fontSize: '6px', fontFamily: '"Press Start 2P", monospace', color: '#FFF8E7', background: 'rgba(26,19,32,0.7)', padding: '2px 5px', borderRadius: '6px', opacity: 0.85 }}
+          >
+            ☕ {props.awakeLabel}
+          </div>
+        )}
 
         {entry.relayedFrom && props.relayedName && (
           <div
@@ -294,6 +336,7 @@ export function CompanionCreature(props: CompanionCreatureProps): React.ReactEle
           onClick={props.onAvatarClick}
           role="button"
           aria-label={props.displayName}
+          title={`${props.displayName}${props.title ? ` · ${props.title}` : ''} · ${entry.visualState}`}
           style={{
             width: '88px',
             height: '88px',
@@ -307,6 +350,11 @@ export function CompanionCreature(props: CompanionCreatureProps): React.ReactEle
             boxShadow: `0 8px 24px rgba(0, 0, 0, 0.4), 0 0 20px ${color}66`,
             border: `3px solid ${color}`,
             ...animationCss(animation),
+            // Living Desktop: a calm resting pose while IDLE, and a celebration paced by personality.
+            ...(!isSleeping && entry.visualState === 'IDLE' && props.ambient === 'RESTING' ? { animation: 'companionRest 3.5s ease-in-out infinite' } : {}),
+            ...(animation === 'celebrate' && props.celebrationIntensity !== undefined
+              ? { animation: `companionCelebrate ${(1.2 - 0.6 * Math.max(0, Math.min(1, props.celebrationIntensity))).toFixed(2)}s ease-in-out infinite` }
+              : {}),
             ...noDrag
           }}
         >

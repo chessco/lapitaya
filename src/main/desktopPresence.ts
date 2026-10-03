@@ -34,6 +34,8 @@ import { LA_PITAYA_AGENT_BY_ID, LA_PITAYA_AGENTS } from '../shared/lapitaya/agen
 import type { AliciaEvent } from '../shared/lapitaya/alicia/events';
 import { getAnimalAvatar } from '../shared/lapitaya/desktopCompanions/animalAvatar';
 import { COMPANION_IPC } from '../shared/lapitaya/desktopCompanions/ipc';
+import { companionSleepAllowed, mayMoveAmbiently, planStroll, seededRandom, shouldStroll, strollPath } from '../shared/lapitaya/desktopCompanions/behavior';
+import { getCompanionPersonality } from '../shared/lapitaya/desktopCompanions/personality';
 import {
   companionFactEffect,
   companionFactsFromAliciaEvent,
@@ -77,7 +79,16 @@ export interface DesktopPresenceDeps {
   /** FASE 2.3: hive agent id → La Pitaya agent (main builds it from the hive registry). Without it
    *  every phase fact goes to the phase's default owner, as in FASE 2.2. */
   resolveAgent?: CompanionAgentResolver;
+  /** FASE 3: run the low-frequency ambient stroll scheduler (the product turns it on; tests drive ambientTick()). */
+  ambientScheduler?: boolean;
+  /** FASE 3: random source for ambient behavior (seeded in tests). */
+  random?: () => number;
 }
+
+/** How often the ambient scheduler considers a stroll, and the stroll animation step. */
+export const AMBIENT_TICK_MS = 20_000;
+export const STROLL_STEP_MS = 60;
+const DEFAULT_SLEEP_AFTER_MS = 5 * 60_000;
 
 const DEFAULT_POSITION: CompanionPosition = { x: 100, y: 100 };
 const WINDOW_SIZE = { width: 340, height: 340 };
@@ -152,6 +163,11 @@ export class DesktopPresenceService {
   private timers: TimersLike;
   private now: () => number;
   private resolveAgent?: CompanionAgentResolver;
+  // FASE 3 Living Desktop (presentation only).
+  private living = { executionActive: false, awakeActive: false, userIdleMs: 0 };
+  private strolling: Map<LaPitayaAgentId, unknown> = new Map();
+  private ambientTimer: unknown = null;
+  private rng: () => number = Math.random;
 
   constructor(deps: DesktopPresenceDeps = {}) {
     this.persist = deps.persist;
@@ -164,9 +180,122 @@ export class DesktopPresenceService {
     this.timers = deps.timers ?? defaultTimers;
     this.now = deps.now ?? (() => Date.now());
     this.resolveAgent = deps.resolveAgent;
+    this.rng = deps.random ?? seededRandom(Date.now() & 0xffffffff);
 
     this.restorePositions();
     this.setupIpcHandlers();
+    if (deps.ambientScheduler) this.scheduleAmbient();
+  }
+
+  // ─── Living Desktop (FASE 3, presentation only) ───────────────────────────
+
+  /**
+   * Context from trusted main-side sources: whether an authoritative execution is running and
+   * whether Execution Awake holds the blocker (ExecutionAwakeService), and the OS idle time
+   * (the trusted system-idle source). It only decides how companions LOOK; nothing here is governance evidence.
+   */
+  public setLivingContext(ctx: Partial<{ executionActive: boolean; awakeActive: boolean; userIdleMs: number }>): void {
+    const before = JSON.stringify(this.livingContext());
+    this.living = { ...this.living, ...ctx };
+    if (JSON.stringify(this.livingContext()) !== before) this.pushSnapshot();
+  }
+
+  public livingContext(): { sleepAllowed: boolean; executionAwake: boolean; ambientMovement: boolean; reducedMotion: boolean } {
+    return {
+      sleepAllowed: companionSleepAllowed({
+        executionActive: this.living.executionActive,
+        humanPending: this.pendingHuman.size > 0,
+        userIdleMs: this.living.userIdleMs,
+        sleepAfterMs: this.preferences.sleepAfterMs ?? DEFAULT_SLEEP_AFTER_MS
+      }),
+      executionAwake: this.living.awakeActive,
+      ambientMovement: this.preferences.ambientMovement !== false,
+      reducedMotion: this.preferences.reducedMotion === true
+    };
+  }
+
+  /**
+   * One ambient scheduler tick: each visible IDLE companion may start a slow stroll near its home
+   * position, inside its own display's workArea. Returns the companions that started one.
+   */
+  public ambientTick(): LaPitayaAgentId[] {
+    if (this.isDestroyed || !VISIBLE_MODES.includes(this.mode)) return [];
+    const ctx = this.livingContext();
+    const p = this.getPresentation();
+    const started: LaPitayaAgentId[] = [];
+    for (const e of p.entries) {
+      const win = this.windows.get(e.agentId);
+      if (!win || win.isDestroyed() || this.strolling.has(e.agentId)) continue;
+      const gate = mayMoveAmbiently({
+        visualState: e.visualState,
+        ambientMovement: ctx.ambientMovement,
+        reducedMotion: ctx.reducedMotion,
+        dragging: this.dragOrigins.has(e.agentId),
+        humanPending: e.agentId === 'alicia' && this.pendingHuman.size > 0,
+        sleeping: ctx.sleepAllowed
+      });
+      const personality = getCompanionPersonality(e.agentId);
+      if (!gate || !shouldStroll(personality, AMBIENT_TICK_MS, this.rng)) continue;
+      let from: CompanionPosition;
+      try { const [x, y] = win.getPosition(); from = { x, y }; } catch { continue; }
+      const home = this.getPosition(e.agentId);
+      const others = p.entries.filter((o) => o.agentId !== e.agentId).map((o) => this.currentPosition(o.agentId));
+      const target = planStroll({ from, home, workArea: this.workAreaFor(home), windowSize: WINDOW_SIZE, personality, others, rng: this.rng });
+      const path = strollPath(from, target, personality.movementSpeed, STROLL_STEP_MS);
+      if (path.length === 0) continue;
+      this.runStroll(e.agentId, path);
+      started.push(e.agentId);
+    }
+    return started;
+  }
+
+  /** Is this companion in the middle of an ambient stroll? */
+  public isStrolling(agentId: LaPitayaAgentId): boolean {
+    return this.strolling.has(agentId);
+  }
+
+  private scheduleAmbient(): void {
+    if (this.isDestroyed) return;
+    this.ambientTimer = this.timers.setTimeout(() => {
+      try { this.ambientTick(); } catch { /* presentation must never break */ }
+      this.scheduleAmbient();
+    }, AMBIENT_TICK_MS);
+  }
+
+  private runStroll(agentId: LaPitayaAgentId, path: CompanionPosition[]): void {
+    let i = 0;
+    const step = (): void => {
+      const win = this.windows.get(agentId);
+      const state = this.getPresentation().entries.find((e) => e.agentId === agentId)?.visualState;
+      // Abort at once if the companion is needed (any runtime state), dragged, hidden or gone.
+      if (!win || win.isDestroyed() || !win.isVisible() || state !== 'IDLE' || this.dragOrigins.has(agentId) || i >= path.length) {
+        this.strolling.delete(agentId);
+        return;
+      }
+      this.placeWindow(win, path[i++]);
+      this.strolling.set(agentId, this.timers.setTimeout(step, STROLL_STEP_MS));
+    };
+    this.strolling.set(agentId, null);
+    step();
+  }
+
+  private currentPosition(agentId: LaPitayaAgentId): CompanionPosition {
+    const win = this.windows.get(agentId);
+    try { if (win && !win.isDestroyed()) { const [x, y] = win.getPosition(); return { x, y }; } } catch { /* fall back */ }
+    return this.getPosition(agentId);
+  }
+
+  /** The workArea (taskbar excluded) of the display a position is on — multi-monitor aware. */
+  private workAreaFor(pos: CompanionPosition): Bounds {
+    try {
+      const rect = { x: Math.round(pos.x), y: Math.round(pos.y), ...WINDOW_SIZE };
+      if (this.screenModule) {
+        return typeof this.screenModule.getDisplayMatching === 'function'
+          ? this.screenModule.getDisplayMatching(rect).workArea
+          : this.screenModule.getPrimaryDisplay().workArea;
+      }
+    } catch { /* fall back */ }
+    return { x: 0, y: 0, width: 1920, height: 1080 };
   }
 
   // ─── Modes ─────────────────────────────────────────────────────────────────
@@ -400,6 +529,7 @@ export class DesktopPresenceService {
       mode: this.mode,
       entries,
       activePhaseAgent: this.activePhaseAgent,
+      living: this.livingContext(),
       updatedAt: this.now()
     };
   }
@@ -553,6 +683,9 @@ export class DesktopPresenceService {
 
   public destroy(): void {
     this.isDestroyed = true;
+    if (this.ambientTimer !== null) this.timers.clearTimeout(this.ambientTimer);
+    for (const h of this.strolling.values()) if (h !== null) this.timers.clearTimeout(h);
+    this.strolling.clear();
     for (const h of [...this.bubbleTimers.values(), ...this.stateTimers.values()]) this.timers.clearTimeout(h);
     this.bubbleTimers.clear();
     this.stateTimers.clear();
@@ -737,6 +870,8 @@ export class DesktopPresenceService {
 
   private handleWindowMoved(agentId: LaPitayaAgentId, win: BrowserWindow): void {
     if (win.isDestroyed()) return;
+    // An ambient stroll never becomes the companion's saved home position.
+    if (this.strolling.has(agentId)) return;
     let x: number;
     let y: number;
     try {

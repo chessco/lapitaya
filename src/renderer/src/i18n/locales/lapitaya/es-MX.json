@@ -19,6 +19,17 @@
   "titles": {
     "rosalba": "Desarrolladora Senior"
   },
+  "executionAwake": {
+    "title": "Mantener el equipo activo durante ejecuciones",
+    "desc": "Evita que el equipo entre en suspensión automática mientras los agentes están trabajando.",
+    "on": "Activado",
+    "off": "Desactivado",
+    "indicator": "Equipo activo mientras trabajan los agentes",
+    "statusActive": "● Ejecución activa · suspensión temporalmente evitada ({{count}})",
+    "statusIdle": "Sin ejecuciones activas · el equipo puede suspenderse normalmente",
+    "statusOff": "Desactivado · La Pitaya no evita la suspensión",
+    "battery": "Con batería: mantener el equipo activo consume más energía."
+  },
   "cima": {
     "name": "CIMA",
     "phases": {

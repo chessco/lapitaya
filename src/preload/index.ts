@@ -1083,6 +1083,9 @@ const api = {
     ipcRenderer.invoke('lapitaya:decide', id, approve),
   /** v0.4.2: REQUEST proposals waiting for (or holding) the human's confirmation. */
   lapitayaRequests: (): Promise<RequestProposal[]> => ipcRenderer.invoke('lapitaya:requests'),
+  /** FASE 3 Execution Awake diagnostics (read-only: no call can start, stop or name an execution). */
+  lapitayaExecutionAwakeState: (): Promise<{ enabled: boolean; active: boolean; activeExecutionCount: number; mode: string | null; onBattery: boolean | null }> =>
+    ipcRenderer.invoke('lapitaya:executionAwake:state'),
   /** The human confirms one proposal with its runtime token. Executes nothing;
    *  every resulting call is still authorized by CIMA (HIGH still needs approval). */
   lapitayaConfirmRequest: (id: string, token: string): Promise<RequestConfirmation> =>

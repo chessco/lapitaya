@@ -95,6 +95,17 @@ export interface CompanionPresentation {
   entries: readonly CompanionPresentationEntry[];
   activePhaseAgent?: LaPitayaAgentId | null;
   updatedAt: number;
+  /** FASE 3 Living Desktop context (presentation only — never governance evidence). */
+  living?: CompanionLivingContext;
+}
+
+export interface CompanionLivingContext {
+  /** Companions may show SLEEPING: nothing executes, nothing waits for the human, the user is away. */
+  sleepAllowed: boolean;
+  /** Execution Awake currently holds the OS power blocker (shown as a small, calm indicator). */
+  executionAwake: boolean;
+  ambientMovement: boolean;
+  reducedMotion: boolean;
 }
 
 export interface CompanionPreferences {
@@ -104,4 +115,8 @@ export interface CompanionPreferences {
   opacity: number;
   reducedMotion: boolean;
   maxVisibleCompanions: number;
+  /** FASE 3: idle companions may take slow, bounded strolls on the desktop (default true). */
+  ambientMovement?: boolean;
+  /** FASE 3: user idle time before companions may visually sleep (default 5 min). */
+  sleepAfterMs?: number;
 }
