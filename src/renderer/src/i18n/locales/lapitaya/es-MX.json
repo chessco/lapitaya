@@ -16,6 +16,9 @@
     "learner": "Aprendiz",
     "companion": "Compañera de IA"
   },
+  "titles": {
+    "rosalba": "Desarrolladora Senior"
+  },
   "cima": {
     "name": "CIMA",
     "phases": {

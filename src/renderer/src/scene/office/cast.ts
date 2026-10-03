@@ -26,7 +26,7 @@ export interface CastMember {
 
 /** Selectable roster, in display order.
  *
- *  La Pitaya: the six sprites worn by La Pitaya agents carry that agent's name
+ *  La Pitaya: the seven sprites worn by La Pitaya agents carry that agent's name
  *  (canonical ASCII form here; castDisplayName() localizes it) and role. The
  *  sprite ids stay the upstream ones because they are persisted per agent in
  *  the hive registry. The remaining upstream cast is untouched for now — see
@@ -34,7 +34,7 @@ export interface CastMember {
 export const OFFICE_CAST: CastMember[] = [
   { name: 'michael',  displayName: 'El Inge',   shirt: '#5a6b8c', blurb: 'Primary Orchestrator' },
   { name: 'jim',      displayName: 'El Beni',   shirt: '#6fa8dc', blurb: 'Builder' },
-  { name: 'pam',      displayName: 'Pam',      shirt: '#9caf88', blurb: 'Receptionist, artist' },
+  { name: 'pam',      displayName: 'Rosalba',   shirt: '#9caf88', blurb: 'Senior Software Developer' },
   { name: 'dwight',   displayName: 'Margarito', shirt: '#b89b3e', blurb: 'Tester' },
   { name: 'kevin',    displayName: 'El Tutu',   shirt: '#4a7ab5', blurb: 'Learner' },
   { name: 'angela',   displayName: 'Jose Juan', shirt: '#8a86a6', blurb: 'Auditor' },

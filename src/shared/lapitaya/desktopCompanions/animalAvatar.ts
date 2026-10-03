@@ -10,6 +10,7 @@ export type AnimalSpecies =
   | 'fox'
   | 'beaver'
   | 'cat'
+  | 'dog'
   | 'owl'
   | 'hamster'
   | 'turtle'
@@ -89,6 +90,20 @@ export const ANIMAL_AVATAR_REGISTRY: Readonly<Record<LaPitayaAgentId, AnimalAvat
       traits: ['builder', 'energetic', 'practical'],
       greeting: 'El Beni listo para construir código.',
       idleBehaviorDescription: 'Revisa planos y herramientas de construcción.'
+    }
+  },
+  'rosalba': {
+    agentId: 'rosalba',
+    species: 'dog',
+    displayName: 'Rosalba (Dog)',
+    emoji: '🐶',
+    defaultColor: '#A1887F',
+    defaultMood: 'CALM',
+    allowedStates: ALL_VISUAL_STATES,
+    personality: {
+      traits: ['senior developer', 'sweet', 'serene', 'reliable', 'collaborative'],
+      greeting: 'Rosalba lista para la implementación difícil.',
+      idleBehaviorDescription: 'Repasa el código con calma y cuida su calidad.'
     }
   },
   'valentin': {

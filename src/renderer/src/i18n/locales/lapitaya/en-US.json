@@ -16,6 +16,9 @@
     "learner": "Learner",
     "companion": "AI Companion"
   },
+  "titles": {
+    "rosalba": "Senior Software Developer"
+  },
   "cima": {
     "name": "CIMA",
     "phases": {

@@ -9,7 +9,7 @@ import { CIMA_WORKFLOW } from './cima';
 import { LA_PITAYA_HIRE_PRESETS, agentDisplayName } from './agents';
 
 const team = LA_PITAYA_HIRE_PRESETS
-  .map((a) => `${agentDisplayName(a.id, 'en-US')} (${a.roleLabel}, ${a.cimaPhases.join('/')})`)
+  .map((a) => `${agentDisplayName(a.id, 'en-US')} (${a.title ?? a.roleLabel}, ${a.cimaPhases.join('/')})`)
   .join(', ');
 
 export const CIMA_GOD_BRIEFING =

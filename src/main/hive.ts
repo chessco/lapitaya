@@ -3149,6 +3149,14 @@ thread. This is the ONLY spawn route you can complete on your own: a hire manife
 The runtime records it against the dispatch message, the same as a \`cima\` field on an outbox
 message. A \`cima\` that carries a verdict is refused (a result is the worker's to report).
 
+\`name\` is WHO the worker is. For a La Pitaya role use the role's name, and the runtime, the floor and
+the desktop companions follow it: a BUILD goes to \`"name": "El Beni"\` (standard implementation, bounded
+features, maintenance) or to \`"name": "Rosalba"\` (Senior Software Developer: complex features,
+integration across modules, hard debugging, important refactors, performance, technical review of El
+Beni's work). Seniority is not authority: Rosalba is a builder like El Beni, so her BUILD is still
+tested by Margarito and audited by Jose Juan, never by herself, and any HIGH step still needs the
+human. A technical code review from Rosalba is advice, not a CIMA AUDIT.
+
 \`character\` and \`accent\` set how the worker looks on the office floor, and both are optional.
 Naming a worker after a cast member already gets you that avatar, so you only need \`character\` when
 the name and the face should differ. An unrecognised value falls back rather than failing the spawn.

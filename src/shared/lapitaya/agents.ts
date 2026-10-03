@@ -6,7 +6,7 @@
  *
  *   - El Inge IS the god. Only its default name changes (godIdentity.ts); the
  *     spawn path, hive protocol and rename support are untouched.
- *   - Valentin, El Beni, Margarito, Jose Juan and El Tutu are ROLE PRESETS on
+ *   - Valentin, Rosalba, El Beni, Margarito, Jose Juan and El Tutu are ROLE PRESETS on
  *     top of the existing hire flow (Add Agent → La Pitaya team). Picking one
  *     pre-fills name, sprite, description and goal; the human still reviews the
  *     command and clicks spawn, exactly like any other hire.
@@ -21,7 +21,7 @@ import type { CimaPhase } from './cima';
 import { isEnglish, toAscii } from './locales';
 
 export type LaPitayaAgentId =
-  | 'el-inge' | 'valentin' | 'el-beni' | 'margarito' | 'jose-juan' | 'el-tutu' | 'alicia';
+  | 'el-inge' | 'valentin' | 'rosalba' | 'el-beni' | 'margarito' | 'jose-juan' | 'el-tutu' | 'alicia';
 
 export type LaPitayaRole =
   | 'orchestrator' | 'architect' | 'builder' | 'tester' | 'auditor' | 'learner' | 'companion';
@@ -54,6 +54,13 @@ export interface LaPitayaAgent {
    *  English on purpose — they are agent prompts; agentLocale adds a language line. */
   description?: string;
   goal?: string;
+  /** FASE 2.3: a senior specialist inside its role. Seniority is capability, never authority:
+   *  it changes nothing in CIMA (same role, same phases, same governance) and a senior agent
+   *  is never the DEFAULT owner of its phase — it works a phase only when dispatched to it. */
+  seniority?: 'senior';
+  /** Stable English job title when it differs from the role label's meaning (UI localizes
+   *  via i18n key `lapitaya.titles.<id>`). */
+  title?: string;
 }
 
 const HARD_RULES =
@@ -90,6 +97,26 @@ export const LA_PITAYA_AGENTS: readonly LaPitayaAgent[] = [
       'For every request routed to you: study the code and context READ-ONLY, define scope, propose the ' +
       'smallest sound design, list risks, and write explicit acceptance criteria. Hand the plan to El Beni ' +
       'through El Inge. Do not modify code yourself. ' + HARD_RULES
+  },
+  {
+    id: 'rosalba',
+    name: 'Rosalba',
+    role: 'builder',
+    roleLabel: 'Builder',
+    title: 'Senior Software Developer',
+    seniority: 'senior',
+    runtime: 'hire-preset',
+    cimaPhases: ['BUILD'],
+    upstream: 'new role (hire preset) — FASE 2.3',
+    character: 'pam',
+    description: 'Senior Software Developer — complex implementation, integration, debugging, refactoring and performance',
+    goal:
+      'Take the implementation work that needs deeper engineering judgement: complex features, integration across ' +
+      'modules, hard debugging, important refactors, performance, technical debt. Respect the boundaries Valentin ' +
+      'set (he decides WHAT/STRUCTURE, you decide HOW). When El Inge asks, give El Beni a technical code review: ' +
+      'defects, patterns, maintainability, performance — a code review is advice, NOT a CIMA AUDIT, which belongs ' +
+      'to Jose Juan. Your BUILD is tested by Margarito and audited by Jose Juan: never test-pass or audit your own ' +
+      'work, never approve anything, and escalate any HIGH-risk step to the human through El Inge. ' + HARD_RULES
   },
   {
     id: 'el-beni',
@@ -190,6 +217,18 @@ export function phaseForAgent(
 ): CimaPhase | null {
   if (agentId === (registry.godId ?? 'god')) return 'CONTEXT';
   return agentByName(registry.agents[agentId]?.name)?.cimaPhases[0] ?? null;
+}
+
+/** The agent that works a CIMA phase when nobody more specific was dispatched: the hire
+ *  preset owning it that is not a senior specialist (BUILD → El Beni, TEST → Margarito,
+ *  AUDIT → José Juan). Explicit, so adding an agent never moves a phase's default owner. */
+export function defaultPhaseOwner(phase: CimaPhase): LaPitayaAgentId | null {
+  return LA_PITAYA_AGENTS.find((a) => a.runtime === 'hire-preset' && !a.seniority && a.cimaPhases.includes(phase))?.id ?? null;
+}
+
+/** i18n key for an agent's job title: its own title when it has one, else its role. */
+export function agentTitleKey(agent: LaPitayaAgent): string {
+  return agent.title ? `lapitaya:titles.${agent.id}` : `lapitaya:roles.${agent.role}`;
 }
 
 /** Which La Pitaya agent wears a given office sprite, if any. */

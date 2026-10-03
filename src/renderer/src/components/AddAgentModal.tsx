@@ -31,7 +31,7 @@ import {
 } from '@/store/config';
 import { useRtl } from '@/i18n/useDirection';
 import { LA_PITAYA_NAME } from '@shared/lapitaya/brand';
-import { LA_PITAYA_HIRE_PRESETS, agentByName, agentDisplayName, agentLanguageDirective } from '@shared/lapitaya/agents';
+import { LA_PITAYA_HIRE_PRESETS, agentByName, agentDisplayName, agentLanguageDirective, agentTitleKey } from '@shared/lapitaya/agents';
 import { toAscii } from '@shared/lapitaya/locales';
 import { getLocaleSettings } from '@/i18n';
 
@@ -692,7 +692,7 @@ export function AddAgentModal({ onClose, config, onConfigChange }: AddAgentModal
                               setDescription(a.description ?? '');
                               setGoal((a.goal ?? '') + agentLanguageDirective(getLocaleSettings().agentLocale));
                             }}
-                            title={`${tr(`lapitaya:roles.${a.role}`)} — ${a.description ?? ''}`}
+                            title={`${tr(agentTitleKey(a))} — ${a.description ?? ''}`}
                             style={{
                               padding: '3px 8px 1px',
                               background: 'var(--cth-cream-100)',
@@ -701,7 +701,7 @@ export function AddAgentModal({ onClose, config, onConfigChange }: AddAgentModal
                               color: 'var(--cth-ink-900)', cursor: 'pointer', border: 'none'
                             }}
                           >
-                            {agentDisplayName(a.id, i18n.language)} · {tr(`lapitaya:roles.${a.role}`)}
+                            {agentDisplayName(a.id, i18n.language)} · {tr(agentTitleKey(a))}
                           </button>
                         ))}
                       </div>

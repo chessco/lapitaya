@@ -81,8 +81,8 @@ test('the full roster is present with the right roles', () => {
 test('es-MX keeps the accents; en-US uses the exact ASCII spelling', () => {
   const es = agents.LA_PITAYA_AGENTS.map((a) => agents.agentDisplayName(a.id, 'es-MX'));
   const en = agents.LA_PITAYA_AGENTS.map((a) => agents.agentDisplayName(a.id, 'en-US'));
-  assert.deepEqual(es, ['El Inge', 'Valentín', 'El Beni', 'Margarito', 'José Juan', 'El Tutú', 'Alicia']);
-  assert.deepEqual(en, ['El Inge', 'Valentin', 'El Beni', 'Margarito', 'Jose Juan', 'El Tutu', 'Alicia']);
+  assert.deepEqual(es, ['El Inge', 'Valentín', 'Rosalba', 'El Beni', 'Margarito', 'José Juan', 'El Tutú', 'Alicia']);
+  assert.deepEqual(en, ['El Inge', 'Valentin', 'Rosalba', 'El Beni', 'Margarito', 'Jose Juan', 'El Tutu', 'Alicia']);
   for (const name of en) assert.match(name, /^[\x20-\x7e]+$/, `${name} is not ASCII`);
 });
 
@@ -95,7 +95,7 @@ test('a typed name resolves in either spelling', () => {
 
 test('hire presets carry a briefing and the CIMA hard rules', () => {
   const presets = agents.LA_PITAYA_HIRE_PRESETS.map((a) => a.id);
-  assert.deepEqual(presets, ['valentin', 'el-beni', 'margarito', 'jose-juan', 'el-tutu']);
+  assert.deepEqual(presets, ['valentin', 'rosalba', 'el-beni', 'margarito', 'jose-juan', 'el-tutu']);
   for (const a of agents.LA_PITAYA_HIRE_PRESETS) {
     assert.ok(a.description && a.goal, `${a.id} has no briefing`);
     assert.match(a.goal, /Builder != Auditor/);
