@@ -1,0 +1,3 @@
+{"ts":1791046204972,"kind":"spawn","agentId":"worker-rosalba-stats-build1","name":"Rosalba","isGod":false}
+✔ ROS-09: El Inge can dispatch BUILD to Rosalba (existing spawn path, documented for him) (1855.0024ms)
+✔ ROS-10: Rosalba spawn carries a structured CIMA assignment (and only an assignment) (1608.6107ms)

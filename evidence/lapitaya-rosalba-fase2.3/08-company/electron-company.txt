@@ -1,0 +1,6 @@
+PASS E13 COMPANY ≤ 3 with independent states (Rosalba WORKING next to others)
+     [{"id":"alicia","state":"WORKING","species":"fox","bubble":{"sourceFact":"BUILD_STARTED","text":"El Beni está construyendo."}},{"id":"margarito","state":"WORKING","species":"hamster","bubble":{"sourceFact":"TEST_STARTED","text":"Margarito está ejecutando pruebas."}},{"id":"rosalba","state":"WORKING","species":"dog","bubble":{"sourceFact":"BUILD_STARTED","text":"Rosalba está construyendo."}}]
+✔ ROS-23: COMPANY can include Rosalba (1566.5697ms)
+✔ ROS-24: COMPANY remains max 3 (1687.4285ms)
+✔ ROS-25: Rosalba state is independent from El Beni (2286.4381ms)
+✔ ROS-26: Rosalba state is independent from Alicia (1770.3825ms)

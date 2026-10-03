@@ -1,0 +1,34 @@
+PASS E1 real spawn "Rosalba" + BUILD → cima-assignment → Rosalba WORKING (El Beni untouched)
+     {"res":{"recorded":true},"entries":[{"id":"alicia","state":"IDLE","species":"fox","bubble":null},{"id":"rosalba","state":"WORKING","species":"dog","bubble":{"sourceFact":"BUILD_STARTED","text":"Rosalba está construyendo."}},{"id":"el-beni","state":"IDLE","species":"cat","bubble":null}]}
+PASS E2 the window shows 🐶 Rosalba · Desarrolladora Senior
+     {"name":"Rosalba","subtitle":"Desarrolladora Senior","avatar":"🐶","bubble":"✓ hecho verificadoRosalba está construyendo.✕","htmlBg":"rgba(0, 0, 0, 0)","bodyBg":"rgba(0, 0, 0, 0)","lang":"en"}
+PASS E3 transparent, frameless, no opaque panel (window + page background)
+     {"htmlBg":"rgba(0, 0, 0, 0)","bodyBg":"rgba(0, 0, 0, 0)","bg":"#000000"}
+PASS E4 speech bubble shows the verified fact
+     ✓ hecho verificadoRosalba está construyendo.✕
+PASS E5 sandbox + contextIsolation, no nodeIntegration
+     {"sandbox":true,"contextIsolation":true,"nodeIntegration":false}
+PASS E6 click on Rosalba opens her menu
+     {"rect":{"x":170,"y":198}}
+PASS E7 click-through: the window becomes interactive only over the creature
+     [{"id":"rosalba","ignore":false}]
+PASS E8 drag moves the window and keeps its size
+     {"x":520,"y":260,"width":340,"height":340}
+PASS E9 hide hides Rosalba; restore brings her back
+     {"hidden":true,"visible":true}
+PASS E10 Rosalba BUILD PASS → Alicia CELEBRATING, Rosalba released
+     {"verdict":"PASS","entries":[{"id":"alicia","state":"CELEBRATING","species":"fox","bubble":{"sourceFact":"BUILD_COMPLETED","text":"El build terminó con éxito."}},{"id":"rosalba","state":"IDLE","species":"dog","bubble":null},{"id":"el-beni","state":"IDLE","species":"cat","bubble":null}]}
+PASS E11 Margarito TEST PASS; Rosalba self-AUDIT refused (BUILDER_NOT_AUDITOR); José Juan AUDIT PASS
+     {"test":"PASS","self":["BLOCKED",["BUILDER_NOT_AUDITOR"]],"audit":["PASS",[]],"entries":[{"id":"alicia","state":"CELEBRATING","species":"fox","bubble":null},{"id":"jose-juan","state":"CELEBRATING","species":"turtle","bubble":{"sourceFact":"AUDIT_COMPLETED","text":"La auditoría terminó con veredicto PASS."}},{"id":"margarito","state":"CELEBRATING","species":"hamster","bubble":{"sourceFact":"TEST_COMPLETED","text":"Las pruebas pasaron."}}]}
+PASS E12 FOCUS + El Beni BUILD → El Beni; FOCUS + Rosalba BUILD → only Rosalba WORKING
+     {"f1":[{"id":"el-beni","state":"WORKING","species":"cat","bubble":{"sourceFact":"BUILD_STARTED","text":"El Beni está construyendo."}}],"f2":[{"id":"rosalba","state":"WORKING","species":"dog","bubble":{"sourceFact":"BUILD_STARTED","text":"Rosalba está construyendo."}}]}
+PASS E13 COMPANY ≤ 3 with independent states (Rosalba WORKING next to others)
+     [{"id":"alicia","state":"WORKING","species":"fox","bubble":{"sourceFact":"BUILD_STARTED","text":"El Beni está construyendo."}},{"id":"margarito","state":"WORKING","species":"hamster","bubble":{"sourceFact":"TEST_STARTED","text":"Margarito está ejecutando pruebas."}},{"id":"rosalba","state":"WORKING","species":"dog","bubble":{"sourceFact":"BUILD_STARTED","text":"Rosalba está construyendo."}}]
+PASS E14 Rosalba's position persists across a restart
+     {"saved":{"x":520,"y":260},"restored":{"x":520,"y":260}}
+PASS E15 Rosalba assignments are chained + MAC'd; ledger HEALTHY
+     {"rosalbaAssignments":[{"eventId":"evt-9a7280f11582ab8304da768c","sequence":1,"to":"worker-ros1","phase":"BUILD","taskId":"LP-ROS-E1","hash":true,"mac":true},{"eventId":"evt-7bd7bf4a93b0af21bcecb6ca","sequence":17,"to":"worker-ros2","phase":"BUILD","taskId":"LP-ROS-E3","hash":true,"mac":true}],"health":"HEALTHY"}
+PASS E16 no renderer console errors
+     []
+
+16/16 PASS

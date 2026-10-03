@@ -1,0 +1,4 @@
+✔ ROS-06: Rosalba cannot audit (or test-pass) her own work (2891.5173ms)
+✔ ROS-33: Builder != Auditor remains enforced across the senior flow (2935.9183ms)
+PASS E11 Margarito TEST PASS; Rosalba self-AUDIT refused (BUILDER_NOT_AUDITOR); José Juan AUDIT PASS
+     {"test":"PASS","self":["BLOCKED",["BUILDER_NOT_AUDITOR"]],"audit":["PASS",[]],"entries":[{"id":"alicia","state":"CELEBRATING","species":"fox","bubble":null},{"id":"jose-juan","state":"CELEBRATING","species":"turtle","bubble":{"sourceFact":"AUDIT_COMPLETED","text":"La auditoría terminó con veredicto PASS."}},{"id":"margarito","state":"CELEBRATING","species":"hamster","bubble":{"sourceFact":"TEST_COMPLETED","text":"Las pruebas pasaron."}}]}

@@ -1,0 +1,380 @@
+{
+  "summary": "16/16 PASS",
+  "results": [
+    {
+      "id": "E1",
+      "desc": "real spawn \"Rosalba\" + BUILD → cima-assignment → Rosalba WORKING (El Beni untouched)",
+      "pass": true,
+      "detail": "{\"res\":{\"recorded\":true},\"entries\":[{\"id\":\"alicia\",\"state\":\"IDLE\",\"species\":\"fox\",\"bubble\":null},{\"id\":\"rosalba\",\"state\":\"WORKING\",\"species\":\"dog\",\"bubble\":{\"sourceFact\":\"BUILD_STARTED\",\"text\":\"Rosalba está construyendo.\"}},{\"id\":\"el-beni\",\"state\":\"IDLE\",\"species\":\"cat\",\"bubble\":null}]}"
+    },
+    {
+      "id": "E2",
+      "desc": "the window shows 🐶 Rosalba · Desarrolladora Senior",
+      "pass": true,
+      "detail": "{\"name\":\"Rosalba\",\"subtitle\":\"Desarrolladora Senior\",\"avatar\":\"🐶\",\"bubble\":\"✓ hecho verificadoRosalba está construyendo.✕\",\"htmlBg\":\"rgba(0, 0, 0, 0)\",\"bodyBg\":\"rgba(0, 0, 0, 0)\",\"lang\":\"en\"}"
+    },
+    {
+      "id": "E3",
+      "desc": "transparent, frameless, no opaque panel (window + page background)",
+      "pass": true,
+      "detail": "{\"htmlBg\":\"rgba(0, 0, 0, 0)\",\"bodyBg\":\"rgba(0, 0, 0, 0)\",\"bg\":\"#000000\"}"
+    },
+    {
+      "id": "E4",
+      "desc": "speech bubble shows the verified fact",
+      "pass": true,
+      "detail": "✓ hecho verificadoRosalba está construyendo.✕"
+    },
+    {
+      "id": "E5",
+      "desc": "sandbox + contextIsolation, no nodeIntegration",
+      "pass": true,
+      "detail": "{\"sandbox\":true,\"contextIsolation\":true,\"nodeIntegration\":false}"
+    },
+    {
+      "id": "E6",
+      "desc": "click on Rosalba opens her menu",
+      "pass": true,
+      "detail": "{\"rect\":{\"x\":170,\"y\":198}}"
+    },
+    {
+      "id": "E7",
+      "desc": "click-through: the window becomes interactive only over the creature",
+      "pass": true,
+      "detail": "[{\"id\":\"rosalba\",\"ignore\":false}]"
+    },
+    {
+      "id": "E8",
+      "desc": "drag moves the window and keeps its size",
+      "pass": true,
+      "detail": "{\"x\":520,\"y\":260,\"width\":340,\"height\":340}"
+    },
+    {
+      "id": "E9",
+      "desc": "hide hides Rosalba; restore brings her back",
+      "pass": true,
+      "detail": "{\"hidden\":true,\"visible\":true}"
+    },
+    {
+      "id": "E10",
+      "desc": "Rosalba BUILD PASS → Alicia CELEBRATING, Rosalba released",
+      "pass": true,
+      "detail": "{\"verdict\":\"PASS\",\"entries\":[{\"id\":\"alicia\",\"state\":\"CELEBRATING\",\"species\":\"fox\",\"bubble\":{\"sourceFact\":\"BUILD_COMPLETED\",\"text\":\"El build terminó con éxito.\"}},{\"id\":\"rosalba\",\"state\":\"IDLE\",\"species\":\"dog\",\"bubble\":null},{\"id\":\"el-beni\",\"state\":\"IDLE\",\"species\":\"cat\",\"bubble\":null}]}"
+    },
+    {
+      "id": "E11",
+      "desc": "Margarito TEST PASS; Rosalba self-AUDIT refused (BUILDER_NOT_AUDITOR); José Juan AUDIT PASS",
+      "pass": true,
+      "detail": "{\"test\":\"PASS\",\"self\":[\"BLOCKED\",[\"BUILDER_NOT_AUDITOR\"]],\"audit\":[\"PASS\",[]],\"entries\":[{\"id\":\"alicia\",\"state\":\"CELEBRATING\",\"species\":\"fox\",\"bubble\":null},{\"id\":\"jose-juan\",\"state\":\"CELEBRATING\",\"species\":\"turtle\",\"bubble\":{\"sourceFact\":\"AUDIT_COMPLETED\",\"text\":\"La auditoría terminó con veredicto PASS.\"}},{\"id\":\"margarito\",\"state\":\"CELEBRATING\",\"species\":\"hamster\",\"bubble\":{\"sourceFact\":\"TEST_COMPLETED\",\"text\":\"Las pruebas pasaron.\"}}]}"
+    },
+    {
+      "id": "E12",
+      "desc": "FOCUS + El Beni BUILD → El Beni; FOCUS + Rosalba BUILD → only Rosalba WORKING",
+      "pass": true,
+      "detail": "{\"f1\":[{\"id\":\"el-beni\",\"state\":\"WORKING\",\"species\":\"cat\",\"bubble\":{\"sourceFact\":\"BUILD_STARTED\",\"text\":\"El Beni está construyendo.\"}}],\"f2\":[{\"id\":\"rosalba\",\"state\":\"WORKING\",\"species\":\"dog\",\"bubble\":{\"sourceFact\":\"BUILD_STARTED\",\"text\":\"Rosalba está construyendo.\"}}]}"
+    },
+    {
+      "id": "E13",
+      "desc": "COMPANY ≤ 3 with independent states (Rosalba WORKING next to others)",
+      "pass": true,
+      "detail": "[{\"id\":\"alicia\",\"state\":\"WORKING\",\"species\":\"fox\",\"bubble\":{\"sourceFact\":\"BUILD_STARTED\",\"text\":\"El Beni está construyendo.\"}},{\"id\":\"margarito\",\"state\":\"WORKING\",\"species\":\"hamster\",\"bubble\":{\"sourceFact\":\"TEST_STARTED\",\"text\":\"Margarito está ejecutando pruebas.\"}},{\"id\":\"rosalba\",\"state\":\"WORKING\",\"species\":\"dog\",\"bubble\":{\"sourceFact\":\"BUILD_STARTED\",\"text\":\"Rosalba está construyendo.\"}}]"
+    },
+    {
+      "id": "E14",
+      "desc": "Rosalba's position persists across a restart",
+      "pass": true,
+      "detail": "{\"saved\":{\"x\":520,\"y\":260},\"restored\":{\"x\":520,\"y\":260}}"
+    },
+    {
+      "id": "E15",
+      "desc": "Rosalba assignments are chained + MAC'd; ledger HEALTHY",
+      "pass": true,
+      "detail": "{\"rosalbaAssignments\":[{\"eventId\":\"evt-9a7280f11582ab8304da768c\",\"sequence\":1,\"to\":\"worker-ros1\",\"phase\":\"BUILD\",\"taskId\":\"LP-ROS-E1\",\"hash\":true,\"mac\":true},{\"eventId\":\"evt-7bd7bf4a93b0af21bcecb6ca\",\"sequence\":17,\"to\":\"worker-ros2\",\"phase\":\"BUILD\",\"taskId\":\"LP-ROS-E3\",\"hash\":true,\"mac\":true}],\"health\":\"HEALTHY\"}"
+    },
+    {
+      "id": "E16",
+      "desc": "no renderer console errors",
+      "pass": true,
+      "detail": "[]"
+    }
+  ],
+  "timeline": [
+    {
+      "label": "rosalba-build-assigned",
+      "mode": "COMPANY",
+      "entries": [
+        {
+          "id": "alicia",
+          "state": "IDLE",
+          "species": "fox",
+          "bubble": null
+        },
+        {
+          "id": "rosalba",
+          "state": "WORKING",
+          "species": "dog",
+          "bubble": {
+            "sourceFact": "BUILD_STARTED",
+            "text": "Rosalba está construyendo."
+          }
+        },
+        {
+          "id": "el-beni",
+          "state": "IDLE",
+          "species": "cat",
+          "bubble": null
+        }
+      ],
+      "shots": [
+        "01-rosalba-build-assigned-alicia.png",
+        "01-rosalba-build-assigned-el-beni.png"
+      ]
+    },
+    {
+      "label": "rosalba-build-pass",
+      "mode": "COMPANY",
+      "entries": [
+        {
+          "id": "alicia",
+          "state": "CELEBRATING",
+          "species": "fox",
+          "bubble": {
+            "sourceFact": "BUILD_COMPLETED",
+            "text": "El build terminó con éxito."
+          }
+        },
+        {
+          "id": "rosalba",
+          "state": "IDLE",
+          "species": "dog",
+          "bubble": null
+        },
+        {
+          "id": "el-beni",
+          "state": "IDLE",
+          "species": "cat",
+          "bubble": null
+        }
+      ],
+      "shots": [
+        "02-rosalba-build-pass-alicia.png",
+        "02-rosalba-build-pass-el-beni.png",
+        "02-rosalba-build-pass-rosalba.png"
+      ]
+    },
+    {
+      "label": "test-audit",
+      "mode": "COMPANY",
+      "entries": [
+        {
+          "id": "alicia",
+          "state": "CELEBRATING",
+          "species": "fox",
+          "bubble": null
+        },
+        {
+          "id": "jose-juan",
+          "state": "CELEBRATING",
+          "species": "turtle",
+          "bubble": {
+            "sourceFact": "AUDIT_COMPLETED",
+            "text": "La auditoría terminó con veredicto PASS."
+          }
+        },
+        {
+          "id": "margarito",
+          "state": "CELEBRATING",
+          "species": "hamster",
+          "bubble": {
+            "sourceFact": "TEST_COMPLETED",
+            "text": "Las pruebas pasaron."
+          }
+        }
+      ],
+      "shots": [
+        "03-test-audit-alicia.png",
+        "03-test-audit-margarito.png"
+      ]
+    },
+    {
+      "label": "focus-elbeni-build",
+      "mode": "FOCUS",
+      "entries": [
+        {
+          "id": "el-beni",
+          "state": "WORKING",
+          "species": "cat",
+          "bubble": {
+            "sourceFact": "BUILD_STARTED",
+            "text": "El Beni está construyendo."
+          }
+        }
+      ],
+      "shots": [
+        "04-focus-elbeni-build-el-beni.png"
+      ]
+    },
+    {
+      "label": "focus-rosalba-build",
+      "mode": "FOCUS",
+      "entries": [
+        {
+          "id": "rosalba",
+          "state": "WORKING",
+          "species": "dog",
+          "bubble": {
+            "sourceFact": "BUILD_STARTED",
+            "text": "Rosalba está construyendo."
+          }
+        }
+      ],
+      "shots": [
+        "05-focus-rosalba-build-rosalba.png"
+      ]
+    },
+    {
+      "label": "company",
+      "mode": "COMPANY",
+      "entries": [
+        {
+          "id": "alicia",
+          "state": "WORKING",
+          "species": "fox",
+          "bubble": {
+            "sourceFact": "BUILD_STARTED",
+            "text": "El Beni está construyendo."
+          }
+        },
+        {
+          "id": "margarito",
+          "state": "WORKING",
+          "species": "hamster",
+          "bubble": {
+            "sourceFact": "TEST_STARTED",
+            "text": "Margarito está ejecutando pruebas."
+          }
+        },
+        {
+          "id": "rosalba",
+          "state": "WORKING",
+          "species": "dog",
+          "bubble": {
+            "sourceFact": "BUILD_STARTED",
+            "text": "Rosalba está construyendo."
+          }
+        }
+      ],
+      "shots": [
+        "06-company-alicia.png",
+        "06-company-margarito.png",
+        "06-company-rosalba.png"
+      ]
+    }
+  ],
+  "runtimeEvents": [
+    {
+      "type": "cima-record",
+      "kind": "cima-assignment",
+      "alicia": [
+        "cima.phase.assigned"
+      ]
+    },
+    {
+      "type": "governance",
+      "alicia": []
+    },
+    {
+      "type": "trace",
+      "alicia": []
+    },
+    {
+      "type": "cima-record",
+      "kind": "cima",
+      "alicia": [
+        "cima.phase.changed"
+      ]
+    },
+    {
+      "type": "cima-record",
+      "kind": "cima-assignment",
+      "alicia": [
+        "cima.phase.assigned"
+      ]
+    },
+    {
+      "type": "governance",
+      "alicia": []
+    },
+    {
+      "type": "trace",
+      "alicia": []
+    },
+    {
+      "type": "cima-record",
+      "kind": "cima",
+      "alicia": [
+        "cima.phase.changed"
+      ]
+    },
+    {
+      "type": "governance",
+      "alicia": []
+    },
+    {
+      "type": "trace",
+      "alicia": []
+    },
+    {
+      "type": "cima-record",
+      "kind": "cima",
+      "alicia": [
+        "governance.blocked"
+      ]
+    },
+    {
+      "type": "cima-record",
+      "kind": "cima-assignment",
+      "alicia": [
+        "cima.phase.assigned"
+      ]
+    },
+    {
+      "type": "governance",
+      "alicia": []
+    },
+    {
+      "type": "trace",
+      "alicia": []
+    },
+    {
+      "type": "cima-record",
+      "kind": "cima",
+      "alicia": [
+        "cima.phase.changed",
+        "audit.completed"
+      ]
+    },
+    {
+      "type": "cima-record",
+      "kind": "cima-assignment",
+      "alicia": [
+        "cima.phase.assigned"
+      ]
+    },
+    {
+      "type": "cima-record",
+      "kind": "cima-assignment",
+      "alicia": [
+        "cima.phase.assigned"
+      ]
+    },
+    {
+      "type": "cima-record",
+      "kind": "cima-assignment",
+      "alicia": [
+        "cima.phase.assigned"
+      ]
+    }
+  ],
+  "consoleErrors": []
+}

@@ -1,0 +1,31 @@
+== Protected files changed vs b13585b2 (empty = none) ==
+
+== Files changed in FASE 2.3 ==
+ package.json                                       |   2 +-
+ src/main/desktopPresence.ts                        |  26 +-
+ src/main/hive.ts                                   |   8 +
+ src/main/index.ts                                  |   7 +-
+ src/renderer/src/companions/CompanionApp.tsx       |   5 +-
+ src/renderer/src/companions/CompanionCreature.tsx  |   5 +-
+ src/renderer/src/components/AddAgentModal.tsx      |   6 +-
+ src/renderer/src/i18n/locales/lapitaya/en-US.json  |   3 +
+ src/renderer/src/i18n/locales/lapitaya/es-MX.json  |   3 +
+ src/renderer/src/scene/office/cast.ts              |   4 +-
+ src/shared/lapitaya/agents.ts                      |  43 +-
+ src/shared/lapitaya/cimaBriefing.ts                |   2 +-
+ .../lapitaya/desktopCompanions/animalAvatar.ts     |  15 +
+ .../lapitaya/desktopCompanions/runtimeFacts.ts     |  50 +-
+ test/lapitaya-foundation.test.cjs                  |   6 +-
+ test/lapitaya-rosalba.test.cjs                     | 577 +++++++++++++++++++++
+ 16 files changed, 732 insertions(+), 30 deletions(-)
+
+== Rosalba-specific IPC / authority symbols anywhere in src (expect none) ==
+none
+
+✔ ROS-07: Rosalba cannot approve HIGH (2263.0606ms)
+✔ ROS-08: a HIGH action by Rosalba requires HUMAN_APPROVAL (even in autoMode) (2083.0989ms)
+✔ ROS-27: the Rosalba companion renderer has no governance authority (1516.6695ms)
+✔ ROS-28: the Rosalba companion exposes presentation-only IPC (sandboxed) (1673.6226ms)
+✔ ROS-35: Rosalba cannot mutate the policy / capability registry at runtime (1724.7557ms)
+PASS E5 sandbox + contextIsolation, no nodeIntegration
+     {"sandbox":true,"contextIsolation":true,"nodeIntegration":false}

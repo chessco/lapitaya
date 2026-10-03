@@ -1,0 +1,6 @@
+Base: b13585b2 (FASE 2.2 acceptance) on lapitaya/desktop-companions-v0.2.1-runtime-phase-assignment
+Branch: lapitaya/desktop-companions-v0.2.3-rosalba-senior-developer
+Working tree at branch creation: clean
+main: 2a5a5858ddf11885fe9c3980df0b9b1dfdace9a8 (untouched)
+Baseline (FASE 2.2 acceptance, same code): companion 95/95, typecheck PASS, build PASS, CIMA v0.14 46/46 v0.15 43/43 v0.16 50/50
+Node v24.14.0 · Electron 32.3.3 · Windows 11 Pro 10.0.26200

@@ -1,0 +1,6 @@
+✔ ROS-05: Rosalba is classified as Builder for CIMA separation purposes (1263.183ms)
+✔ ROS-06: Rosalba cannot audit (or test-pass) her own work (2891.5173ms)
+✔ ROS-07: Rosalba cannot approve HIGH (2263.0606ms)
+✔ ROS-08: a HIGH action by Rosalba requires HUMAN_APPROVAL (even in autoMode) (2083.0989ms)
+✔ ROS-33: Builder != Auditor remains enforced across the senior flow (2935.9183ms)
+✔ ROS-35: Rosalba cannot mutate the policy / capability registry at runtime (1724.7557ms)
