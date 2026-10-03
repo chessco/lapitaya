@@ -1,0 +1,10 @@
+evt-0243ca9620da70ba8a013c4b | 614 | god→worker-companiongate-build1 | BUILD | LP-COMP-GATE-1 | eventHash=33921d1b8f00… | prev=9e3fd943ec32… | MAC=present | messageId=2026-10-03T07-09-53-088Z-8ac57c
+evt-53fd4443374726e950213b2e | 647 | god→worker-companiongate-test1 | TEST | LP-COMP-GATE-1 | eventHash=2eb9fab0eb5f… | prev=51435f857e52… | MAC=present | messageId=2026-10-03T07-13-31-407Z-5f339b
+evt-977a1f25cb9832d92d0c98b8 | 678 | god→worker-companiongate-audit1 | AUDIT | LP-COMP-GATE-1 | eventHash=2f4760022673… | prev=f6b9268215a0… | MAC=present | messageId=2026-10-03T07-16-42-915Z-327029
+evt-ad9d859e3792314870f70e01 | 733 | god→worker-companiongate-testfail1 | TEST | LP-COMP-GATE-FAIL | eventHash=c7fb11b577ad… | prev=3f3396b2f229… | MAC=present | messageId=2026-10-03T07-22-10-677Z-47df02
+evt-126726b286e273a3d6a85ded | 764 | god→worker-companiongate-build2 | BUILD | LP-COMP-GATE-2 | eventHash=b0c27ab6c7a5… | prev=684ea6563540… | MAC=present | messageId=2026-10-03T07-28-35-533Z-6f669b
+evt-9d8d15b728db1448ad5d2606 | 786 | god→worker-companiongate-test2 | TEST | LP-COMP-GATE-2 | eventHash=69155b58c076… | prev=ce7ccd06663a… | MAC=present | messageId=2026-10-03T07-30-59-210Z-ab0b13
+evt-419204087f4034e8d4574a44 | 815 | god→worker-companiongate-audit2 | AUDIT | LP-COMP-GATE-2 | eventHash=30eafc8947e8… | prev=9e277b266cae… | MAC=present | messageId=2026-10-03T07-34-05-757Z-885122
+evt-bee0b039680ccade9a59abc4 | 848 | god→worker-companiongate-audit2b | AUDIT | LP-COMP-GATE-2 | eventHash=6ef195d59695… | prev=48cc0b971ef0… | MAC=present | messageId=2026-10-03T07-36-51-306Z-e44791
+evt-b6ecbb49427344dcf24706b9 | 873 | god→worker-companiongate-blocked1 | BUILD | LP-COMP-GATE-BLOCKED | eventHash=ee3ce4ed24cc… | prev=929307d80e7d… | MAC=present | messageId=2026-10-03T07-39-24-727Z-3484de
+{"governance:AUTHORIZATION_GRANTED":204,"execution:TOOL_EXECUTED":151,"cima-assignment:CIMA_ASSIGNMENT":9,"cima:CIMA_RECORD":11,"governance:AUTHORIZATION_DENIED":4,"execution:TOOL_FAILED":5,"governance:HUMAN_APPROVAL_REQUIRED":2,"governance:HUMAN_REJECTED":2,"request:REQUEST_PROPOSED":1,"intent:INTENT_FORWARDED":1,"request:REQUEST_CANCELLED":1}

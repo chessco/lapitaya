@@ -1,0 +1,40 @@
+== Code changes in this gate (git diff 107cd9f7, tracked files) ==
+(empty = no code change)
+
+== Companion preload: exposed API keys (contextBridge) ==
+18:  onSnapshot: (callback: (snapshot: CompanionPresentation) => void) => () => void;
+19:  open: () => void;
+20:  dismissBubble: () => void;
+21:  setMode: (mode: CompanionMode) => void;
+22:  hide: () => void;
+23:  setInteractive: (interactive: boolean) => void;
+24:  drag: (phase: CompanionDragPhase, dx: number, dy: number) => void;
+28:  onSnapshot: (callback) => {
+39:  open: () => {
+42:  dismissBubble: () => {
+45:  setMode: (mode: CompanionMode) => {
+50:  hide: () => {
+53:  setInteractive: (interactive: boolean) => {
+56:  drag: (phase: CompanionDragPhase, dx: number, dy: number) => {
+
+== Companion IPC channels handled in main ==
+816:    ipcMain.on(COMPANION_IPC.REQUEST_SNAPSHOT
+827:    ipcMain.on(COMPANION_IPC.OPEN_MAIN
+832:    ipcMain.on(COMPANION_IPC.DISMISS_BUBBLE
+843:    ipcMain.on(COMPANION_IPC.SET_MODE
+848:    ipcMain.on(COMPANION_IPC.HIDE
+853:    ipcMain.on(COMPANION_IPC.DRAG
+885:    ipcMain.on(COMPANION_IPC.SET_INTERACTIVE
+
+== Any authority call reachable from companion code? (approve|authorize|decide|reject|confirm|ledger|spawn|execute) ==
+none
+
+== webPreferences of companion windows ==
+682:        sandbox: true,
+683:        contextIsolation: true,
+684:        nodeIntegration: false,
+
+== Protected files untouched since base ec208a6e ==
+(empty = unchanged)
+src/main/index.ts
+src/main/intentBoundary.ts

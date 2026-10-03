@@ -1,0 +1,18 @@
+Branch: lapitaya/desktop-companions-v0.2.1-runtime-phase-assignment
+HEAD: 107cd9f78a2f7e5c76712acdabc82e46795fe5be
+Working tree: clean at start (only untracked change afterwards: this evidence folder)
+Node: v24.14.0
+Electron: 32.3.3
+OS: Windows 11 Pro 10.0.26200
+Date: 2026-10-03T07:01:09Z
+
+companion=0
+typecheck=0
+build=0
+cima-0.14=0 ℹ pass 46 ℹ fail 0 
+cima-0.15=0 ℹ pass 43 ℹ fail 0 
+cima-0.16=0 ℹ pass 50 ℹ fail 0 
+ℹ tests 95
+ℹ pass 95
+ℹ fail 0
+

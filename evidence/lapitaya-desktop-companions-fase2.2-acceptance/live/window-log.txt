@@ -1,0 +1,19 @@
+07:14:04.197 pid=22000 title='La Pitaya' rect=1438,673,1778,1013 
+07:16:46.069 
+07:16:55.827 pid=22000 title='La Pitaya' rect=1176,676,1516,1016 
+07:22:13.754 pid=22000 title='La Pitaya' rect=1438,673,1778,1013 
+07:25:22.644 pid=22000 title='' rect=1589,725,1816,991 pid=22000 title='La Pitaya' rect=1438,673,1778,1013 
+07:25:54.384 pid=22000 title='La Pitaya' rect=1176,676,1516,1016 pid=22000 title='La Pitaya' rect=1312,676,1652,1016 pid=22000 title='La Pitaya' rect=1438,673,1778,1013 
+07:28:42.386 pid=22000 title='La Pitaya' rect=1312,676,1652,1016 pid=22000 title='La Pitaya' rect=1438,673,1778,1013 pid=22000 title='La Pitaya' rect=400,100,740,440 
+07:34:08.743 pid=22000 title='La Pitaya' rect=1176,676,1516,1016 pid=22000 title='La Pitaya' rect=1312,676,1652,1016 pid=22000 title='La Pitaya' rect=1438,673,1778,1013 
+07:39:29.183 pid=22000 title='La Pitaya' rect=1176,676,1516,1016 pid=22000 title='La Pitaya' rect=1312,676,1652,1016 pid=22000 title='La Pitaya' rect=400,100,740,440 
+14:59:17.822 pid=22000 title='La Pitaya' rect=-1520,100,-1180,440 pid=22000 title='La Pitaya' rect=-1712,74,-430,876 pid=22000 title='La Pitaya' rect=-608,676,-268,1016 pid=22000 title='La Pitaya' rect=-744,676,-404,1016 
+15:12:37.384 pid=22000 title='La Pitaya' rect=-1520,100,-1180,440 pid=22000 title='La Pitaya' rect=-3828,5,-1905,1208 pid=22000 title='La Pitaya' rect=-608,676,-268,1016 pid=22000 title='La Pitaya' rect=-744,676,-404,1016 
+15:15:15.224 pid=22000 title='La Pitaya' rect=-1520,100,-1180,440 pid=22000 title='La Pitaya' rect=-2561,306,-2051,816 pid=22000 title='La Pitaya' rect=-3828,5,-1905,1208 pid=22000 title='La Pitaya' rect=-744,676,-404,1016 
+15:15:23.135 pid=22000 title='La Pitaya' rect=-1520,100,-1180,440 pid=22000 title='La Pitaya' rect=-2939,97,-2429,607 pid=22000 title='La Pitaya' rect=-3119,102,-2609,612 pid=22000 title='La Pitaya' rect=-3828,5,-1905,1208 
+15:15:27.367 pid=22000 title='' rect=-3129,594,-3036,632 pid=22000 title='La Pitaya' rect=-2939,97,-2429,607 pid=22000 title='La Pitaya' rect=-3119,102,-2609,612 pid=22000 title='La Pitaya' rect=-3396,87,-2886,597 pid=22000 title='La Pitaya' rect=-3828,5,-1905,1208 
+15:16:42.194 pid=22000 title='La Pitaya' rect=-2939,97,-2429,607 pid=22000 title='La Pitaya' rect=-3119,102,-2609,612 pid=22000 title='La Pitaya' rect=-3396,87,-2886,597 pid=22000 title='La Pitaya' rect=-3828,5,-1905,1208 
+15:18:07.813 pid=22000 title='La Pitaya' rect=-2345,-14,-425,1187 pid=22000 title='La Pitaya' rect=-2939,97,-2429,607 pid=22000 title='La Pitaya' rect=-3119,102,-2609,612 pid=22000 title='La Pitaya' rect=-3396,87,-2886,597 
+15:18:13.776 pid=22000 title='La Pitaya' rect=-2939,97,-2429,607 pid=22000 title='La Pitaya' rect=-3119,102,-2609,612 pid=22000 title='La Pitaya' rect=-3396,87,-2886,597 pid=22000 title='La Pitaya' rect=198,109,1480,911 
+15:18:39.027 pid=22000 title='La Pitaya' rect=-2939,97,-2429,607 pid=22000 title='La Pitaya' rect=-3119,102,-2609,612 pid=22000 title='La Pitaya' rect=-3396,87,-2886,597 pid=22000 title='La Pitaya' rect=-8,-8,1928,1040 
+15:19:54.109 pid=22000 title='La Pitaya' rect=-2939,97,-2429,607 pid=22000 title='La Pitaya' rect=-3119,102,-2609,612 pid=22000 title='La Pitaya' rect=-3396,87,-2886,597 pid=22000 title='La Pitaya' rect=198,109,1480,911 

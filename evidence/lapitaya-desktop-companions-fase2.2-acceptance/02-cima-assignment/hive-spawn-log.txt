@@ -1,0 +1,11 @@
+{"spawn":9,"message":41,"session":9,"archive":9,"drop":1}
+{"ts":1791011390855,"kind":"spawn","agentId":"worker-companiongate-build1","name":"El Beni","isGod":false}
+{"ts":1791011609594,"kind":"spawn","agentId":"worker-companiongate-test1","name":"Margarito","isGod":false}
+{"ts":1791011800903,"kind":"spawn","agentId":"worker-companiongate-audit1","name":"Jose Juan","isGod":false}
+{"ts":1791012078660,"kind":"drop","reason":"malformed-json","from":"worker-companiongate-audit1","file":"done-LP-COMP-GATE-1.json"}
+{"ts":1791012128255,"kind":"spawn","agentId":"worker-companiongate-testfail1","name":"Margarito","isGod":false}
+{"ts":1791012513602,"kind":"spawn","agentId":"worker-companiongate-build2","name":"El Beni","isGod":false}
+{"ts":1791012657111,"kind":"spawn","agentId":"worker-companiongate-test2","name":"Margarito","isGod":false}
+{"ts":1791012844425,"kind":"spawn","agentId":"worker-companiongate-audit2","name":"Jose Juan","isGod":false}
+{"ts":1791013010285,"kind":"spawn","agentId":"worker-companiongate-audit2b","name":"Jose Juan","isGod":false}
+{"ts":1791013163538,"kind":"spawn","agentId":"worker-companiongate-blocked1","name":"El Beni","isGod":false}

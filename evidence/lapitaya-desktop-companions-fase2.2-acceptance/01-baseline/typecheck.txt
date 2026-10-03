@@ -1,0 +1,5 @@
+
+
+> munder-difflin@0.4.6 typecheck:web
+> tsc --noEmit -p tsconfig.web.json
+

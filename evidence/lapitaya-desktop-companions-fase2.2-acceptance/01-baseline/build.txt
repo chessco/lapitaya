@@ -1,0 +1,8 @@
+[2m../../out/renderer/[22m[36massets/index-B1KnbeYi.js                        [39m[1m[33m12,422.21 kB[39m[22m
+[32m✓ built in 1m 47s[39m
+
+> munder-difflin@0.4.6 copy:main-assets
+> node tools/copy-main-assets.cjs
+
+[copy-main-assets] src/main/slack-trigger.cjs -> out/main/slack-trigger.cjs
+[copy-main-assets] src/main/kg-core.cjs -> out/main/kg-core.cjs
