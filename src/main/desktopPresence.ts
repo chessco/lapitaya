@@ -53,6 +53,7 @@ import {
   type CompanionSpeechBubbleData,
   type CompanionPreferences
 } from '../shared/lapitaya/desktopCompanions/types';
+import type { CompanySnapshot } from '../shared/lapitaya/company/types';
 import { COMPANION_TRAY_ICON_DATA_URL } from './desktopPresenceTrayIcon';
 
 export interface PersistStoreLike {
@@ -168,6 +169,7 @@ export class DesktopPresenceService {
   private strolling: Map<LaPitayaAgentId, unknown> = new Map();
   private ambientTimer: unknown = null;
   private rng: () => number = Math.random;
+  private companySnapshot: CompanySnapshot | undefined;
 
   constructor(deps: DesktopPresenceDeps = {}) {
     this.persist = deps.persist;
@@ -198,6 +200,12 @@ export class DesktopPresenceService {
     const before = JSON.stringify(this.livingContext());
     this.living = { ...this.living, ...ctx };
     if (JSON.stringify(this.livingContext()) !== before) this.pushSnapshot();
+  }
+
+  /** FASE 4: main-owned, read-only company projection for companion renderers. */
+  public setCompanySnapshot(snapshot: CompanySnapshot | null): void {
+    this.companySnapshot = snapshot ? JSON.parse(JSON.stringify(snapshot)) as CompanySnapshot : undefined;
+    this.pushSnapshot();
   }
 
   public livingContext(): { sleepAllowed: boolean; executionAwake: boolean; ambientMovement: boolean; reducedMotion: boolean } {
@@ -530,6 +538,7 @@ export class DesktopPresenceService {
       entries,
       activePhaseAgent: this.activePhaseAgent,
       living: this.livingContext(),
+      company: this.companySnapshot ? JSON.parse(JSON.stringify(this.companySnapshot)) as CompanySnapshot : undefined,
       updatedAt: this.now()
     };
   }

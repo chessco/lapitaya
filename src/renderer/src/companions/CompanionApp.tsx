@@ -166,6 +166,7 @@ export const CompanionApp: React.FC = () => {
       workCue={WORK_STYLE_CUE[personality.workStyle]}
       awakeLabel={awakeLabel}
       celebrationIntensity={personality.celebrationIntensity}
+      company={entry.agentId === 'alicia' ? snapshot.company : undefined}
       galleryEntries={snapshot.entries}
       onAvatarClick={(e) => {
         e.stopPropagation();

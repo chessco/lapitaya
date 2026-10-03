@@ -48,6 +48,7 @@ import { KnowledgeManager } from './knowledge';
 import { MemoryReflector, type ReflectSettings } from './reflect';
 import { PersistStore } from './db';
 import { DesktopPresenceService } from './desktopPresence';
+import { CompanyAwarenessService } from './companyAwareness';
 import { recordSpawnAssignment } from './spawnAssignment';
 import { readAgentUsage, readContextTokens, seedSessionTranscript, resolveSessionCwd } from './transcript';
 import { listIssues, listCIRuns } from './github';
@@ -284,6 +285,7 @@ const executionAwake = new ExecutionAwakeService({
   log: (line) => console.log(line),
   onChange: (state) => { onExecutionAwakeChanged(state); }
 });
+let companyAwareness: CompanyAwarenessService | null = null;
 const lapitaya = new CimaRuntimeService({
   hiveRoot: () => hive.root(),
   godId: () => hive.registry().godId ?? 'god',
@@ -304,6 +306,8 @@ const lapitaya = new CimaRuntimeService({
     try { aliciaEvents = fromRuntimeEvent(e, Date.now()); for (const ev of aliciaEvents) alicia().notify(ev); } catch { /* never break governance */ }
     // The desktop companions present the same verified facts (read-only; presentation only).
     try { desktopPresence.observeAliciaEvents(aliciaEvents); } catch { /* never break governance */ }
+    // FASE 4: company awareness is a read-only aggregation of the same verified events.
+    try { companyAwareness?.observe(aliciaEvents); desktopPresence.setCompanySnapshot(companyAwareness?.snapshot() ?? null); } catch { /* projection must never break governance */ }
     // Execution Awake reads the same authoritative event (assignment opens, verdict closes). Read-only.
     try { executionAwake.noteRuntimeEvent(e); } catch { /* never break governance */ }
   }
@@ -458,6 +462,11 @@ const desktopPresence = new DesktopPresenceService({
   // FASE 3 Living Desktop: slow, bounded ambient strolls for IDLE companions (one check every 20 s).
   ambientScheduler: true
 });
+companyAwareness = new CompanyAwarenessService({
+  resolveAgent: (hiveAgentId) => agentByName(hive.registry().agents[hiveAgentId]?.name)?.id ?? null,
+  executionAwake: () => executionAwake.state().active
+});
+desktopPresence.setCompanySnapshot(companyAwareness.snapshot());
 /** The PRIMARY window — the one running the hive/god orchestration and the sink
  *  for process-global timer events (missions, breaker, Slack ingestion). It is
  *  the most-recently-focused live window, so global events follow the user.
@@ -783,6 +792,7 @@ function onExecutionAwakeChanged(state: ExecutionAwakeState): void {
     }, null, 2), 'utf8');
   } catch { /* diagnostics are best-effort */ }
   try { desktopPresence.setLivingContext({ executionActive: state.activeExecutionCount > 0, awakeActive: state.active }); } catch { /* presentation only */ }
+  try { companyAwareness?.setExecutionAwake(state.active); desktopPresence.setCompanySnapshot(companyAwareness?.snapshot() ?? null); } catch { /* projection only */ }
 }
 
 /** Living Desktop: the OS idle time is PRESENTATION context (companion sleep) — never governance evidence. */
@@ -4167,6 +4177,11 @@ ipcMain.handle('alicia:submit', (evt, message: unknown, opts: unknown) => {
   if (outcome?.type === 'REQUEST') humanGov.attributeSubmitted(evt, outcome.proposalId);
   return { ok: true, ...result };
 });
+// FASE 4: deterministic, read-only company status. Action-shaped messages still
+// use Alicia's existing intent boundary; these channels cannot mutate the company.
+ipcMain.handle('company:getSnapshot', () => companyAwareness?.snapshot() ?? null);
+ipcMain.handle('company:answer', (_evt, question: unknown) =>
+  typeof question === 'string' ? companyAwareness?.answerQuestion(question) ?? null : null);
 // v0.6 governance observability: a read-only, human-safe projection of what the
 // runtime recorded (ledger, execution traces, approval/proposal state). It is
 // computed here so raw records (commands, paths, outputs, tokens) never reach

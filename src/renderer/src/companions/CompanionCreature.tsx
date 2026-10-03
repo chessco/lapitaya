@@ -20,6 +20,7 @@ import type {
   CompanionSpeechBubbleData,
   CompanionVisualState
 } from '@shared/lapitaya/desktopCompanions/types';
+import type { CompanySnapshot } from '@shared/lapitaya/company/types';
 
 export const SPECIES_EMOJI_MAP: Record<string, string> = {
   fox: '🦊',
@@ -49,6 +50,8 @@ export interface CompanionCreatureProps {
   awakeLabel?: string | null;
   /** FASE 3: celebration strength 0–1 (personality). */
   celebrationIntensity?: number;
+  /** FASE 4: read-only company projection shown by Alicia. */
+  company?: CompanySnapshot;
   /** FASE 3: switch the companions to FOCUS mode (presentation action). */
   onFocusMode?: (e: React.MouseEvent) => void;
   /** Localized name of the companion Alicia is relaying, if any. */
@@ -195,6 +198,37 @@ export function CompanionCreature(props: CompanionCreatureProps): React.ReactEle
       }}
     >
       <style>{KEYFRAMES}</style>
+
+      {props.company && (
+        <div
+          {...{ [ROLE_ATTR]: 'company-awareness' }}
+          {...hover}
+          style={{
+            position: 'absolute',
+            top: '8px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '250px',
+            boxSizing: 'border-box',
+            padding: '8px 10px',
+            borderRadius: '12px',
+            border: `1px solid ${color}88`,
+            background: 'rgba(26, 19, 32, 0.9)',
+            color: '#FFF8E7',
+            fontFamily: '"Press Start 2P", monospace',
+            fontSize: '7px',
+            lineHeight: '1.5',
+            zIndex: 90,
+            ...noDrag
+          }}
+        >
+          <div style={{ color: '#FFCC80', marginBottom: '4px' }}>LA PITAYA · {props.company.status}</div>
+          <div>{props.company.project.displayName ?? props.company.session?.taskId ?? 'Sin proyecto verificado'}</div>
+          {props.company.currentPhase && <div style={{ opacity: 0.8, marginTop: '3px' }}>Fase: {props.company.currentPhase}</div>}
+          {props.company.expectedNext.length > 0 && <div style={{ color: '#B9F6CA', marginTop: '3px' }}>Siguiente esperado: {props.company.expectedNext[0].agentId} · no asignado</div>}
+          {props.company.humanAttention && <div style={{ color: '#FFAB91', marginTop: '3px' }}>Requiere atención humana</div>}
+        </div>
+      )}
 
       {/* Speech bubble + menu */}
       {(bubble || showMenu) && (

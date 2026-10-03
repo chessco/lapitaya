@@ -7,6 +7,7 @@
  */
 
 import type { LaPitayaAgentId } from '../agents';
+import type { CompanySnapshot } from '../company/types';
 
 /** The authoritative set of companion modes. `SET_MODE` rejects anything else. */
 export const COMPANION_MODES = ['OFF', 'MINI', 'COMPANION', 'COMPANY', 'FOCUS', 'PAUSED'] as const;
@@ -97,6 +98,8 @@ export interface CompanionPresentation {
   updatedAt: number;
   /** FASE 3 Living Desktop context (presentation only — never governance evidence). */
   living?: CompanionLivingContext;
+  /** FASE 4: immutable, read-only company projection. */
+  company?: CompanySnapshot;
 }
 
 export interface CompanionLivingContext {
