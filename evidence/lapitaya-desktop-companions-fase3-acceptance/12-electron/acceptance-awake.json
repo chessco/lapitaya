@@ -1,0 +1,560 @@
+{
+  "pass": true,
+  "results": [
+    {
+      "id": "OFF-01",
+      "pass": true,
+      "detail": {
+        "enabled": false,
+        "active": false,
+        "activeExecutionCount": 1,
+        "mode": null,
+        "executions": [
+          {
+            "id": "worker:off-agent",
+            "source": "worker",
+            "agentId": "off-agent",
+            "since": 1791060189346
+          }
+        ],
+        "blockerIds": [
+          "worker:off-agent"
+        ]
+      }
+    },
+    {
+      "id": "ON-01",
+      "pass": true,
+      "detail": {
+        "enabled": true,
+        "active": false,
+        "activeExecutionCount": 0,
+        "mode": null,
+        "executions": [],
+        "blockerIds": []
+      }
+    },
+    {
+      "id": "MULTI-01",
+      "pass": true,
+      "detail": {
+        "enabled": true,
+        "active": true,
+        "activeExecutionCount": 2,
+        "mode": "prevent-app-suspension",
+        "executions": [
+          {
+            "id": "worker:A",
+            "source": "worker",
+            "agentId": "A",
+            "since": 1791060189346
+          },
+          {
+            "id": "worker:B",
+            "source": "worker",
+            "agentId": "B",
+            "since": 1791060189347
+          }
+        ],
+        "blockerIds": [
+          "worker:A",
+          "worker:B"
+        ]
+      }
+    },
+    {
+      "id": "MULTI-02",
+      "pass": true,
+      "detail": {
+        "enabled": true,
+        "active": true,
+        "activeExecutionCount": 1,
+        "mode": "prevent-app-suspension",
+        "executions": [
+          {
+            "id": "worker:B",
+            "source": "worker",
+            "agentId": "B",
+            "since": 1791060189347
+          }
+        ],
+        "blockerIds": [
+          "worker:B"
+        ]
+      }
+    },
+    {
+      "id": "TOGGLE-01",
+      "pass": true,
+      "detail": {
+        "enabled": false,
+        "active": false,
+        "activeExecutionCount": 1,
+        "mode": null,
+        "executions": [
+          {
+            "id": "worker:B",
+            "source": "worker",
+            "agentId": "B",
+            "since": 1791060189347
+          }
+        ],
+        "blockerIds": [
+          "worker:B"
+        ]
+      }
+    },
+    {
+      "id": "TOGGLE-02",
+      "pass": true,
+      "detail": {
+        "enabled": true,
+        "active": true,
+        "activeExecutionCount": 1,
+        "mode": "prevent-app-suspension",
+        "executions": [
+          {
+            "id": "worker:B",
+            "source": "worker",
+            "agentId": "B",
+            "since": 1791060189347
+          }
+        ],
+        "blockerIds": [
+          "worker:B"
+        ]
+      }
+    },
+    {
+      "id": "MULTI-03",
+      "pass": true,
+      "detail": {
+        "enabled": true,
+        "active": false,
+        "activeExecutionCount": 0,
+        "mode": null,
+        "executions": [],
+        "blockerIds": []
+      }
+    },
+    {
+      "id": "ON-02",
+      "pass": true,
+      "detail": [
+        {
+          "at": 1791060189346,
+          "enabled": false,
+          "active": false,
+          "count": 0,
+          "mode": null
+        },
+        {
+          "at": 1791060189346,
+          "enabled": false,
+          "active": false,
+          "count": 1,
+          "mode": null
+        },
+        {
+          "at": 1791060189346,
+          "enabled": false,
+          "active": false,
+          "count": 0,
+          "mode": null
+        },
+        {
+          "at": 1791060189346,
+          "enabled": true,
+          "active": false,
+          "count": 0,
+          "mode": null
+        },
+        {
+          "at": 1791060189347,
+          "enabled": true,
+          "active": true,
+          "count": 1,
+          "mode": "prevent-app-suspension"
+        },
+        {
+          "at": 1791060189347,
+          "enabled": true,
+          "active": true,
+          "count": 2,
+          "mode": "prevent-app-suspension"
+        },
+        {
+          "at": 1791060189347,
+          "enabled": true,
+          "active": true,
+          "count": 1,
+          "mode": "prevent-app-suspension"
+        },
+        {
+          "at": 1791060189347,
+          "enabled": false,
+          "active": false,
+          "count": 1,
+          "mode": null
+        },
+        {
+          "at": 1791060189347,
+          "enabled": true,
+          "active": true,
+          "count": 1,
+          "mode": "prevent-app-suspension"
+        },
+        {
+          "at": 1791060189347,
+          "enabled": true,
+          "active": false,
+          "count": 0,
+          "mode": null
+        },
+        {
+          "at": 1791060189368,
+          "enabled": true,
+          "active": true,
+          "count": 1,
+          "mode": "prevent-app-suspension"
+        },
+        {
+          "at": 1791060189369,
+          "enabled": true,
+          "active": false,
+          "count": 0,
+          "mode": null
+        },
+        {
+          "at": 1791060189388,
+          "enabled": true,
+          "active": true,
+          "count": 1,
+          "mode": "prevent-app-suspension"
+        },
+        {
+          "at": 1791060189389,
+          "enabled": true,
+          "active": false,
+          "count": 0,
+          "mode": null
+        },
+        {
+          "at": 1791060189401,
+          "enabled": true,
+          "active": true,
+          "count": 1,
+          "mode": "prevent-app-suspension"
+        },
+        {
+          "at": 1791060189401,
+          "enabled": true,
+          "active": false,
+          "count": 0,
+          "mode": null
+        }
+      ]
+    },
+    {
+      "id": "CHAIN-BUILD-START",
+      "pass": true,
+      "detail": {
+        "state": {
+          "enabled": true,
+          "active": true,
+          "activeExecutionCount": 1,
+          "mode": "prevent-app-suspension",
+          "executions": [
+            {
+              "id": "cima:CHAIN-1:BUILD:rosalba-1",
+              "source": "cima",
+              "agentId": "rosalba-1",
+              "taskId": "CHAIN-1",
+              "phase": "BUILD",
+              "since": 1791060189368
+            }
+          ],
+          "blockerIds": [
+            "cima:CHAIN-1:BUILD:rosalba-1"
+          ]
+        },
+        "runtimeEvent": {
+          "kind": "cima-assignment",
+          "ts": 1791060189352,
+          "taskId": "CHAIN-1",
+          "phase": "BUILD",
+          "from": "god",
+          "to": "rosalba-1",
+          "messageId": "m-CHAIN-1-BUILD"
+        }
+      }
+    },
+    {
+      "id": "CHAIN-BUILD-PASS",
+      "pass": true,
+      "detail": {
+        "enabled": true,
+        "active": false,
+        "activeExecutionCount": 0,
+        "mode": null,
+        "executions": [],
+        "blockerIds": []
+      }
+    },
+    {
+      "id": "CHAIN-TEST-START",
+      "pass": true,
+      "detail": {
+        "state": {
+          "enabled": true,
+          "active": true,
+          "activeExecutionCount": 1,
+          "mode": "prevent-app-suspension",
+          "executions": [
+            {
+              "id": "cima:CHAIN-1:TEST:margarito-1",
+              "source": "cima",
+              "agentId": "margarito-1",
+              "taskId": "CHAIN-1",
+              "phase": "TEST",
+              "since": 1791060189388
+            }
+          ],
+          "blockerIds": [
+            "cima:CHAIN-1:TEST:margarito-1"
+          ]
+        },
+        "runtimeEvent": {
+          "kind": "cima-assignment",
+          "ts": 1791060189376,
+          "taskId": "CHAIN-1",
+          "phase": "TEST",
+          "from": "god",
+          "to": "margarito-1",
+          "messageId": "m-CHAIN-1-TEST"
+        }
+      }
+    },
+    {
+      "id": "CHAIN-TEST-PASS",
+      "pass": true,
+      "detail": {
+        "enabled": true,
+        "active": false,
+        "activeExecutionCount": 0,
+        "mode": null,
+        "executions": [],
+        "blockerIds": []
+      }
+    },
+    {
+      "id": "CHAIN-AUDIT-START",
+      "pass": true,
+      "detail": {
+        "state": {
+          "enabled": true,
+          "active": true,
+          "activeExecutionCount": 1,
+          "mode": "prevent-app-suspension",
+          "executions": [
+            {
+              "id": "cima:CHAIN-1:AUDIT:jose-juan-1",
+              "source": "cima",
+              "agentId": "jose-juan-1",
+              "taskId": "CHAIN-1",
+              "phase": "AUDIT",
+              "since": 1791060189401
+            }
+          ],
+          "blockerIds": [
+            "cima:CHAIN-1:AUDIT:jose-juan-1"
+          ]
+        },
+        "runtimeEvent": {
+          "kind": "cima-assignment",
+          "ts": 1791060189397,
+          "taskId": "CHAIN-1",
+          "phase": "AUDIT",
+          "from": "god",
+          "to": "jose-juan-1",
+          "messageId": "m-CHAIN-1-AUDIT"
+        }
+      }
+    },
+    {
+      "id": "CHAIN-AUDIT-PASS",
+      "pass": true,
+      "detail": {
+        "enabled": true,
+        "active": false,
+        "activeExecutionCount": 0,
+        "mode": null,
+        "executions": [],
+        "blockerIds": []
+      }
+    },
+    {
+      "id": "O1-01",
+      "pass": true,
+      "detail": {
+        "state": {
+          "enabled": true,
+          "active": false,
+          "activeExecutionCount": 0,
+          "mode": null,
+          "executions": [],
+          "blockerIds": []
+        },
+        "event": {
+          "kind": "cima-assignment",
+          "ts": 1791060189408,
+          "taskId": "CHAIN-1",
+          "phase": "AUDIT",
+          "from": "god",
+          "to": "jose-juan-1",
+          "messageId": "m-CHAIN-1-AUDIT"
+        }
+      }
+    },
+    {
+      "id": "CHAIN-FINAL",
+      "pass": true,
+      "detail": {
+        "enabled": true,
+        "active": false,
+        "activeExecutionCount": 0,
+        "mode": null,
+        "executions": [],
+        "blockerIds": []
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "at": 1791060189346,
+      "enabled": false,
+      "active": false,
+      "count": 0,
+      "mode": null
+    },
+    {
+      "at": 1791060189346,
+      "enabled": false,
+      "active": false,
+      "count": 1,
+      "mode": null
+    },
+    {
+      "at": 1791060189346,
+      "enabled": false,
+      "active": false,
+      "count": 0,
+      "mode": null
+    },
+    {
+      "at": 1791060189346,
+      "enabled": true,
+      "active": false,
+      "count": 0,
+      "mode": null
+    },
+    {
+      "at": 1791060189347,
+      "enabled": true,
+      "active": true,
+      "count": 1,
+      "mode": "prevent-app-suspension"
+    },
+    {
+      "at": 1791060189347,
+      "enabled": true,
+      "active": true,
+      "count": 2,
+      "mode": "prevent-app-suspension"
+    },
+    {
+      "at": 1791060189347,
+      "enabled": true,
+      "active": true,
+      "count": 1,
+      "mode": "prevent-app-suspension"
+    },
+    {
+      "at": 1791060189347,
+      "enabled": false,
+      "active": false,
+      "count": 1,
+      "mode": null
+    },
+    {
+      "at": 1791060189347,
+      "enabled": true,
+      "active": true,
+      "count": 1,
+      "mode": "prevent-app-suspension"
+    },
+    {
+      "at": 1791060189347,
+      "enabled": true,
+      "active": false,
+      "count": 0,
+      "mode": null
+    },
+    {
+      "at": 1791060189368,
+      "enabled": true,
+      "active": true,
+      "count": 1,
+      "mode": "prevent-app-suspension"
+    },
+    {
+      "at": 1791060189369,
+      "enabled": true,
+      "active": false,
+      "count": 0,
+      "mode": null
+    },
+    {
+      "at": 1791060189388,
+      "enabled": true,
+      "active": true,
+      "count": 1,
+      "mode": "prevent-app-suspension"
+    },
+    {
+      "at": 1791060189389,
+      "enabled": true,
+      "active": false,
+      "count": 0,
+      "mode": null
+    },
+    {
+      "at": 1791060189401,
+      "enabled": true,
+      "active": true,
+      "count": 1,
+      "mode": "prevent-app-suspension"
+    },
+    {
+      "at": 1791060189401,
+      "enabled": true,
+      "active": false,
+      "count": 0,
+      "mode": null
+    }
+  ],
+  "runtimeEventCount": 4,
+  "process": {
+    "rssKb": 115148,
+    "cpu": {
+      "cumulativeCPUUsage": 1.984375,
+      "percentCPUUsage": 0,
+      "idleWakeupsPerSecond": 0
+    }
+  },
+  "notes": [
+    "Screen lock not exercised in this unattended harness.",
+    "Ambient CPU is covered by LIVE tests; this harness measures the Electron main process lifecycle.",
+    "O-1 is classified as lifecycle noise; no CIMA correction is made."
+  ]
+}
