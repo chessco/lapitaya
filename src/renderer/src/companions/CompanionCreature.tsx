@@ -25,6 +25,7 @@ export const SPECIES_EMOJI_MAP: Record<string, string> = {
   fox: '🦊',
   beaver: '🦫',
   cat: '🐱',
+  dog: '🐶',
   owl: '🦉',
   hamster: '🐹',
   turtle: '🐢',
@@ -38,6 +39,8 @@ export interface CompanionCreatureProps {
   entry: CompanionPresentationEntry;
   /** Localized companion name (agentDisplayName). */
   displayName: string;
+  /** Localized job title for agents that have one (Rosalba → "Desarrolladora Senior"); else the species is shown. */
+  title?: string | null;
   /** Localized name of the companion Alicia is relaying, if any. */
   relayedName?: string | null;
   relayedSpecies?: string | null;
@@ -325,7 +328,7 @@ export function CompanionCreature(props: CompanionCreatureProps): React.ReactEle
           }}
         >
           <div {...{ [ROLE_ATTR]: 'identity-name' }} style={{ fontSize: '9px' }}>{props.displayName}</div>
-          <div style={{ fontSize: '6px', opacity: 0.7, marginTop: '2px' }}>{capitalize(entry.species)}</div>
+          <div {...{ [ROLE_ATTR]: 'identity-subtitle' }} style={{ fontSize: '6px', opacity: 0.7, marginTop: '2px' }}>{props.title || capitalize(entry.species)}</div>
         </div>
       </div>
 

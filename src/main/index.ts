@@ -33,7 +33,7 @@ import { createHumanIdentityService, newSessionId } from './humanIdentity';
 import { createHumanGovernanceHandlers, resolveRendererSender } from './humanGovernanceIpc';
 import { loadOrCreateKey } from './authBinding';
 import { AUTONOMY_STAGES, DEFAULT_AUTONOMY_STAGE, type AutonomyStage } from '../shared/lapitaya/autonomy';
-import { phaseForAgent } from '../shared/lapitaya/agents';
+import { agentByName, phaseForAgent } from '../shared/lapitaya/agents';
 import { recordBanner } from '../shared/lapitaya/cimaRuntime';
 import { LA_PITAYA_NAME } from '../shared/lapitaya/brand';
 import {
@@ -434,7 +434,10 @@ const persist = new PersistStore();
 const desktopPresence = new DesktopPresenceService({
   persist,
   screenModule: screen,
-  mainWindowGetter: () => mainWindow
+  mainWindowGetter: () => mainWindow,
+  // FASE 2.3: which La Pitaya agent a verified event's hive id is — from the NAME the hive registry
+  // holds for that worker (the spawn-request `name`), the same lookup phaseOf uses. Read-only.
+  resolveAgent: (hiveAgentId) => agentByName(hive.registry().agents[hiveAgentId]?.name)?.id ?? null
 });
 /** The PRIMARY window — the one running the hive/god orchestration and the sink
  *  for process-global timer events (missions, breaker, Slack ingestion). It is

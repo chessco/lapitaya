@@ -12,7 +12,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import i18n from '../i18n';
-import { agentDisplayName, type LaPitayaAgentId } from '@shared/lapitaya/agents';
+import { agentDisplayName, agentTitleKey, LA_PITAYA_AGENT_BY_ID, type LaPitayaAgentId } from '@shared/lapitaya/agents';
 import type {
   CompanionPresentation,
   CompanionPresentationEntry,
@@ -128,12 +128,15 @@ export const CompanionApp: React.FC = () => {
 
   const locale = i18n.language;
   const displayName = agentDisplayName(entry.agentId, locale);
+  const agent = LA_PITAYA_AGENT_BY_ID[entry.agentId];
+  const title = agent?.title ? i18n.t(agentTitleKey(agent), { defaultValue: agent.title }) : null;
   const relayed = entry.relayedFrom ? snapshot.entries.find((e) => e.agentId === entry.relayedFrom) : undefined;
 
   return (
     <CompanionCreature
       entry={entry}
       displayName={displayName}
+      title={title}
       relayedName={entry.relayedFrom ? agentDisplayName(entry.relayedFrom, locale) : null}
       relayedSpecies={relayed?.species ?? null}
       bubble={localBubble ?? runtimeBubble}

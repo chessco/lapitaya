@@ -13,7 +13,7 @@
 
 import type { AliciaEvent } from '../alicia/events';
 import type { CimaPhase } from '../cima';
-import { LA_PITAYA_AGENTS, type LaPitayaAgentId } from '../agents';
+import { defaultPhaseOwner, LA_PITAYA_AGENT_BY_ID, type LaPitayaAgentId } from '../agents';
 import type { CompanionVisualState } from './types';
 
 export const COMPANION_FACTS = [
@@ -33,7 +33,14 @@ export interface CompanionFact {
   fact: CompanionFactName;
   /** Id of the source record (approval id, proposal id, message id) — links a pending fact to its resolution. */
   ref?: string;
+  /** FASE 2.3: the La Pitaya agent the verified event names (assignment `to`, record `agentId`),
+   *  resolved by the host from the hive registry. Absent when it could not be resolved. */
+  agent?: LaPitayaAgentId;
 }
+
+/** Host-supplied lookup: hive agent id (worker-…) → La Pitaya agent, or null. Main builds it from
+ *  the hive registry's NAME for that worker; it never reads the event's free text. */
+export type CompanionAgentResolver = (hiveAgentId: string) => LaPitayaAgentId | null;
 
 /**
  * What each fact does to the presentation. `target` is explicit: a fact never
@@ -50,9 +57,10 @@ export interface CompanionFactEffect {
   sticky?: boolean;
 }
 
-/** The hire preset that owns a CIMA phase (BUILD → El Beni, TEST → Margarito, AUDIT → José Juan). */
+/** The default hire preset for a CIMA phase (BUILD → El Beni, TEST → Margarito, AUDIT → José Juan):
+ *  who the companions show when the event names no agent that owns the phase. */
 export function phaseOwner(phase: CimaPhase): LaPitayaAgentId | null {
-  return LA_PITAYA_AGENTS.find((a) => a.runtime === 'hire-preset' && a.cimaPhases.includes(phase))?.id ?? null;
+  return defaultPhaseOwner(phase);
 }
 
 const BUILDER = phaseOwner('BUILD') ?? 'el-beni';
@@ -83,6 +91,28 @@ export const COMPANION_FACT_EFFECTS: Readonly<Record<CompanionFactName, Companio
   APPROVAL_RESOLVED: null
 };
 
+/**
+ * The effect of a fact for the agent the event named (FASE 2.3). The table above is written for each
+ * phase's default owner; a dispatched agent that owns the same phase (Rosalba on BUILD) takes that
+ * owner's place — target, FOCUS agent, release and name in the text — and nothing else changes:
+ * the state (WORKING / CELEBRATING / CONCERNED / PAUSED) and who celebrates a BUILD PASS (Alicia)
+ * stay exactly as for the default owner. No agent, or the default owner itself → the table entry.
+ */
+export function companionFactEffect(fact: CompanionFactName, agent?: LaPitayaAgentId): CompanionFactEffect | null {
+  const base = COMPANION_FACT_EFFECTS[fact];
+  const owner = base?.phaseAgent;
+  if (!base || !agent || !owner || agent === owner) return base;
+  if (!LA_PITAYA_AGENT_BY_ID[agent]?.cimaPhases.some((p) => LA_PITAYA_AGENT_BY_ID[owner].cimaPhases.includes(p))) return base;
+  const swap = (id: LaPitayaAgentId): LaPitayaAgentId => (id === owner ? agent : id);
+  return {
+    ...base,
+    target: swap(base.target),
+    phaseAgent: agent,
+    ...(base.release ? { release: swap(base.release) } : {}),
+    text: base.text.replace(LA_PITAYA_AGENT_BY_ID[owner].name, LA_PITAYA_AGENT_BY_ID[agent].name)
+  };
+}
+
 const STARTED: Partial<Record<CimaPhase, CompanionFactName>> = { BUILD: 'BUILD_STARTED', TEST: 'TEST_STARTED', AUDIT: 'AUDIT_STARTED' };
 const PASSED: Partial<Record<CimaPhase, CompanionFactName>> = { BUILD: 'BUILD_COMPLETED', TEST: 'TEST_COMPLETED', AUDIT: 'AUDIT_COMPLETED' };
 const FAILED: Partial<Record<CimaPhase, CompanionFactName>> = { BUILD: 'BUILD_FAILED', TEST: 'TEST_FAILED', AUDIT: 'AUDIT_FAILED' };
@@ -105,19 +135,27 @@ const BY_VERDICT: Readonly<Record<string, Partial<Record<CimaPhase, CompanionFac
  * `audit.completed` is not mapped separately: the runtime emits it alongside the
  * AUDIT `cima.phase.changed`, which already carries the verdict.
  */
-export function companionFactsFromAliciaEvent(ev: AliciaEvent | null | undefined): CompanionFact[] {
+export function companionFactsFromAliciaEvent(ev: AliciaEvent | null | undefined, resolveAgent?: CompanionAgentResolver): CompanionFact[] {
   if (!ev || typeof ev.type !== 'string') return [];
   const ref = typeof ev.ref === 'string' && ev.ref ? ev.ref : undefined;
   const withRef = (fact: CompanionFactName): CompanionFact[] => [ref ? { fact, ref } : { fact }];
+  // A phase fact keeps the agent the verified event names — but only an agent that owns that
+  // phase in the roster; anything else falls back to the phase's default owner (FASE 2.2).
+  const phaseFact = (fact: CompanionFactName, phase: CimaPhase): CompanionFact[] => {
+    let agent: LaPitayaAgentId | null = null;
+    try { agent = ev.agentId && resolveAgent ? resolveAgent(ev.agentId) : null; } catch { agent = null; }
+    const owns = agent !== null && LA_PITAYA_AGENT_BY_ID[agent]?.cimaPhases.includes(phase) === true;
+    return [{ fact, ...(ref ? { ref } : {}), ...(owns ? { agent: agent as LaPitayaAgentId } : {}) }];
+  };
   switch (ev.type) {
     case 'cima.phase.assigned': {
       const f = ev.phase ? STARTED[ev.phase] : undefined;
-      return f ? withRef(f) : [];
+      return f && ev.phase ? phaseFact(f, ev.phase) : [];
     }
     case 'cima.phase.changed': {
       if (!ev.phase || !ev.verdict) return [];
       const f = BY_VERDICT[ev.verdict]?.[ev.phase];
-      return f ? withRef(f) : [];
+      return f ? phaseFact(f, ev.phase) : [];
     }
     case 'approval.required':
       return withRef('HUMAN_APPROVAL_REQUIRED');

@@ -30,14 +30,15 @@ import {
 } from 'electron';
 import { join } from 'node:path';
 import type { LaPitayaAgentId } from '../shared/lapitaya/agents';
-import { LA_PITAYA_AGENT_BY_ID } from '../shared/lapitaya/agents';
+import { LA_PITAYA_AGENT_BY_ID, LA_PITAYA_AGENTS } from '../shared/lapitaya/agents';
 import type { AliciaEvent } from '../shared/lapitaya/alicia/events';
 import { getAnimalAvatar } from '../shared/lapitaya/desktopCompanions/animalAvatar';
 import { COMPANION_IPC } from '../shared/lapitaya/desktopCompanions/ipc';
 import {
-  COMPANION_FACT_EFFECTS,
+  companionFactEffect,
   companionFactsFromAliciaEvent,
-  isCompanionFact
+  isCompanionFact,
+  type CompanionAgentResolver
 } from '../shared/lapitaya/desktopCompanions/runtimeFacts';
 import {
   isCompanionMode,
@@ -73,6 +74,9 @@ export interface DesktopPresenceDeps {
   devServerUrl?: string;
   timers?: TimersLike;
   now?: () => number;
+  /** FASE 2.3: hive agent id → La Pitaya agent (main builds it from the hive registry). Without it
+   *  every phase fact goes to the phase's default owner, as in FASE 2.2. */
+  resolveAgent?: CompanionAgentResolver;
 }
 
 const DEFAULT_POSITION: CompanionPosition = { x: 100, y: 100 };
@@ -83,9 +87,11 @@ export const CELEBRATE_MS = 8000;
 /** Auto-dismiss delay for non-sticky bubbles. */
 export const BUBBLE_AUTO_DISMISS_MS = 6000;
 
-const ALL_AGENTS: readonly LaPitayaAgentId[] = ['alicia', 'el-inge', 'el-beni', 'valentin', 'margarito', 'jose-juan', 'el-tutu'];
+/** Every companion with a seat — the canonical roster, never a second hand-kept list (a member missing
+ *  here would silently lose its saved position). */
+const ALL_AGENTS: readonly LaPitayaAgentId[] = LA_PITAYA_AGENTS.map((a) => a.id);
 /** COMPANY fills the seats after Alicia with the most recently active companions, then in CIMA work order. */
-const COMPANY_FILL_ORDER: readonly LaPitayaAgentId[] = ['el-beni', 'margarito', 'jose-juan', 'el-inge', 'valentin', 'el-tutu'];
+const COMPANY_FILL_ORDER: readonly LaPitayaAgentId[] = ['el-beni', 'margarito', 'jose-juan', 'el-inge', 'valentin', 'el-tutu', 'rosalba'];
 const VISIBLE_MODES: readonly CompanionMode[] = ['MINI', 'COMPANION', 'COMPANY', 'FOCUS'];
 
 /** How strongly a state asks for the human's eye — decides what Alicia relays. */
@@ -145,6 +151,7 @@ export class DesktopPresenceService {
   private devServerUrl?: string;
   private timers: TimersLike;
   private now: () => number;
+  private resolveAgent?: CompanionAgentResolver;
 
   constructor(deps: DesktopPresenceDeps = {}) {
     this.persist = deps.persist;
@@ -156,6 +163,7 @@ export class DesktopPresenceService {
     this.devServerUrl = deps.devServerUrl ?? process.env.ELECTRON_RENDERER_URL;
     this.timers = deps.timers ?? defaultTimers;
     this.now = deps.now ?? (() => Date.now());
+    this.resolveAgent = deps.resolveAgent;
 
     this.restorePositions();
     this.setupIpcHandlers();
@@ -257,7 +265,7 @@ export class DesktopPresenceService {
   public observeAliciaEvents(events: readonly AliciaEvent[]): void {
     for (const ev of events) {
       try {
-        for (const f of companionFactsFromAliciaEvent(ev)) this.triggerVerifiedRuntimeFact(f.fact, { ref: f.ref });
+        for (const f of companionFactsFromAliciaEvent(ev, this.resolveAgent)) this.triggerVerifiedRuntimeFact(f.fact, { ref: f.ref, agent: f.agent });
       } catch {
         /* presentation must never break the runtime */
       }
@@ -265,10 +273,12 @@ export class DesktopPresenceService {
   }
 
   /** Apply one verified fact. Unknown facts are rejected: no state change, no bubble. */
-  public triggerVerifiedRuntimeFact(fact: string, meta: { ref?: string } = {}): boolean {
+  public triggerVerifiedRuntimeFact(fact: string, meta: { ref?: string; agent?: LaPitayaAgentId } = {}): boolean {
     if (this.isDestroyed || !isCompanionFact(fact)) return false;
     this.verifiedRuntimeFacts.add(fact);
-    const effect = COMPANION_FACT_EFFECTS[fact];
+    // An agent outside the roster is ignored (the fact keeps its default owner).
+    const agent = meta.agent && Object.prototype.hasOwnProperty.call(LA_PITAYA_AGENT_BY_ID, meta.agent) ? meta.agent : undefined;
+    const effect = companionFactEffect(fact, agent);
 
     if (!effect) {
       // A resolution: clear exactly the pending request it names.
