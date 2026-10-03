@@ -1,0 +1,23 @@
+{
+  "pass": true,
+  "blockerHeld": true,
+  "released": true,
+  "executions": 0,
+  "memory": {
+    "residentSet": 114256,
+    "private": 111492,
+    "shared": 4
+  },
+  "cpuBefore": {
+    "cumulativeCPUUsage": 1.90625,
+    "percentCPUUsage": 0,
+    "idleWakeupsPerSecond": 0
+  },
+  "cpuAfter": {
+    "cumulativeCPUUsage": 1.90625,
+    "percentCPUUsage": 0,
+    "idleWakeupsPerSecond": 0
+  },
+  "transitions": 2,
+  "note": "O-1 lifecycle noise is ignored by ExecutionAwake; CIMA correction remains separate."
+}
