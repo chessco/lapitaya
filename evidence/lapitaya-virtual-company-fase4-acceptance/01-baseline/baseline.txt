@@ -1,0 +1,5 @@
+branch=lapitaya/virtual-company-v0.4-company-awareness
+head=86d312eb9df8968d395a6640e40f9d28dc90943a
+main_head=2a5a5858ddf11885fe9c3980df0b9b1dfdace9a8
+working_tree=clean before acceptance documentation
+source_changes_during_gate=none

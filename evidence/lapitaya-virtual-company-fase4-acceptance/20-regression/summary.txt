@@ -1,0 +1,7 @@
+test:companion=229/229 PASS
+typecheck_node=PASS
+typecheck_web=PASS
+build=PASS
+cima_relevant=302/302 PASS
+acceptance_live_chain=NOT_EXECUTED
+gate_verdict=INCONCLUSIVE_NOT_CLOSED

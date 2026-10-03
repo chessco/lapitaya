@@ -1,0 +1,3 @@
+result=Electron startup observed with clean test-process environment
+processes=responsive Electron processes observed
+live_company_workflow=not executed in this gate run

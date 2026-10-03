@@ -1,0 +1,6 @@
+original_ELECTRON_RUN_AS_NODE=1
+test_process_ELECTRON_RUN_AS_NODE=unset
+electron_startup=real Electron reached app startup
+renderer=electron-vite development renderer built and served
+observations=existing Vite port and Hive named pipe were already occupied by another instance
+classification=environment/tooling/session collision; no source remediation applied

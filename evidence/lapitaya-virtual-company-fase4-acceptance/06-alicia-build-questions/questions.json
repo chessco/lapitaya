@@ -1,0 +1,21 @@
+{
+  "gate": "FASE4",
+  "mode": "validation-only",
+  "status": "NOT_EXECUTED",
+  "reason": "The required real UI chain through the normal composer and Alicia was not completed; no internal answer function or synthetic event was used as substitute evidence.",
+  "questions": [
+    {"questionId":"Q1","label":"Current work","result":"NOT_EXECUTED"},
+    {"questionId":"Q2","label":"Who is working","result":"NOT_EXECUTED"},
+    {"questionId":"Q3","label":"Rosalba status","result":"NOT_EXECUTED"},
+    {"questionId":"Q4","label":"Who is next","result":"NOT_EXECUTED"},
+    {"questionId":"Q5","label":"Tests before completion","result":"NOT_EXECUTED"},
+    {"questionId":"Q6","label":"Audit before completion","result":"NOT_EXECUTED"},
+    {"questionId":"Q7","label":"Human attention","result":"NOT_EXECUTED"},
+    {"questionId":"Q8","label":"Worker during TEST","result":"NOT_EXECUTED"},
+    {"questionId":"Q9","label":"Rosalba after BUILD","result":"NOT_EXECUTED"},
+    {"questionId":"Q10","label":"Auditor","result":"NOT_EXECUTED"},
+    {"questionId":"Q11","label":"Audit before completion","result":"NOT_EXECUTED"},
+    {"questionId":"Q12","label":"What happened","result":"NOT_EXECUTED"},
+    {"questionId":"Q13","label":"Final status","result":"NOT_EXECUTED"}
+  ]
+}
