@@ -1,0 +1,11 @@
+{
+  "contract": "CompanyMission",
+  "planContract": "MissionPlan",
+  "invariants": {
+    "missionPlanNotAssignment": true,
+    "missionConfirmationNotHighApproval": true,
+    "missionPlanNotAuthority": true
+  },
+  "testCoverage": ["MISS6-01", "MISS6-02", "MISS6-03", "MISS6-04", "MISS6-05", "MISS6-06", "MISS6-07", "MISS6-08", "MISS6-09", "MISS6-10", "MISS6-11", "MISS6-12", "MISS6-13", "MISS6-14", "MISS6-15"],
+  "status": "PASS"
+}

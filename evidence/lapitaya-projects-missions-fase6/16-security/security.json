@@ -1,0 +1,11 @@
+{
+  "security": {
+    "rendererReadOnly": true,
+    "preloadApiProtected": true,
+    "intentBoundaryEnforced": true,
+    "cimaAuthorityIntact": true,
+    "noRendererMutations": true,
+    "atomicWrites": true,
+    "status": "PASS"
+  }
+}

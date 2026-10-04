@@ -1,0 +1,22 @@
+{
+  "queriesSupported": [
+    "¿Qué proyectos tenemos?",
+    "¿Cómo va este proyecto?",
+    "¿Qué misión está activa?",
+    "¿Qué falta?",
+    "¿Qué ya terminaron?",
+    "¿Qué está bloqueado?",
+    "¿Quién está trabajando?",
+    "¿Quién sigue?",
+    "¿Necesitan algo de mí?",
+    "¿Qué entregaron?"
+  ],
+  "ambiguityHandling": "Prompts clarification if project match is ambiguous",
+  "falsePremiseHandling": {
+    "falseCompletionCorrected": true,
+    "falseAssignmentCorrected": true
+  },
+  "statusQueryMutations": 0,
+  "testCoverage": ["ALI6-01", "ALI6-02", "ALI6-03", "ALI6-04", "ALI6-05", "ALI6-06", "ALI6-07", "ALI6-08", "ALI6-09", "ALI6-10", "ALI6-11", "ALI6-12", "ALI6-13", "ALI6-14", "ALI6-15"],
+  "status": "PASS"
+}

@@ -1,0 +1,11 @@
+{
+  "restartVerification": {
+    "persistenceFile": "projects.json",
+    "projectRestored": true,
+    "missionsRestored": true,
+    "deliveriesRestored": true,
+    "noFakeWorking": true,
+    "aliciaRestoredContinuity": true
+  },
+  "status": "PASS"
+}

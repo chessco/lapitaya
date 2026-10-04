@@ -1,0 +1,10 @@
+{
+  "dependencyModel": "Explicit missionId references with blocking semantics",
+  "invariants": {
+    "satisfactionNotAssignment": true,
+    "satisfactionNotHighApproval": true,
+    "noCrossProjectContamination": true
+  },
+  "testCoverage": ["DEP6-01", "DEP6-02", "DEP6-03", "DEP6-04", "DEP6-05", "DEP6-06", "DEP6-07"],
+  "status": "PASS"
+}

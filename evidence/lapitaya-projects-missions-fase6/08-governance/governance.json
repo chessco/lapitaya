@@ -1,0 +1,13 @@
+{
+  "authorityBoundaries": {
+    "humanOwnsObjective": true,
+    "elIngeOwnsOrchestration": true,
+    "cimaOwnsAuthority": true,
+    "projectOwnsContinuity": true,
+    "aliciaOwnsCommunication": true,
+    "builderNotAuditor": true,
+    "missionConfirmationNotHighApproval": true
+  },
+  "testCoverage": ["GOV6-01", "GOV6-02", "GOV6-03", "GOV6-04", "GOV6-05", "GOV6-06", "GOV6-07", "GOV6-08", "GOV6-09", "GOV6-10", "GOV6-11", "GOV6-12"],
+  "status": "PASS"
+}

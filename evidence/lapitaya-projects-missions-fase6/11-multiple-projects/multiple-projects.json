@@ -1,0 +1,10 @@
+{
+  "isolation": {
+    "projectsIsolated": true,
+    "noSharedMissions": true,
+    "noSharedWorkRequests": true,
+    "noSharedDeliveries": true,
+    "noCrossContamination": true
+  },
+  "status": "PASS"
+}

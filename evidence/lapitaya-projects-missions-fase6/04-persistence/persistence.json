@@ -1,0 +1,13 @@
+{
+  "persistenceStrategy": "Atomic JSON file write via tmp file swap with schema versioning (v1)",
+  "storageFile": "HIVE_ROOT/lapitaya/projects.json",
+  "restartContinuity": {
+    "projectRestored": true,
+    "missionsRestored": true,
+    "deliveriesRestored": true,
+    "noFakeWorkingAgentsOnRestart": true,
+    "aliciaRestoredContinuity": true
+  },
+  "testCoverage": ["CONT6-01", "CONT6-02", "CONT6-03", "CONT6-04", "CONT6-05", "CONT6-06", "CONT6-07", "CONT6-08", "CONT6-09", "CONT6-10", "CONT6-11", "CONT6-12"],
+  "status": "PASS"
+}

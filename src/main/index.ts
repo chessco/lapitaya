@@ -475,10 +475,16 @@ companyAwareness = new CompanyAwarenessService({
 });
 companyOperations = new CompanyOperationsService({
   snapshot: () => companyAwareness!.snapshot(),
+  storageFile: hive.root() ? join(hive.root()!, 'lapitaya', 'projects.json') : undefined,
   project: () => {
     const reg = hive.registry();
     const cwd = reg.godId ? reg.agents[reg.godId]?.cwd ?? null : null;
     return { projectId: cwd, displayName: cwd ? basename(cwd) : null };
+  },
+  onStateChanged: () => {
+    if (companyAwareness) {
+      desktopPresence.setCompanySnapshot({ ...companyAwareness.snapshot(), operations: companyOperations?.projection() });
+    }
   }
 });
 desktopPresence.setCompanySnapshot({ ...companyAwareness.snapshot(), operations: companyOperations.projection() });
@@ -4202,6 +4208,11 @@ ipcMain.handle('company:getSnapshot', () => {
 ipcMain.handle('company:getOperations', () => companyOperations?.projection() ?? null);
 ipcMain.handle('company:answer', (_evt, question: unknown) =>
   typeof question === 'string' ? companyOperations?.answer(question) ?? companyAwareness?.answerQuestion(question) ?? null : null);
+ipcMain.handle('projects:list', () => companyOperations?.listProjects() ?? []);
+ipcMain.handle('projects:getSnapshot', (_evt, projectId: unknown) =>
+  companyOperations?.projectSnapshot(typeof projectId === 'string' ? projectId : undefined) ?? null);
+ipcMain.handle('missions:getSnapshot', (_evt, missionId: unknown) =>
+  companyOperations?.missionSnapshot(typeof missionId === 'string' ? missionId : undefined) ?? null);
 // v0.6 governance observability: a read-only, human-safe projection of what the
 // runtime recorded (ledger, execution traces, approval/proposal state). It is
 // computed here so raw records (commands, paths, outputs, tokens) never reach

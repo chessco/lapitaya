@@ -1,0 +1,17 @@
+{
+  "regression": {
+    "fase5WorkRequestsIndependent": true,
+    "companySnapshotReadOnly": true,
+    "expectedNotAssigned": true,
+    "companyDeliveryVerified": true,
+    "companySeatsMaxThree": true,
+    "focusFollowsAssignment": true,
+    "executionAwakeAuthoritative": true,
+    "o1DoesNotReopenWork": true,
+    "aliciaCannotApproveHigh": true,
+    "noMouseSimulation": true,
+    "noKeyboardSimulation": true,
+    "sessionIsolation": true,
+    "status": "PASS"
+  }
+}

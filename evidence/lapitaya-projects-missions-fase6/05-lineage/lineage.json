@@ -1,0 +1,5 @@
+{
+  "lineageChain": "Project -> Mission -> WorkRequest -> WorkPlan -> Task -> CompanySession -> Assignments -> CIMA Events -> Delivery",
+  "projectCorrelation": "WorkRequest.projectId, WorkRequest.missionId, Delivery.projectId, Delivery.missionId",
+  "status": "PASS"
+}

@@ -223,7 +223,7 @@ const ACTION_RULES: readonly { signal: string; category: ActionCategory; re: Reg
   { signal: 'action:run', category: 'shell-command', re: W('ejecuta|ejecutar|ejecutes|corre|correr|run|execute') }
 ];
 
-const REQUEST_RULE = W('quiero que|queremos que|me gustaria que|necesito que|necesitamos que|i want|i would like|we need|we should|lets|let\'s|vamos a|revisa|revisar|revise|revisemos|review|analiza|analizar|analice|analicemos|analyze|analyse|investiga|investigar|investigate|prepara|preparar|prepare|planea|planear|plan|propon|proponer|propose|disena|disenar|design|implementa|implementar|implemente|implementen|implement|audita|auditar|audit|evalua|evaluar|evaluate|asigna|asignar|assign|delega|delegar|delegate');
+const REQUEST_RULE = W('quiero que|queremos que|me gustaria que|necesito que|necesitamos que|i want|i would like|we need|we should|lets|let\'s|vamos a|revisa|revisar|revise|revisemos|review|analiza|analizar|analice|analicemos|analyze|analyse|investiga|investigar|investigate|prepara|preparar|prepare|planea|planear|plan|propon|proponer|propose|disena|disenar|design|implementa|implementar|implemente|implementen|implement|audita|auditar|audit|evalua|evaluar|evaluate|asigna|asignar|assign|delega|delegar|delegate|crea un proyecto|crear un proyecto|crea una mision|crear una mision|organiza|organizar|crea proyecto|crea mision');
 
 /** "How do I deploy?" / "¿qué significa BLOCKED?" — asking about something,
  *  not asking for it. Only honoured when no second instruction follows. */

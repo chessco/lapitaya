@@ -1,0 +1,7 @@
+{
+  "contract": "CompanyProject",
+  "provenance": "HUMAN | EL_INGE_PROPOSED | RUNTIME_DERIVED",
+  "statusLifecycle": ["PLANNING", "ACTIVE", "WAITING_FOR_HUMAN", "BLOCKED", "COMPLETED", "CANCELLED"],
+  "testCoverage": ["PROJ6-01", "PROJ6-02", "PROJ6-03", "PROJ6-04", "PROJ6-05", "PROJ6-06", "PROJ6-07", "PROJ6-08", "PROJ6-09", "PROJ6-10", "PROJ6-11", "PROJ6-12"],
+  "status": "PASS"
+}

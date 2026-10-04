@@ -1,0 +1,12 @@
+{
+  "scenario": {
+    "project": "LP-F6-PROJECT-1",
+    "objective": "Construir una calculadora de prueba aislada para validar continuidad de proyecto.",
+    "mission1": "Implementar suma",
+    "mission2": "Implementar resta",
+    "dependency": "Mission 2 depends on Mission 1",
+    "humanCheckpoint": "READY and verified",
+    "flowExecuted": "Human -> Alicia -> Project -> Mission 1 -> WorkRequest -> CIMA (BUILD -> TEST -> AUDIT -> DECISION) -> Delivery -> Mission 1 COMPLETED -> Restart -> Continuity Verified -> Mission 2 pending",
+    "status": "PASS"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "projectSnapshot": {
+    "readOnly": true,
+    "progressMetric": "missionsCompleted / missionsTotal",
+    "blockersDerived": true,
+    "humanAttentionDerived": true
+  },
+  "missionSnapshot": {
+    "readOnly": true,
+    "deliveriesAggregated": true
+  },
+  "status": "PASS"
+}

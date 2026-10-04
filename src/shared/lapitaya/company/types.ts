@@ -11,6 +11,9 @@ export type CompanyWorkRequestStatus = 'DRAFT' | 'PROPOSED' | 'CONFIRMED' | 'PLA
 export type CompanyWorkPlanStatus = 'PLANNING' | 'ACTIVE' | 'COMPLETED' | 'FAILED' | 'BLOCKED' | 'CANCELLED';
 export type CompanyFactProvenance = 'HUMAN' | 'EL_INGE_PROPOSED' | 'RUNTIME_DERIVED';
 
+export type CompanyProjectStatus = 'PLANNING' | 'ACTIVE' | 'WAITING_FOR_HUMAN' | 'BLOCKED' | 'COMPLETED' | 'CANCELLED';
+export type CompanyMissionStatus = 'PLANNING' | 'WAITING_FOR_HUMAN' | 'CONFIRMED' | 'ACTIVE' | 'BLOCKED' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+
 export interface CompanyProjectContext {
   projectId: string | null;
   displayName: string | null;
@@ -75,11 +78,65 @@ export interface CompanyAcceptanceCriterion {
   verified: true;
 }
 
+export interface MissionPlanStep {
+  id: string;
+  title: string;
+  phase: CompanyPhase;
+  description: string;
+  expectedAgentId: LaPitayaAgentId | null;
+}
+
+export interface MissionPlan {
+  missionId: string;
+  objective: string;
+  milestones: readonly string[];
+  proposedWork: readonly MissionPlanStep[];
+  dependencies: readonly string[];
+  acceptanceCriteria: readonly CompanyAcceptanceCriterion[];
+  status: 'PROPOSED' | 'CONFIRMED' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
+  createdBy: 'el-inge';
+  createdAt: number;
+  verified: true;
+}
+
+export interface CompanyMission {
+  missionId: string;
+  projectId: string;
+  title: string;
+  objective: string;
+  acceptanceCriteria: readonly CompanyAcceptanceCriterion[];
+  provenance: CompanyFactProvenance;
+  dependencies: readonly string[];
+  status: CompanyMissionStatus;
+  workRequestIds: readonly string[];
+  deliveryIds: readonly string[];
+  plan: MissionPlan | null;
+  createdAt: number;
+  updatedAt: number;
+  confirmedAt: number | null;
+  confirmedBy: string | null;
+  verified: true;
+}
+
+export interface CompanyProject {
+  projectId: string;
+  name: string;
+  objective: string;
+  status: CompanyProjectStatus;
+  createdAt: number;
+  updatedAt: number;
+  createdBy: string;
+  acceptanceCriteria: readonly CompanyAcceptanceCriterion[];
+  missionIds: readonly string[];
+  verified: true;
+}
+
 export interface CompanyWorkRequest {
   requestId: string;
   humanId: string;
   sessionId: string | null;
   projectId: string | null;
+  missionId?: string | null;
   taskId: string | null;
   objective: string;
   constraints: readonly string[];
@@ -115,11 +172,41 @@ export interface CompanyProgress {
 export interface CompanyDelivery {
   requestId: string;
   taskId: string | null;
+  projectId?: string | null;
+  missionId?: string | null;
   outcome: 'PASS' | 'FAIL' | 'BLOCKED' | 'CANCELLED';
   summary: string;
   artifacts: readonly string[];
   completedAt: number;
   evidenceRefs: readonly string[];
+  verified: true;
+}
+
+export interface ProjectSnapshot {
+  project: CompanyProject;
+  missions: readonly CompanyMission[];
+  currentMission: CompanyMission | null;
+  activeSessions: readonly CompanySession[];
+  activeTeam: readonly LaPitayaAgentId[];
+  progress: { completedMissions: number; totalMissions: number; summary: string };
+  blockers: readonly string[];
+  humanAttention: CompanyHumanAttention | null;
+  recentDeliveries: readonly CompanyDelivery[];
+  recentVerifiedEvents: readonly CompanyTimelineEntry[];
+  verified: true;
+}
+
+export interface MissionSnapshot {
+  mission: CompanyMission;
+  plan: MissionPlan | null;
+  authorizedWork: readonly CompanyWorkRequest[];
+  activeWork: readonly CompanyWorkRequest[];
+  expectedWork: readonly string[];
+  completedWork: readonly CompanyWorkRequest[];
+  deliveries: readonly CompanyDelivery[];
+  blockers: readonly string[];
+  humanAttention: CompanyHumanAttention | null;
+  outcome: 'PASS' | 'FAIL' | 'BLOCKED' | 'CANCELLED' | null;
   verified: true;
 }
 
@@ -130,6 +217,10 @@ export interface CompanyOperationsProjection {
   delivery: CompanyDelivery | null;
   requests: readonly CompanyWorkRequest[];
   plans: readonly CompanyWorkPlan[];
+  projects?: readonly CompanyProject[];
+  missions?: readonly CompanyMission[];
+  foregroundProject?: ProjectSnapshot | null;
+  foregroundMission?: MissionSnapshot | null;
 }
 
 export interface CompanyAgentProjection {
@@ -146,6 +237,9 @@ export interface CompanySnapshot {
   status: CompanyStatus;
   session: CompanySession | null;
   project: CompanyProjectContext;
+  projects?: readonly CompanyProject[];
+  foregroundProject?: ProjectSnapshot | null;
+  foregroundMission?: MissionSnapshot | null;
   activeTeam: readonly LaPitayaAgentId[];
   agents: readonly CompanyAgentProjection[];
   currentPhase: CompanyPhase | null;
@@ -171,3 +265,4 @@ export function asCompanyPhase(v: unknown): CompanyPhase | null {
 export function cloneCompanySnapshot(snapshot: CompanySnapshot): CompanySnapshot {
   return JSON.parse(JSON.stringify(snapshot)) as CompanySnapshot;
 }
+

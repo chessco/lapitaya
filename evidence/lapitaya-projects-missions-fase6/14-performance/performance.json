@@ -1,0 +1,12 @@
+{
+  "performance": {
+    "mainRssMiB": 123.68,
+    "rendererRssMiB": 74.06,
+    "cpuIdlePercent": "0.1-0.4%",
+    "cpuActivePercent": "1.2-3.8%",
+    "electronProcesses": 4,
+    "browserWindows": 1,
+    "listeners": 28,
+    "status": "PASS"
+  }
+}

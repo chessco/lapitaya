@@ -1,0 +1,10 @@
+{
+  "electron": {
+    "sandbox": true,
+    "contextIsolation": true,
+    "nodeIntegration": false,
+    "processes": 4,
+    "browserWindows": 1,
+    "status": "PASS"
+  }
+}
