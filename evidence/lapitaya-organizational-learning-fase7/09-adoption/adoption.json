@@ -1,0 +1,9 @@
+{
+  "phase": "FASE_7_IMPLEMENTATION",
+  "step": "09-adoption",
+  "skillId": "skill-001",
+  "proposalId": "prop-001",
+  "approvedBy": "human",
+  "status": "ACTIVE",
+  "version": "1.0.0"
+}

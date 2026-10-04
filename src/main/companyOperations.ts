@@ -22,12 +22,15 @@ import type {
   ProjectSnapshot
 } from '../shared/lapitaya/company/types';
 
+import type { OrganizationalLearningService } from './organizationalLearning';
+
 export interface CompanyOperationsDeps {
   now?: () => number;
   project?: () => { projectId: string | null; displayName: string | null };
   snapshot: () => CompanySnapshot;
   storageFile?: string;
   onStateChanged?: () => void;
+  learningService?: OrganizationalLearningService;
 }
 
 const expectedAgent: Partial<Record<CompanyPhase, CompanyWorkPlan['steps'][number]['expectedAgentId']>> = {
@@ -57,14 +60,24 @@ export class CompanyOperationsService {
   private readonly plans = new Map<string, CompanyWorkPlan>();
   private readonly deliveries = new Map<string, CompanyDelivery>();
   private readonly deps: CompanyOperationsDeps;
+  private learningService: OrganizationalLearningService | null = null;
   private foregroundProjectId: string | null = null;
   private foregroundMissionId: string | null = null;
 
   constructor(deps: CompanyOperationsDeps) {
     this.deps = deps;
+    this.learningService = deps.learningService ?? null;
     if (deps.storageFile) {
       this.load(deps.storageFile);
     }
+  }
+
+  setLearningService(service: OrganizationalLearningService | null): void {
+    this.learningService = service;
+  }
+
+  getLearningService(): OrganizationalLearningService | null {
+    return this.learningService;
   }
 
   // ─── Persistence ────────────────────────────────────────────────────────────
@@ -544,6 +557,8 @@ export class CompanyOperationsService {
     const delivery = request ? this.deliveries.get(request.requestId) ?? null : null;
     const foregroundProject = this.projectSnapshot();
     const foregroundMission = this.missionSnapshot();
+    const learning = this.learningService?.snapshot() ?? null;
+    const skills = this.learningService?.listAdoptedSkills() ?? [];
 
     return {
       workRequest: request,
@@ -555,7 +570,9 @@ export class CompanyOperationsService {
       projects: [...this.projects.values()],
       missions: [...this.missions.values()],
       foregroundProject,
-      foregroundMission
+      foregroundMission,
+      learning,
+      skills
     };
   }
 
@@ -563,6 +580,13 @@ export class CompanyOperationsService {
 
   answer(question: string): { known: boolean; answer: string; facts: readonly string[]; snapshotVersion: 1 } | null {
     const q = this.normalize(question);
+
+    // Learning / Skills queries
+    if (this.learningService) {
+      const learningAns = this.learningService.answer(question);
+      if (learningAns) return learningAns;
+    }
+
     const p = this.projection();
     const base = this.deps.snapshot();
     const fgProjectSnap = p.foregroundProject;
@@ -968,6 +992,20 @@ export class CompanyOperationsService {
       verified: true
     };
     this.deliveries.set(request.requestId, delivery);
+
+    if (this.learningService) {
+      this.learningService.recordExperience({
+        sourceType: 'DELIVERY',
+        projectId: request.projectId,
+        missionId: request.missionId,
+        requestId: request.requestId,
+        taskId: snapshot.session.taskId,
+        sessionId: snapshot.session.sessionId,
+        outcome: outcome === 'PASS' ? 'PASS' : outcome === 'BLOCKED' ? 'BLOCKED' : 'FAIL',
+        summary: `Entrega ${delivery.summary}`,
+        evidenceRefs: delivery.evidenceRefs.length ? delivery.evidenceRefs : [`delivery:${delivery.requestId}`]
+      });
+    }
 
     // Update mission if correlated
     if (request.missionId) {

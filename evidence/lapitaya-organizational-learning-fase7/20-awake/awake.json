@@ -1,0 +1,6 @@
+{
+  "phase": "FASE_7_IMPLEMENTATION",
+  "step": "20-awake",
+  "awakeActiveOnlyDuringAuthoritativeExecution": true,
+  "idleLearningStateKeepsAwakeInactive": true
+}

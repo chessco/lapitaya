@@ -1,5 +1,6 @@
 import type { CimaPhase } from '../cima';
 import type { LaPitayaAgentId } from '../agents';
+import type { LearningSnapshot, AdoptedSkill } from '../learning/types';
 
 export const COMPANY_PHASES = ['CONTEXT', 'ARCHITECT', 'BUILD', 'TEST', 'AUDIT', 'LEARN', 'DECISION', 'ITERATE'] as const;
 export type CompanyPhase = (typeof COMPANY_PHASES)[number];
@@ -221,6 +222,8 @@ export interface CompanyOperationsProjection {
   missions?: readonly CompanyMission[];
   foregroundProject?: ProjectSnapshot | null;
   foregroundMission?: MissionSnapshot | null;
+  learning?: LearningSnapshot | null;
+  skills?: readonly AdoptedSkill[];
 }
 
 export interface CompanyAgentProjection {
@@ -249,6 +252,7 @@ export interface CompanySnapshot {
   recentVerifiedEvents: readonly CompanyTimelineEntry[];
   executionAwake: boolean;
   operations?: CompanyOperationsProjection;
+  learning?: LearningSnapshot | null;
 }
 
 export interface CompanyAnswer {

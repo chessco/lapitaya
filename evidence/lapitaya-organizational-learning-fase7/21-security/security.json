@@ -1,0 +1,8 @@
+{
+  "phase": "FASE_7_IMPLEMENTATION",
+  "step": "21-security",
+  "sandbox": true,
+  "contextIsolation": true,
+  "readOnlyIpcChannels": ["learning:getSnapshot", "learning:listCandidates", "skills:list", "skills:get", "skills:getProposal"],
+  "unauthorizedRendererAdoptionBlocked": true
+}

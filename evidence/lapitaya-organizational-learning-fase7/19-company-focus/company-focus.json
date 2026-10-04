@@ -1,0 +1,7 @@
+{
+  "phase": "FASE_7_IMPLEMENTATION",
+  "step": "19-company-focus",
+  "companyLimit": 3,
+  "focusFollowsAssignment": true,
+  "tutuVisualStates": ["IDLE", "ANALYZING", "LEARNING", "PROPOSING"]
+}

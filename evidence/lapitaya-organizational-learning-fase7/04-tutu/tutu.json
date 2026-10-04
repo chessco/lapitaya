@@ -1,0 +1,9 @@
+{
+  "phase": "FASE_7_IMPLEMENTATION",
+  "step": "04-tutu",
+  "role": "learner",
+  "canModifyProduction": false,
+  "canSelfApprove": false,
+  "canSelfAudit": false,
+  "insufficientEvidenceSupported": true
+}

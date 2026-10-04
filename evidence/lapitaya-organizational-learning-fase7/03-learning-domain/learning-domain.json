@@ -1,0 +1,15 @@
+{
+  "phase": "FASE_7_IMPLEMENTATION",
+  "step": "03-learning-domain",
+  "candidates": [
+    {
+      "candidateId": "cand-001",
+      "observation": "Validar antes de auditar previene defectos",
+      "confidence": "HIGH",
+      "scope": "PROJECT",
+      "proposedBy": "el-tutu",
+      "evidenceRefs": ["test:001", "deliv:001"]
+    }
+  ],
+  "deduplicationVerified": true
+}

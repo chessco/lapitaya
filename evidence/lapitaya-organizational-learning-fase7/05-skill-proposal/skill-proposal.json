@@ -1,0 +1,10 @@
+{
+  "phase": "FASE_7_IMPLEMENTATION",
+  "step": "05-skill-proposal",
+  "proposalId": "prop-001",
+  "name": "TargetedTestRunner",
+  "version": "1.0.0",
+  "status": "PROPOSED",
+  "provenance": "el-tutu",
+  "proposalNotAdopted": true
+}

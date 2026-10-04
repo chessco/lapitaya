@@ -1,0 +1,8 @@
+{
+  "phase": "FASE_7_IMPLEMENTATION",
+  "step": "07-audit",
+  "proposalId": "prop-001",
+  "auditedBy": "jose-juan",
+  "auditStatus": "AUDITED",
+  "learnerNotAuditor": true
+}

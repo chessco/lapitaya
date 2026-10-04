@@ -1,0 +1,6 @@
+{
+  "phase": "FASE_7_IMPLEMENTATION",
+  "step": "08-governance",
+  "humanApprovalRequiredForHigh": true,
+  "proposalAuditedBeforeAdoption": true
+}

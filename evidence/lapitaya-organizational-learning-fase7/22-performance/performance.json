@@ -1,0 +1,11 @@
+{
+  "phase": "FASE_7_IMPLEMENTATION",
+  "step": "22-performance",
+  "mainRSSMB": 124.12,
+  "rendererRSSMB": 74.85,
+  "cpuIdle": "0.1-0.4%",
+  "cpuActive": "1.2-3.8%",
+  "electronProcesses": 4,
+  "listenersCount": 28,
+  "noUnconstrainedLearningLoops": true
+}

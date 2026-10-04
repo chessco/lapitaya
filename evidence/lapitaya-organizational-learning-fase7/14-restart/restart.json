@@ -1,0 +1,9 @@
+{
+  "phase": "FASE_7_IMPLEMENTATION",
+  "step": "14-restart",
+  "stateReloaded": true,
+  "candidatesPreserved": true,
+  "proposalsPreserved": true,
+  "adoptedSkillsPreserved": true,
+  "noStatePromotion": true
+}

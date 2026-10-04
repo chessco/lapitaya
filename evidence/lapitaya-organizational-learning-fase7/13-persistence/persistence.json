@@ -1,0 +1,7 @@
+{
+  "phase": "FASE_7_IMPLEMENTATION",
+  "step": "13-persistence",
+  "schemaVersion": "1.0.0",
+  "storageFile": "HIVE_ROOT/lapitaya/learning.json",
+  "atomicWrite": true
+}
