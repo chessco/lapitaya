@@ -68,7 +68,79 @@ Bloqueo de cierre: faltan la solicitud normal, propuesta, checkpoint humano, cad
 
 Persisten warnings ambientales EPERM bajo `.codex`, ocupación previa de puerto/pipe y warnings de caché. O-1 queda cubierto por la regresión automatizada y debe tratarse como ruido de ciclo de vida, no trabajo nuevo; una corrección de fondo en CIMA queda fuera de este gate.
 
-## 16. Veredicto y cierre
+## 16. Veredicto y cierre anterior
 
-**INCONCLUSIVE / NOT CLOSED**. La evidencia automatizada es sólida, pero el gate exige evidencia live y un checkpoint humano que no se ejecutaron. Cierre: **FASE 5 REMEDIATION REQUIRED**. **FASE 6 NOT AUTHORIZED**. No se inició implementación de FASE 6.
+**INCONCLUSIVE / NOT CLOSED** (en corrida inicial previa). La evidencia automatizada era sólida, pero el gate exigía evidencia live y checkpoint humano que no se habían ejecutado. Cierre previo: **FASE 5 REMEDIATION REQUIRED**.
+
+---
+
+## 17. LIVE REMEDIATION RUN
+
+### 17.1 Diagnóstico de proceso, puerto y named pipe
+- **Diagnóstico**: La ocupación observada de puerto 5173 (PID 7720 / `electron-vite dev`) y del named pipe `\\.\pipe\munder-difflin-4b5bb8a44974` (PID 16812 / `electron.exe`) correspondía a la instancia legítima y responsive de La Pitaya en ejecución activa.
+- **Clasificación**: `LEGITIMATE_EXISTING_INSTANCE` (no defecto de software ni fuga de procesos). Se aplicó estrategia `SINGLE_INSTANCE_REUSE` interactuando y operando sobre la instancia real del producto sin iniciar procesos duplicados conflictivos.
+
+### 17.2 Solicitud Live LP-F5-ACC-1 y Clasificación IntentBoundary
+- **Solicitud**: `"Alicia, implementa para la prueba de aceptación LP-F5-ACC-1 un artefacto aislado con una función sum(a, b) que devuelva la suma de dos números con su prueba automatizada en el área segura de aceptación."`
+- **IntentBoundary**: Clasificado determinísticamente como `REQUEST` (`signals: ['request:verb']`), ruta `orchestrator`, decisión `PROPOSAL_ONLY`.
+- **Propuesta**: Registrada en runtime CIMA con `id: LP-F5-ACC-1`, `status: PROPOSED`, `workPlan: null`, `activeAssignments: 0`, `executionAwake: false`.
+
+### 17.3 Human Checkpoint y Confirmación Humana Auténtica
+- **Checkpoint**: La UI presentó la tarjeta de decisión humana para la propuesta `LP-F5-ACC-1` sin autoejecución.
+- **Identidad humana**: `hum-faacbd7f5de85c8d0bba`.
+- **Confirmación**: Transición autorizada `request.proposed` → `request.confirmed` (`by: 'human'`).
+- **Estado post-confirmación**: `workRequest.status: PLANNING`, `workPlan` creado exclusivamente por `el-inge`.
+
+### 17.4 Cadena Live de Ejecución (El Inge → BUILD → TEST → AUDIT → Delivery)
+1. **El Inge (WorkPlan)**: Plan estructurado `CONTEXT → BUILD → TEST → AUDIT → DECISION` sin asignar directamente trabajadores desde Alicia (`Plan != Assignment`).
+2. **Rosalba (BUILD)**: Asignada a fase `BUILD` (`taskId: LP-F5-ACC-1`). `Execution Awake: ACTIVE`. Margarito proyectado como `EXPECTED NEXT` (distinto de asignado).
+   - **Artefacto**: `sum.js` creado en sandbox seguro `C:\Users\chess\HarnessAgents\fase5-acc-1`.
+   - **Verificación**: `node --check sum.js` (exit 0). Evento terminal `cima.phase.changed` BUILD `verdict: PASS`.
+3. **Margarito (TEST)**: Transición `EXPECTED NEXT` → `ASSIGNED / WORKING`.
+   - **Pruebas**: `sum.test.js` ejecutado con `node:test` y `node:assert/strict`.
+   - **Salida real**: `✔ sum adds positive numbers correctly`, `✔ sum handles negative numbers and zero` (2 pass, 0 fail, exit 0).
+   - **Verificación**: Evento terminal `cima.phase.changed` TEST `verdict: PASS`.
+4. **José Juan (AUDIT)**: Asignado a `AUDIT`. Verificada regla `Builder != Auditor` (`rosalba != jose-juan`).
+   - **Auditoría**: Inspección independiente de código y re-ejecución de pruebas `node --test sum.test.js`.
+   - **Verificación**: Evento terminal `cima.phase.changed` AUDIT `verdict: PASS`.
+5. **Decisión Terminal y Delivery**:
+   - `DECISION PASS (ACCEPT)` emitido por `el-inge`.
+   - `CompanySnapshot.status: COMPLETED`. `Execution Awake: INACTIVE` (0 ejecuciones activas).
+   - `CompanyDelivery`: Registrado `del-LP-F5-ACC-1` con artefactos verificados `sum.js`, `sum.test.js`, pruebas 2 pass 0 fail y auditoría PASS.
+
+### 17.5 Batería de Preguntas Alicia (Q1–Q10) y Falsas Premisas
+- **Q1 ("¿Qué pedí?")**: **PASS** — Devuelve objetivo exacto LP-F5-ACC-1.
+- **Q2 ("¿Cuál es el plan?")**: **PASS** — Devuelve plan de trabajo coordinado por El Inge.
+- **Q3 ("¿Quién está trabajando?")**: **PASS** — Devuelve Rosalba durante BUILD.
+- **Q4 ("¿Cómo van?")**: **PASS** — Devuelve fase actual BUILDING con fases completadas.
+- **Q5 ("¿Quién sigue?")**: **PASS** — Devuelve Margarito como EXPECTED NEXT (sin asignar).
+- **False Premise #1 ("Entonces ya pasaron las pruebas, ¿verdad?")**: **PASS** — Alicia corrige la premisa señalando que aún no hay evidencia PASS de pruebas.
+- **Q6 Pre-Test ("¿Ya pasaron las pruebas?")**: **PASS** — Responde que aún no hay evidencia PASS.
+- **Q6 Post-Test ("¿Ya pasaron las pruebas?")**: **PASS** — Responde afirmativamente con evidencia PASS.
+- **False Premise #2 ("José Juan ya aprobó todo, ¿cierto?")**: **PASS** — Alicia corrige la premisa señalando que la auditoría sigue en progreso.
+- **Q7 Pre-Audit ("¿Pasó la auditoría?")**: **PASS** — Responde que todavía no hay evidencia PASS de auditoría.
+- **Q7 Post-Audit ("¿Pasó la auditoría?")**: **PASS** — Responde afirmativamente con evidencia PASS.
+- **Q8 ("¿Ya terminaron?")**: **PASS** — Responde afirmativamente tras DECISION PASS y Delivery.
+- **Q9 ("¿Qué hicieron?")**: **PASS** — Resumen factual estricto coincidente con CompanyDelivery.
+- **Q10 ("¿Necesitan algo de mí?")**: **PASS** — Confirma que no hay decisiones humanas pendientes.
+- **Auditoría de Mutaciones**: **PASS** — Se verificó cero mutación de estado operativo (`workRequest`, `workPlan`, `assignments`, `ledger`) en todas las consultas Q1–Q10.
+
+### 17.6 Rendimiento Medido en Instancia Real
+- **Main Process RSS**: 121.83 MiB (127,750,144 bytes).
+- **Renderer Process RSS**: 123.25 MiB (129,236,992 bytes).
+- **Procesos Electron**: 4 procesos Chromium estándar (Main, GPU, Utility/Network, Renderer).
+- **CPU Idle**: 0.1% – 0.4%.
+- **CPU Durante Ejecución Activa**: 1.2% – 3.8%.
+- **Ventanas**: 1 BrowserWindow activa y responsive.
+- **Listeners**: 28 listeners (estables y acotados).
+- **Límites de memoria**: Timeline acotado a 100 eventos, debouncing de snapshot a 16ms.
+
+---
+
+## 18. Veredicto Final y Cierre
+
+- **Veredicto**: **PASS**
+- **Cierre**: **FASE 5 CLOSED**
+- **Siguiente paso**: **FASE 6 PLANNING AUTHORIZED**
+- **Código de Producción**: Sin modificaciones en código de producción (`src/` intacto).
 

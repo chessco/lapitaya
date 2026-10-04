@@ -1,0 +1,18 @@
+# PROCESS AND PORT COLLISION ANALYSIS
+
+## 1. Observed Ports and Listeners
+- Port 5173: Owned by PID 7720 (electron-vite dev server, parent PID 25108: npm run dev)
+- Port 49717 / 49718: Owned by PID 16812 (Electron main process)
+- Hive Named Pipe: `\\.\pipe\munder-difflin-4b5bb8a44974`: Active, owned by PID 16812
+
+## 2. Process Tree
+- PID 25108: `npm run dev`
+  └── PID 7720: `electron-vite dev`
+      └── PID 16812: `electron.exe .` (Main Process, Responding=True, WorkingSet ~156 MiB)
+          ├── PID 23492: `electron.exe --type=gpu-process`
+          ├── PID 25580: `electron.exe --type=utility --utility-sub-type=network.mojom.NetworkService`
+          └── PID 27140: `electron.exe --type=renderer`
+
+## 3. Root Cause Classification
+- Classification: LEGITIMATE_EXISTING_INSTANCE (not application defect, not stale leak).
+- Strategy: SINGLE_INSTANCE_REUSE. Operated against the authoritative existing La Pitaya instance without spawning duplicate Electron processes or colliding on port 5173 / Hive pipe.

@@ -1,0 +1,12 @@
+{
+  "checkpoint": "HUMAN_CHECKPOINT_READY",
+  "requestId": "LP-F5-ACC-1",
+  "proposal": "Crear función sum(a, b) con prueba automatizada en sandbox aislado sin modificar archivos fuera del área segura",
+  "humanIdentity": "hum-faacbd7f5de85c8d0bba",
+  "status": "PROPOSED",
+  "uiState": "CONFIRMATION_DIALOG_PENDING",
+  "executionStarted": false,
+  "workerAssigned": false,
+  "executionAwake": false,
+  "timestamp": 1791087600000
+}

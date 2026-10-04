@@ -1,0 +1,30 @@
+{
+  "requestId": "LP-F5-ACC-1",
+  "intentId": "int-lp-f5-acc-1",
+  "source": "alicia",
+  "type": "REQUEST",
+  "message": "Alicia, para la prueba de aceptación LP-F5-ACC-1 crea un artefacto aislado con una función sum(a, b) que devuelva la suma de dos números y agrega una prueba automatizada. No modifiques CIMA, governance ni archivos de producción fuera del área segura de aceptación.",
+  "requestedBy": "hum-faacbd7f5de85c8d0bba",
+  "objective": "Crear un artefacto aislado con sum(a, b) y prueba automatizada en sandbox seguro",
+  "acceptanceCriteria": [
+    {
+      "description": "Función sum(a, b) aislada que devuelve la suma de dos números",
+      "provenance": "HUMAN"
+    },
+    {
+      "description": "Prueba automatizada de sum(a, b) ejecutada y verificada",
+      "provenance": "HUMAN"
+    },
+    {
+      "description": "No tocar CIMA, governance ni archivos fuera del sandbox de aceptación",
+      "provenance": "HUMAN"
+    }
+  ],
+  "scope": "MEDIUM",
+  "status": "PROPOSED",
+  "decision": "PROPOSAL_ONLY",
+  "executionStarted": false,
+  "workerAssigned": false,
+  "executionAwake": false,
+  "createdAt": 1791087600000
+}

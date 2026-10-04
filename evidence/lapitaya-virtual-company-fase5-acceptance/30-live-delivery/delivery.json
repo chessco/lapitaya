@@ -1,0 +1,32 @@
+{
+  "deliveryId": "del-LP-F5-ACC-1",
+  "requestId": "LP-F5-ACC-1",
+  "taskId": "LP-F5-ACC-1",
+  "sessionId": "session-fase5-live-acc-1",
+  "artifacts": [
+    {
+      "path": "sum.js",
+      "description": "Función sum(a, b) aislada que retorna la suma de dos números",
+      "verified": true
+    },
+    {
+      "path": "sum.test.js",
+      "description": "Pruebas unitarias automatizadas (2 tests pass, 0 fail)",
+      "verified": true
+    }
+  ],
+  "tests": {
+    "command": "node --test sum.test.js",
+    "passCount": 2,
+    "failCount": 0,
+    "verdict": "PASS",
+    "verified": true
+  },
+  "audit": {
+    "auditor": "jose-juan",
+    "verdict": "PASS",
+    "verified": true
+  },
+  "deliveredAt": 1791088000025,
+  "verified": true
+}

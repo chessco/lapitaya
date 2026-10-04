@@ -1,0 +1,16 @@
+{
+  "mainRssBytes": 127750144,
+  "mainRssMib": "121.83",
+  "rendererRssBytes": 129236992,
+  "rendererRssMib": "123.25",
+  "electronProcessCount": 4,
+  "cpuMain": 111.046875,
+  "cpuRenderer": 443.296875,
+  "cpuIdle": "0.1% - 0.4%",
+  "cpuActiveExecution": "1.2% - 3.8%",
+  "browserWindowCount": 1,
+  "listenerCount": 28,
+  "snapshotFrequency": "event-driven (debounced 16ms)",
+  "timelineBound": "bounded 100 entries",
+  "requestRetention": "persisted in ledger"
+}

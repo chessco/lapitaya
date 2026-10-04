@@ -1,0 +1,12 @@
+branch=lapitaya/virtual-company-v0.5-fase5
+base_fase4=218f6e82
+fase5_impl=5b28db9a19e62e4a024c635944f8a46280a7956e
+head=52cc5d5a8cb73da60a025b02b320312f622fe8c0
+main=2a5a5858ddf11885fe9c3980df0b9b1dfdace9a8
+working_tree_status=clean
+electron_run_as_node=unset_for_electron
+authoritative_instance_pid=16812
+renderer_pid=27140
+port_5173_owner=7720
+hive_root=C:\Users\chess\HarnessAgents\hive
+human_id=hum-faacbd7f5de85c8d0bba
