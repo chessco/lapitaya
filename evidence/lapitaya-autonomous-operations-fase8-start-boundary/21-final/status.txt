@@ -1,0 +1,9 @@
+start8=26/26 PASS
+test_autonomy=132/132 PASS
+typecheck=PASS
+build=PASS
+policy31=1/1 PASS
+production_changed=YES; localized governed boundary only
+fase8_2=CLOSED
+fase8=OPEN_ACCEPTANCE_GATE_RESUME_REQUIRED
+fase9_implementation=NOT_AUTHORIZED

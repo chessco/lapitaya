@@ -1,0 +1,5 @@
+command=npm.cmd run test:focused
+result=TIMEOUT_NO_INCREMENTAL_OUTPUT
+limit=15 minutes
+interpretation=not converted to PASS; historical full-suite/environment issue, not START8 failure
+blocking_for_fase8_2=NO; START8, autonomy, typecheck, POLICY-31 focused, and build passed

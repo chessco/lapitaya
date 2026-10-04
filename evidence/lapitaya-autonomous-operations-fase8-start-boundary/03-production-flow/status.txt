@@ -1,0 +1,7 @@
+caller=CompanyOperationsService.confirmMission
+orchestrator=el-inge
+path=confirmMission -> matching ACTIVE envelope -> requestAutonomousOperationStart -> CIMA -> AutonomousOperationsService.startOperation
+authorization=human authorization is reused; no new authorization is created
+renderer_direct_authority=NO
+auto_start_on_authorize=NO
+test=START8-26 PASS

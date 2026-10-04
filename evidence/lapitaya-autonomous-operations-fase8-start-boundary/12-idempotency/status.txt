@@ -1,0 +1,6 @@
+same_idempotency_key=one operation
+duplicate_operation=NO
+duplicate_work_request=NO
+duplicate_budget_consumption=NO
+restart_auto_start=NO
+persisted_operation_duplication=NO

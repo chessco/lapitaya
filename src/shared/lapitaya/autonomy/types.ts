@@ -151,8 +151,24 @@ export interface ScopeExpansionRequest {
   verified: true;
 }
 
+export interface AutonomousOperationStartRequest {
+  operationId?: string;
+  idempotencyKey?: string;
+  envelopeId: string;
+  projectId: string;
+  missionId: string;
+  objective?: string;
+  requestedRisk?: RiskLevel;
+  requiredCapabilities?: readonly string[];
+  requestedSkills?: readonly string[];
+  requestedPaths?: readonly string[];
+  pinnedSkills?: Record<string, string>;
+}
+
 export interface AutonomousOperation {
   operationId: string;
+  /** Stable orchestration correlation; optional for operations persisted before START8. */
+  idempotencyKey?: string;
   envelopeId: string;
   projectId: string;
   missionId: string;

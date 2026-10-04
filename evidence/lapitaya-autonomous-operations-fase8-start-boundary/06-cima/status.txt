@@ -1,0 +1,5 @@
+low=PASS
+medium=preserved supervised semantics
+high=not blanket-approved; rejected/escalated
+policy31_focused=1/1 PASS
+cima_v016=TIMEOUT_AFTER_5_MINUTES_WITH_KNOWN_EP​​ERM_CODEX_SESSION_DIRECTORY_ERRORS

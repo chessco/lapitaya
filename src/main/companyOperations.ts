@@ -24,6 +24,8 @@ import type {
 
 import type { OrganizationalLearningService } from './organizationalLearning';
 import type { AutonomousOperationsService } from './autonomousOperations';
+import type { AutonomousOperation, AutonomousOperationStartRequest } from '../shared/lapitaya/autonomy/types';
+import type { RiskLevel } from '../shared/lapitaya/autonomy';
 
 export interface CompanyOperationsDeps {
   now?: () => number;
@@ -33,6 +35,8 @@ export interface CompanyOperationsDeps {
   onStateChanged?: () => void;
   learningService?: OrganizationalLearningService;
   autonomyService?: AutonomousOperationsService;
+  /** CIMA decision for El Inge's proposed autonomous start; never supplied by renderer. */
+  cimaAutonomousStart?: (request: AutonomousOperationStartRequest) => { allowed: boolean; reason: string };
 }
 
 const expectedAgent: Partial<Record<CompanyPhase, CompanyWorkPlan['steps'][number]['expectedAgentId']>> = {
@@ -90,6 +94,29 @@ export class CompanyOperationsService {
 
   getAutonomyService(): AutonomousOperationsService | null {
     return this.autonomyService;
+  }
+
+  /**
+   * El Inge's production orchestration boundary. An ACTIVE envelope is only a
+   * permission boundary; this separate proposal validates the project/mission,
+   * crosses CIMA, then creates the operation exactly once.
+   */
+  requestAutonomousOperationStart(request: AutonomousOperationStartRequest & {
+    requestedBy?: 'el-inge';
+    requestedRisk?: RiskLevel;
+  }): { ok: true; operation: AutonomousOperation } | { ok: false; code: string; reason: string } {
+    if (request.requestedBy && request.requestedBy !== 'el-inge') return { ok: false, code: 'ORCHESTRATOR_REQUIRED', reason: 'only El Inge may request an autonomous operation start' };
+    const project = this.projects.get(request.projectId);
+    const mission = this.missions.get(request.missionId);
+    if (!project || !mission || mission.projectId !== project.projectId) return { ok: false, code: 'PROJECT_MISSION_MISMATCH', reason: 'project and mission are not bound' };
+    if (mission.status === 'BLOCKED' || mission.status === 'CANCELLED' || mission.status === 'FAILED') return { ok: false, code: 'MISSION_NOT_ELIGIBLE', reason: `mission status ${mission.status} cannot start` };
+    if (request.objective !== undefined && request.objective !== mission.objective) return { ok: false, code: 'OBJECTIVE_MISMATCH', reason: 'requested objective does not match mission objective' };
+    const autonomy = this.autonomyService;
+    if (!autonomy) return { ok: false, code: 'AUTONOMY_UNAVAILABLE', reason: 'autonomy service unavailable' };
+    const decision = this.deps.cimaAutonomousStart?.(request);
+    if (!decision?.allowed) return { ok: false, code: 'CIMA_DENIED', reason: decision?.reason ?? 'CIMA authorization is required before operation start' };
+    const operation = autonomy.startOperation({ ...request, objective: request.objective ?? mission.objective });
+    return operation ? { ok: true, operation } : { ok: false, code: 'ENVELOPE_VALIDATION_FAILED', reason: 'active envelope did not validate for this start request' };
   }
 
   // ─── Persistence ────────────────────────────────────────────────────────────
@@ -310,6 +337,26 @@ export class CompanyOperationsService {
 
     this.missions.set(missionId, updated);
     this.save();
+
+    // This is the production El Inge decision point. Human authorization only
+    // made the envelope ACTIVE; confirming the mission is a separate governed
+    // orchestration request and may start only its matching envelope.
+    const eligibleEnvelope = this.autonomyService?.listEnvelopes().find((env) =>
+      env.status === 'ACTIVE' && env.projectId === updated.projectId && env.missionId === updated.missionId);
+    if (eligibleEnvelope) {
+      this.requestAutonomousOperationStart({
+        envelopeId: eligibleEnvelope.envelopeId,
+        projectId: updated.projectId,
+        missionId: updated.missionId,
+        objective: updated.objective,
+        requestedBy: 'el-inge',
+        requestedRisk: eligibleEnvelope.riskCeiling,
+        requiredCapabilities: eligibleEnvelope.allowedCapabilities,
+        requestedSkills: eligibleEnvelope.allowedSkills,
+        requestedPaths: eligibleEnvelope.allowedPaths,
+        idempotencyKey: `mission-confirm:${updated.missionId}`
+      });
+    }
     return updated;
   }
 

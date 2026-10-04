@@ -13,6 +13,7 @@ import type {
   AutonomousOperation,
   AutonomousOperationStatus,
   AutonomySnapshot,
+  AutonomousOperationStartRequest,
   ContinuationDecision,
   ContinuationDecisionType,
   ContinuationReasonCode,
@@ -422,15 +423,33 @@ export class AutonomousOperationsService {
 
   // ─── Autonomous Operation Management ──────────────────────────────────────
 
-  startOperation(params: {
-    operationId?: string;
-    envelopeId: string;
-    projectId: string;
-    missionId: string;
-    pinnedSkills?: Record<string, string>;
-  }): AutonomousOperation | null {
+  startOperation(params: AutonomousOperationStartRequest): AutonomousOperation | null {
     const env = this.envelopes.get(params.envelopeId);
     if (!env) return null;
+
+    // This method is called by the governed orchestration boundary, never by
+    // the renderer. Treat the envelope as a scoped permission, not as a command.
+    if (env.projectId !== params.projectId || env.missionId !== params.missionId) return null;
+    if (params.objective !== undefined && params.objective !== env.objective) return null;
+    if (params.requestedRisk && (params.requestedRisk === 'HIGH' || (params.requestedRisk === 'MEDIUM' && env.riskCeiling === 'LOW'))) return null;
+    const subset = (requested: readonly string[] | undefined, allowed: readonly string[]) =>
+      !requested || requested.every((value) => allowed.includes(value));
+    if (!subset(params.requiredCapabilities, env.allowedCapabilities)
+      || !subset(params.requestedSkills, env.allowedSkills)
+      || !subset(params.requestedPaths, env.allowedPaths)) return null;
+    if (env.budget.maxIterations < 1 || env.budget.maxRetries < 0) return null;
+
+    if (params.idempotencyKey) {
+      const existing = [...this.operations.values()].find((op) => op.idempotencyKey === params.idempotencyKey);
+      if (existing) {
+        return existing.envelopeId === params.envelopeId && existing.projectId === params.projectId && existing.missionId === params.missionId
+          ? existing : null;
+      }
+    }
+    const exhausted = [...this.operations.values()].some((op) => op.envelopeId === params.envelopeId
+      && op.projectId === params.projectId && op.missionId === params.missionId
+      && (op.consumption.iterationsUsed >= env.budget.maxIterations || op.consumption.retriesUsed >= env.budget.maxRetries));
+    if (exhausted) return null;
 
     // Verify envelope validity & integrity
     if (env.status !== 'ACTIVE') return null;
@@ -450,7 +469,7 @@ export class AutonomousOperationsService {
       return null;
     }
 
-    const operationId = params.operationId ?? `op-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const operationId = params.operationId ?? (params.idempotencyKey ? `op-${params.idempotencyKey}` : `op-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`);
     const now = this.now();
 
     // Verify pinned skills are ACTIVE and allowed by envelope
@@ -472,6 +491,7 @@ export class AutonomousOperationsService {
 
     const operation: AutonomousOperation = {
       operationId,
+      ...(params.idempotencyKey ? { idempotencyKey: params.idempotencyKey } : {}),
       envelopeId: params.envelopeId,
       projectId: params.projectId,
       missionId: params.missionId,

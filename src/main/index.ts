@@ -485,6 +485,19 @@ companyOperations = new CompanyOperationsService({
     const cwd = reg.godId ? reg.agents[reg.godId]?.cwd ?? null : null;
     return { projectId: cwd, displayName: cwd ? basename(cwd) : null };
   },
+  cimaAutonomousStart: (request) => {
+    const risk = request.requestedRisk ?? 'LOW';
+    const auth = lapitaya.evaluateProposedCall('god', 'autonomous-operation:start', request, {
+      raiseApproval: false,
+      classify: () => ({
+        category: 'hive-coordination',
+        risk,
+        summary: `El Inge solicita iniciar operación autónoma para ${request.missionId}`,
+        rule: 'autonomous-operation-start'
+      })
+    });
+    return { allowed: auth.decision === 'ALLOW', reason: auth.reason ?? auth.decision };
+  },
   onStateChanged: () => {
     if (companyAwareness) {
       desktopPresence.setCompanySnapshot({

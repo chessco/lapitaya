@@ -1,0 +1,4 @@
+typecheck=PASS
+build=PASS
+electron_smoke=PASS; real responsive Electron processes/window, no operation started
+known_warning=store.ts static/dynamic import warning

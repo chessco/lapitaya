@@ -1,0 +1,5 @@
+tests=START8-02..START8-15 PASS
+checks=ACTIVE, project, mission, objective, integrity, authorizationBinding, expiration, risk, capabilities, skills, paths, budget
+fail_closed=YES
+work_request_on_failure=NO
+budget_consumption_on_failure=NO
