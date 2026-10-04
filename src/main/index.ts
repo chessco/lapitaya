@@ -49,6 +49,7 @@ import { MemoryReflector, type ReflectSettings } from './reflect';
 import { PersistStore } from './db';
 import { DesktopPresenceService } from './desktopPresence';
 import { CompanyAwarenessService } from './companyAwareness';
+import { CompanyOperationsService } from './companyOperations';
 import { recordSpawnAssignment } from './spawnAssignment';
 import { readAgentUsage, readContextTokens, seedSessionTranscript, resolveSessionCwd } from './transcript';
 import { listIssues, listCIRuns } from './github';
@@ -286,6 +287,7 @@ const executionAwake = new ExecutionAwakeService({
   onChange: (state) => { onExecutionAwakeChanged(state); }
 });
 let companyAwareness: CompanyAwarenessService | null = null;
+let companyOperations: CompanyOperationsService | null = null;
 const lapitaya = new CimaRuntimeService({
   hiveRoot: () => hive.root(),
   godId: () => hive.registry().godId ?? 'god',
@@ -308,6 +310,7 @@ const lapitaya = new CimaRuntimeService({
     try { desktopPresence.observeAliciaEvents(aliciaEvents); } catch { /* never break governance */ }
     // FASE 4: company awareness is a read-only aggregation of the same verified events.
     try { companyAwareness?.observe(aliciaEvents); desktopPresence.setCompanySnapshot(companyAwareness?.snapshot() ?? null); } catch { /* projection must never break governance */ }
+    try { const ops = companyOperations; if (ops && companyAwareness) { ops.observe(aliciaEvents); desktopPresence.setCompanySnapshot({ ...companyAwareness.snapshot(), operations: ops.projection() }); } } catch { /* projection must never break governance */ }
     // Execution Awake reads the same authoritative event (assignment opens, verdict closes). Read-only.
     try { executionAwake.noteRuntimeEvent(e); } catch { /* never break governance */ }
   }
@@ -338,6 +341,10 @@ const aliciaCompanion = createAliciaCompanion({
       const reg = hive.registry();
       const cwd = reg.godId ? reg.agents[reg.godId]?.cwd ?? null : null;
       return cwd ? { root: cwd, name: basename(cwd) } : null;
+    },
+    companyAnswer: (question) => {
+      const answer = companyOperations?.answer(question);
+      return answer ? { text: answer.answer, locale: 'es-MX', citations: answer.facts.map((ref) => ({ kind: 'task' as const, ref })) } : null;
     },
     agentName: (id) => hive.registry().agents[id]?.name,
     submitIntent: (intent) => intentBoundary.submit(intent)
@@ -466,7 +473,15 @@ companyAwareness = new CompanyAwarenessService({
   resolveAgent: (hiveAgentId) => agentByName(hive.registry().agents[hiveAgentId]?.name)?.id ?? null,
   executionAwake: () => executionAwake.state().active
 });
-desktopPresence.setCompanySnapshot(companyAwareness.snapshot());
+companyOperations = new CompanyOperationsService({
+  snapshot: () => companyAwareness!.snapshot(),
+  project: () => {
+    const reg = hive.registry();
+    const cwd = reg.godId ? reg.agents[reg.godId]?.cwd ?? null : null;
+    return { projectId: cwd, displayName: cwd ? basename(cwd) : null };
+  }
+});
+desktopPresence.setCompanySnapshot({ ...companyAwareness.snapshot(), operations: companyOperations.projection() });
 /** The PRIMARY window — the one running the hive/god orchestration and the sink
  *  for process-global timer events (missions, breaker, Slack ingestion). It is
  *  the most-recently-focused live window, so global events follow the user.
@@ -792,7 +807,7 @@ function onExecutionAwakeChanged(state: ExecutionAwakeState): void {
     }, null, 2), 'utf8');
   } catch { /* diagnostics are best-effort */ }
   try { desktopPresence.setLivingContext({ executionActive: state.activeExecutionCount > 0, awakeActive: state.active }); } catch { /* presentation only */ }
-  try { companyAwareness?.setExecutionAwake(state.active); desktopPresence.setCompanySnapshot(companyAwareness?.snapshot() ?? null); } catch { /* projection only */ }
+  try { companyAwareness?.setExecutionAwake(state.active); if (companyAwareness) desktopPresence.setCompanySnapshot({ ...companyAwareness.snapshot(), operations: companyOperations?.projection() }); } catch { /* projection only */ }
 }
 
 /** Living Desktop: the OS idle time is PRESENTATION context (companion sleep) — never governance evidence. */
@@ -4172,6 +4187,7 @@ ipcMain.handle('alicia:submit', (evt, message: unknown, opts: unknown) => {
     target: o.target && typeof o.target === 'object' ? (o.target as Record<string, unknown>) : null,
     locales: { uiLocale: pick(l.uiLocale), agentLocale: pick(l.agentLocale), notificationLocale: pick(l.notificationLocale) }
   });
+  try { companyOperations?.observeIntent(result.intent, result.outcome); if (companyAwareness) desktopPresence.setCompanySnapshot({ ...companyAwareness.snapshot(), operations: companyOperations?.projection() ?? null }); } catch { /* projection must never break intent handling */ }
   // v0.8: WHO submitted a REQUEST — write-once, from the trusted sender; changes no state.
   const outcome = (result as { outcome?: { type?: string; proposalId?: unknown } }).outcome;
   if (outcome?.type === 'REQUEST') humanGov.attributeSubmitted(evt, outcome.proposalId);
@@ -4179,9 +4195,13 @@ ipcMain.handle('alicia:submit', (evt, message: unknown, opts: unknown) => {
 });
 // FASE 4: deterministic, read-only company status. Action-shaped messages still
 // use Alicia's existing intent boundary; these channels cannot mutate the company.
-ipcMain.handle('company:getSnapshot', () => companyAwareness?.snapshot() ?? null);
+ipcMain.handle('company:getSnapshot', () => {
+  if (!companyAwareness) return null;
+  return { ...companyAwareness.snapshot(), operations: companyOperations?.projection() };
+});
+ipcMain.handle('company:getOperations', () => companyOperations?.projection() ?? null);
 ipcMain.handle('company:answer', (_evt, question: unknown) =>
-  typeof question === 'string' ? companyAwareness?.answerQuestion(question) ?? null : null);
+  typeof question === 'string' ? companyOperations?.answer(question) ?? companyAwareness?.answerQuestion(question) ?? null : null);
 // v0.6 governance observability: a read-only, human-safe projection of what the
 // runtime recorded (ledger, execution traces, approval/proposal state). It is
 // computed here so raw records (commands, paths, outputs, tokens) never reach

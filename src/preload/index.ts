@@ -18,7 +18,7 @@ import type { LedgerEntry, RequestConfirmation } from '../main/cimaRuntime';
 import type { RequestProposal } from '../shared/lapitaya/intent';
 import type { LocaleSettings } from '../shared/lapitaya/locales';
 import type { AliciaCompanionState, AliciaSubmitResult, ObservabilityView } from '../shared/lapitaya/alicia';
-import type { CompanyAnswer, CompanySnapshot } from '../shared/lapitaya/company/types';
+import type { CompanyAnswer, CompanyOperationsProjection, CompanySnapshot } from '../shared/lapitaya/company/types';
 import type { IntentTarget } from '../shared/lapitaya/intent';
 export type { HookEvent } from '../shared/hookEvents';
 import type { LocalSkill, CatalogSkill } from '../main/skills';
@@ -1122,6 +1122,7 @@ const api = {
     ipcRenderer.invoke('alicia:submit', message, opts ?? {}),
   /** FASE 4: read-only verified company projection. */
   companySnapshot: (): Promise<CompanySnapshot | null> => ipcRenderer.invoke('company:getSnapshot'),
+  companyOperations: (): Promise<CompanyOperationsProjection | null> => ipcRenderer.invoke('company:getOperations'),
   /** FASE 4: deterministic status question over CompanySnapshot; never an action path. */
   companyAnswer: (question: string): Promise<CompanyAnswer | null> => ipcRenderer.invoke('company:answer', question),
 

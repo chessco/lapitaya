@@ -7,6 +7,9 @@ export type CompanyStatus = 'IDLE' | 'WORKING' | 'WAITING_FOR_HUMAN' | 'BLOCKED'
 export type CompanyAgentState = 'AVAILABLE' | 'EXPECTED_NEXT' | 'ASSIGNED' | 'WORKING' | 'WAITING' | 'ATTENTION' | 'COMPLETED' | 'BLOCKED';
 export type CompanyAssignmentStatus = 'ASSIGNED' | 'WORKING' | 'COMPLETED' | 'FAILED' | 'BLOCKED';
 export type CompanySessionStatus = 'ACTIVE' | 'COMPLETED' | 'FAILED' | 'BLOCKED' | 'CANCELLED';
+export type CompanyWorkRequestStatus = 'DRAFT' | 'PROPOSED' | 'CONFIRMED' | 'PLANNING' | 'ACTIVE' | 'WAITING_FOR_HUMAN' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+export type CompanyWorkPlanStatus = 'PLANNING' | 'ACTIVE' | 'COMPLETED' | 'FAILED' | 'BLOCKED' | 'CANCELLED';
+export type CompanyFactProvenance = 'HUMAN' | 'EL_INGE_PROPOSED' | 'RUNTIME_DERIVED';
 
 export interface CompanyProjectContext {
   projectId: string | null;
@@ -66,6 +69,69 @@ export interface CompanySession {
   timeline: readonly CompanyTimelineEntry[];
 }
 
+export interface CompanyAcceptanceCriterion {
+  text: string;
+  provenance: CompanyFactProvenance;
+  verified: true;
+}
+
+export interface CompanyWorkRequest {
+  requestId: string;
+  humanId: string;
+  sessionId: string | null;
+  projectId: string | null;
+  taskId: string | null;
+  objective: string;
+  constraints: readonly string[];
+  acceptanceCriteria: readonly CompanyAcceptanceCriterion[];
+  status: CompanyWorkRequestStatus;
+  createdAt: number;
+  confirmedAt: number | null;
+  cancelledAt: number | null;
+  proposalRef: string | null;
+  verified: true;
+}
+
+export interface CompanyWorkPlan {
+  planId: string;
+  requestId: string;
+  taskId: string | null;
+  objective: string;
+  steps: readonly { phase: CompanyPhase; label: string; expectedAgentId: LaPitayaAgentId | null }[];
+  expectedRoles: readonly string[];
+  acceptanceCriteria: readonly CompanyAcceptanceCriterion[];
+  status: CompanyWorkPlanStatus;
+  createdBy: 'el-inge';
+  createdAt: number;
+  verified: true;
+}
+
+export interface CompanyProgress {
+  stage: 'PLANNING' | 'BUILDING' | 'TESTING' | 'AUDITING' | 'WAITING_FOR_HUMAN' | 'COMPLETED' | 'FAILED' | 'BLOCKED';
+  completedPhases: readonly CompanyPhase[];
+  verified: true;
+}
+
+export interface CompanyDelivery {
+  requestId: string;
+  taskId: string | null;
+  outcome: 'PASS' | 'FAIL' | 'BLOCKED' | 'CANCELLED';
+  summary: string;
+  artifacts: readonly string[];
+  completedAt: number;
+  evidenceRefs: readonly string[];
+  verified: true;
+}
+
+export interface CompanyOperationsProjection {
+  workRequest: CompanyWorkRequest | null;
+  workPlan: CompanyWorkPlan | null;
+  progress: CompanyProgress | null;
+  delivery: CompanyDelivery | null;
+  requests: readonly CompanyWorkRequest[];
+  plans: readonly CompanyWorkPlan[];
+}
+
 export interface CompanyAgentProjection {
   agentId: LaPitayaAgentId;
   state: CompanyAgentState;
@@ -88,6 +154,7 @@ export interface CompanySnapshot {
   humanAttention: CompanyHumanAttention | null;
   recentVerifiedEvents: readonly CompanyTimelineEntry[];
   executionAwake: boolean;
+  operations?: CompanyOperationsProjection;
 }
 
 export interface CompanyAnswer {

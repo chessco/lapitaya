@@ -225,6 +225,10 @@ export function CompanionCreature(props: CompanionCreatureProps): React.ReactEle
           <div style={{ color: '#FFCC80', marginBottom: '4px' }}>LA PITAYA · {props.company.status}</div>
           <div>{props.company.project.displayName ?? props.company.session?.taskId ?? 'Sin proyecto verificado'}</div>
           {props.company.currentPhase && <div style={{ opacity: 0.8, marginTop: '3px' }}>Fase: {props.company.currentPhase}</div>}
+          {props.company.operations?.workRequest && <div style={{ opacity: 0.8, marginTop: '3px' }}>Solicitud: {props.company.operations.workRequest.status}</div>}
+          {props.company.operations?.progress && <div style={{ opacity: 0.8, marginTop: '3px' }}>Progreso: {props.company.operations.progress.stage}</div>}
+          {props.company.operations?.workPlan && <div style={{ opacity: 0.8, marginTop: '3px' }}>Plan: El Inge coordina {props.company.operations.workPlan.steps.length} pasos</div>}
+          {props.company.operations?.delivery && <div style={{ color: '#B9F6CA', marginTop: '3px' }}>Entrega: {props.company.operations.delivery.outcome}</div>}
           {props.company.expectedNext.length > 0 && <div style={{ color: '#B9F6CA', marginTop: '3px' }}>Siguiente esperado: {props.company.expectedNext[0].agentId} · no asignado</div>}
           {props.company.humanAttention && <div style={{ color: '#FFAB91', marginTop: '3px' }}>Requiere atención humana</div>}
         </div>

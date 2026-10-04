@@ -68,6 +68,8 @@ export interface AliciaPorts {
   agentName?: AgentNameResolver;
   /** The ONLY outbound path: the runtime intent boundary. */
   submitIntent(intent: AliciaIntent): IntentOutcome;
+  /** Optional deterministic company-operations answer; read-only and factual. */
+  companyAnswer?(question: string): AliciaReply | null;
 }
 
 export interface AliciaCompanionState {
@@ -200,7 +202,7 @@ export function createAliciaCompanion(opts: {
         };
       }
       const reply = outcome.route === 'producer'
-        ? statusReply(snapshot({ locales, focusTaskId: o.taskId ?? null }).context, locales.uiLocale)
+        ? ports.companyAnswer?.(message) ?? statusReply(snapshot({ locales, focusTaskId: o.taskId ?? null }).context, locales.uiLocale)
         : null;
       return { intent, outcome, reply, executed: false };
     },
