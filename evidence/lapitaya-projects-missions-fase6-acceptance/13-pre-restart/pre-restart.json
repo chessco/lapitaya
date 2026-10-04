@@ -1,0 +1,10 @@
+{
+  "preRestart": {
+    "persistenceFileExists": true,
+    "projectsPersisted": 1,
+    "missionsPersisted": 2,
+    "deliveriesPersisted": 1,
+    "executionAwake": false,
+    "status": "PASS"
+  }
+}

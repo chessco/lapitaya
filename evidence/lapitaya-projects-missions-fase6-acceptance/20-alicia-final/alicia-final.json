@@ -1,0 +1,24 @@
+{
+  "gate": "FASE_6_ACCEPTANCE",
+  "step": "20-alicia-final",
+  "questions": [
+    {
+      "questionId": "Q-FINAL-01",
+      "question": "¿Ya terminaron el proyecto?",
+      "response": "¡Sí! El proyecto Calculadora de Continuidad está 100% completado.",
+      "operationalMutationDetected": false
+    },
+    {
+      "questionId": "Q-FINAL-02",
+      "question": "¿Qué entregaron?",
+      "response": "Se entregaron 2 misiones verificadas: Implementar suma (src/math/sum.ts) e Implementar resta (src/math/subtract.ts) con sus pruebas y auditorías aprobadas.",
+      "operationalMutationDetected": false
+    },
+    {
+      "questionId": "Q-FINAL-03",
+      "question": "Resume el proyecto.",
+      "response": "El proyecto Calculadora de Continuidad cumplió su objetivo con 2 misiones completadas: Implementar suma (M1) e Implementar resta (M2), todas verificadas por El Inge, construidas por el equipo de desarrollo, probadas por Margarito y auditadas por José Juan.",
+      "operationalMutationDetected": false
+    }
+  ]
+}

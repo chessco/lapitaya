@@ -1,0 +1,35 @@
+{
+  "aliciaRecoveryQuestions": [
+    {
+      "question": "¿Cómo va el proyecto Calculadora de Continuidad?",
+      "response": "El proyecto \"Calculadora de Continuidad\" tiene 1 de 2 misiones completadas. Misión actual: \"Implementar resta\" (CONFIRMED).",
+      "facts": ["project:LP-F6-ACC-PROJECT", "progress:1/2"],
+      "operationalMutationDetected": false
+    },
+    {
+      "question": "¿Qué ya terminaron?",
+      "response": "Terminado con evidencia PASS: Misión \"Implementar suma\". Entregas: BUILD PASS, TEST PASS, AUDIT PASS.",
+      "facts": ["mission:LP-F6-M1:COMPLETED", "delivery:req-m1-suma"],
+      "operationalMutationDetected": false
+    },
+    {
+      "question": "¿Qué falta?",
+      "response": "Faltan 1 misión(es) por completar: \"Implementar resta\" (CONFIRMED).",
+      "facts": ["mission:LP-F6-M2"],
+      "operationalMutationDetected": false
+    },
+    {
+      "question": "¿Quién está trabajando?",
+      "response": "No hay ningún agente trabajando en este momento.",
+      "facts": ["activeAssignments:0"],
+      "operationalMutationDetected": false
+    },
+    {
+      "question": "¿Necesitan algo de mí?",
+      "response": "No hay decisiones humanas pendientes en este momento.",
+      "facts": ["attention:none"],
+      "operationalMutationDetected": false
+    }
+  ],
+  "status": "PASS"
+}

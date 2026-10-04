@@ -1,0 +1,23 @@
+{
+  "missions": [
+    {
+      "missionId": "LP-F6-M1",
+      "projectId": "LP-F6-ACC-PROJECT",
+      "title": "Implementar suma",
+      "objective": "Crear una función aislada sum(a, b) y sus pruebas automatizadas.",
+      "provenance": "HUMAN",
+      "dependencies": [],
+      "status": "COMPLETED"
+    },
+    {
+      "missionId": "LP-F6-M2",
+      "projectId": "LP-F6-ACC-PROJECT",
+      "title": "Implementar resta",
+      "objective": "Crear una función aislada subtract(a, b) y sus pruebas automatizadas.",
+      "provenance": "HUMAN",
+      "dependencies": ["LP-F6-M1"],
+      "status": "COMPLETED"
+    }
+  ],
+  "status": "PASS"
+}

@@ -1,0 +1,10 @@
+{
+  "m1Test": {
+    "agent": "margarito",
+    "phase": "TEST",
+    "verdict": "PASS",
+    "focus": "margarito",
+    "expectedNextToAssigned": true,
+    "status": "PASS"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "gate": "FASE_6_ACCEPTANCE",
+  "step": "32-regression",
+  "suites": {
+    "PROJ6": "12/12 PASS",
+    "MISS6": "15/15 PASS",
+    "CONT6": "12/12 PASS",
+    "ALI6": "15/15 PASS",
+    "GOV6": "12/12 PASS",
+    "DEP6": "7/7 PASS",
+    "REG6": "12/12 PASS",
+    "companion": "296/296 PASS",
+    "virtualCompanyOperations": "67/67 PASS",
+    "total": "393/393 PASS"
+  },
+  "typecheckNode": "PASS",
+  "typecheckWeb": "PASS",
+  "build": "PASS"
+}

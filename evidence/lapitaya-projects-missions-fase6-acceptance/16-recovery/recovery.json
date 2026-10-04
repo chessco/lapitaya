@@ -1,0 +1,13 @@
+{
+  "recovery": {
+    "project": "LP-F6-ACC-PROJECT",
+    "name": "Calculadora de Continuidad",
+    "m1": "COMPLETED",
+    "m1DeliveryCorrelated": true,
+    "m2": "CONFIRMED",
+    "m2DependencySatisfied": true,
+    "noStaleWorkers": true,
+    "executionAwake": false,
+    "status": "PASS"
+  }
+}

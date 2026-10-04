@@ -1,0 +1,9 @@
+{
+  "gate": "FINAL INDEPENDENT ACCEPTANCE GATE",
+  "phase": "FASE 6 — PROJECTS & MISSIONS",
+  "branch": "lapitaya/virtual-company-v0.6-projects-missions",
+  "baseCommit": "e999439b9ef77822484201cf052576839369483a",
+  "implementationHead": "ff4f64f976fb9db0c5bc7e1ba228df722aa80574",
+  "productionCodeModifiedDuringGate": false,
+  "preflightStatus": "PASS"
+}

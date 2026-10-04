@@ -1,0 +1,16 @@
+{
+  "gate": "FASE_6_ACCEPTANCE",
+  "step": "27-awake",
+  "states": {
+    "projectExistsOnly": "INACTIVE",
+    "missionPlanned": "INACTIVE",
+    "missionBlocked": "INACTIVE",
+    "missionAwaitingHuman": "INACTIVE",
+    "buildExecuting": "ACTIVE",
+    "testExecuting": "ACTIVE",
+    "auditExecuting": "ACTIVE",
+    "terminal": "INACTIVE",
+    "postRestartIdle": "INACTIVE"
+  },
+  "executionAwakeContractMaintained": true
+}

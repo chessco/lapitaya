@@ -1,0 +1,8 @@
+{
+  "shutdown": {
+    "type": "GRACEFUL",
+    "persistenceFlushed": true,
+    "awakeReleased": true,
+    "status": "PASS"
+  }
+}

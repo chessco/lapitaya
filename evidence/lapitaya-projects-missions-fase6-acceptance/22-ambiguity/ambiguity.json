@@ -1,0 +1,10 @@
+{
+  "gate": "FASE_6_ACCEPTANCE",
+  "step": "22-ambiguity",
+  "query": "¿Cómo va Calculadora?",
+  "candidates": ["Calculadora de Continuidad", "Calculadora Financiera"],
+  "response": "Encontré más de un proyecto con ese nombre: Calculadora de Continuidad y Calculadora Financiera. ¿A cuál te refieres?",
+  "ambiguityResolvedViaClarification": true,
+  "randomSelectionOccurred": false,
+  "operationalMutation": 0
+}

@@ -1,0 +1,14 @@
+{
+  "gate": "FASE_6_ACCEPTANCE",
+  "step": "31-performance",
+  "mainRSSMB": 123.68,
+  "rendererRSSMB": 74.06,
+  "cpuIdlePercent": "0.1-0.4%",
+  "cpuActivePercent": "1.2-3.8%",
+  "electronProcesses": 4,
+  "browserWindows": 1,
+  "listenersCount": 28,
+  "stableNoLeaks": true,
+  "projectsCount": 2,
+  "missionsCount": 3
+}

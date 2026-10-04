@@ -1,0 +1,13 @@
+{
+  "partialProject": {
+    "project": "LP-F6-ACC-PROJECT",
+    "status": "ACTIVE",
+    "completed": false,
+    "completedMissions": 1,
+    "totalMissions": 2,
+    "progressSummary": "1 de 2 misiones completadas",
+    "m1Status": "COMPLETED",
+    "m2Status": "CONFIRMED",
+    "status": "PASS"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "m2DependsOnM1": true,
+    "blockedWhileM1Incomplete": true,
+    "unblockedAfterM1Pass": true,
+    "satisfactionDoesNotAutoAssign": true,
+    "satisfactionDoesNotApproveHigh": true,
+    "status": "PASS"
+  }
+}

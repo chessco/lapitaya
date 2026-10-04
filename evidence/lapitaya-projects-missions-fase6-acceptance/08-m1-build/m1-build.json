@@ -1,0 +1,9 @@
+{
+  "m1Build": {
+    "agent": "rosalba",
+    "phase": "BUILD",
+    "verdict": "PASS",
+    "focus": "rosalba",
+    "status": "PASS"
+  }
+}

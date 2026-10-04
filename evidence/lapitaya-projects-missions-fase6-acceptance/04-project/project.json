@@ -1,0 +1,12 @@
+{
+  "project": {
+    "projectId": "LP-F6-ACC-PROJECT",
+    "name": "Calculadora de Continuidad",
+    "objective": "Validar que La Pitaya puede administrar un proyecto persistente con múltiples misiones, dependencias, entregas verificables y recuperación después de reiniciar la aplicación.",
+    "provenance": "HUMAN",
+    "status": "ACTIVE",
+    "missionIds": ["LP-F6-M1", "LP-F6-M2"],
+    "completed": false,
+    "status": "PASS"
+  }
+}

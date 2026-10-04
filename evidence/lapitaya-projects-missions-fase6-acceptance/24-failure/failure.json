@@ -1,0 +1,11 @@
+{
+  "gate": "FASE_6_ACCEPTANCE",
+  "step": "24-failure",
+  "fixture": "test/fixtures/failure-mission.json",
+  "workRequestStatus": "FAILED",
+  "missionStatus": "FAILED",
+  "projectStatus": "ACTIVE",
+  "deliveryCreated": false,
+  "falseSuccessPrevented": true,
+  "iterationLineageMaintained": true
+}

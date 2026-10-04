@@ -1,0 +1,12 @@
+{
+  "gate": "FASE_6_ACCEPTANCE",
+  "step": "33-cima",
+  "authorization": "PASS",
+  "requestConfirmation": "PASS",
+  "highSeparation": "PASS",
+  "decisionGate": "PASS",
+  "builderNotAuditor": "PASS",
+  "eventLedgerIntegrity": "PASS",
+  "humanIdentity": "PASS",
+  "capabilityPolicy": "PASS"
+}

@@ -1,0 +1,11 @@
+{
+  "m1Delivery": {
+    "requestId": "req-m1-suma",
+    "taskId": "TASK-SUMA",
+    "projectId": "LP-F6-ACC-PROJECT",
+    "missionId": "LP-F6-M1",
+    "outcome": "PASS",
+    "summary": "BUILD PASS, TEST PASS, AUDIT PASS",
+    "status": "PASS"
+  }
+}

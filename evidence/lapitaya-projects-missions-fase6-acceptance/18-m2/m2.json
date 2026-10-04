@@ -1,0 +1,30 @@
+{
+  "gate": "FASE_6_ACCEPTANCE",
+  "step": "18-m2",
+  "missionId": "LP-F6-M2",
+  "projectId": "LP-F6-ACC-PROJECT",
+  "title": "Implementar resta",
+  "dependency": "LP-F6-M1",
+  "dependencyStatus": "SATISFIED",
+  "status": "COMPLETED",
+  "lineage": {
+    "projectId": "LP-F6-ACC-PROJECT",
+    "missionId": "LP-F6-M2",
+    "requestId": "req-m2-001",
+    "taskId": "task-m2-001",
+    "sessionId": "sess-m2-001"
+  },
+  "builder": "El Beni",
+  "buildOutcome": "PASS",
+  "tester": "Margarito",
+  "testOutcome": "PASS",
+  "auditor": "José Juan",
+  "auditOutcome": "PASS",
+  "delivery": {
+    "deliveryId": "deliv-m2-001",
+    "artifacts": ["src/math/subtract.ts", "test/math/subtract.test.ts"],
+    "testsExecuted": 6,
+    "testsPassed": 6,
+    "auditPassed": true
+  }
+}

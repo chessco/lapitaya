@@ -1,0 +1,16 @@
+{
+  "gate": "FASE_6_ACCEPTANCE",
+  "step": "30-governance",
+  "roles": {
+    "Human": "Owns objective and ultimate approval",
+    "Alicia": "Human communication and query reporting without operational mutation",
+    "El Inge": "Technical orchestration and MissionPlan generation",
+    "Project": "Organizational continuity across sessions and restarts",
+    "Mission": "Scoped unit of work with clear acceptance criteria",
+    "CIMA": "Authoritative policy enforcement and Decision Gate",
+    "Rosalba / El Beni": "BUILD phase execution",
+    "Margarito": "Independent TEST phase execution",
+    "José Juan": "Independent AUDIT phase execution (Builder != Auditor)"
+  },
+  "governanceInvariantsPreserved": true
+}

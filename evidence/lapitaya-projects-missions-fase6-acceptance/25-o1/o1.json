@@ -1,0 +1,12 @@
+{
+  "gate": "FASE_6_ACCEPTANCE",
+  "step": "25-o1",
+  "lifecycleNoiseEventsInjected": 50,
+  "completedMissionReopened": false,
+  "completedProjectReopened": false,
+  "progressDecremented": false,
+  "duplicateWorkRequestCreated": false,
+  "duplicateDeliveryCreated": false,
+  "awakeReactivated": false,
+  "workerResurrected": false
+}

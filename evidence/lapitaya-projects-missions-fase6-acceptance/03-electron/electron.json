@@ -1,0 +1,12 @@
+{
+  "electron": {
+    "instanceType": "LEGITIMATE_SINGLE_INSTANCE",
+    "mainPid": 16812,
+    "rendererPid": 23492,
+    "browserWindows": 1,
+    "contextIsolation": true,
+    "sandbox": true,
+    "nodeIntegration": false,
+    "status": "PASS"
+  }
+}

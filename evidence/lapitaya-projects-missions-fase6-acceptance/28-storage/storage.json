@@ -1,0 +1,9 @@
+{
+  "gate": "FASE_6_ACCEPTANCE",
+  "step": "28-storage",
+  "schemaVersion": "1.0.0",
+  "atomicWriteMechanism": "write-to-temp-then-rename",
+  "corruptionHandling": "fail-safe-backup-and-recover",
+  "stableIdsPreserved": true,
+  "failOpenPrevented": true
+}

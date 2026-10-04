@@ -1,0 +1,20 @@
+{
+  "gate": "FASE_6_ACCEPTANCE",
+  "step": "21-multiple-projects",
+  "projects": [
+    {
+      "projectId": "LP-F6-ACC-PROJECT",
+      "name": "Calculadora de Continuidad",
+      "missionsCount": 2,
+      "status": "COMPLETED"
+    },
+    {
+      "projectId": "LP-F6-ACC-PROJECT-B",
+      "name": "Proyecto Auxiliar B",
+      "missionsCount": 1,
+      "status": "ACTIVE"
+    }
+  ],
+  "isolationVerified": true,
+  "crossContamination": false
+}

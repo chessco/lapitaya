@@ -1,0 +1,12 @@
+{
+  "gate": "FASE_6_ACCEPTANCE",
+  "step": "26-company-focus",
+  "companyLimitMax": 3,
+  "actualActiveCompanions": 1,
+  "focusTransitions": [
+    { "phase": "BUILD", "worker": "El Beni", "focused": "El Beni" },
+    { "phase": "TEST", "worker": "Margarito", "focused": "Margarito" },
+    { "phase": "AUDIT", "worker": "José Juan", "focused": "José Juan" }
+  ],
+  "focusFollowsAssignment": true
+}

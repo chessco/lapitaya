@@ -1,0 +1,10 @@
+{
+  "gate": "FASE_6_ACCEPTANCE",
+  "step": "23-high",
+  "projectConfirmed": true,
+  "missionConfirmed": true,
+  "highActionAttempted": "deploy_production_bundle",
+  "cimaDecision": "HUMAN_APPROVAL_REQUIRED",
+  "autoApproved": false,
+  "highSeparationPreserved": true
+}

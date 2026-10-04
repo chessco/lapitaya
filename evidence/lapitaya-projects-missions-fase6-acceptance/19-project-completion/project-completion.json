@@ -1,0 +1,14 @@
+{
+  "gate": "FASE_6_ACCEPTANCE",
+  "step": "19-project-completion",
+  "projectId": "LP-F6-ACC-PROJECT",
+  "status": "COMPLETED",
+  "completedMissions": ["LP-F6-M1", "LP-F6-M2"],
+  "totalMissions": 2,
+  "progressRatio": "2/2",
+  "progressPercent": 100,
+  "acceptanceCriteriaSatisfied": true,
+  "allDeliveriesVerified": true,
+  "completedAt": "2026-10-04T05:22:00.000Z",
+  "operationalMutation": 0
+}

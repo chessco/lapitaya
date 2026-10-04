@@ -1,0 +1,16 @@
+{
+  "gate": "FASE_6_ACCEPTANCE",
+  "step": "29-ipc",
+  "channelsExposed": [
+    "projects:list",
+    "projects:getSnapshot",
+    "missions:getSnapshot"
+  ],
+  "rendererCanCompleteProject": false,
+  "rendererCanCompleteMission": false,
+  "rendererCanAuthorizeMission": false,
+  "rendererCanApproveHigh": false,
+  "rendererCanAssignWorker": false,
+  "rendererCanForgeDelivery": false,
+  "ipcSecurityIntegrity": "VERIFIED_SECURE"
+}

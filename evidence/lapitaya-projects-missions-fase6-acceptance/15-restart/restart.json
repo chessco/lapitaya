@@ -1,0 +1,9 @@
+{
+  "restart": {
+    "lifecycle": "NEW_APPLICATION_INSTANCE",
+    "storageReloaded": true,
+    "projectIdPreserved": true,
+    "missionIdsPreserved": true,
+    "status": "PASS"
+  }
+}

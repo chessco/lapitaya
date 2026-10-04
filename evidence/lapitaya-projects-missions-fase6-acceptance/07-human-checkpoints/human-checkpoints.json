@@ -1,0 +1,22 @@
+{
+  "checkpoints": [
+    {
+      "checkpoint": "MISSION 1 CONFIRMATION",
+      "type": "MISSION",
+      "project": "LP-F6-ACC-PROJECT",
+      "mission": "LP-F6-M1",
+      "humanConfirmed": true,
+      "autoConfirmed": false,
+      "status": "PASS"
+    },
+    {
+      "checkpoint": "MISSION 2 CONFIRMATION",
+      "type": "MISSION",
+      "project": "LP-F6-ACC-PROJECT",
+      "mission": "LP-F6-M2",
+      "humanConfirmed": true,
+      "autoConfirmed": false,
+      "status": "PASS"
+    }
+  ]
+}
