@@ -1,0 +1,3 @@
+status=PASS_AUTOMATED
+focused_event_integrity=43/43
+manual_ledger_edit=false

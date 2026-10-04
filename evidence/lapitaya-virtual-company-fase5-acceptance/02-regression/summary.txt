@@ -1,0 +1,5 @@
+npm.cmd run test:companion => PASS 296/296, duration_ms=60390
+npm.cmd run typecheck:node => PASS
+npm.cmd run typecheck:web => PASS
+npm.cmd run build => PASS, duration_ms=119700
+build_warning=store.ts dynamically and statically imported; no build failure

@@ -1,0 +1,17 @@
+{
+  "requestId": "LP-F5-ACC-1",
+  "status": "NOT_EXECUTED",
+  "questions": [
+    {"questionId":"Q1","question":"¿Qué pedí?","verdict":"NOT_EXECUTED"},
+    {"questionId":"Q2","question":"¿Cuál es el plan?","verdict":"NOT_EXECUTED"},
+    {"questionId":"Q3","question":"¿Quién está trabajando?","verdict":"NOT_EXECUTED"},
+    {"questionId":"Q4","question":"¿Cómo van?","verdict":"NOT_EXECUTED"},
+    {"questionId":"Q5","question":"¿Quién sigue?","verdict":"NOT_EXECUTED"},
+    {"questionId":"Q6","question":"¿Ya pasaron las pruebas?","verdict":"NOT_EXECUTED"},
+    {"questionId":"Q7","question":"¿Ya terminó la auditoría?","verdict":"NOT_EXECUTED"},
+    {"questionId":"Q8","question":"¿Ya terminaron?","verdict":"NOT_EXECUTED"},
+    {"questionId":"Q9","question":"¿Qué hicieron?","verdict":"NOT_EXECUTED"},
+    {"questionId":"Q10","question":"¿Necesitan algo de mí?","verdict":"NOT_EXECUTED"}
+  ],
+  "operationalMutationDetected": null
+}

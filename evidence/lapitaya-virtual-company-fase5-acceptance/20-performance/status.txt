@@ -1,0 +1,10 @@
+status=INCOMPLETE
+electron_processes=5
+main_rss_bytes=153010176
+main_window=La Pitaya
+responsive=true
+renderer_rss=NOT_MEASURED
+cpu_idle_or_active=NOT_MEASURED
+windows=NOT_MEASURED
+listeners=NOT_MEASURED
+retention=NOT_MEASURED

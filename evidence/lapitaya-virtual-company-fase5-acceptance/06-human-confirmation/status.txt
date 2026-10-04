@@ -1,0 +1,3 @@
+status=NOT_REACHED
+confirmation=NOT_PERFORMED
+reason=trusted UI checkpoint was not reached; no automatic approval was attempted

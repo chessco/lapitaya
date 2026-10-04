@@ -1,0 +1,6 @@
+original_ELECTRON_RUN_AS_NODE=1
+test_process_ELECTRON_RUN_AS_NODE=unset
+command=npm.cmd run dev
+result=real Electron started; main window title La Pitaya; responsive=true
+observations=port 5173 already occupied; renderer selected 5174; Hive pipe already in use; cache/profile warnings
+process_count_observed=5 electron processes

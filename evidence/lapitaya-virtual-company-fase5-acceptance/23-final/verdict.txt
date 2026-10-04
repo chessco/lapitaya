@@ -1,0 +1,4 @@
+verdict=INCONCLUSIVE / NOT CLOSED
+closure=FASE 5 REMEDIATION REQUIRED
+fase6=NOT AUTHORIZED
+blocking=live chain and human checkpoint not executed

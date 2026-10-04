@@ -1,0 +1,6 @@
+branch=lapitaya/virtual-company-v0.5-fase5
+base_fase4=218f6e82
+head=5b28db9a19e62e4a024c635944f8a46280a7956e
+main=2a5a5858ddf11885fe9c3980df0b9b1dfdace9a8
+working_tree_before_acceptance=clean
+main_untouched=true
