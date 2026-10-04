@@ -984,12 +984,71 @@ export class CompanyOperationsService {
         confirmedAt: event.ts,
         acceptanceCriteria: criteria
       });
-      this.createPlan(this.requests.get(id)!);
+      const boundRequest = this.bootstrapConfirmedRequest(this.requests.get(id)!);
+      this.requests.set(id, boundRequest);
+      this.createPlan(boundRequest);
+      if (boundRequest.missionId) {
+        this.confirmMission(boundRequest.missionId, 'el-inge');
+      }
     } else {
       const status = event.technical?.decision === 'CANCELLED' ? 'CANCELLED' : event.technical?.decision === 'BLOCKED' ? 'FAILED' : current.status;
       this.requests.set(id, { ...current, status, cancelledAt: status === 'CANCELLED' ? event.ts : current.cancelledAt });
     }
     this.save();
+  }
+
+  /**
+   * A human-confirmed REQUEST may bootstrap the product entities needed by
+   * the already-authorized production envelope. The envelope is never
+   * created, activated, or modified here; it is only used as an exact binding
+   * for the project and mission that the human is asking El Inge to run.
+   */
+  private bootstrapConfirmedRequest(request: CompanyWorkRequest): CompanyWorkRequest {
+    const envelope = this.autonomyService?.listEnvelopes().find((candidate) =>
+      candidate.status === 'ACTIVE' && candidate.objective === request.objective);
+    if (!envelope) return request;
+
+    // A request can already have foreground bindings. Only reuse them when
+    // they are the exact bindings authorized by the active envelope.
+    if (request.projectId && request.missionId &&
+      (request.projectId !== envelope.projectId || request.missionId !== envelope.missionId)) {
+      return request;
+    }
+
+    const now = this.now();
+    let project = this.projects.get(envelope.projectId);
+    if (!project) {
+      project = this.createProject({
+        projectId: envelope.projectId,
+        name: `La Pitaya · ${envelope.projectId}`,
+        objective: request.objective,
+        acceptanceCriteria: request.acceptanceCriteria,
+        createdBy: 'human'
+      });
+    }
+
+    let mission = this.missions.get(envelope.missionId);
+    if (!mission) {
+      mission = this.createMission({
+        missionId: envelope.missionId,
+        projectId: project.projectId,
+        title: 'FASE 8 · Aceptación de autonomía operacional',
+        objective: request.objective,
+        acceptanceCriteria: request.acceptanceCriteria,
+        provenance: 'HUMAN'
+      });
+    }
+
+    if (!mission.workRequestIds.includes(request.requestId)) {
+      mission = { ...mission, workRequestIds: [...mission.workRequestIds, request.requestId], updatedAt: now };
+      this.missions.set(mission.missionId, mission);
+    }
+
+    return {
+      ...request,
+      projectId: project.projectId,
+      missionId: mission.missionId
+    };
   }
 
   private refreshActiveRequest(event: AliciaEvent): void {

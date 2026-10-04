@@ -82,3 +82,24 @@ test('START8-26: El Inge mission confirmation is the production start caller', (
     assert.equal(f.autonomy.listOperations()[0].missionId, mission.missionId);
   } finally { close(f); }
 });
+
+test('START8-27: human-confirmed REQUEST binds the active envelope and starts once', () => {
+  const f = fixture();
+  try {
+    const objective = f.base.objective;
+    const requestId = 'request-start8-bootstrap';
+    f.ops.observe([
+      { type: 'request.proposed', ref: requestId, subject: objective, ts: ++clock },
+      { type: 'request.confirmed', ref: requestId, subject: objective, taskId: 'task-start8-bootstrap', ts: ++clock }
+    ]);
+    const request = f.ops.projection().requests.find((item) => item.requestId === requestId);
+    assert.equal(request.projectId, f.base.projectId);
+    assert.equal(request.missionId, f.base.missionId);
+    assert.equal(f.ops.getMission(f.base.missionId).workRequestIds.includes(requestId), true);
+    assert.equal(f.autonomy.listOperations().length, 1);
+    assert.equal(f.autonomy.listOperations()[0].missionId, f.base.missionId);
+
+    f.ops.observe([{ type: 'request.confirmed', ref: requestId, subject: objective, taskId: 'task-start8-bootstrap', ts: ++clock }]);
+    assert.equal(f.autonomy.listOperations().length, 1);
+  } finally { close(f); }
+});
