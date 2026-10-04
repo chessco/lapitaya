@@ -1,4 +1,5 @@
 project=LP-F8-ACC-PROJECT
 mission=LP-F8-ACC-M1
-envelope_id=NOT_CREATED_LIVE
-status=NOT_EXECUTED
+envelope_id=env-1791134931220-v3boz
+status=CREATED_LIVE_VIA_ALICIA_UI
+note=UI bug found+fixed in same session: AliciaPanel.tsx read snapshot.autonomy.envelopes (removed by POLICY-31) instead of snapshot.operations.autonomy.envelopes. Backend had already created 3 PENDING_AUTHORIZATION envelopes from prior clicks; fix made them visible. test:autonomy 132/132 PASS after fix.

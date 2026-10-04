@@ -1,4 +1,11 @@
-status=NOT_REACHED
-authorized=NO
+status=REACHED
+authorized=YES
+decision=AUTHORIZE
+authorized_by=hum-faacbd7f5de85c8d0bba (chess)
+decisionId=decision-1791135641843-92ldu2
+authorizedAt=1791135641843
+authorizationBinding=663fdbb5421ad1e991b09ac0702bf6dfa2db51172d2301ed180927ec6982fbe9
+envelope_status=ACTIVE
+channel=lapitaya:decide (real AUTHORIZE click in running La Pitaya window, Alicia "pregúntame" tab)
 execution_started=NO
-action=human must create/review proposal in real La Pitaya UI
+note=two other proposal clicks from the same session remain PENDING_AUTHORIZATION (env-1791135018010-5rfrz, env-1791135129567-jmt4n); not decided, left as-is

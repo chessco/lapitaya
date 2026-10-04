@@ -1,4 +1,5 @@
-verdict=REMEDIATION PASS — HUMAN CHECKPOINT PENDING
-FASE8_closed=NO
+verdict=FASE 8.1 (Human Autonomy Authorization Boundary) PASS — human checkpoint reached live
+FASE8.1_closed=YES — real human AUTHORIZE via lapitaya:decide, envelope ACTIVE with authorizationBinding
+FASE8_full_acceptance_closed=NO — the separate 40-section acceptance gate (evidence/lapitaya-autonomous-operations-fase8-acceptance) remains BLOCKED at section 26; sections 27-40 (budget consumption/exhaustion, pause/resume/cancel, scope self-expansion, integrity, restart recovery, idempotency, project isolation, performance, final regression) were never executed live and are out of this session's scope
 FASE9=NOT_AUTHORIZED
-production_code_changed=YES remediation implementation only
+production_code_changed=YES — fixed AliciaPanel.tsx reading snapshot.autonomy.envelopes instead of snapshot.operations.autonomy.envelopes (POLICY-31 moved the canonical path; renderer was never updated). test:autonomy 132/132 PASS after fix.

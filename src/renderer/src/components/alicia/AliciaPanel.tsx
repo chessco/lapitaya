@@ -61,7 +61,7 @@ export function AliciaPanel() {
     void window.cth.aliciaSnapshot({ locales: locales() }).then(setAlicia).catch(() => setAlicia(null));
   }, [locales]);
   const refreshAutonomy = useCallback(() => {
-    void window.cth.companySnapshot().then((s) => setAutonomy(s?.autonomy?.envelopes.find((e) => e.status === 'PENDING_AUTHORIZATION' || e.status === 'ACTIVE' || e.status === 'REJECTED') ?? null)).catch(() => setAutonomy(null));
+    void window.cth.companySnapshot().then((s) => setAutonomy(s?.operations?.autonomy?.envelopes.find((e) => e.status === 'PENDING_AUTHORIZATION' || e.status === 'ACTIVE' || e.status === 'REJECTED') ?? null)).catch(() => setAutonomy(null));
   }, []);
 
   useEffect(() => {

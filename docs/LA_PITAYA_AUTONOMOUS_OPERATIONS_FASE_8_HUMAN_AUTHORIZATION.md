@@ -1,6 +1,6 @@
 # FASE 8.1 — Human Autonomy Authorization Boundary
 
-Estado: **REMEDIATION PASS — HUMAN CHECKPOINT PENDING**
+Estado: **FASE 8.1 CLOSED — human checkpoint reached live (full FASE 8 acceptance, sections 27-40, still open)**
 
 ## Findings remediados
 
@@ -40,6 +40,22 @@ La propuesta, decisión, identidad, binding y estado usan el almacenamiento exis
 
 ## Real Electron y checkpoint
 
-Electron real arrancó con ventana `La Pitaya` responsive; se observaron 5 procesos y el proceso con ventana fue PID 20644. No se automatizó la creación de `LP-F8-ACC-PROJECT`, `LP-F8-ACC-M1` ni la autorización, porque la especificación prohíbe simular al humano o inyectar envelopes. El siguiente paso es usar el control real de Alicia para crear la propuesta; cuando aparezca `PENDING_AUTHORIZATION`, el gate debe detenerse y solicitar la decisión humana.
+Electron real arrancó con ventana `La Pitaya` responsive. No se automatizó la creación de `LP-F8-ACC-PROJECT`, `LP-F8-ACC-M1` ni la autorización, porque la especificación prohíbe simular al humano o inyectar envelopes: el humano creó la propuesta pulsando "Proponer envelope de autonomía acotada" en la pestaña Alicia ("pregúntame") y decidió pulsando AUTHORIZE sobre la tarjeta real del envelope.
 
-FASE 8 no está cerrada. FASE 9 no está autorizada.
+### Bug encontrado y corregido en esta sesión
+
+La tarjeta `PENDING_AUTHORIZATION` no aparecía tras pulsar el botón, aunque el backend sí creaba el envelope (confirmado en `autonomy.json`: 3 envelopes `PENDING_AUTHORIZATION` acumulados de clics previos). Causa: `AliciaPanel.tsx` leía `snapshot.autonomy.envelopes`, un campo raíz que `company:getSnapshot` ya no llena desde la remediación POLICY-31 — la ruta canónica es `snapshot.operations.autonomy.envelopes` (ver comentario en `index.ts` junto al handler). Corregido en una línea; `test:autonomy` 132/132 PASS tras el fix.
+
+### Checkpoint humano real — REACHED
+
+- `envelopeId`: `env-1791134931220-v3boz`
+- Decisión: **AUTHORIZE**, vía `lapitaya:decide`, identidad resuelta en main (`hum-faacbd7f5de85c8d0bba`, "chess")
+- `authorizationBinding`: `663fdbb5421ad1e991b09ac0702bf6dfa2db51172d2301ed180927ec6982fbe9`
+- Estado resultante: `ACTIVE`
+- Los otros dos envelopes creados por clics previos (`env-1791135018010-5rfrz`, `env-1791135129567-jmt4n`) quedan `PENDING_AUTHORIZATION`, sin decidir.
+
+**FASE 8.1 (Human Autonomy Authorization Boundary) queda cerrada**: el checkpoint humano es real y verificable en el estado persistido, no simulado.
+
+**FASE 8 (aceptación completa, 40 secciones) sigue sin cerrarse**: la evidencia `lapitaya-autonomous-operations-fase8-acceptance` quedó bloqueada en la sección 26; las secciones 27-40 (consumo/agotamiento de presupuesto, pausa/resume/cancelación, auto-expansión de alcance, integridad, recuperación tras restart, idempotencia, aislamiento de proyectos, rendimiento, regresión final) nunca se ejecutaron en vivo y quedan fuera del alcance de esta sesión.
+
+FASE 9 no está autorizada.
