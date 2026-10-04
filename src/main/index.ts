@@ -51,6 +51,7 @@ import { DesktopPresenceService } from './desktopPresence';
 import { CompanyAwarenessService } from './companyAwareness';
 import { CompanyOperationsService } from './companyOperations';
 import { OrganizationalLearningService } from './organizationalLearning';
+import { AutonomousOperationsService } from './autonomousOperations';
 import { recordSpawnAssignment } from './spawnAssignment';
 import { readAgentUsage, readContextTokens, seedSessionTranscript, resolveSessionCwd } from './transcript';
 import { listIssues, listCIRuns } from './github';
@@ -290,6 +291,7 @@ const executionAwake = new ExecutionAwakeService({
 let companyAwareness: CompanyAwarenessService | null = null;
 let companyOperations: CompanyOperationsService | null = null;
 let organizationalLearning: OrganizationalLearningService | null = null;
+let autonomousOperations: AutonomousOperationsService | null = null;
 const lapitaya = new CimaRuntimeService({
   hiveRoot: () => hive.root(),
   godId: () => hive.registry().godId ?? 'god',
@@ -501,16 +503,34 @@ organizationalLearning = new OrganizationalLearningService({
       desktopPresence.setCompanySnapshot({
         ...companyAwareness.snapshot(),
         operations: companyOperations?.projection(),
-        learning: organizationalLearning?.snapshot() ?? null
+        learning: organizationalLearning?.snapshot() ?? null,
+        autonomy: autonomousOperations?.snapshot() ?? null
+      });
+    }
+  }
+});
+autonomousOperations = new AutonomousOperationsService({
+  storageFile: hive.root() ? join(hive.root()!, 'lapitaya', 'autonomy.json') : undefined,
+  learningService: organizationalLearning,
+  humanAttention: () => companyAwareness?.snapshot().humanAttention ?? null,
+  onStateChanged: () => {
+    if (companyAwareness) {
+      desktopPresence.setCompanySnapshot({
+        ...companyAwareness.snapshot(),
+        operations: companyOperations?.projection(),
+        learning: organizationalLearning?.snapshot() ?? null,
+        autonomy: autonomousOperations?.snapshot() ?? null
       });
     }
   }
 });
 companyOperations.setLearningService(organizationalLearning);
+companyOperations.setAutonomyService(autonomousOperations);
 desktopPresence.setCompanySnapshot({
   ...companyAwareness.snapshot(),
   operations: companyOperations.projection(),
-  learning: organizationalLearning.snapshot()
+  learning: organizationalLearning.snapshot(),
+  autonomy: autonomousOperations.snapshot()
 });
 /** The PRIMARY window — the one running the hive/god orchestration and the sink
  *  for process-global timer events (missions, breaker, Slack ingestion). It is
@@ -872,6 +892,25 @@ ipcMain.handle('skills:get', (_evt, skillId: unknown) => {
 ipcMain.handle('skills:getProposal', (_evt, proposalId: unknown) => {
   if (typeof proposalId !== 'string') return null;
   return organizationalLearning ? organizationalLearning.getProposal(proposalId) : null;
+});
+
+// Read-only Autonomy queries for UI (no channel can mutate envelope, budget or authority)
+ipcMain.handle('autonomy:getSnapshot', () => {
+  return autonomousOperations ? autonomousOperations.snapshot() : null;
+});
+ipcMain.handle('autonomy:listEnvelopes', () => {
+  return autonomousOperations ? autonomousOperations.listEnvelopes() : [];
+});
+ipcMain.handle('autonomy:getEnvelope', (_evt, envelopeId: unknown) => {
+  if (typeof envelopeId !== 'string') return null;
+  return autonomousOperations ? autonomousOperations.getEnvelope(envelopeId) : null;
+});
+ipcMain.handle('autonomy:listOperations', () => {
+  return autonomousOperations ? autonomousOperations.listOperations() : [];
+});
+ipcMain.handle('autonomy:getOperation', (_evt, operationId: unknown) => {
+  if (typeof operationId !== 'string') return null;
+  return autonomousOperations ? autonomousOperations.getOperation(operationId) : null;
 });
 
 /** A mission's live scheduler handles: the initial `setTimeout` that waits out

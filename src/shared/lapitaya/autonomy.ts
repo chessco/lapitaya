@@ -11,6 +11,7 @@
  * enforcement all agree on what "high risk" means. Unknown actions are HIGH
  * risk — the safe default. See docs/CIMA/AUTONOMY.md for the roadmap.
  */
+export * from './autonomy/types';
 
 export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
 export type AutonomyMode = 'AUTO' | 'SUPERVISED' | 'HUMAN_APPROVAL';

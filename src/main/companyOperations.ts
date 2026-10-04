@@ -23,6 +23,7 @@ import type {
 } from '../shared/lapitaya/company/types';
 
 import type { OrganizationalLearningService } from './organizationalLearning';
+import type { AutonomousOperationsService } from './autonomousOperations';
 
 export interface CompanyOperationsDeps {
   now?: () => number;
@@ -31,6 +32,7 @@ export interface CompanyOperationsDeps {
   storageFile?: string;
   onStateChanged?: () => void;
   learningService?: OrganizationalLearningService;
+  autonomyService?: AutonomousOperationsService;
 }
 
 const expectedAgent: Partial<Record<CompanyPhase, CompanyWorkPlan['steps'][number]['expectedAgentId']>> = {
@@ -61,12 +63,14 @@ export class CompanyOperationsService {
   private readonly deliveries = new Map<string, CompanyDelivery>();
   private readonly deps: CompanyOperationsDeps;
   private learningService: OrganizationalLearningService | null = null;
+  private autonomyService: AutonomousOperationsService | null = null;
   private foregroundProjectId: string | null = null;
   private foregroundMissionId: string | null = null;
 
   constructor(deps: CompanyOperationsDeps) {
     this.deps = deps;
     this.learningService = deps.learningService ?? null;
+    this.autonomyService = deps.autonomyService ?? null;
     if (deps.storageFile) {
       this.load(deps.storageFile);
     }
@@ -78,6 +82,14 @@ export class CompanyOperationsService {
 
   getLearningService(): OrganizationalLearningService | null {
     return this.learningService;
+  }
+
+  setAutonomyService(service: AutonomousOperationsService | null): void {
+    this.autonomyService = service;
+  }
+
+  getAutonomyService(): AutonomousOperationsService | null {
+    return this.autonomyService;
   }
 
   // ─── Persistence ────────────────────────────────────────────────────────────
@@ -559,6 +571,7 @@ export class CompanyOperationsService {
     const foregroundMission = this.missionSnapshot();
     const learning = this.learningService?.snapshot() ?? null;
     const skills = this.learningService?.listAdoptedSkills() ?? [];
+    const autonomy = this.autonomyService?.snapshot() ?? null;
 
     return {
       workRequest: request,
@@ -572,7 +585,8 @@ export class CompanyOperationsService {
       foregroundProject,
       foregroundMission,
       learning,
-      skills
+      skills,
+      autonomy
     };
   }
 
@@ -580,6 +594,12 @@ export class CompanyOperationsService {
 
   answer(question: string): { known: boolean; answer: string; facts: readonly string[]; snapshotVersion: 1 } | null {
     const q = this.normalize(question);
+
+    // Autonomy queries
+    if (this.autonomyService) {
+      const autonomyAns = this.autonomyService.askAlicia(question);
+      if (autonomyAns && autonomyAns.known) return autonomyAns;
+    }
 
     // Learning / Skills queries
     if (this.learningService) {

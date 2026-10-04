@@ -495,7 +495,7 @@ export class OrganizationalLearningService {
   }
 
   getAdoptedSkill(skillId: string): AdoptedSkill | null {
-    return this.adoptedSkills.get(skillId) ?? null;
+    return this.adoptedSkills.get(skillId) ?? [...this.adoptedSkills.values()].find((s) => s.name.toLowerCase() === skillId.toLowerCase()) ?? null;
   }
 
   // ─── Skill Execution Trace & Feedback ──────────────────────────────────────
