@@ -63,3 +63,24 @@ No se hizo ninguna corrección productiva durante el gate.
 
 **FAIL — REMEDIATION REQUIRED**. FASE 8 no puede cerrarse. FASE 9 no está autorizada.
 
+## 10. Continuación posterior al cleanup humano
+
+El operador rechazó en la interfaz Electron real los dos envelopes duplicados
+`env-1791135018010-5rfrz` y `env-1791135129567-jmt4n`. Codex no modificó el
+almacenamiento ni inyectó decisiones.
+
+La validación canónica `npm.cmd run test:autonomy` terminó **132/132 PASS** y
+`npm.cmd run build` terminó **PASS**, con únicamente el warning conocido sobre
+la importación estática/dinámica de `store.ts`.
+
+La regresión completa agotó 15 minutos. Los dos fallos observados se
+reprodujeron aisladamente y son ajenos a este gate: una expectativa de ruta
+POSIX en Windows en `agent-token-cap.test.cjs` y una aserción de terminal árabe
+en `arabic-terminal.test.cjs`.
+
+El bloqueo decisivo permanece: no existe caller de producción para iniciar una
+operación autónoma ni para encadenar `consumeIteration`, `consumeRetry` y
+`evaluateContinuation`. Esos métodos solo aparecen en
+`src/main/autonomousOperations.ts` y en tests. Invocarlos directamente no sería
+una validación live válida bajo esta especificación. Por tanto, FASE 8 sigue
+**FAIL — REMEDIATION REQUIRED** y FASE 9 sigue **NOT AUTHORIZED**.

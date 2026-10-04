@@ -1,0 +1,16 @@
+phase=FASE 8 continuation after human cleanup
+date=2026-10-04
+branch=lapitaya/virtual-company-v0.8-autonomous-operations
+reference_commit=b3ac1630869e6157e9d68f8a2a0e69e7d17b1488
+human_cleanup=CONFIRMED_BY_REAL_OPERATOR
+duplicate_envelopes=REJECTED_BY_REAL_OPERATOR_IN_ELECTRON_UI
+production_changed=false
+test_autonomy=132/132 PASS
+build=PASS
+full_regression=TIMEOUT_AFTER_15_MINUTES
+isolated_regression_failures=agent-token-cap Windows path expectation; Arabic terminal live-switch assertion
+live_gate=BLOCKED
+blocking_reason=No production caller of startOperation/consumeIteration/consumeRetry/evaluateContinuation exists; direct service invocation is prohibited as live evidence
+verdict=FAIL — REMEDIATION REQUIRED
+fase8_closed=NO
+fase9=NOT AUTHORIZED
