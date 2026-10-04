@@ -1,0 +1,2 @@
+status=AUTOMATED_PASS_LIVE_NOT_EXECUTED
+tamper_fail_closed=true

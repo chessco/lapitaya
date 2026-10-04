@@ -1,0 +1,4 @@
+autonomous_operations=125/125 PASS
+companion=296/296 PASS
+typecheck_and_build=PASS
+blocking_regression=CIMA v0.16 POLICY-31 49/50 FAIL

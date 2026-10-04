@@ -1,0 +1,8 @@
+main_rss_bytes=148140032
+main_window=La Pitaya
+electron_processes=5
+responding=true
+renderer_rss=NOT_MEASURED
+cpu=NOT_MEASURED
+listeners=NOT_MEASURED
+autonomy_counts=NOT_MEASURED_LIVE

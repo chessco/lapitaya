@@ -1,0 +1,3 @@
+COMPANY=automated PASS; live not executed
+FOCUS=automated PASS; live not executed
+fake_workers=automated PASS

@@ -1,0 +1,8 @@
+REQ_REQUEST_AUTH=19/19 PASS
+HUMAN_IDENTITY=13/13 PASS
+CIMA_RUNTIME=25/25 PASS
+EVENT_LEDGER=43/43 PASS
+POLICY_REGISTRY=49/50 FAIL
+blocking_test=POLICY-31
+classification=FAIL_BLOCKING
+environment_warning=EPERM mkdir under C:\Users\chess\.codex during relevant suites

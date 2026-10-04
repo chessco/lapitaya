@@ -1,0 +1,6 @@
+status=FAIL_BLOCKING
+failing_suite=test/lapitaya-cima-v0.16.test.cjs
+test=POLICY-31
+actual=autonomy:getSnapshot
+expected=renderer surface channel rejected by policy|capability|risk|autonomy guard
+interpretation=read-only autonomy IPC channel is not recognized by legacy assertion

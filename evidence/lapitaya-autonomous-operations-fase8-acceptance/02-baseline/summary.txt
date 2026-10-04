@@ -1,0 +1,14 @@
+autonomous_operations=125/125 PASS
+ENV8=15/15
+AUTO8=20/20
+RETRY8=10/10
+SKAUTO8=10/10
+PERSIST8=15/15
+ALI8=15/15
+GOV8=15/15
+DESK8=10/10
+REG8=15/15
+companion=296/296 PASS
+typecheck_node=PASS
+typecheck_web=PASS
+build=PASS

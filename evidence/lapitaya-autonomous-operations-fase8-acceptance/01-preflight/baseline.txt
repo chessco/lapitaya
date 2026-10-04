@@ -1,0 +1,6 @@
+branch=lapitaya/virtual-company-v0.8-autonomous-operations
+base=caa851b4c9528be6a89c988a8d11c183cf666eb1
+implementation_head=bc0ca522b0244dea1d842ee8e20878eb488cba2a
+working_tree_before_gate=clean
+production_source_changed=false
+main=inspected_untouched

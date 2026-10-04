@@ -1,0 +1,5 @@
+active_execution=automated PASS; live not executed
+waiting_human=automated inactive
+paused=automated inactive
+exhausted=automated inactive
+cancelled=automated inactive

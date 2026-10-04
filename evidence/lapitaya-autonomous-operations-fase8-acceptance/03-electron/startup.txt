@@ -1,0 +1,11 @@
+original_ELECTRON_RUN_AS_NODE=1
+test_process_ELECTRON_RUN_AS_NODE=unset
+before_processes=0
+before_ports=none on 5173/5174
+command=npm.cmd run dev
+runner_result=timeout because Electron is long-lived
+after_processes=5 electron
+window=La Pitaya
+responding=true
+port_5173=listening
+mission_started=false

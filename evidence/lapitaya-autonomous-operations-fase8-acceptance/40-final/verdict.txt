@@ -1,0 +1,6 @@
+verdict=FAIL — REMEDIATION REQUIRED
+fase8_closed=NO
+fase9=NOT AUTHORIZED
+blocking=CIMA POLICY-31 relevant assertion failure
+human_authorization=NOT_EXECUTED
+production_changed=false
