@@ -34,7 +34,7 @@ export interface AliciaPanelViewProps {
   onGoToProposal(): void;
   onDraft(value: string): void;
   onSend(): void;
-  autonomy?: AutonomyEnvelope | null;
+  autonomy?: readonly AutonomyEnvelope[];
   autonomyBusy?: boolean;
   onProposeAutonomy(): void;
   onApproveAutonomy(envelopeId: string): void;
@@ -220,12 +220,12 @@ export function AliciaPanelView(p: AliciaPanelViewProps) {
       </div>
       <div style={{ ...muted, marginBottom: 6 }}>{t(`${NS}.role`)}</div>
 
-      {!p.autonomy && (
+      {(!p.autonomy || p.autonomy.length === 0) && (
         <button type="button" style={btn} data-action="propose-autonomy" onClick={p.onProposeAutonomy} disabled={p.autonomyBusy}>
           Proponer envelope de autonomía acotada
         </button>
       )}
-      {p.autonomy && <AutonomyEnvelopeCard envelope={p.autonomy} busy={!!p.autonomyBusy} onApprove={p.onApproveAutonomy} onReject={p.onRejectAutonomy} />}
+      {p.autonomy?.map((envelope) => <AutonomyEnvelopeCard key={envelope.envelopeId} envelope={envelope} busy={!!p.autonomyBusy} onApprove={p.onApproveAutonomy} onReject={p.onRejectAutonomy} />)}
 
       {snapshot.pendingCount > 0 && (
         <div role="status" data-field="pending-banner" style={{ ...box, display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'space-between' }}>

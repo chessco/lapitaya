@@ -42,7 +42,7 @@ export function AliciaPanel() {
   const [lines, setLines] = useState<AliciaLine[]>([]);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
-  const [autonomy, setAutonomy] = useState<AutonomyEnvelope | null>(null);
+  const [autonomy, setAutonomy] = useState<AutonomyEnvelope[]>([]);
   const [autonomyBusy, setAutonomyBusy] = useState(false);
   // v0.6: what the runtime recorded, explained (read only).
   const observability = useGovernanceObservability();
@@ -61,7 +61,14 @@ export function AliciaPanel() {
     void window.cth.aliciaSnapshot({ locales: locales() }).then(setAlicia).catch(() => setAlicia(null));
   }, [locales]);
   const refreshAutonomy = useCallback(() => {
-    void window.cth.companySnapshot().then((s) => setAutonomy(s?.operations?.autonomy?.envelopes.find((e) => e.status === 'PENDING_AUTHORIZATION' || e.status === 'ACTIVE' || e.status === 'REJECTED') ?? null)).catch(() => setAutonomy(null));
+    void window.cth.companySnapshot().then((s) => {
+      const envelopes = s?.operations?.autonomy?.envelopes ?? [];
+      // Keep every actionable envelope visible. A single `.find()` hid older
+      // pending envelopes whenever a newer ACTIVE envelope sorted first.
+      setAutonomy(envelopes
+        .filter((e) => e.status === 'PENDING_AUTHORIZATION' || e.status === 'ACTIVE' || e.status === 'REJECTED')
+        .sort((a, b) => Number(b.status === 'PENDING_AUTHORIZATION') - Number(a.status === 'PENDING_AUTHORIZATION')));
+    }).catch(() => setAutonomy([]));
   }, []);
 
   useEffect(() => {
