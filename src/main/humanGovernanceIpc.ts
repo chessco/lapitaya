@@ -24,20 +24,33 @@ export interface HumanGovernanceRuntime {
   attributeRequest(proposalId: unknown, human: unknown): boolean;
 }
 
+export interface HumanAutonomyRuntime {
+  authorizeEnvelope(envelopeId: string, authorizedBy: string, humanDisplayName?: string, decisionId?: string): { envelopeId: string; status: string; authorizedBy: string | null; authorizedAt?: number | null } | null;
+  rejectEnvelope(envelopeId: string, rejectedBy: string, humanDisplayName?: string, decisionId?: string): { envelopeId: string; status: string; authorizedBy: string | null; authorizedAt?: number | null } | null;
+}
+
 export interface HumanGovernanceDeps {
   runtime: HumanGovernanceRuntime;
+  autonomy?: HumanAutonomyRuntime;
   identity: { resolve(evt: unknown): HumanContext | null; identity(): { id: string; displayName: string } };
 }
 
 const UNTRUSTED = { ok: false, code: 'NOT_AUTHORIZED', reason: 'untrusted sender' } as const;
 
-export function createHumanGovernanceHandlers({ runtime, identity }: HumanGovernanceDeps) {
+export function createHumanGovernanceHandlers({ runtime, autonomy, identity }: HumanGovernanceDeps) {
   return {
     /** lapitaya:decide — the outcome only (no summary, no fingerprint), plus who decided. */
     decide(evt: unknown, id: unknown, approve: unknown) {
       if (typeof id !== 'string' || typeof approve !== 'boolean') return null;
       const ctx = identity.resolve(evt);
       if (!ctx) return null;
+      if (id.startsWith('env-') && autonomy) {
+        const decisionId = `decision-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const envelope = approve
+          ? autonomy.authorizeEnvelope(id, ctx.human.id, ctx.human.displayName, decisionId)
+          : autonomy.rejectEnvelope(id, ctx.human.id, ctx.human.displayName, decisionId);
+        return envelope ? { id, status: envelope.status, decidedAt: envelope.authorizedAt ?? null, decidedBy: envelope.authorizedBy } : null;
+      }
       const a = runtime.decide(id, approve, 'human', ctx);
       return a ? { id: a.id, status: a.status, decidedAt: a.decidedAt ?? null, decidedBy: a.decidedBy ?? null } : null;
     },

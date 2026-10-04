@@ -1,0 +1,4 @@
+trusted_identity=main process HumanIdentityService
+renderer_humanId=non_authoritative
+payload_authorizedBy=non_authoritative
+agent_roles=non_authoritative

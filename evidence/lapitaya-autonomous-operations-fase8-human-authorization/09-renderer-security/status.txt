@@ -1,0 +1,4 @@
+autonomy_ipc_channels_added=none
+renderer_authority=none
+observation=company:getSnapshot
+decision=lapitaya:decide existing trusted boundary

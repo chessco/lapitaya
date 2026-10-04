@@ -22,6 +22,7 @@
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
+    "test:autonomy": "node --test test/lapitaya-autonomous-operations.test.cjs test/lapitaya-autonomy-human-authorization.test.cjs",
     "test:focused": "node --test test/*.test.cjs",
       "test:companion": "node --test test/lapitaya-desktop-companions.test.cjs test/lapitaya-rosalba.test.cjs test/lapitaya-living-desktop.test.cjs test/lapitaya-virtual-company.test.cjs test/lapitaya-virtual-company-operations.test.cjs",
     "check:links": "node tools/check-release-links.cjs",

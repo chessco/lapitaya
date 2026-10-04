@@ -1,0 +1,4 @@
+status=NOT_REACHED
+authorized=NO
+execution_started=NO
+action=human must create/review proposal in real La Pitaya UI

@@ -38,6 +38,20 @@ export interface IntentTarget {
   tool?: string;
   input?: unknown;
   taskId?: string;
+  /** Proposal-only request from the trusted Alicia UI; never an authorization. */
+  envelopeProposal?: {
+    projectId: string;
+    missionId: string;
+    objective: string;
+    riskCeiling?: RiskLevel;
+    budget: { maxIterations: number; maxRetries: number; maxDurationMs?: number | null };
+    allowedSkills?: string[];
+    allowedCapabilities?: string[];
+    allowedPaths?: string[];
+    stopConditions?: string[];
+    escalationConditions?: string[];
+    expiresAt?: number | null;
+  };
 }
 
 export interface AliciaIntent {

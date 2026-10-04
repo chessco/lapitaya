@@ -1,0 +1,6 @@
+authorization=PASS focused
+HIGH_separation=PASS
+MEDIUM_semantics=PASS
+Builder_Auditor=PASS
+ledger_event_integrity=PASS
+policy_registry=50/50 PASS

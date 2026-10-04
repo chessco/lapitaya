@@ -1,0 +1,5 @@
+FASE8_plus_AUTH8=132/132 PASS
+companion=296/296 PASS
+typecheck_node=PASS
+typecheck_web=PASS
+build=PASS

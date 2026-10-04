@@ -1,0 +1,6 @@
+branch=lapitaya/virtual-company-v0.8-autonomous-operations
+base=caa851b4c9528be6a89c988a8d11c183cf666eb1
+previous_acceptance=f1f4fb3c
+policy31_remediation=78118e0b
+production_changes=FASE8.1 implementation permitted by remediation specification
+main=untouched

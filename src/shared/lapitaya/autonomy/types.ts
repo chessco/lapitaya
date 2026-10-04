@@ -11,6 +11,7 @@ export type AutonomyEnvelopeStatus =
   | 'EXHAUSTED'
   | 'COMPLETED'
   | 'CANCELLED'
+  | 'REJECTED'
   | 'EXPIRED'
   | 'FAILED';
 
@@ -51,12 +52,30 @@ export interface AutonomyEnvelope {
   authorizedBy: string | null;
   createdAt: number;
   authorizedAt: number | null;
+  authorizationBinding: string | null;
+  decisionId: string | null;
+  authorizedHumanDisplayName?: string | null;
   expiresAt: number | null;
   status: AutonomyEnvelopeStatus;
   skillsConstrained?: boolean;
   evidenceRefs: readonly string[];
   integrityHash: string;
   verified: true;
+}
+
+export interface AutonomyEnvelopeProposalRequest {
+  projectId: string;
+  missionId: string;
+  objective: string;
+  riskCeiling?: RiskLevel;
+  budget: AutonomyBudget;
+  allowedSkills?: readonly string[];
+  allowedCapabilities?: readonly string[];
+  allowedPaths?: readonly string[];
+  stopConditions?: readonly string[];
+  escalationConditions?: readonly string[];
+  expiresAt?: number | null;
+  evidenceRefs?: readonly string[];
 }
 
 export type AutonomousOperationStatus =

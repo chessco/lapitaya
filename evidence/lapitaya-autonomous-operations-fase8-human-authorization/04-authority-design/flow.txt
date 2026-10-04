@@ -1,0 +1,6 @@
+proposal=Alicia trusted UI via existing alicia:submit
+identity=resolved in main process from trusted sender
+decision=existing lapitaya:decide channel
+activation=only after trusted identity and exact envelope binding
+execution=CIMA remains authority
+forbidden_channels=autonomy:*

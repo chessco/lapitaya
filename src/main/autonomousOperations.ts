@@ -9,6 +9,7 @@ import type {
   AutonomyBudgetConsumption,
   AutonomyEnvelope,
   AutonomyEnvelopeStatus,
+  AutonomyEnvelopeProposalRequest,
   AutonomousOperation,
   AutonomousOperationStatus,
   AutonomySnapshot,
@@ -57,9 +58,33 @@ export function computeEnvelopeHash(envelope: Omit<AutonomyEnvelope, 'integrityH
     authorizedBy: envelope.authorizedBy,
     createdAt: envelope.createdAt,
     authorizedAt: envelope.authorizedAt,
+    authorizationBinding: envelope.authorizationBinding,
+    decisionId: envelope.decisionId,
+    authorizedHumanDisplayName: envelope.authorizedHumanDisplayName ?? null,
     expiresAt: envelope.expiresAt
   });
   return crypto.createHash('sha256').update(payload).digest('hex');
+}
+
+export function computeEnvelopeAuthorizationBinding(envelope: AutonomyEnvelope): string {
+  const scope = {
+    envelopeId: envelope.envelopeId,
+    projectId: envelope.projectId,
+    missionId: envelope.missionId,
+    objective: envelope.objective,
+    riskCeiling: envelope.riskCeiling,
+    budget: envelope.budget,
+    allowedActions: [...envelope.allowedActions].sort(),
+    allowedCapabilities: [...envelope.allowedCapabilities].sort(),
+    allowedSkills: [...envelope.allowedSkills].sort(),
+    allowedResources: [...envelope.allowedResources].sort(),
+    allowedPaths: [...envelope.allowedPaths].sort(),
+    allowedProviders: [...envelope.allowedProviders].sort(),
+    stopConditions: [...envelope.stopConditions].sort(),
+    escalationConditions: [...envelope.escalationConditions].sort(),
+    expiresAt: envelope.expiresAt
+  };
+  return crypto.createHash('sha256').update(JSON.stringify(scope)).digest('hex');
 }
 
 export class AutonomousOperationsService {
@@ -104,7 +129,9 @@ export class AutonomousOperationsService {
           const calculated = computeEnvelopeHash(env);
           if (calculated === env.integrityHash) {
             const isExpired = env.expiresAt && env.expiresAt <= this.now();
-            const status = isExpired ? 'EXPIRED' : env.status;
+            const bindingInvalid = env.status === 'ACTIVE' && env.authorizationBinding !== null
+              && computeEnvelopeAuthorizationBinding(env) !== env.authorizationBinding;
+            const status = isExpired ? 'EXPIRED' : bindingInvalid ? 'FAILED' : env.status;
             this.envelopes.set(env.envelopeId, {
               ...env,
               status
@@ -180,7 +207,9 @@ export class AutonomousOperationsService {
     expiresAt?: number | null;
     evidenceRefs?: readonly string[];
   }): AutonomyEnvelope | null {
-    const createdBy = params.createdBy ?? params.provenance ?? 'HUMAN';
+    const createdBy = params.createdBy ?? params.provenance;
+    // Missing provenance is never a human decision and never an active envelope.
+    if (!createdBy) return null;
     // Envelope must originate from legitimate authority
     if (createdBy !== 'HUMAN' && createdBy !== 'CIMA_POLICY_DERIVED' && createdBy !== 'RUNTIME_DERIVED_FROM_HUMAN_SCOPE') {
       return null;
@@ -188,7 +217,7 @@ export class AutonomousOperationsService {
 
     const envelopeId = params.envelopeId ?? `env-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const now = this.now();
-    const isAuthorized = createdBy === 'HUMAN' || Boolean(params.authorizedBy);
+    const isAuthorized = createdBy === 'HUMAN' && Boolean(params.authorizedBy);
 
     const skillsConstrained = params.allowedSkills !== undefined;
     const baseData = {
@@ -216,6 +245,9 @@ export class AutonomousOperationsService {
       authorizedBy: params.authorizedBy ?? (createdBy === 'HUMAN' ? 'human' : null),
       createdAt: now,
       authorizedAt: isAuthorized ? now : null,
+      authorizationBinding: null,
+      decisionId: null,
+      authorizedHumanDisplayName: null,
       expiresAt: params.expiresAt ?? null,
       status: (isAuthorized ? 'ACTIVE' : 'PENDING_AUTHORIZATION') as AutonomyEnvelopeStatus,
       skillsConstrained,
@@ -235,6 +267,14 @@ export class AutonomousOperationsService {
     return envelope;
   }
 
+  proposeEnvelope(params: AutonomyEnvelopeProposalRequest): AutonomyEnvelope | null {
+    return this.createEnvelope({
+      ...params,
+      createdBy: 'RUNTIME_DERIVED_FROM_HUMAN_SCOPE',
+      authorizedBy: null
+    });
+  }
+
   getEnvelope(envelopeId: string): AutonomyEnvelope | null {
     return this.envelopes.get(envelopeId) ?? null;
   }
@@ -244,16 +284,20 @@ export class AutonomousOperationsService {
     return projectId ? list.filter((e) => e.projectId === projectId) : list;
   }
 
-  authorizeEnvelope(envelopeId: string, authorizedBy: string): AutonomyEnvelope | null {
+  authorizeEnvelope(envelopeId: string, authorizedBy: string, humanDisplayName?: string, decisionId?: string): AutonomyEnvelope | null {
     const env = this.envelopes.get(envelopeId);
     if (!env) return null;
     if (env.status !== 'PENDING_AUTHORIZATION' && env.status !== 'DRAFT') return env;
+    if (!authorizedBy || authorizedBy === 'human' || authorizedBy === 'untrusted-sender') return null;
 
     const now = this.now();
     const updatedBase = {
       ...env,
       authorizedBy,
       authorizedAt: now,
+      authorizationBinding: computeEnvelopeAuthorizationBinding(env),
+      decisionId: decisionId ?? `decision-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      authorizedHumanDisplayName: humanDisplayName ?? null,
       status: 'ACTIVE' as AutonomyEnvelopeStatus
     };
     const integrityHash = computeEnvelopeHash(updatedBase);
@@ -263,6 +307,25 @@ export class AutonomousOperationsService {
       verified: true
     };
 
+    this.envelopes.set(envelopeId, updated);
+    this.save();
+    this.deps.onStateChanged?.();
+    return updated;
+  }
+
+  rejectEnvelope(envelopeId: string, rejectedBy: string, humanDisplayName?: string, decisionId?: string): AutonomyEnvelope | null {
+    const env = this.envelopes.get(envelopeId);
+    if (!env || env.status !== 'PENDING_AUTHORIZATION' || !rejectedBy || rejectedBy === 'human' || rejectedBy === 'untrusted-sender') return null;
+    const updatedBase = {
+      ...env,
+      status: 'REJECTED' as AutonomyEnvelopeStatus,
+      authorizedBy: rejectedBy,
+      authorizedAt: this.now(),
+      authorizationBinding: null,
+      decisionId: decisionId ?? `decision-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      authorizedHumanDisplayName: humanDisplayName ?? null
+    };
+    const updated: AutonomyEnvelope = { ...updatedBase, integrityHash: computeEnvelopeHash(updatedBase), verified: true };
     this.envelopes.set(envelopeId, updated);
     this.save();
     this.deps.onStateChanged?.();
@@ -377,6 +440,11 @@ export class AutonomousOperationsService {
       return null;
     }
     if (computeEnvelopeHash(env) !== env.integrityHash) {
+      env.status = 'FAILED';
+      this.save();
+      return null;
+    }
+    if (env.authorizationBinding !== null && computeEnvelopeAuthorizationBinding(env) !== env.authorizationBinding) {
       env.status = 'FAILED';
       this.save();
       return null;

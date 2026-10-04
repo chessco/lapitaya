@@ -1,0 +1,4 @@
+finding=F8-ACC-BLOCK-02
+status=REMEDIATED_AUTOMATED
+production_path=Alicia trusted UI -> alicia:submit proposal -> pending envelope -> existing lapitaya:decide
+real_electron_proposal=NOT_EXECUTED

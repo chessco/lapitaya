@@ -4224,7 +4224,7 @@ const humanIdentity = createHumanIdentityService({
     ...(isDev && process.env.ELECTRON_RENDERER_URL ? [process.env.ELECTRON_RENDERER_URL] : [])
   ]
 });
-const humanGov = createHumanGovernanceHandlers({ runtime: lapitaya, identity: humanIdentity });
+const humanGov = createHumanGovernanceHandlers({ runtime: lapitaya, autonomy: autonomousOperations, identity: humanIdentity });
 // v0.7: the renderer gets the decision's outcome, never the call's summary
 // (the command) or fingerprint. null = not pending (unknown, already decided, untrusted sender).
 ipcMain.handle('lapitaya:decide', (evt, id: unknown, approve: unknown) => humanGov.decide(evt, id, approve));
@@ -4255,10 +4255,37 @@ ipcMain.handle('alicia:submit', (evt, message: unknown, opts: unknown) => {
   const o = (opts && typeof opts === 'object' ? opts : {}) as Record<string, unknown>;
   const l = (o.locales && typeof o.locales === 'object' ? o.locales : {}) as Record<string, unknown>;
   const pick = (v: unknown) => (typeof v === 'string' && v.length <= 20 ? v : undefined);
+  const target = o.target && typeof o.target === 'object' ? (o.target as Record<string, unknown>) : null;
+  const proposal = target?.envelopeProposal;
+  // Proposal creation is deliberately separate from intent execution. The
+  // trusted sender may request a bounded proposal; only the existing human
+  // decision channel can activate or reject it later.
+  if (proposal && typeof proposal === 'object') {
+    const ctx = humanIdentity.resolve(evt);
+    const p = proposal as Record<string, unknown>;
+    const budget = p.budget && typeof p.budget === 'object' ? p.budget as Record<string, unknown> : null;
+    const strings = (v: unknown, max: number) => Array.isArray(v) && v.length <= max && v.every((x) => typeof x === 'string' && x.length <= 200) ? v as string[] : undefined;
+    if (!ctx || typeof p.projectId !== 'string' || typeof p.missionId !== 'string' || typeof p.objective !== 'string' || p.objective.length > 2000 || !budget
+      || typeof budget.maxIterations !== 'number' || !Number.isInteger(budget.maxIterations) || budget.maxIterations < 1 || budget.maxIterations > 100
+      || typeof budget.maxRetries !== 'number' || !Number.isInteger(budget.maxRetries) || budget.maxRetries < 0 || budget.maxRetries > 100) {
+      return { ok: false, error: 'invalid autonomy envelope proposal' };
+    }
+    const envelope = autonomousOperations.proposeEnvelope({
+      projectId: p.projectId.slice(0, 200), missionId: p.missionId.slice(0, 200), objective: p.objective,
+      riskCeiling: p.riskCeiling === 'MEDIUM' ? 'MEDIUM' : 'LOW',
+      budget: { maxIterations: budget.maxIterations, maxRetries: budget.maxRetries, maxDurationMs: typeof budget.maxDurationMs === 'number' ? budget.maxDurationMs : null },
+      allowedSkills: strings(p.allowedSkills, 20), allowedCapabilities: strings(p.allowedCapabilities, 30), allowedPaths: strings(p.allowedPaths, 30),
+      stopConditions: strings(p.stopConditions, 20), escalationConditions: strings(p.escalationConditions, 20),
+      expiresAt: typeof p.expiresAt === 'number' ? p.expiresAt : null,
+      evidenceRefs: [`human-ui:${ctx.session}`]
+    });
+    if (!envelope) return { ok: false, error: 'could not create pending envelope proposal' };
+    return { ok: true, envelopeProposal: envelope };
+  }
   // The target is passed through untouched: the boundary validates it.
   const result = aliciaCompanion.submit(message.slice(0, 4000), {
     taskId: typeof o.taskId === 'string' ? o.taskId.slice(0, 200) : null,
-    target: o.target && typeof o.target === 'object' ? (o.target as Record<string, unknown>) : null,
+    target,
     locales: { uiLocale: pick(l.uiLocale), agentLocale: pick(l.agentLocale), notificationLocale: pick(l.notificationLocale) }
   });
   try { companyOperations?.observeIntent(result.intent, result.outcome); if (companyAwareness) desktopPresence.setCompanySnapshot({ ...companyAwareness.snapshot(), operations: companyOperations?.projection() ?? null }); } catch { /* projection must never break intent handling */ }

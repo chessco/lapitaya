@@ -7,6 +7,7 @@ import { AliciaPanelView, lineForSubmit, NS, type AliciaLine } from './AliciaPan
 import { requestObservabilityRefresh, useGovernanceObservability } from './useGovernanceObservability';
 import { fetchPendingDecisionCount, fetchPendingHighApprovals, useDecisionCenter } from './useDecisionCenter';
 import { highLineKey } from './decisionCenter';
+import type { AutonomyEnvelope } from '@shared/lapitaya/autonomy/types';
 
 /**
  * La Pitaya Alicia v0.5 — Human Confirmation UI.
@@ -41,6 +42,8 @@ export function AliciaPanel() {
   const [lines, setLines] = useState<AliciaLine[]>([]);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
+  const [autonomy, setAutonomy] = useState<AutonomyEnvelope | null>(null);
+  const [autonomyBusy, setAutonomyBusy] = useState(false);
   // v0.6: what the runtime recorded, explained (read only).
   const observability = useGovernanceObservability();
   // v0.7: Human Decisions — REQUEST confirmations (v0.5 controller) + HIGH approvals (existing lapitaya:decide).
@@ -57,18 +60,24 @@ export function AliciaPanel() {
   const refreshAlicia = useCallback(() => {
     void window.cth.aliciaSnapshot({ locales: locales() }).then(setAlicia).catch(() => setAlicia(null));
   }, [locales]);
+  const refreshAutonomy = useCallback(() => {
+    void window.cth.companySnapshot().then((s) => setAutonomy(s?.autonomy?.envelopes.find((e) => e.status === 'PENDING_AUTHORIZATION' || e.status === 'ACTIVE' || e.status === 'REJECTED') ?? null)).catch(() => setAutonomy(null));
+  }, []);
 
   useEffect(() => {
     void controller.refresh();
     refreshAlicia();
+    refreshAutonomy();
+    const timer = window.setInterval(refreshAutonomy, 1000);
     // The existing runtime event stream — no new bus.
-    return window.cth.onLapitayaGovernance((e) => {
+    const unsubscribe = window.cth.onLapitayaGovernance((e) => {
       if (e.type === 'request' || e.type === 'approval-request' || e.type === 'approval-decided') void controller.refresh();
       // v0.6: per-call decision/trace signals never change Alicia's notifications.
       if (e.type === 'governance' || e.type === 'trace') return;
       refreshAlicia();
     });
-  }, [controller, refreshAlicia]);
+    return () => { window.clearInterval(timer); unsubscribe(); };
+  }, [controller, refreshAlicia, refreshAutonomy]);
 
   const say = (text: string) => setLines((ls) => [...ls, { from: 'alicia' as const, text }].slice(-8));
 
@@ -125,6 +134,29 @@ export function AliciaPanel() {
     }
   };
 
+  const proposeAutonomy = async () => {
+    if (autonomyBusy) return;
+    setAutonomyBusy(true);
+    try {
+      await window.cth.aliciaSubmit('Solicito una propuesta de autonomía acotada para esta aceptación.', {
+        target: { envelopeProposal: {
+          projectId: 'LP-F8-ACC-PROJECT', missionId: 'LP-F8-ACC-M1',
+          objective: 'Validar autonomía operacional acotada mediante ejecución LOW, iteración correctiva, presupuestos, escalamiento de alcance, persistencia y recuperación.',
+          riskCeiling: 'LOW', budget: { maxIterations: 3, maxRetries: 1, maxDurationMs: 300000 },
+          allowedSkills: ['TargetedTestRunner'], allowedCapabilities: ['read', 'test', 'lint'], allowedPaths: ['acceptance/LP-F8-ACC-PROJECT'],
+          stopConditions: ['mission-completed', 'budget-exhausted', 'high-risk-encountered'], escalationConditions: ['scope-expansion', 'high-risk-action', 'audit-failure']
+        } }
+      });
+      refreshAutonomy();
+    } finally { setAutonomyBusy(false); }
+  };
+
+  const decideAutonomy = async (id: string, approve: boolean) => {
+    if (autonomyBusy) return;
+    setAutonomyBusy(true);
+    try { await window.cth.lapitayaDecide(id, approve); refreshAutonomy(); } finally { setAutonomyBusy(false); }
+  };
+
 
   return (
     <AliciaPanelView
@@ -141,6 +173,11 @@ export function AliciaPanel() {
       onGoToProposal={goToProposal}
       onDraft={setDraft}
       onSend={() => void send()}
+      autonomy={autonomy}
+      autonomyBusy={autonomyBusy}
+      onProposeAutonomy={() => void proposeAutonomy()}
+      onApproveAutonomy={(id) => void decideAutonomy(id, true)}
+      onRejectAutonomy={(id) => void decideAutonomy(id, false)}
       observability={observability}
       decisions={decisions}
       highAcknowledged={highAcknowledged}

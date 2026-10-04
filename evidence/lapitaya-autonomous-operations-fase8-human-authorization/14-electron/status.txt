@@ -1,0 +1,8 @@
+build=PASS
+real_electron_started=true
+main_window=La Pitaya
+main_pid=20644
+electron_processes=5
+responsive=true
+real_electron_proposal=NOT_EXECUTED
+reason=human interaction cannot be simulated

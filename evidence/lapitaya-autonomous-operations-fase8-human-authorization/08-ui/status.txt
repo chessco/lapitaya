@@ -1,0 +1,4 @@
+pending_fields=project mission objective risk iterations retries capabilities skills scope stop escalation
+controls=AUTHORIZE, REJECT
+close_dialog=does_not_authorize
+timeout=does_not_authorize

@@ -1,0 +1,4 @@
+proposal=automated domain persistence covered
+binding=automated persistence covered
+rejected=automated terminal state covered
+real_restart=NOT_EXECUTED

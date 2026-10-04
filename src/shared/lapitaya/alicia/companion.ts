@@ -97,6 +97,8 @@ export interface AliciaSubmitResult {
   reply: AliciaReply | null;
   /** Alicia never executes. */
   readonly executed: false;
+  /** Present only when the trusted UI created a pending autonomy proposal. */
+  envelopeProposal?: import('../autonomy/types').AutonomyEnvelope;
 }
 
 export interface AliciaCompanion extends AliciaCapability {

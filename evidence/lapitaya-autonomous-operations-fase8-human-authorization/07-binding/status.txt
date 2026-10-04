@@ -1,0 +1,5 @@
+binding=SHA-256 exact envelope scope
+fields=project mission objective risk budget skills capabilities paths resources stop escalation expiration
+post_approval_mutation=FAIL_CLOSED
+decision_id=recorded
+timestamp=recorded

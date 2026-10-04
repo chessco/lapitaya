@@ -1,5 +1,6 @@
 import type { CSSProperties, FormEvent } from 'react';
 import type { AliciaSubmitResult } from '@shared/lapitaya/alicia';
+import type { AutonomyEnvelope } from '@shared/lapitaya/autonomy/types';
 import type { ObservabilityView } from '@shared/lapitaya/alicia/observability';
 import { EXPLAINED_CODES, type ConfirmationSnapshot, type ProposalView } from './confirmationController';
 import { GovernanceActivity, GovernanceHealthBanner, ProposalGovernance } from './GovernanceExplanationView';
@@ -33,6 +34,11 @@ export interface AliciaPanelViewProps {
   onGoToProposal(): void;
   onDraft(value: string): void;
   onSend(): void;
+  autonomy?: AutonomyEnvelope | null;
+  autonomyBusy?: boolean;
+  onProposeAutonomy(): void;
+  onApproveAutonomy(envelopeId: string): void;
+  onRejectAutonomy(envelopeId: string): void;
   /** v0.6: the runtime's read-only governance projection (absent → nothing extra is shown). */
   observability?: ObservabilityView | null;
   /** v0.7: the Human Decisions center (absent → the v0.5/v0.6 panel, unchanged). */
@@ -214,6 +220,13 @@ export function AliciaPanelView(p: AliciaPanelViewProps) {
       </div>
       <div style={{ ...muted, marginBottom: 6 }}>{t(`${NS}.role`)}</div>
 
+      {!p.autonomy && (
+        <button type="button" style={btn} data-action="propose-autonomy" onClick={p.onProposeAutonomy} disabled={p.autonomyBusy}>
+          Proponer envelope de autonomía acotada
+        </button>
+      )}
+      {p.autonomy && <AutonomyEnvelopeCard envelope={p.autonomy} busy={!!p.autonomyBusy} onApprove={p.onApproveAutonomy} onReject={p.onRejectAutonomy} />}
+
       {snapshot.pendingCount > 0 && (
         <div role="status" data-field="pending-banner" style={{ ...box, display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'space-between' }}>
           <span>{t(`${NS}.pendingBanner`, { count: snapshot.pendingCount })}</span>
@@ -266,6 +279,32 @@ export function AliciaPanelView(p: AliciaPanelViewProps) {
       </form>
     </div>
   );
+}
+
+function AutonomyEnvelopeCard({ envelope, busy, onApprove, onReject }: { envelope: AutonomyEnvelope; busy: boolean; onApprove(id: string): void; onReject(id: string): void }) {
+  const pending = envelope.status === 'PENDING_AUTHORIZATION';
+  return <section data-autonomy-envelope={envelope.envelopeId} data-status={envelope.status} style={{ ...box, marginTop: 8 }}>
+    <div style={{ fontWeight: 700, marginBottom: 4 }}>AUTONOMY ENVELOPE · {envelope.status}</div>
+    <dl style={{ display: 'grid', gridTemplateColumns: 'max-content 1fr', columnGap: 8, rowGap: 2, margin: '0 0 6px' }}>
+      <dt>Envelope</dt><dd data-field="envelope-id" style={{ margin: 0 }}><code style={mono}>{envelope.envelopeId}</code></dd>
+      <dt>Project</dt><dd data-field="project" style={{ margin: 0 }}>{envelope.projectId}</dd>
+      <dt>Mission</dt><dd data-field="mission" style={{ margin: 0 }}>{envelope.missionId}</dd>
+      <dt>Objective</dt><dd data-field="objective" style={{ margin: 0 }}>{envelope.objective}</dd>
+      <dt>Risk</dt><dd data-field="risk" style={{ margin: 0 }}>{envelope.riskCeiling}</dd>
+      <dt>Iterations</dt><dd data-field="iterations" style={{ margin: 0 }}>{envelope.budget.maxIterations}</dd>
+      <dt>Retries</dt><dd data-field="retries" style={{ margin: 0 }}>{envelope.budget.maxRetries}</dd>
+      <dt>Capabilities</dt><dd data-field="capabilities" style={{ margin: 0 }}>{envelope.allowedCapabilities.join(', ') || 'none'}</dd>
+      <dt>Skills</dt><dd data-field="skills" style={{ margin: 0 }}>{envelope.allowedSkills.join(', ') || 'none'}</dd>
+      <dt>Scope</dt><dd data-field="paths" style={{ margin: 0 }}>{envelope.allowedPaths.join(', ') || 'none'}</dd>
+      <dt>Stop</dt><dd data-field="stop" style={{ margin: 0 }}>{envelope.stopConditions.join(', ')}</dd>
+      <dt>Escalate</dt><dd data-field="escalate" style={{ margin: 0 }}>{envelope.escalationConditions.join(', ')}</dd>
+      <dt>Authorized by</dt><dd data-field="authorized-by" style={{ margin: 0 }}>{envelope.authorizedBy ?? 'NONE'}</dd>
+    </dl>
+    {pending && <div role="group" aria-label="Autonomy envelope decision">
+      <button type="button" style={btn} data-action="reject-autonomy" disabled={busy} onClick={() => onReject(envelope.envelopeId)}>REJECT</button>
+      <button type="button" style={confirmBtn} data-action="approve-autonomy" disabled={busy} onClick={() => onApprove(envelope.envelopeId)}>AUTHORIZE</button>
+    </div>}
+  </section>;
 }
 
 /** v0.7: the Human Decisions center — pending HIGH approvals + the REQUEST cards, one surface. */

@@ -1,0 +1,4 @@
+project=LP-F8-ACC-PROJECT
+mission=LP-F8-ACC-M1
+envelope_id=NOT_CREATED_LIVE
+status=NOT_EXECUTED

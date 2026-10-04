@@ -1,0 +1,4 @@
+proposal_status=PENDING_AUTHORIZATION
+authorizedBy=NONE before decision
+authorizedAt=NONE before decision
+execution_started=false
