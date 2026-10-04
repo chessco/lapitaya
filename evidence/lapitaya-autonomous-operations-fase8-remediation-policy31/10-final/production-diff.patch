@@ -1,0 +1,33 @@
+diff --git a/src/main/index.ts b/src/main/index.ts
+index d5eed72c..79c2fb81 100644
+--- a/src/main/index.ts
++++ b/src/main/index.ts
+@@ -894,24 +894,10 @@ ipcMain.handle('skills:getProposal', (_evt, proposalId: unknown) => {
+   return organizationalLearning ? organizationalLearning.getProposal(proposalId) : null;
+ });
+ 
+-// Read-only Autonomy queries for UI (no channel can mutate envelope, budget or authority)
+-ipcMain.handle('autonomy:getSnapshot', () => {
+-  return autonomousOperations ? autonomousOperations.snapshot() : null;
+-});
+-ipcMain.handle('autonomy:listEnvelopes', () => {
+-  return autonomousOperations ? autonomousOperations.listEnvelopes() : [];
+-});
+-ipcMain.handle('autonomy:getEnvelope', (_evt, envelopeId: unknown) => {
+-  if (typeof envelopeId !== 'string') return null;
+-  return autonomousOperations ? autonomousOperations.getEnvelope(envelopeId) : null;
+-});
+-ipcMain.handle('autonomy:listOperations', () => {
+-  return autonomousOperations ? autonomousOperations.listOperations() : [];
+-});
+-ipcMain.handle('autonomy:getOperation', (_evt, operationId: unknown) => {
+-  if (typeof operationId !== 'string') return null;
+-  return autonomousOperations ? autonomousOperations.getOperation(operationId) : null;
+-});
++// Autonomy has NO IPC channel of its own (CIMA POLICY-31). The renderer observes
++// it read-only through the canonical company projection — `company:getSnapshot` /
++// `company:getOperations` → `operations.autonomy` (AutonomySnapshot) — and no
++// channel can create, authorize, widen or resume an envelope or operation.
+ 
+ /** A mission's live scheduler handles: the initial `setTimeout` that waits out
+  *  the time remaining until its next due fire, and the steady `setInterval`

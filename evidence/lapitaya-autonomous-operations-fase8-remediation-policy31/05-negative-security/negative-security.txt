@@ -1,0 +1,47 @@
+## Negative security — renderer cannot reach any autonomy authority (post-remediation)
+### 1. Preload (src/preload/index.ts) channels matching /autonom|envelope|policy|capabilit|risk/i
+NONE
+### 2. Main (src/main/index.ts) ipcMain channels matching same pattern
+NONE
+### 3. Candidate mutation channels (prompt §12) — exposure check in preload + main + companionPreload
+autonomy:activateEnvelope -> occurrences=0 -> NOT EXPOSED
+autonomy:authorizeEnvelope -> occurrences=0 -> NOT EXPOSED
+autonomy:increaseRisk -> occurrences=0 -> NOT EXPOSED
+autonomy:increaseIterationBudget -> occurrences=0 -> NOT EXPOSED
+autonomy:increaseRetryBudget -> occurrences=0 -> NOT EXPOSED
+autonomy:addCapability -> occurrences=0 -> NOT EXPOSED
+autonomy:addSkill -> occurrences=0 -> NOT EXPOSED
+autonomy:addPath -> occurrences=0 -> NOT EXPOSED
+autonomy:resetBudget -> occurrences=0 -> NOT EXPOSED
+autonomy:markCompleted -> occurrences=0 -> NOT EXPOSED
+autonomy:approveHigh -> occurrences=0 -> NOT EXPOSED
+autonomy:writeLedger -> occurrences=0 -> NOT EXPOSED
+autonomy:createEnvelope -> occurrences=0 -> NOT EXPOSED
+autonomy:narrowEnvelope -> occurrences=0 -> NOT EXPOSED
+autonomy:startOperation -> occurrences=0 -> NOT EXPOSED
+autonomy:pauseOperation -> occurrences=0 -> NOT EXPOSED
+autonomy:resumeOperation -> occurrences=0 -> NOT EXPOSED
+autonomy:cancelOperation -> occurrences=0 -> NOT EXPOSED
+autonomy:consumeIteration -> occurrences=0 -> NOT EXPOSED
+autonomy:consumeRetry -> occurrences=0 -> NOT EXPOSED
+autonomy:recordWorkRequest -> occurrences=0 -> NOT EXPOSED
+autonomy:recordDecision -> occurrences=0 -> NOT EXPOSED
+autonomy:evaluateContinuation -> occurrences=0 -> NOT EXPOSED
+autonomy:setExecutionAwake -> occurrences=0 -> NOT EXPOSED
+### 4. AutonomousOperationsService mutation methods referenced from IPC surface files (main/index.ts, preload/*)
+NONE
+### 5. Remaining autonomy reads from main/index.ts (all inside company projection plumbing, not IPC channels)
+54:import { AutonomousOperationsService } from './autonomousOperations';
+294:let autonomousOperations: AutonomousOperationsService | null = null;
+507:        autonomy: autonomousOperations?.snapshot() ?? null
+512:autonomousOperations = new AutonomousOperationsService({
+522:        autonomy: autonomousOperations?.snapshot() ?? null
+528:companyOperations.setAutonomyService(autonomousOperations);
+533:  autonomy: autonomousOperations.snapshot()
+### 6. Renderer-visible read path for autonomy
+src/preload/index.ts:1124:  companySnapshot: (): Promise<CompanySnapshot | null> => ipcRenderer.invoke('company:getSnapshot'),
+src/preload/index.ts:1125:  companyOperations: (): Promise<CompanyOperationsProjection | null> => ipcRenderer.invoke('company:getOperations'),
+src/main/index.ts:898:// it read-only through the canonical company projection — `company:getSnapshot` /
+src/main/index.ts:899:// `company:getOperations` → `operations.autonomy` (AutonomySnapshot) — and no
+src/main/index.ts:4272:ipcMain.handle('company:getSnapshot', () => {
+src/main/index.ts:4276:ipcMain.handle('company:getOperations', () => companyOperations?.projection() ?? null);

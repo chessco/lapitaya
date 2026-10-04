@@ -1,0 +1,60 @@
+$ git status
+On branch lapitaya/virtual-company-v0.8-autonomous-operations
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	evidence/lapitaya-autonomous-operations-fase8-remediation-policy31/
+
+nothing added to commit but untracked files present (use "git add" to track)
+$ git branch --show-current
+lapitaya/virtual-company-v0.8-autonomous-operations
+$ git rev-parse HEAD
+f1f4fb3cae3c27f0f118d969a5b4eca7d9ae931c
+$ git log -n 8 --oneline
+f1f4fb3c docs: record autonomous operations fase 8 acceptance gate
+bc0ca522 feat(autonomy): implement FASE 8 bounded autonomous operations and governance envelope
+caa851b4 docs: close organizational learning fase 7 acceptance gate
+9da05360 feat(learning): add verified organizational learning domain and skills lifecycle
+73c932b6 docs: close projects and missions fase 6 acceptance gate
+ff4f64f9 feat(projects): implement FASE 6 projects and missions continuity
+e999439b docs: close fase 5 after live acceptance remediation
+52cc5d5a docs: record virtual company operations fase 5 acceptance gate
+$ git diff --stat bc0ca522..HEAD
+ ...AUTONOMOUS_OPERATIONS_FASE_8_ACCEPTANCE_GATE.md | 65 ++++++++++++++++++++++
+ .../01-preflight/baseline.txt                      |  6 ++
+ .../02-baseline/summary.txt                        | 14 +++++
+ .../03-electron/startup.txt                        | 11 ++++
+ .../04-project-mission/status.txt                  |  4 ++
+ .../05-envelope/status.txt                         |  3 +
+ .../06-human-checkpoint/status.txt                 |  3 +
+ .../08-low-continuation/status.txt                 |  2 +
+ .../09-controlled-failure/status.txt               |  2 +
+ .../10-remediation/status.txt                      |  2 +
+ .../11-budget-consumption/status.txt               |  2 +
+ .../13-skills/status.txt                           |  4 ++
+ .../15-scope-expansion/status.txt                  |  2 +
+ .../16-waiting-human/status.txt                    |  2 +
+ .../17-budget-exhaustion/status.txt                |  2 +
+ .../18-pause/status.txt                            |  2 +
+ .../19-resume/status.txt                           |  2 +
+ .../20-cancel/status.txt                           |  2 +
+ .../21-self-expansion/status.txt                   |  2 +
+ .../22-integrity/status.txt                        |  2 +
+ .../23-pre-restart/status.txt                      |  2 +
+ .../25-restart/status.txt                          |  2 +
+ .../27-idempotency/status.txt                      |  2 +
+ .../31-project-isolation/status.txt                |  1 +
+ .../32-alicia/status.txt                           |  2 +
+ .../33-desktop/status.txt                          |  3 +
+ .../34-awake/status.txt                            |  5 ++
+ .../35-o1/status.txt                               |  2 +
+ .../36-ipc/status.txt                              |  6 ++
+ .../37-performance/status.txt                      |  8 +++
+ .../38-regression/summary.txt                      |  4 ++
+ .../39-cima/summary.txt                            |  8 +++
+ .../40-final/verdict.txt                           |  6 ++
+ .../README.md                                      |  8 +++
+ 34 files changed, 193 insertions(+)
+$ git diff --name-only bc0ca522..HEAD -- src test package.json
+(vacío = ningún cambio de producción/tests desde la implementación)
+$ ls electron.vite.config.*
+electron.vite.config.ts

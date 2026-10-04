@@ -1,0 +1,19 @@
+remediation=REMEDIATION PASS
+policy31_focused=1/1 PASS (before 0/1)
+cima_v0.16=50/50 PASS skipped=0
+lapitaya_suites=1003/1003 PASS (26 files)
+fase8=125/125 (ENV8 15, AUTO8 20, RETRY8 10, SKAUTO8 10, PERSIST8 15, ALI8 15, GOV8 15, DESK8 10, REG8 15)
+companion=296/296 PASS
+full_repo=1854 tests, 1822 pass, 21 fail (pre-existing, identical set at f1f4fb3c), 11 skipped
+autonomy_read=READ-ONLY VERIFIED via company:getSnapshot/getOperations -> operations.autonomy
+snapshot_mutations=0
+mutation_channels=NOT EXPOSED
+typecheck_node=PASS
+typecheck_web=PASS
+build=PASS
+production_diff=src/main/index.ts +4 -18 (removed 5 unreachable autonomy:* ipcMain handlers)
+acceptance_resume=BLOCKED at section 26
+new_blockers=F8-ACC-BLOCK-02 (no production path to create/authorize AutonomyEnvelope); F8-ACC-BLOCK-03 (createEnvelope defaults to HUMAN -> ACTIVE implicit authorization)
+human_checkpoint=NOT REACHED
+fase8_closed=NO
+fase9=NOT AUTHORIZED

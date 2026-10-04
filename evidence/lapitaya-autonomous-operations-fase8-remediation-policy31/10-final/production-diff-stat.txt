@@ -1,0 +1,2 @@
+ src/main/index.ts | 22 ++++------------------
+ 1 file changed, 4 insertions(+), 18 deletions(-)

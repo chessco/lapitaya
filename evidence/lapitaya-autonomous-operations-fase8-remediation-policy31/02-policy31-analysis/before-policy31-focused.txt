@@ -1,0 +1,28 @@
+✖ [POLICY-31] the renderer cannot redefine policy: no channel exists, and the registry is immutable (13.6716ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9008.8376
+
+✖ failing tests:
+
+test at test\lapitaya-cima-v0.16.test.cjs:487:1
+✖ [POLICY-31] the renderer cannot redefine policy: no channel exists, and the registry is immutable (13.6716ms)
+  AssertionError [ERR_ASSERTION]: autonomy:getSnapshot
+      at TestContext.<anonymous> (C:\PitayaCode\LaPitaya\test\lapitaya-cima-v0.16.test.cjs:494:82)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'autonomy:getSnapshot',
+    expected: /policy|capabilit|risk|autonomy/i,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }
+exit=1
