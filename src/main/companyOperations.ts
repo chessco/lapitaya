@@ -49,6 +49,13 @@ const expectedAgent: Partial<Record<CompanyPhase, CompanyWorkPlan['steps'][numbe
 
 const text = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.trim() : null);
 
+const normalizedObjective = (value: string): string => value
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase()
+  .replace(/\s+/g, ' ')
+  .trim();
+
 interface PersistedOperationsState {
   version: 1;
   savedAt: number;
@@ -1005,7 +1012,8 @@ export class CompanyOperationsService {
    */
   private bootstrapConfirmedRequest(request: CompanyWorkRequest): CompanyWorkRequest {
     const envelope = this.autonomyService?.listEnvelopes().find((candidate) =>
-      candidate.status === 'ACTIVE' && candidate.objective === request.objective);
+      candidate.status === 'ACTIVE' &&
+      normalizedObjective(request.objective).includes(normalizedObjective(candidate.objective)));
     if (!envelope) return request;
 
     // A request can already have foreground bindings. Only reuse them when

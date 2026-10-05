@@ -103,3 +103,17 @@ test('START8-27: human-confirmed REQUEST binds the active envelope and starts on
     assert.equal(f.autonomy.listOperations().length, 1);
   } finally { close(f); }
 });
+
+test('START8-28: natural REQUEST framing may wrap the exact authorized objective', () => {
+  const f = fixture();
+  try {
+    const requestId = 'request-start8-natural-framing';
+    const message = 'Quiero que El Inge prepare una propuesta para validar: Build A.';
+    f.ops.observe([
+      { type: 'request.proposed', ref: requestId, subject: message, ts: ++clock },
+      { type: 'request.confirmed', ref: requestId, subject: message, taskId: 'task-start8-natural', ts: ++clock }
+    ]);
+    assert.equal(f.autonomy.listOperations().length, 1);
+    assert.equal(f.autonomy.listOperations()[0].missionId, f.base.missionId);
+  } finally { close(f); }
+});
