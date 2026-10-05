@@ -23,6 +23,12 @@ authorize, widen, or mutate an envelope.
 Requests that do not contain the complete authorized objective still fail
 closed and cannot bind to the envelope.
 
+The CIMA Capability Registry also declares the internal
+`autonomous-operation:start` proposal as the LOW `autonomy.start` capability.
+This allows CIMA to evaluate the production start boundary instead of
+rejecting it as an unknown tool. It is reachable only from the main-process
+El Inge orchestration callback; no renderer IPC or agent capability is added.
+
 ## Verification
 
 - `START8`: 28/28 PASS, including natural REQUEST framing, canonical objective

@@ -160,7 +160,10 @@ const CAPABILITIES_V1: CapabilityDefinition[] = [
   cap('governance.approval', 'HIGH', 'HUMAN_APPROVAL', ['GOVERNANCE_EVENT_REQUIRED', 'HUMAN_DECISION_REQUIRED'], false),
   cap('provider.spawn', 'HIGH', 'HUMAN_APPROVAL', ['GOVERNANCE_EVENT_REQUIRED', 'HUMAN_DECISION_REQUIRED'], false),
   // the intent boundary's evaluation of a proposed action (no execution: the executor's own call is re-authorized)
-  cap('intent.evaluate', 'LOW', 'AUTO', ['GOVERNANCE_EVENT_REQUIRED'], false)
+  cap('intent.evaluate', 'LOW', 'AUTO', ['GOVERNANCE_EVENT_REQUIRED'], false),
+  // Internal El Inge orchestration proposal. This is a CIMA decision point,
+  // not a renderer/agent authority channel and not an execution capability.
+  cap('autonomy.start', 'LOW', 'AUTO', ['GOVERNANCE_EVENT_REQUIRED'], false)
 ];
 
 /** v0.11 provider classification, stated explicitly (cross-checked against the provider presets at validation). */
@@ -209,7 +212,8 @@ const TOOLS_V1: ToolBinding[] = [
   bind('Bash', 'shell', SHELL_OPS), bind('PowerShell', 'shell', SHELL_OPS),
   bind('shell', 'shell', SHELL_OPS), bind('run_shell_command', 'shell', SHELL_OPS),
   { tool: 'mcp__', match: 'prefix', classifier: 'mcp', operations: { invoke: 'mcp.tool', 'governance-state': 'governance.state-write' } },
-  bind('intent', 'intent', { evaluate: 'intent.evaluate' })
+  bind('intent', 'intent', { evaluate: 'intent.evaluate' }),
+  bind('autonomous-operation:start', 'read', { read: 'autonomy.start' })
 ];
 
 function deepFreeze<T>(v: T): T {

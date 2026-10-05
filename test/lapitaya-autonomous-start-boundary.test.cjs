@@ -10,6 +10,7 @@ const loadTs = require('./load-ts.cjs');
 const { AutonomousOperationsService, computeEnvelopeHash } = loadTs('src/main/autonomousOperations.ts');
 const { CompanyOperationsService } = loadTs('src/main/companyOperations.ts');
 const { CompanyAwarenessService } = loadTs('src/main/companyAwareness.ts');
+const { DEFAULT_POLICY } = loadTs('src/shared/lapitaya/policyRegistry.ts');
 
 let clock = 7_000_000_000_000;
 
@@ -124,4 +125,11 @@ test('START8-28: natural REQUEST framing may wrap the exact authorized objective
     assert.equal(f.autonomy.listOperations().length, 1);
     assert.equal(f.autonomy.listOperations()[0].missionId, f.base.missionId);
   } finally { close(f); }
+});
+
+test('START8-29: CIMA registry recognizes the internal governed start proposal', () => {
+  const binding = DEFAULT_POLICY.tools.find((tool) => tool.tool === 'autonomous-operation:start');
+  assert.ok(binding);
+  assert.equal(binding.operations.read, 'autonomy.start');
+  assert.equal(DEFAULT_POLICY.capabilities.find((cap) => cap.id === 'autonomy.start').risk, 'LOW');
 });
