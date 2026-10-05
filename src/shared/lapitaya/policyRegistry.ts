@@ -244,7 +244,10 @@ export interface PolicyValidation { ok: boolean; errors: string[] }
 
 const CAP_ID = /^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)+$/;
 const PROVIDER_ID = /^[a-z][a-z0-9-]*$/;
-const TOOL_NAME = /^[A-Za-z_][A-Za-z0-9_.-]*$/;
+// Internal runtime boundaries may use a namespace separator, e.g.
+// `autonomous-operation:start`; provider tool names remain closed by the same
+// ASCII grammar and are still matched exactly or by an explicit prefix.
+const TOOL_NAME = /^[A-Za-z_][A-Za-z0-9_.:-]*$/;
 
 /** What the provider presets themselves imply (the v0.11 derivation) — used to detect a drifted declaration. */
 export function derivedEnforcement(provider: string): ProviderEnforcement | null {

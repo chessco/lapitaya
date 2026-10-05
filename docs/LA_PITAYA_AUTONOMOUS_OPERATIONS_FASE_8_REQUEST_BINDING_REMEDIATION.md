@@ -28,16 +28,18 @@ The CIMA Capability Registry also declares the internal
 This allows CIMA to evaluate the production start boundary instead of
 rejecting it as an unknown tool. It is reachable only from the main-process
 El Inge orchestration callback; no renderer IPC or agent capability is added.
+The registry name validator also accepts `:` for this namespaced internal
+boundary.
 
 ## Verification
 
 - `START8`: 28/28 PASS, including natural REQUEST framing, canonical objective
   preservation, and idempotent start.
+- `START8`: 29/29 PASS after the CIMA registry validation fix.
 - `test:autonomy`: 132/132 PASS.
 - `typecheck`: PASS.
-- `build`: TIMEOUT at 300 seconds during renderer chunk rendering after all
-  2,622 renderer modules transformed; no TypeScript or Vite transform error
-  was reported.
+- `build`: PASS after the registry validation fix; the known static/dynamic
+  `store.ts` import warning remains.
 
 ## Acceptance consequence
 
