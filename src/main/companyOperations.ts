@@ -1029,10 +1029,13 @@ export class CompanyOperationsService {
       project = this.createProject({
         projectId: envelope.projectId,
         name: `La Pitaya · ${envelope.projectId}`,
-        objective: request.objective,
+        objective: envelope.objective,
         acceptanceCriteria: request.acceptanceCriteria,
         createdBy: 'human'
       });
+    } else if (project.objective !== envelope.objective) {
+      project = { ...project, objective: envelope.objective, updatedAt: now };
+      this.projects.set(project.projectId, project);
     }
 
     let mission = this.missions.get(envelope.missionId);
@@ -1041,10 +1044,13 @@ export class CompanyOperationsService {
         missionId: envelope.missionId,
         projectId: project.projectId,
         title: 'FASE 8 · Aceptación de autonomía operacional',
-        objective: request.objective,
+        objective: envelope.objective,
         acceptanceCriteria: request.acceptanceCriteria,
         provenance: 'HUMAN'
       });
+    } else if (mission.objective !== envelope.objective) {
+      mission = { ...mission, objective: envelope.objective, updatedAt: now };
+      this.missions.set(mission.missionId, mission);
     }
 
     if (!mission.workRequestIds.includes(request.requestId)) {

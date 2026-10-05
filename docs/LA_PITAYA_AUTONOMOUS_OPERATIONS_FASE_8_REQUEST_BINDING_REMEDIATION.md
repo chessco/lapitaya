@@ -14,7 +14,9 @@ mission, or operation was created.
 
 CompanyOperations now accepts a confirmed REQUEST only when its normalized
 objective contains the complete normalized objective of an `ACTIVE` envelope.
-Normalization removes accents, folds case, and collapses whitespace. The
+Normalization removes accents, folds case, and collapses whitespace. Project
+and mission records retain the envelope's canonical objective for the later
+start validation; the human wording remains preserved on the REQUEST. The
 envelope remains the authority boundary; this change does not create,
 authorize, widen, or mutate an envelope.
 
@@ -23,7 +25,8 @@ closed and cannot bind to the envelope.
 
 ## Verification
 
-- `START8`: 28/28 PASS, including natural REQUEST framing and idempotent start.
+- `START8`: 28/28 PASS, including natural REQUEST framing, canonical objective
+  preservation, and idempotent start.
 - `test:autonomy`: 132/132 PASS.
 - `typecheck`: PASS.
 - `build`: TIMEOUT at 300 seconds during renderer chunk rendering after all

@@ -109,10 +109,18 @@ test('START8-28: natural REQUEST framing may wrap the exact authorized objective
   try {
     const requestId = 'request-start8-natural-framing';
     const message = 'Quiero que El Inge prepare una propuesta para validar: Build A.';
+    // Simulate the pre-remediation persisted entities: the natural human
+    // wording must not become the mission's canonical envelope objective.
+    const project = f.ops.getProject(f.base.projectId);
+    const mission = f.ops.getMission(f.base.missionId);
+    project.objective = message;
+    mission.objective = message;
     f.ops.observe([
       { type: 'request.proposed', ref: requestId, subject: message, ts: ++clock },
       { type: 'request.confirmed', ref: requestId, subject: message, taskId: 'task-start8-natural', ts: ++clock }
     ]);
+    assert.equal(f.ops.getProject(f.base.projectId).objective, f.base.objective);
+    assert.equal(f.ops.getMission(f.base.missionId).objective, f.base.objective);
     assert.equal(f.autonomy.listOperations().length, 1);
     assert.equal(f.autonomy.listOperations()[0].missionId, f.base.missionId);
   } finally { close(f); }
