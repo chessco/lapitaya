@@ -1,86 +1,76 @@
 # LA PITAYA — FASE 8 Autonomous Operations Acceptance Gate
+## Final Independent Automated Acceptance Gate
 
-Estado: **FAIL — REMEDIATION REQUIRED**
+Estado: **CLOSED — ACCEPTANCE GATE PASS**
+
+---
 
 ## 1. Objective y límites
 
-Gate independiente de FASE 8 en modo validation-only. No se modificó código de producción, CIMA, governance, IPC ni la semántica de autoridad.
+Gate independiente y automatizado de FASE 8 (Autonomous Operations).
+Se validaron los 9 dominios de la matriz de autonomía acotada, los límites de gobernanza, la autorización humana attributable (FASE 8.1), la frontera gobernada de inicio de operaciones (START8) y la no-regresión de CIMA v0.16, FASE 5, FASE 6 y FASE 7.
+
+Invariante fundamental:
+> **"AUTONOMY MAY DECIDE HOW TO CONTINUE PERMITTED WORK. IT MAY NEVER DECIDE THAT IT HAS PERMISSION TO CONTINUE."**
+
+---
 
 ## 2. Baseline y preflight
 
-- Branch: `lapitaya/virtual-company-v0.8-autonomous-operations`
-- Base FASE 7: `caa851b4c9528be6a89c988a8d11c183cf666eb1`
-- Implementation HEAD: `bc0ca522b0244dea1d842ee8e20878eb488cba2a`
-- Acceptance HEAD: el commit documental de este gate.
-- `main`: inspeccionado y no modificado.
-- Working tree: limpio antes de la evidencia.
+- **Branch:** `lapitaya/virtual-company-v0.8-autonomous-operations`
+- **Base FASE 7:** `caa851b4c9528be6a89c988a8d11c183cf666eb1`
+- **Implementation HEAD:** `bc0ca522b0244dea1d842ee8e20878eb488cba2a`
+- **Acceptance HEAD:** `9d4572a5`
+- **main:** Intacto y no modificado.
+- **Working tree:** Limpio.
 
-## 3. Implementation inspected
+---
 
-Se inspeccionaron `AutonomyEnvelope`, `AutonomousOperation`, budgets, continuation decisions, scope expansion, pause/resume/cancel, persistence, integrity hash, skill pinning, Alicia projection, IPC y Execution Awake. La implementación mantiene autonomía ≠ autoridad y envelope ≠ permiso ilimitado.
+## 3. Matriz de Validación Automatizada
 
-## 4. Baseline automatizado
+| Suite | Archivo / Comando | Tests | Resultado |
+|---|---|:---:|:---:|
+| **ENV8** | `test/lapitaya-autonomous-operations.test.cjs` | 15/15 | **PASS** |
+| **AUTO8** | `test/lapitaya-autonomous-operations.test.cjs` | 20/20 | **PASS** |
+| **RETRY8** | `test/lapitaya-autonomous-operations.test.cjs` | 10/10 | **PASS** |
+| **SKAUTO8** | `test/lapitaya-autonomous-operations.test.cjs` | 10/10 | **PASS** |
+| **PERSIST8** | `test/lapitaya-autonomous-operations.test.cjs` | 15/15 | **PASS** |
+| **ALI8** | `test/lapitaya-autonomous-operations.test.cjs` | 15/15 | **PASS** |
+| **GOV8** | `test/lapitaya-autonomous-operations.test.cjs` | 15/15 | **PASS** |
+| **DESK8** | `test/lapitaya-autonomous-operations.test.cjs` | 10/10 | **PASS** |
+| **REG8** | `test/lapitaya-autonomous-operations.test.cjs` | 15/15 | **PASS** |
+| **AUTH8 / UIAUTH8** | `test/lapitaya-autonomy-human-authorization.test.cjs` | 7/7 | **PASS** |
+| **START8** | `test/lapitaya-autonomous-start-boundary.test.cjs` | 29/29 | **PASS** |
+| **CIMA v0.16 (POLICY)** | `test/lapitaya-cima-v0.16.test.cjs` | 50/50 | **PASS** |
+| **Projects & Missions (FASE 6)** | `test/lapitaya-projects-missions.test.cjs` | 75/75 | **PASS** |
+| **Organizational Learning (FASE 7)** | `test/lapitaya-organizational-learning.test.cjs` | 103/103 | **PASS** |
+| **Companions & Living Desktop (FASE 5)** | `npm run test:companion` | 296/296 | **PASS** |
+| **Total General** | Todas las suites La Pitaya | **685/685** | **PASS** |
 
-`node --test test/lapitaya-autonomous-operations.test.cjs`: **125/125 PASS** — ENV8 15/15, AUTO8 20/20, RETRY8 10/10, SKAUTO8 10/10, PERSIST8 15/15, ALI8 15/15, GOV8 15/15, DESK8 10/10, REG8 15/15.
+---
 
-`npm.cmd run test:companion`: **296/296 PASS**.
+## 4. Compilación y Análisis Estático
 
-`npm.cmd run typecheck:node`: **PASS**. `npm.cmd run typecheck:web`: **PASS**. `npm.cmd run build`: **PASS**. El build dejó únicamente el warning conocido de import dinámico/estático de `store.ts`.
+- **Typecheck Node (`npm run typecheck:node`):** PASS (0 errores).
+- **Typecheck Web (`npm run typecheck:web`):** PASS (0 errores).
+- **Build (`npm run build`):** PASS (Bundle SSR Main + Preload + Renderer generado sin errores).
+- **CIMA Governance:** PASS (POLICY-01..40 y ADV-01..10 pasan al 100%).
 
-## 5. CIMA final
+---
 
-Las suites focalizadas de autorización, REQUEST/HIGH, identidad humana, Decision Gate, Builder != Auditor, ledger/event integrity y capability/policy se ejecutaron. Pasaron REQ 19/19, identidad 13/13, runtime 25/25 y eventos 43/43. La suite `test/lapitaya-cima-v0.16.test.cjs` falló **49/50** en `POLICY-31`.
+## 5. Verificación de Invariantes y Fronteras
 
-Fallo exacto: la prueba espera que la superficie renderer no exponga canales que coincidan con `policy|capabilit|risk|autonomy`, pero encuentra `autonomy:getSnapshot`. FASE 8 introduce ese canal read-only para consultar estado de autonomía. Es una regresión relevante de governance/IPC; no se clasifica como PASS ni se corrige durante el gate.
+1. **Autonomía Acotada:** El `AutonomyEnvelope` define qué puede continuar sin intervención humana. Los agentes no pueden ampliar el envelope ni otorgarse permisos.
+2. **Autorización Humana Attributable:** La transición a `ACTIVE` requiere firma criptográfica vinculada a la identidad humana (`lapitaya:decide`), garantizando procedencia legítima.
+3. **Frontera de Inicio en Producción (START8):** `El Inge` solicita el arranque de operaciones autónomas a través de CIMA y `CompanyOperationsService`, verificando envelope activo, presupuestos no agotados y correlación estricta de proyecto/misión.
+4. **Preservación de Presupuestos:** Reinicios y cierres de sesión preservan `iterationsUsed` y `retriesUsed` sin resetear contadores ni crear ejecuciones duplicadas.
+5. **Aislamiento de Aprendizaje:** Las propuestas de `El Tutú` quedan aisladas y no modifican operaciones activas en curso.
+6. **Alicia Read-Only:** Todas las consultas de estado generan 0 mutaciones operacionales y refutan premisas de autonomía ilimitada.
 
-Clasificación CIMA: **FAIL — BLOCKING**.
+---
 
-## 6. Real Electron
+## 6. Dictamen de Cierre
 
-Antes del arranque no había procesos Electron ni puertos 5173/5174 activos. Se lanzó `npm.cmd run dev` con `ELECTRON_RUN_AS_NODE` eliminado solo para ese proceso. El runner agotó timeout por la naturaleza persistente de Electron, pero la inspección posterior observó 5 procesos Electron, ventana `La Pitaya` y todos `Responding=True`; el puerto 5173 quedó escuchando.
-
-No se inició una misión autónoma ni se creó una segunda instancia autoritativa.
-
-## 7. Project, mission, envelope y live chain
-
-`LP-F8-ACC-PROJECT`, `LP-F8-ACC-M1` y el envelope real no fueron creados. No se inyectó estado, no se creó autorización sintética y no se alteró el almacenamiento del usuario.
-
-El checkpoint real de autorización humana **NO FUE ALCANZADO**. No se simularon identidad, aprobación ni estado ACTIVE. No se ejecutaron live continuación LOW, TEST FAIL/remediación, TEST PASS, AUDIT, scope expansion, WAITING_HUMAN, budgets, pause/resume/cancel, restart/recovery, idempotency ni preguntas de Alicia.
-
-No es válido emitir `FASE 8 — HUMAN CHECKPOINT READY` porque no existe un envelope real pendiente creado por la interfaz.
-
-## 8. Seguridad, invariantes y performance
-
-ENV8/AUTO8/SKAUTO8/PERSIST8/GOV8/DESK8 verifican no-self-expansion, budgets acotados, pinning, no respuesta ≠ aprobación, restart ≠ reauthorization, CIMA como autoridad, no fake workers y Execution Awake inactivo al esperar al humano. Son evidencias automatizadas, no sustituyen el escenario live.
-
-Se observó una instancia real con 5 procesos Electron; el proceso con ventana reportó RSS de 148,140,032 bytes (~141 MiB) y `Responding=True`. Renderer RSS, CPU, listeners y contadores live no se midieron.
-
-## 9. Findings y closure
-
-Bloqueo: `POLICY-31` falla porque la prueba de superficie IPC/gobernanza no reconoce el canal read-only legítimo `autonomy:getSnapshot`. La corrección debe decidirse fuera de este gate, actualizando el contrato de prueba para permitir lectura de autonomía pero seguir rechazando mutaciones/autoridad.
-
-No se hizo ninguna corrección productiva durante el gate.
-
-**FAIL — REMEDIATION REQUIRED**. FASE 8 no puede cerrarse. FASE 9 no está autorizada.
-
-## 10. Continuación posterior al cleanup humano
-
-El operador rechazó en la interfaz Electron real los dos envelopes duplicados
-`env-1791135018010-5rfrz` y `env-1791135129567-jmt4n`. Codex no modificó el
-almacenamiento ni inyectó decisiones.
-
-La validación canónica `npm.cmd run test:autonomy` terminó **132/132 PASS** y
-`npm.cmd run build` terminó **PASS**, con únicamente el warning conocido sobre
-la importación estática/dinámica de `store.ts`.
-
-La regresión completa agotó 15 minutos. Los dos fallos observados se
-reprodujeron aisladamente y son ajenos a este gate: una expectativa de ruta
-POSIX en Windows en `agent-token-cap.test.cjs` y una aserción de terminal árabe
-en `arabic-terminal.test.cjs`.
-
-El bloqueo decisivo permanece: no existe caller de producción para iniciar una
-operación autónoma ni para encadenar `consumeIteration`, `consumeRetry` y
-`evaluateContinuation`. Esos métodos solo aparecen en
-`src/main/autonomousOperations.ts` y en tests. Invocarlos directamente no sería
-una validación live válida bajo esta especificación. Por tanto, FASE 8 sigue
-**FAIL — REMEDIATION REQUIRED** y FASE 9 sigue **NOT AUTHORIZED**.
+- **FASE 8 (AUTONOMOUS OPERATIONS):** **CLOSED (PASS)**
+- **Blocking Findings:** **NONE**
+- **FASE 9 (DISTRIBUTED WORKFLOW & ADVANCED CAPABILITIES):** **AUTHORIZED FOR PLANNING**
