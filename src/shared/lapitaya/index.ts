@@ -12,3 +12,4 @@ export * from './cimaBriefing';
 export * from './intent';
 export * from './alicia';
 export * from './learning/types';
+export * from './company/types';

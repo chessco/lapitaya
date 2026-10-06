@@ -24,6 +24,7 @@
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
     "test:autonomy": "node --test test/lapitaya-autonomous-operations.test.cjs test/lapitaya-autonomy-human-authorization.test.cjs",
     "test:start-boundary": "node --test test/lapitaya-autonomous-start-boundary.test.cjs",
+    "test:company-os": "node --test test/lapitaya-virtual-company-foundation.test.cjs test/lapitaya-virtual-company-portfolio.test.cjs test/lapitaya-virtual-company-teams.test.cjs test/lapitaya-virtual-company-scheduler.test.cjs test/lapitaya-virtual-company-attention.test.cjs test/lapitaya-virtual-company-health.test.cjs test/lapitaya-virtual-company-snapshot.test.cjs test/lapitaya-virtual-company-alicia.test.cjs test/lapitaya-virtual-company-recovery.test.cjs test/lapitaya-virtual-company-integration.test.cjs",
     "test:focused": "node --test test/*.test.cjs",
       "test:companion": "node --test test/lapitaya-desktop-companions.test.cjs test/lapitaya-rosalba.test.cjs test/lapitaya-living-desktop.test.cjs test/lapitaya-virtual-company.test.cjs test/lapitaya-virtual-company-operations.test.cjs",
     "check:links": "node tools/check-release-links.cjs",

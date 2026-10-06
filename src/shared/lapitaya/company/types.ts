@@ -273,3 +273,5 @@ export function cloneCompanySnapshot(snapshot: CompanySnapshot): CompanySnapshot
   return JSON.parse(JSON.stringify(snapshot)) as CompanySnapshot;
 }
 
+export * from './osTypes';
+

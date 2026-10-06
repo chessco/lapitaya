@@ -38,3 +38,4 @@ export * from './conversation';
 export * from './provider';
 export * from './companion';
 export * from './observability';
+export * from './companyOSAnswers';

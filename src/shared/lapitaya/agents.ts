@@ -192,6 +192,9 @@ export const LA_PITAYA_AGENTS: readonly LaPitayaAgent[] = [
 export const LA_PITAYA_AGENT_BY_ID: Readonly<Record<LaPitayaAgentId, LaPitayaAgent>> =
   Object.fromEntries(LA_PITAYA_AGENTS.map((a) => [a.id, a])) as Record<LaPitayaAgentId, LaPitayaAgent>;
 
+export const LA_PITAYA_AGENT_IDS: readonly LaPitayaAgentId[] =
+  LA_PITAYA_AGENTS.map((a) => a.id);
+
 /** The orchestrator's default name — godIdentity.ts re-exports this. */
 export const EL_INGE_NAME = LA_PITAYA_AGENT_BY_ID['el-inge'].name;
 
