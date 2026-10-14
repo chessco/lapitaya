@@ -319,6 +319,11 @@ export class CompanyOperationsService {
     return projectId ? all.filter((m) => m.projectId === projectId) : all;
   }
 
+  listDeliveries(projectId?: string): readonly CompanyDelivery[] {
+    const all = [...this.deliveries.values()];
+    return projectId ? all.filter((d) => d.projectId === projectId) : all;
+  }
+
   confirmMission(missionId: string, confirmedBy = 'human'): CompanyMission | null {
     const mission = this.missions.get(missionId);
     if (!mission) return null;

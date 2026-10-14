@@ -52,6 +52,9 @@ import { CompanyAwarenessService } from './companyAwareness';
 import { CompanyOperationsService } from './companyOperations';
 import { OrganizationalLearningService } from './organizationalLearning';
 import { AutonomousOperationsService } from './autonomousOperations';
+import { VirtualCompanyOSService } from './virtualCompanyOS';
+import type { PriorityLevel } from '../shared/lapitaya/company/osTypes';
+import { answerCompanyOSQuestion } from '../shared/lapitaya/alicia/companyOSAnswers';
 import { recordSpawnAssignment } from './spawnAssignment';
 import { readAgentUsage, readContextTokens, seedSessionTranscript, resolveSessionCwd } from './transcript';
 import { listIssues, listCIRuns } from './github';
@@ -292,6 +295,7 @@ let companyAwareness: CompanyAwarenessService | null = null;
 let companyOperations: CompanyOperationsService | null = null;
 let organizationalLearning: OrganizationalLearningService | null = null;
 let autonomousOperations: AutonomousOperationsService | null = null;
+let virtualCompanyOS: VirtualCompanyOSService | null = null;
 const lapitaya = new CimaRuntimeService({
   hiveRoot: () => hive.root(),
   godId: () => hive.registry().godId ?? 'god',
@@ -347,6 +351,17 @@ const aliciaCompanion = createAliciaCompanion({
       return cwd ? { root: cwd, name: basename(cwd) } : null;
     },
     companyAnswer: (question) => {
+      if (virtualCompanyOS) {
+        const snap = virtualCompanyOS.getSnapshot();
+        const osAns = answerCompanyOSQuestion(question, snap, 'es-MX');
+        if (osAns.known) {
+          return {
+            text: osAns.answer,
+            locale: 'es-MX',
+            citations: osAns.facts.map((ref) => ({ kind: 'task' as const, ref }))
+          };
+        }
+      }
       const answer = companyOperations?.answer(question);
       return answer ? { text: answer.answer, locale: 'es-MX', citations: answer.facts.map((ref) => ({ kind: 'task' as const, ref })) } : null;
     },
@@ -499,27 +514,14 @@ companyOperations = new CompanyOperationsService({
     return { allowed: auth.decision === 'ALLOW', reason: auth.reason ?? auth.decision };
   },
   onStateChanged: () => {
-    if (companyAwareness) {
-      desktopPresence.setCompanySnapshot({
-        ...companyAwareness.snapshot(),
-        operations: companyOperations?.projection(),
-        learning: organizationalLearning?.snapshot() ?? null
-      });
-    }
+    syncVirtualCompanyOS();
   }
 });
 organizationalLearning = new OrganizationalLearningService({
   storageFile: hive.root() ? join(hive.root()!, 'lapitaya', 'learning.json') : undefined,
   humanAttention: () => companyAwareness?.snapshot().humanAttention ?? null,
   onStateChanged: () => {
-    if (companyAwareness) {
-      desktopPresence.setCompanySnapshot({
-        ...companyAwareness.snapshot(),
-        operations: companyOperations?.projection(),
-        learning: organizationalLearning?.snapshot() ?? null,
-        autonomy: autonomousOperations?.snapshot() ?? null
-      });
-    }
+    syncVirtualCompanyOS();
   }
 });
 autonomousOperations = new AutonomousOperationsService({
@@ -527,24 +529,40 @@ autonomousOperations = new AutonomousOperationsService({
   learningService: organizationalLearning,
   humanAttention: () => companyAwareness?.snapshot().humanAttention ?? null,
   onStateChanged: () => {
-    if (companyAwareness) {
-      desktopPresence.setCompanySnapshot({
-        ...companyAwareness.snapshot(),
-        operations: companyOperations?.projection(),
-        learning: organizationalLearning?.snapshot() ?? null,
-        autonomy: autonomousOperations?.snapshot() ?? null
-      });
-    }
+    syncVirtualCompanyOS();
   }
 });
 companyOperations.setLearningService(organizationalLearning);
 companyOperations.setAutonomyService(autonomousOperations);
-desktopPresence.setCompanySnapshot({
-  ...companyAwareness.snapshot(),
-  operations: companyOperations.projection(),
-  learning: organizationalLearning.snapshot(),
-  autonomy: autonomousOperations.snapshot()
+
+virtualCompanyOS = new VirtualCompanyOSService({
+  getLegacySnapshot: () => ({
+    ...companyAwareness!.snapshot(),
+    operations: companyOperations?.projection(),
+    learning: organizationalLearning?.snapshot() ?? null,
+    autonomy: autonomousOperations?.snapshot() ?? null
+  }),
+  storagePath: hive.root()
+    ? join(hive.root()!, 'lapitaya', 'virtual-company-os.json')
+    : join(app.getPath('userData'), 'lapitaya', 'virtual-company-os.json')
 });
+
+function syncVirtualCompanyOS() {
+  if (!virtualCompanyOS || !companyOperations) return;
+  try {
+    virtualCompanyOS.syncPortfolioAndQueue({
+      projects: companyOperations.listProjects(),
+      missions: companyOperations.listMissions(),
+      deliveries: companyOperations.listDeliveries()
+    });
+    desktopPresence.setCompanySnapshot(virtualCompanyOS.getSnapshot());
+    virtualCompanyOS.save();
+  } catch (err) {
+    console.error('[VirtualCompanyOS] sync error:', err);
+  }
+}
+
+syncVirtualCompanyOS();
 /** The PRIMARY window — the one running the hive/god orchestration and the sink
  *  for process-global timer events (missions, breaker, Slack ingestion). It is
  *  the most-recently-focused live window, so global events follow the user.
@@ -4321,6 +4339,38 @@ ipcMain.handle('projects:getSnapshot', (_evt, projectId: unknown) =>
   companyOperations?.projectSnapshot(typeof projectId === 'string' ? projectId : undefined) ?? null);
 ipcMain.handle('missions:getSnapshot', (_evt, missionId: unknown) =>
   companyOperations?.missionSnapshot(typeof missionId === 'string' ? missionId : undefined) ?? null);
+// FASE 9: Virtual Company OS — Portfolio, Work Queue, Teams, Health & Scheduler
+ipcMain.handle('lapitaya:companyOS:snapshot', () => virtualCompanyOS?.getSnapshot() ?? null);
+ipcMain.handle('lapitaya:companyOS:pause', (evt, reason: unknown) => {
+  const ctx = humanIdentity.resolve(evt);
+  if (!ctx) return { ok: false, error: 'UNTRUSTED_SENDER' };
+  virtualCompanyOS?.pauseCompany(typeof reason === 'string' ? reason : 'Human operator pause');
+  syncVirtualCompanyOS();
+  return { ok: true };
+});
+ipcMain.handle('lapitaya:companyOS:resume', (evt) => {
+  const ctx = humanIdentity.resolve(evt);
+  if (!ctx) return { ok: false, error: 'UNTRUSTED_SENDER' };
+  virtualCompanyOS?.resumeCompany();
+  syncVirtualCompanyOS();
+  return { ok: true };
+});
+ipcMain.handle('lapitaya:companyOS:setPriority', (evt, projectId: unknown, level: unknown, reason: unknown) => {
+  const ctx = humanIdentity.resolve(evt);
+  if (!ctx) return { ok: false, error: 'UNTRUSTED_SENDER' };
+  if (typeof projectId !== 'string' || typeof level !== 'string') return { ok: false, error: 'INVALID_ARGUMENTS' };
+  if (!['CRITICAL', 'HIGH', 'NORMAL', 'LOW'].includes(level)) return { ok: false, error: 'INVALID_PRIORITY_LEVEL' };
+  const priority = virtualCompanyOS?.setProjectPriority(
+    projectId,
+    level as PriorityLevel,
+    typeof reason === 'string' ? reason : 'Human priority override',
+    ctx.human.displayName,
+    'HUMAN'
+  );
+  syncVirtualCompanyOS();
+  return { ok: true, priority };
+});
+ipcMain.handle('lapitaya:companyOS:evaluateDispatch', () => virtualCompanyOS?.evaluateNextDispatch() ?? null);
 // v0.6 governance observability: a read-only, human-safe projection of what the
 // runtime recorded (ledger, execution traces, approval/proposal state). It is
 // computed here so raw records (commands, paths, outputs, tokens) never reach
@@ -5824,6 +5874,8 @@ app.on('window-all-closed', () => {
 // exactly what's left to do.
 let analyticsFlushed = false;
 app.on('will-quit', (e) => {
+  // Save Virtual Company OS state cleanly before quit.
+  try { virtualCompanyOS?.save(); } catch { /* best-effort save */ }
   // Never leak the OS power-save blocker past the app (Electron would release it at exit anyway).
   try { executionAwake.dispose(); } catch { /* best-effort */ }
   if (analyticsFlushed) return;

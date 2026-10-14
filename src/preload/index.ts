@@ -19,6 +19,10 @@ import type { RequestProposal } from '../shared/lapitaya/intent';
 import type { LocaleSettings } from '../shared/lapitaya/locales';
 import type { AliciaCompanionState, AliciaSubmitResult, ObservabilityView } from '../shared/lapitaya/alicia';
 import type { CompanyAnswer, CompanyOperationsProjection, CompanySnapshot } from '../shared/lapitaya/company/types';
+import type { CompanyOSSnapshot, PriorityLevel, PriorityDefinition } from '../shared/lapitaya/company/osTypes';
+import type { SchedulingDecisionCandidate } from '../main/companyScheduler';
+export type { CompanyOSSnapshot, PriorityLevel, PriorityDefinition } from '../shared/lapitaya/company/osTypes';
+export type { SchedulingDecisionCandidate } from '../main/companyScheduler';
 import type { IntentTarget } from '../shared/lapitaya/intent';
 export type { HookEvent } from '../shared/hookEvents';
 import type { LocalSkill, CatalogSkill } from '../main/skills';
@@ -1125,6 +1129,22 @@ const api = {
   companyOperations: (): Promise<CompanyOperationsProjection | null> => ipcRenderer.invoke('company:getOperations'),
   /** FASE 4: deterministic status question over CompanySnapshot; never an action path. */
   companyAnswer: (question: string): Promise<CompanyAnswer | null> => ipcRenderer.invoke('company:answer', question),
+  /** FASE 9: read-only Virtual Company OS Snapshot (schemaVersion: 2) */
+  companyOSSnapshot: (): Promise<CompanyOSSnapshot | null> => ipcRenderer.invoke('lapitaya:companyOS:snapshot'),
+  /** FASE 9: non-destructive company execution pause */
+  companyOSPause: (reason?: string): Promise<{ ok: boolean }> => ipcRenderer.invoke('lapitaya:companyOS:pause', reason),
+  /** FASE 9: company execution resume */
+  companyOSResume: (): Promise<{ ok: boolean }> => ipcRenderer.invoke('lapitaya:companyOS:resume'),
+  /** FASE 9: human priority definition for a project */
+  companyOSSetPriority: (
+    projectId: string,
+    level: PriorityLevel,
+    reason?: string
+  ): Promise<{ ok: boolean; priority?: PriorityDefinition; error?: string }> =>
+    ipcRenderer.invoke('lapitaya:companyOS:setPriority', projectId, level, reason),
+  /** FASE 9: deterministic next dispatch candidate evaluation */
+  companyOSEvaluateDispatch: (): Promise<SchedulingDecisionCandidate | null> =>
+    ipcRenderer.invoke('lapitaya:companyOS:evaluateDispatch'),
 
   // ─── Task kanban (hive/tasks.json) ───────────────────────────────────────
   /** Atomically append one card against the latest main-process ledger. */
