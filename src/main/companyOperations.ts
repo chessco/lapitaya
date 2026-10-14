@@ -1011,7 +1011,7 @@ export class CompanyOperationsService {
 
   /**
    * A human-confirmed REQUEST may bootstrap the product entities needed by
-   * the already-authorized production envelope. The envelope is never
+   * the already-approved production envelope. The envelope is never
    * created, activated, or modified here; it is only used as an exact binding
    * for the project and mission that the human is asking El Inge to run.
    */
@@ -1022,7 +1022,7 @@ export class CompanyOperationsService {
     if (!envelope) return request;
 
     // A request can already have foreground bindings. Only reuse them when
-    // they are the exact bindings authorized by the active envelope.
+    // they are the exact bindings approved by the active envelope.
     if (request.projectId && request.missionId &&
       (request.projectId !== envelope.projectId || request.missionId !== envelope.missionId)) {
       return request;

@@ -388,6 +388,7 @@
     "ide": "IDE",
     "tabs": {
       "terminal": "terminal",
+      "company": "company",
       "floor": "monitor",
       "tasks": "tasks",
       "human": "ask me",
