@@ -14,7 +14,8 @@ export function useResolvedGodName(): string {
   const [godName, setGodName] = useState(DEFAULT_GOD_NAME);
   useEffect(() => {
     let cancelled = false;
-    void window.cth.hiveRegistry().then((reg) => {
+    // No preload bridge (e.g. renderer opened in a plain browser): keep the default.
+    void window.cth?.hiveRegistry?.().then((reg) => {
       if (!cancelled) setGodName(resolveGodName(reg?.agents?.[GOD_ID]?.name));
     }).catch(() => { /* keep the default while unknown */ });
     return () => { cancelled = true; };

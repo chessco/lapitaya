@@ -62,7 +62,7 @@ export function usePtyParser(agentId: string) {
       // No new tool calls for ~4 s → assume the model went idle
       updateAgent(agentId, {
         status: 'idle',
-        action: 'awaiting',
+        action: '',
         carrying: undefined,
         currentStation: 'desk'
       });

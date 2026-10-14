@@ -9,6 +9,7 @@ import type { TerminalAutomationBlock } from './terminalAutomation';
 import { freeflowRecorder, useFreeflow } from '@/freeflow/recorder';
 import { useTerminalFontSize } from './terminalFontSize';
 import { isComposingKey } from '@shared/imeGuard';
+import { isInboxNudge } from '@shared/hiveNudge';
 import { useRtl } from '@/i18n/useDirection';
 
 const EMPTY_QUEUE: QueuedMessage[] = [];
@@ -454,6 +455,9 @@ function QueuedMessageRow(
   const [expanded, setExpanded] = useState(false);
   const [clipped, setClipped] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
+  // Display only: the inbox-wake nudge is an English agent prompt (matched by
+  // isInboxNudge, sent verbatim), so show a localized label and leave message.text alone.
+  const shownText = isInboxNudge(message.text) ? t('queueComposer.inboxNudge') : message.text;
 
   // Measure against the CLAMPED box, so the toggle survives being expanded (the
   // expanded box never overflows and would otherwise report clipped = false).
@@ -486,7 +490,7 @@ function QueuedMessageRow(
         <div
           ref={bodyRef}
           dir={rtl ? 'auto' : undefined}
-          title={expanded ? undefined : message.text}
+          title={expanded ? undefined : shownText}
           style={{
             fontSize: 12, lineHeight: '18px',
             color: 'var(--cth-ink-900)',
@@ -500,7 +504,7 @@ function QueuedMessageRow(
                   overflow: 'hidden'
                 })
           }}
-        >{message.text}</div>
+        >{shownText}</div>
         {(clipped || expanded || paused) && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {(clipped || expanded) && (

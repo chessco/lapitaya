@@ -165,11 +165,11 @@
     "reportProblem": "反馈问题",
     "fullChangelog": "完整更新日志 →",
     "announcement": "公告",
-    "proLaunch": "v0.5.0 与 Munder Difflin Pro 一同发布。",
+    "proLaunch": "v0.5.0 与 La Pitaya Pro 一同发布。",
     "proCommunityFree": "社区版保持免费、开源，并持续获得更新。",
     "proParagraph": "Pro 版将带来新的功能与集成，全年持续上新；它领先于社区版，面向想要充分发挥编码智能体与智能体工具链潜力的重度用户。Pro 路线图还包括移动端应用。",
     "foundersWallTitle": "在 Founders' Wall 上吗？",
-    "foundersWallBody": "免费获得一个月的 Munder Difflin Pro，此后年度套餐享 5 折。仅限前 100 位上榜用户。",
+    "foundersWallBody": "免费获得一个月的 La Pitaya Pro，此后年度套餐享 5 折。仅限前 100 位上榜用户。",
     "seeTheWall": "查看榜单",
     "joinDiscord": "加入 Discord"
   },
@@ -578,7 +578,7 @@
   },
   "onboarding": {
     "titles": {
-      "persona": "欢迎来到 MUNDER DIFFLIN",
+      "persona": "欢迎来到 LA PITAYA",
       "welcome": "认识你的办公室",
       "home": "第 1 步，共 4 步 · HARNESS 主目录",
       "homePlain": "第 1 步，共 4 步 · 为应用找一个家",
@@ -1319,6 +1319,7 @@
     "files": "文件",
     "collapse": "收起此消息",
     "showFull": "显示完整消息",
+    "inboxNudge": "📬 提醒：你的 hive 收件箱有新消息",
     "seeLess": "收起",
     "seeMore": "展开",
     "sendNowTitle": "即使自动投递已暂停也投递此消息。它会移到队列最前，终端一空闲就输入。",

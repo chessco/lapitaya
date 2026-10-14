@@ -148,9 +148,17 @@ function loadTexture(url: string): Promise<Texture> {
  *  `action` (e.g. "edit App.tsx", "bash npm test"), fall back to the prompt we
  *  gave it, then to a caller-supplied generic. Returns '' for the working state
  *  with nothing concrete yet — the bubble renders an animated "…" for that. */
-function liveActivity(agent: Agent, fallback = ''): string {
+function liveActivity(agent: Agent, fallback = '', t?: (k: string) => string): string {
   const action = (agent.action || '').trim();
-  if (action) return action;
+  if (action) {
+    const lower = action.toLowerCase();
+    if (lower === 'awaiting' || lower === 'idle') return fallback || (t ? t('office.activity.idle') : 'inactivo');
+    if (lower === 'running the floor') return t ? t('office.activity.runningFloor') : 'dirigiendo el piso';
+    if (lower === 'thinking') return t ? t('badge.thinking') : 'pensando';
+    if (lower === 'waiting on you') return t ? t('office.activity.needsYou') : 'te necesita';
+    if (lower === 'compacting context') return t ? t('office.activity.compacting') : 'compactando contexto';
+    return action;
+  }
   return firstWords(agent.lastPrompt) || fallback;
 }
 
@@ -1510,7 +1518,7 @@ export function OfficeFloor() {
           case 'thinking':
             c.setStatusGlyph('none');
             c.sitAtDesk(true);
-            c.showThought(liveActivity(agent), agent.carrying);
+            c.showThought(liveActivity(agent, '', t), agent.carrying);
             break;
           case 'waiting':
             // Parked at the desk awaiting god / another agent — not actively
@@ -1518,11 +1526,11 @@ export function OfficeFloor() {
             // agents that need the human).
             c.setStatusGlyph('none');
             c.sitAtDesk(false);
-            c.showThought(liveActivity(agent, t('office.activity.waiting')), agent.carrying);
+            c.showThought(liveActivity(agent, t('office.activity.waiting'), t), agent.carrying);
             break;
           case 'blocked':
             c.setStatusGlyph('blocked');
-            c.showThought(liveActivity(agent, t('office.activity.needsYou')));
+            c.showThought(liveActivity(agent, t('office.activity.needsYou'), t));
             c.walkToTile(rt.waitTile);
             break;
           case 'compacting':
@@ -1530,14 +1538,14 @@ export function OfficeFloor() {
             // so an agent compacting context reads as busy rather than frozen.
             c.setStatusGlyph('compacting');
             c.sitAtDesk(true);
-            c.showThought(liveActivity(agent, t('office.activity.compacting')));
+            c.showThought(liveActivity(agent, t('office.activity.compacting'), t));
             break;
           case 'looping':
             // #5C — circuit-breaker armed (#6): hold position with the spinning
             // warning glyph so a runaway agent is visible on the floor.
             c.setStatusGlyph('looping');
             c.sitAtDesk(false);
-            c.showThought(liveActivity(agent, t('office.activity.looping')));
+            c.showThought(liveActivity(agent, t('office.activity.looping'), t));
             break;
           case 'success':
             c.setStatusGlyph('success');
@@ -1559,14 +1567,14 @@ export function OfficeFloor() {
           default:
             c.setStatusGlyph('none');
             // The god runs the floor from its desk; everyone else wanders when idle.
-            if (agent.isGod) { c.sitAtDesk(true); c.showThought(liveActivity(agent, t('office.activity.runningFloor'))); }
+            if (agent.isGod) { c.sitAtDesk(true); c.showThought(liveActivity(agent, t('office.activity.runningFloor'), t)); }
             else if (finishedWork) {
               // Task done → a quick cheer on the spot, then back to roaming.
               c.startWandering();
               c.cheer();
               c.showThought(t(CHEER_KEYS[Math.floor(Math.random() * CHEER_KEYS.length)]));
             }
-            else { c.startWandering(); c.showThought(liveActivity(agent, t('office.activity.idle'))); }
+            else { c.startWandering(); c.showThought(liveActivity(agent, t('office.activity.idle'), t)); }
             break;
         }
       };

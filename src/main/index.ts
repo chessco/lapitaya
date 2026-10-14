@@ -2573,6 +2573,7 @@ function createWindow(opts: { floor?: boolean } = {}): BrowserWindow {
     minHeight: MIN_WIN.height,
     title: isFloor ? `${LA_PITAYA_NAME} — Floor` : LA_PITAYA_NAME,
     backgroundColor: '#FFF8E7',
+    autoHideMenuBar: true,
     titleBarStyle: 'hiddenInset',
     show: false,
     webPreferences: {

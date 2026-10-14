@@ -18,6 +18,31 @@
     "restarting": "reiniciando…",
     "add": "agregar"
   },
+  "app": {
+    "autoModeOn": "modo auto activado",
+    "autoModeOff": "modo auto desactivado",
+    "lightTheme": "Tema claro",
+    "darkTheme": "Tema oscuro",
+    "toggleDarkMode": "Alternar modo oscuro",
+    "settings": "Configuración",
+    "focusMode": "Modo de enfoque",
+    "exitFocusMode": "Salir de modo de enfoque (Esc)",
+    "toggleFocusMode": "Alternar modo de enfoque",
+    "emptyFloor": "PISO VACÍO",
+    "emptyFloorDesc": "Aún no hay agentes en el piso. Lanza uno para ver la salida de claude en tiempo real aquí.",
+    "addAgent": "agregar agente",
+    "wakingFloor": "DESPERTANDO EL PISO",
+    "wakingFloorDesc": "{{name}} está entrando al turno.\nLa terminal aparecerá aquí una vez que tome su lugar.",
+    "noAgentSelected": "NINGÚN AGENTE SELECCIONADO",
+    "noAgentSelectedDesc": "Lanza un agente desde la barra inferior.\nLa terminal y barra de comandos aparecerán aquí."
+  },
+  "terminal": {
+    "live": "en vivo",
+    "zoomIn": "Acercar (Cmd +)",
+    "zoomOut": "Alejar (Cmd -)",
+    "resetZoom": "Restablecer zoom (Cmd 0)",
+    "exitFocusMode": "Salir de modo de enfoque (Esc)"
+  },
   "commandBar": {
     "free": "libre",
     "skill": "/skill",
@@ -165,11 +190,11 @@
     "reportProblem": "reportar un problema",
     "fullChangelog": "changelog completo →",
     "announcement": "Anuncio",
-    "proLaunch": "La v0.5.0 llega con Munder Difflin Pro.",
+    "proLaunch": "La v0.5.0 llega con La Pitaya Pro.",
     "proCommunityFree": "La edición Community sigue siendo gratuita, abierta y recibiendo actualizaciones.",
     "proParagraph": "Pro incluye nuevas funciones e integraciones, con más durante el año, y se mantiene por delante de Community, para usuarios avanzados que quieren todo el potencial de los agentes de código y sus harnesses. El roadmap de Pro también incluye una app móvil.",
     "foundersWallTitle": "¿Estás en el Founders' Wall?",
-    "foundersWallBody": "Un mes de Munder Difflin Pro gratis y luego 50% de descuento en el plan anual. Para las primeras 100 personas en el muro.",
+    "foundersWallBody": "Un mes de La Pitaya Pro gratis y luego 50% de descuento en el plan anual. Para las primeras 100 personas en el muro.",
     "seeTheWall": "ver el muro",
     "joinDiscord": "unirse a Discord"
   },
@@ -397,7 +422,7 @@
       "memory": "memoria",
       "graph": "grafo",
       "activity": "actividad",
-      "skills": "skills",
+      "skills": "habilidades",
       "workers": "trabajadores"
     },
     "terminalFullscreen": "La terminal está abierta en pantalla completa. Presiona Esc para traerla de vuelta.",
@@ -1320,6 +1345,7 @@
     "files": "archivos",
     "collapse": "Contraer este mensaje",
     "showFull": "Mostrar el mensaje completo",
+    "inboxNudge": "📬 Aviso: hay mensajes nuevos en tu bandeja del hive",
     "seeLess": "ver menos",
     "seeMore": "ver más",
     "sendNowTitle": "Entrega este mensaje aunque la entrega automática esté pausada. Pasa al frente de la cola y se escribe en cuanto la terminal esté libre.",

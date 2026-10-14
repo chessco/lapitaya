@@ -18,6 +18,31 @@
     "restarting": "restarting…",
     "add": "add"
   },
+  "app": {
+    "autoModeOn": "auto mode on",
+    "autoModeOff": "auto mode off",
+    "lightTheme": "Light theme",
+    "darkTheme": "Dark theme",
+    "toggleDarkMode": "Toggle dark mode",
+    "settings": "Settings",
+    "focusMode": "Focus mode",
+    "exitFocusMode": "Exit focus mode (Esc)",
+    "toggleFocusMode": "Toggle focus mode",
+    "emptyFloor": "EMPTY FLOOR",
+    "emptyFloorDesc": "No agents on the floor yet. Spawn one to see real claude output stream in here.",
+    "addAgent": "add agent",
+    "wakingFloor": "WAKING THE FLOOR",
+    "wakingFloorDesc": "{{name}} is clocking in.\nThe terminal will land here once he's seated.",
+    "noAgentSelected": "NO AGENT SELECTED",
+    "noAgentSelectedDesc": "Spawn an agent from the strip below.\nThe terminal and command bar will land here."
+  },
+  "terminal": {
+    "live": "live",
+    "zoomIn": "Zoom in (Cmd +)",
+    "zoomOut": "Zoom out (Cmd -)",
+    "resetZoom": "Reset zoom (Cmd 0)",
+    "exitFocusMode": "Exit focus mode (Esc)"
+  },
   "commandBar": {
     "free": "free",
     "skill": "/skill",
@@ -165,11 +190,11 @@
     "reportProblem": "report a problem",
     "fullChangelog": "full changelog →",
     "announcement": "Announcement",
-    "proLaunch": "v0.5.0 launches with Munder Difflin Pro.",
+    "proLaunch": "v0.5.0 launches with La Pitaya Pro.",
     "proCommunityFree": "Community stays free, stays open, and keeps getting updates.",
     "proParagraph": "Pro ships with new features and integrations, with more posted throughout the year, and it stays ahead of Community, for power users who want the full potential of coding agents and agent harnesses. The Pro roadmap also includes a mobile app.",
     "foundersWallTitle": "On the Founders' Wall?",
-    "foundersWallBody": "A month of Munder Difflin Pro free, then 50% off the annual plan. For the first 100 people on the wall.",
+    "foundersWallBody": "A month of La Pitaya Pro free, then 50% off the annual plan. For the first 100 people on the wall.",
     "seeTheWall": "see the wall",
     "joinDiscord": "join Discord"
   },
@@ -579,7 +604,7 @@
   },
   "onboarding": {
     "titles": {
-      "persona": "WELCOME TO MUNDER DIFFLIN",
+      "persona": "WELCOME TO LA PITAYA",
       "welcome": "MEET YOUR OFFICE",
       "home": "STEP 1 OF 4 · HARNESS HOME",
       "homePlain": "STEP 1 OF 4 · A HOME FOR THE APP",
@@ -1320,6 +1345,7 @@
     "files": "files",
     "collapse": "Collapse this message",
     "showFull": "Show the full message",
+    "inboxNudge": "📬 Heads-up: new messages in your hive inbox",
     "seeLess": "see less",
     "seeMore": "see more",
     "sendNowTitle": "Deliver this message even though auto-delivery is paused. It moves to the front of the queue and types in as soon as the terminal is free.",
