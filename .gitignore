@@ -14,6 +14,9 @@ dist/
 *.p8
 *.p12
 *.cer
+*.pem
+*.key
+*.crt
 *.mobileprovision
 build/AuthKey_*.p8
 
